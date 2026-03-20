@@ -10,6 +10,9 @@ on:
 permissions:
   contents: write
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   fetch:
     runs-on: ubuntu-latest
@@ -27,9 +30,13 @@ jobs:
       - name: Fetch all energy data
         run: python scripts/fetch_all.py
 
+      - name: Show data folder
+        run: ls -lh data/
+
       - name: Commit & push updated data
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add data/
-          git diff --cached --quiet || git commit -m "chore: update energy dat
+          git diff --cached --quiet || git commit -m "chore: update energy data $(date -u '+%Y-%m-%dT%H:%M')Z"
+          git push
