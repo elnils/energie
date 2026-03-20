@@ -1,1 +1,1 @@
-{"last_fetch":"2024-01-01T00:00:00Z","next_fetch_approx":"2024-01-01T00:15:00Z","note":"Warte auf ersten GitHub Actions Run"}
+{"last_fetch": "2026-03-20T10:42:08.548935+00:00", "next_fetch_approx": "2026-03-20T10:57:08.548941+00:00", "sources": {"smard": "smard.de", "energy_charts": "api.energy-charts.info", "gas_storage": "agsi.gie.eu", "macro": "data-api.ecb.europa.eu", "weather": "api.open-meteo.com", "commodities": "Yahoo + Tankerkoenig + Ember", "expansion": "api.energy-charts.info"}}
