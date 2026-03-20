@@ -3,152 +3,314 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Energie Dashboard Deutschland & Europa</title>
+<title>Energie Dashboard DE/EU</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;600&family=IBM+Plex+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;0,9..144,700;1,9..144,400&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg:#0a0c10; --bg2:#10131a; --bg3:#181c26;
-    --border:#1e2535; --border2:#2a3248;
-    --text:#d4dbe8; --text2:#8493b0; --text3:#4a5570;
-    --accent:#3b82f6; --accent2:#06b6d4;
-    --green:#22c55e; --yellow:#eab308; --red:#ef4444;
-    --orange:#f97316; --purple:#a855f7;
-    --wind:#3b82f6; --solar:#eab308; --bio:#22c55e;
-    --hydro:#06b6d4; --nuclear:#a855f7;
-    --lignite:#92400e; --coal:#6b7280; --gas:#f97316;
-  }
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:14px;min-height:100vh}
-  header{display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:56px;background:var(--bg2);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
-  .logo{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;letter-spacing:.08em;color:var(--accent);text-transform:uppercase}
-  .logo span{color:var(--text2);font-weight:300}
-  .header-meta{display:flex;align-items:center;gap:16px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3)}
-  .pulse-dot{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;animation:pulse 2s infinite}
-  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-  #last-update{color:var(--text2)}
-  .tabs-bar{display:flex;padding:0 24px;background:var(--bg2);border-bottom:1px solid var(--border);overflow-x:auto}
-  .tab-btn{background:none;border:none;border-bottom:2px solid transparent;color:var(--text2);padding:12px 18px;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;font-size:13px;font-weight:500;white-space:nowrap;transition:color .15s,border-color .15s}
-  .tab-btn:hover{color:var(--text)}
-  .tab-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
-  .toolbar{display:flex;align-items:center;gap:12px;padding:10px 24px;background:var(--bg);border-bottom:1px solid var(--border);flex-wrap:wrap}
-  .toolbar-label{font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--text3);text-transform:uppercase;letter-spacing:.08em}
-  .ctrl-group{display:flex;align-items:center;gap:6px;padding:4px 8px;background:var(--bg2);border:1px solid var(--border);border-radius:4px}
-  .ctrl-group label{font-size:11px;color:var(--text2);font-family:'IBM Plex Mono',monospace}
-  select,input[type=range],input[type=number]{background:var(--bg3);color:var(--text);border:1px solid var(--border2);border-radius:3px;font-size:12px;font-family:'IBM Plex Mono',monospace;padding:3px 6px;outline:none}
-  .btn{background:var(--bg3);color:var(--text2);border:1px solid var(--border2);border-radius:4px;padding:5px 12px;font-size:12px;font-family:'IBM Plex Mono',monospace;cursor:pointer;transition:all .15s}
-  .btn:hover{color:var(--text);border-color:var(--accent)}
-  .btn-accent{background:var(--accent);color:#fff;border-color:var(--accent)}
-  .btn-accent:hover{background:#2563eb}
-  main{padding:20px 24px 60px}
-  .tab-panel{display:none}
-  .tab-panel.active{display:block}
-  .kpi-strip{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:20px}
-  .kpi-card{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:12px 14px;position:relative;overflow:hidden}
-  .kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent-line,var(--accent))}
-  .kpi-label{font-size:10px;font-family:'IBM Plex Mono',monospace;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
-  .kpi-value{font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:600;color:var(--text);line-height:1}
-  .kpi-unit{font-size:10px;color:var(--text2);margin-top:3px;font-family:'IBM Plex Mono',monospace}
-  .kpi-delta{font-size:11px;font-family:'IBM Plex Mono',monospace;margin-top:4px}
-  .delta-up{color:var(--green)}
-  .delta-down{color:var(--red)}
-  .chart-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px;margin-bottom:20px}
-  .chart-card{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:14px}
-  .span-12{grid-column:span 12}
-  .span-8{grid-column:span 8}
-  .span-6{grid-column:span 6}
-  .span-4{grid-column:span 4}
-  @media(max-width:900px){.span-8,.span-6,.span-4{grid-column:span 12}}
-  .card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-  .card-title{font-size:12px;font-family:'IBM Plex Mono',monospace;color:var(--text2);text-transform:uppercase;letter-spacing:.07em;font-weight:600}
-  .card-source{font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace}
-  .chart-wrap{position:relative}
-  .loading-state{display:flex;align-items:center;justify-content:center;height:120px;color:var(--text3);font-family:'IBM Plex Mono',monospace;font-size:12px;gap:8px}
-  .spinner{width:14px;height:14px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
-  @keyframes spin{to{transform:rotate(360deg)}}
-  .donut-wrap{display:flex;gap:20px;align-items:center;flex-wrap:wrap}
-  .donut-canvas-wrap{position:relative;width:180px;flex-shrink:0}
-  .donut-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none}
-  .donut-pct{font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:600;color:var(--green)}
-  .donut-sub{font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace}
-  .legend-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;flex:1}
-  .legend-item{display:flex;align-items:center;gap:7px;font-size:12px}
-  .legend-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
-  .legend-name{color:var(--text2)}
-  .legend-val{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text)}
-  .data-table{width:100%;border-collapse:collapse;font-size:12px;font-family:'IBM Plex Mono',monospace}
-  .data-table th{text-align:left;padding:6px 10px;color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);font-weight:600}
-  .data-table td{padding:6px 10px;border-bottom:1px solid var(--border);color:var(--text2)}
-  .data-table tr:hover td{background:var(--bg3)}
-  .data-table .val{color:var(--text);font-weight:600;text-align:right}
-  .toggle-switch{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2);font-family:'IBM Plex Mono',monospace;cursor:pointer}
-  .toggle-switch input{display:none}
-  .toggle-track{width:32px;height:18px;background:var(--bg3);border:1px solid var(--border2);border-radius:9px;position:relative;transition:background .15s;cursor:pointer}
-  .toggle-track::after{content:'';position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:var(--text3);transition:left .15s,background .15s}
-  input:checked+.toggle-track{background:var(--accent);border-color:var(--accent)}
-  input:checked+.toggle-track::after{left:16px;background:#fff}
-  .status-bar{display:flex;align-items:center;gap:16px;padding:6px 24px;background:var(--bg2);border-top:1px solid var(--border);font-size:10px;font-family:'IBM Plex Mono',monospace;color:var(--text3);position:fixed;bottom:0;left:0;right:0;z-index:50}
-  .section-title{font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin:0 0 10px;padding-bottom:8px;border-bottom:1px solid var(--border)}
-  .map-placeholder{background:var(--bg3);border:1px dashed var(--border2);border-radius:4px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;height:260px;color:var(--text3);font-family:'IBM Plex Mono',monospace;font-size:12px}
-  ::-webkit-scrollbar{width:6px;height:6px}
-  ::-webkit-scrollbar-track{background:var(--bg)}
-  ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+:root {
+  --bg:        #f4f1eb;
+  --bg2:       #fffef9;
+  --bg3:       #edeae0;
+  --border:    #d8d3c5;
+  --border2:   #c5bfaf;
+  --text:      #1a1714;
+  --text2:     #5a5449;
+  --text3:     #9b9389;
+  --accent:    #1d4ed8;
+  --accent2:   #0891b2;
+  --green:     #15803d;
+  --yellow:    #b45309;
+  --red:       #b91c1c;
+  --orange:    #c2410c;
+  --purple:    #7c3aed;
+  --teal:      #0d9488;
+  --wind:      #1d4ed8;
+  --solar:     #b45309;
+  --bio:       #15803d;
+  --hydro:     #0891b2;
+  --nuclear:   #7c3aed;
+  --lignite:   #78350f;
+  --coal:      #44403c;
+  --gas:       #c2410c;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Fraunces',serif;font-size:14px;min-height:100vh}
+
+/* ── HEADER ── */
+header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 28px;height:58px;
+  background:var(--bg2);border-bottom:2px solid var(--text);
+  position:sticky;top:0;z-index:100;
+}
+.logo{
+  font-family:'Fraunces',serif;font-size:15px;font-weight:700;
+  letter-spacing:-.01em;color:var(--text);
+}
+.logo em{font-style:italic;font-weight:300;color:var(--text2)}
+.header-right{display:flex;align-items:center;gap:14px}
+.live-badge{
+  display:flex;align-items:center;gap:6px;
+  background:var(--green);color:#fff;
+  font-family:'DM Mono',monospace;font-size:10px;font-weight:500;
+  padding:3px 9px;border-radius:2px;text-transform:uppercase;letter-spacing:.08em;
+}
+.pulse-dot{width:6px;height:6px;border-radius:50%;background:#fff;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.header-time{font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)}
+#last-update{color:var(--text2)}
+
+/* ── TABS ── */
+.tabs-bar{
+  display:flex;padding:0 28px;
+  background:var(--bg2);border-bottom:1px solid var(--border);
+  overflow-x:auto;gap:0;
+}
+.tab-btn{
+  background:none;border:none;border-bottom:3px solid transparent;
+  color:var(--text2);padding:11px 16px;cursor:pointer;
+  font-family:'Fraunces',serif;font-size:13px;font-weight:600;
+  white-space:nowrap;transition:all .15s;
+}
+.tab-btn:hover{color:var(--text)}
+.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* ── TOOLBAR ── */
+.toolbar{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 28px;background:var(--bg3);
+  border-bottom:1px solid var(--border);flex-wrap:wrap;
+}
+.toolbar-sep{width:1px;height:20px;background:var(--border2);margin:0 4px}
+.ctrl-label{font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.09em}
+.ctrl-group{display:flex;align-items:center;gap:5px;padding:3px 8px;background:var(--bg2);border:1px solid var(--border);border-radius:3px}
+.ctrl-group label{font-family:'DM Mono',monospace;font-size:10px;color:var(--text2)}
+select,input[type=range]{
+  background:transparent;color:var(--text);
+  border:none;font-family:'DM Mono',monospace;font-size:11px;
+  padding:2px 4px;outline:none;cursor:pointer;
+}
+select{border-right:4px solid transparent}
+input[type=range]{accent-color:var(--accent);width:72px}
+.btn{
+  background:var(--bg2);color:var(--text2);
+  border:1px solid var(--border2);border-radius:3px;
+  padding:5px 12px;font-size:11px;font-family:'DM Mono',monospace;
+  cursor:pointer;transition:all .15s;white-space:nowrap;
+}
+.btn:hover{color:var(--text);border-color:var(--accent);background:var(--bg)}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-primary:hover{background:#1e40af}
+.btn-green{background:var(--green);color:#fff;border-color:var(--green)}
+.btn-green:hover{background:#166534}
+.toggle{display:flex;align-items:center;gap:5px;cursor:pointer}
+.toggle input{display:none}
+.toggle-track{
+  width:30px;height:16px;background:var(--border2);
+  border-radius:8px;position:relative;transition:background .15s;
+}
+.toggle-track::after{
+  content:'';position:absolute;top:2px;left:2px;
+  width:12px;height:12px;border-radius:50%;
+  background:var(--bg2);transition:left .15s;
+}
+input:checked+.toggle-track{background:var(--accent)}
+input:checked+.toggle-track::after{left:16px}
+
+/* ── LAYOUT ── */
+main{padding:20px 28px 52px}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+/* ── KPI STRIP ── */
+.kpi-strip{display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:10px;margin-bottom:18px}
+.kpi-card{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:4px;padding:12px 14px;
+  position:relative;overflow:hidden;cursor:pointer;
+  transition:border-color .15s,box-shadow .15s;
+}
+.kpi-card:hover{border-color:var(--accent);box-shadow:0 2px 8px rgba(29,78,216,.1)}
+.kpi-card.selected{border-color:var(--accent);background:#eff6ff;box-shadow:0 0 0 2px rgba(29,78,216,.15)}
+.kpi-card::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;
+  width:3px;background:var(--kpi-color,var(--accent));
+}
+.kpi-label{font-family:'DM Mono',monospace;font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px}
+.kpi-value{font-family:'DM Mono',monospace;font-size:22px;font-weight:500;color:var(--text);line-height:1}
+.kpi-unit{font-family:'DM Mono',monospace;font-size:9px;color:var(--text3);margin-top:3px}
+.kpi-delta{font-family:'DM Mono',monospace;font-size:10px;margin-top:5px;font-weight:500}
+.up{color:var(--green)}.down{color:var(--red)}
+.kpi-check{position:absolute;top:8px;right:8px;font-size:12px;display:none}
+.kpi-card.selected .kpi-check{display:block}
+
+/* ── CHART GRID ── */
+.chart-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px;margin-bottom:18px}
+.chart-card{background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:14px}
+.span-12{grid-column:span 12}.span-8{grid-column:span 8}
+.span-6{grid-column:span 6}.span-4{grid-column:span 4}.span-3{grid-column:span 3}
+@media(max-width:1000px){.span-8,.span-6,.span-4,.span-3{grid-column:span 12}}
+.card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;gap:8px}
+.card-title{font-family:'Fraunces',serif;font-size:13px;font-weight:600;color:var(--text)}
+.card-meta{text-align:right}
+.card-source{font-family:'DM Mono',monospace;font-size:9px;color:var(--text3);display:block}
+.chart-wrap{position:relative}
+
+/* ── LOADING ── */
+.loading{display:flex;align-items:center;justify-content:center;height:100px;gap:8px;color:var(--text3);font-family:'DM Mono',monospace;font-size:11px}
+.spinner{width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.no-data{display:flex;align-items:center;justify-content:center;height:80px;color:var(--text3);font-family:'DM Mono',monospace;font-size:11px;font-style:italic}
+
+/* ── DONUT ── */
+.donut-wrap{display:flex;gap:20px;align-items:center;flex-wrap:wrap;min-height:180px}
+.donut-canvas-wrap{position:relative;width:176px;height:176px;flex-shrink:0}
+.donut-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
+.donut-pct{font-family:'DM Mono',monospace;font-size:24px;font-weight:500;color:var(--green)}
+.donut-sub{font-family:'DM Mono',monospace;font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em}
+.legend-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px 14px;flex:1}
+.leg-item{display:flex;align-items:center;gap:6px;font-size:11px}
+.leg-dot{width:8px;height:8px;border-radius:1px;flex-shrink:0}
+.leg-name{color:var(--text2);font-family:'DM Mono',monospace;font-size:10px}
+.leg-val{margin-left:auto;font-family:'DM Mono',monospace;font-size:10px;color:var(--text);font-weight:500}
+
+/* ── TABLES ── */
+.data-table{width:100%;border-collapse:collapse;font-size:11px;font-family:'DM Mono',monospace}
+.data-table th{padding:6px 10px;color:var(--text3);font-size:9px;text-transform:uppercase;letter-spacing:.09em;border-bottom:2px solid var(--border);font-weight:500;text-align:left}
+.data-table td{padding:6px 10px;border-bottom:1px solid var(--border);color:var(--text2)}
+.data-table tr:hover td{background:var(--bg3)}
+.data-table .num{text-align:right;color:var(--text);font-weight:500}
+.data-table .pos{color:var(--green)}.data-table .neg{color:var(--red)}
+.data-table tr.selected-row td{background:#eff6ff}
+
+/* ── FUEL FILTER ── */
+.fuel-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin-bottom:14px}
+.fuel-region-card{
+  background:var(--bg2);border:1px solid var(--border);border-radius:3px;
+  padding:10px 12px;cursor:pointer;transition:all .15s;
+}
+.fuel-region-card:hover{border-color:var(--accent)}
+.fuel-region-card.active{border-color:var(--accent);background:#eff6ff}
+.fuel-region-name{font-family:'Fraunces',serif;font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px}
+.fuel-prices{display:flex;gap:10px;font-family:'DM Mono',monospace;font-size:10px}
+.fuel-badge{padding:2px 5px;border-radius:2px;background:var(--bg3)}
+
+/* ── SECTION TITLES ── */
+.section-title{
+  font-family:'Fraunces',serif;font-size:11px;font-weight:600;
+  color:var(--text3);text-transform:uppercase;letter-spacing:.1em;
+  margin:0 0 12px;padding-bottom:8px;border-bottom:1px solid var(--border);
+}
+
+/* ── DOWNLOAD PANEL ── */
+.download-panel{
+  background:var(--bg2);border:1px solid var(--border);border-radius:4px;
+  padding:14px;margin-bottom:18px;display:none;
+}
+.download-panel.visible{display:block}
+.download-panel h3{font-family:'Fraunces',serif;font-size:14px;font-weight:700;margin-bottom:10px}
+.download-options{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+
+/* ── MAP AREA ── */
+.map-svg-wrap{background:var(--bg3);border:1px solid var(--border);border-radius:4px;overflow:hidden}
+.map-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;height:300px;gap:8px;color:var(--text3);font-family:'DM Mono',monospace;font-size:11px}
+
+/* ── COUNTRY PRICE TABLE ── */
+.country-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+.country-card{background:var(--bg2);border:1px solid var(--border);border-radius:3px;padding:10px 12px;cursor:pointer;transition:all .15s}
+.country-card:hover{border-color:var(--accent)}
+.country-card.selected{border-color:var(--accent);background:#eff6ff}
+.country-name{font-family:'DM Mono',monospace;font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.country-price{font-family:'DM Mono',monospace;font-size:18px;font-weight:500;color:var(--text)}
+.country-unit{font-family:'DM Mono',monospace;font-size:9px;color:var(--text3)}
+
+/* ── STATUS BAR ── */
+.status-bar{
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  padding:5px 28px;background:var(--bg3);border-top:1px solid var(--border);
+  font-family:'DM Mono',monospace;font-size:9px;color:var(--text3);
+  position:fixed;bottom:0;left:0;right:0;z-index:50;
+}
+.st-ok{color:var(--green)}.st-err{color:var(--red)}.st-warn{color:var(--yellow)}
+.st-item::before{content:'●  ';font-size:8px}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+/* ── SELECTION MODE ── */
+body.select-mode .kpi-card{cursor:pointer}
+body.select-mode .kpi-card:hover{border-color:var(--accent)}
+
+/* ── INTRADAY BADGE ── */
+.price-badge{
+  display:inline-block;padding:2px 7px;border-radius:2px;
+  font-family:'DM Mono',monospace;font-size:10px;font-weight:500;
+}
+.price-neg{background:#fee2e2;color:var(--red)}
+.price-pos{background:#dcfce7;color:var(--green)}
+.price-neu{background:var(--bg3);color:var(--text2)}
 </style>
 </head>
 <body>
 
 <header>
-  <div class="logo">Energie<span>Dashboard</span> · DE/EU</div>
-  <div class="header-meta">
-    <span><span class="pulse-dot"></span> LIVE</span>
-    <span>Update: <span id="last-update">—</span></span>
-    <span>Nächstes: <span id="next-update">—</span></span>
-    <button class="btn" onclick="forceRefresh()">↺ Neu laden</button>
-    <button class="btn btn-accent" onclick="downloadView()">⬇ Download</button>
+  <div class="logo">Energie<em>Dashboard</em> · DE/EU</div>
+  <div class="header-right">
+    <div class="live-badge"><span class="pulse-dot"></span> Live</div>
+    <span class="header-time">Stand: <span id="last-update">—</span></span>
+    <button class="btn" onclick="toggleSelectMode()" id="btn-select">☑ Auswählen</button>
+    <button class="btn btn-green" onclick="downloadSelected()" id="btn-dl" style="display:none">⬇ Download</button>
+    <button class="btn" onclick="forceRefresh()">↺</button>
   </div>
 </header>
 
 <nav class="tabs-bar">
   <button class="tab-btn active" data-tab="strom">⚡ Strom DE</button>
+  <button class="tab-btn" data-tab="spotpreise">📊 Spotpreise</button>
   <button class="tab-btn" data-tab="markt">📈 Marktpreise</button>
   <button class="tab-btn" data-tab="rohstoffe">🛢 Rohstoffe</button>
+  <button class="tab-btn" data-tab="kraftstoff">⛽ Kraftstoff</button>
+  <button class="tab-btn" data-tab="europa">🌍 Europa</button>
+  <button class="tab-btn" data-tab="gas">🔵 Gas</button>
   <button class="tab-btn" data-tab="erneuerbare">🌱 Ausbau</button>
-  <button class="tab-btn" data-tab="gas">🔵 Gas & Speicher</button>
   <button class="tab-btn" data-tab="wetter">🌤 Wetter</button>
-  <button class="tab-btn" data-tab="makro">📊 Makro & Inflation</button>
+  <button class="tab-btn" data-tab="makro">📉 Makro</button>
 </nav>
 
 <div class="toolbar">
-  <span class="toolbar-label">Filter:</span>
+  <span class="ctrl-label">Zeitraum</span>
   <div class="ctrl-group">
-    <label>Zeitraum</label>
     <select id="ctrl-range" onchange="applyFilters()">
       <option value="1">24 h</option>
       <option value="7" selected>7 Tage</option>
       <option value="30">30 Tage</option>
       <option value="90">90 Tage</option>
       <option value="365">1 Jahr</option>
+      <option value="1825">5 Jahre</option>
+      <option value="3650">10 Jahre</option>
+      <option value="7300">20 Jahre</option>
     </select>
   </div>
+  <div class="toolbar-sep"></div>
   <div class="ctrl-group">
-    <label>Inflation</label>
-    <label class="toggle-switch">
+    <label>Inflation bereinigen</label>
+    <label class="toggle">
       <input type="checkbox" id="ctrl-inflation" onchange="applyFilters()">
       <span class="toggle-track"></span>
     </label>
   </div>
-  <div class="ctrl-group" id="inflation-opts" style="display:none">
+  <div class="ctrl-group" id="inf-base-wrap" style="display:none">
     <label>Basisjahr</label>
     <select id="ctrl-base-year" onchange="applyFilters()">
-      <option value="2015">2015</option>
-      <option value="2019">2019</option>
-      <option value="2020" selected>2020</option>
-      <option value="2021">2021</option>
-      <option value="2022">2022</option>
-      <option value="2023">2023</option>
+      <option>2000</option><option>2005</option><option>2010</option>
+      <option>2015</option><option>2019</option><option value="2020" selected>2020</option>
+      <option>2021</option><option>2022</option><option>2023</option>
     </select>
   </div>
+  <div class="toolbar-sep"></div>
   <div class="ctrl-group">
     <label>Währung</label>
     <select id="ctrl-currency" onchange="applyFilters()">
@@ -156,565 +318,636 @@
       <option value="USD">USD</option>
     </select>
   </div>
+  <div class="toolbar-sep"></div>
   <div class="ctrl-group">
     <label>Glättung</label>
-    <input type="range" id="ctrl-smooth" min="0" max="7" value="0" onchange="document.getElementById('smooth-val').textContent=this.value;applyFilters()">
-    <span id="smooth-val" style="font-family:monospace;font-size:11px;color:var(--text2)">0</span>
+    <input type="range" id="ctrl-smooth" min="0" max="12" value="0"
+      oninput="document.getElementById('sv').textContent=this.value;applyFilters()">
+    <span id="sv" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text2);min-width:14px">0</span>
+  </div>
+  <div class="toolbar-sep"></div>
+  <div class="ctrl-group">
+    <label>Chart-Typ</label>
+    <select id="ctrl-charttype" onchange="applyFilters()">
+      <option value="line">Linie</option>
+      <option value="bar">Balken</option>
+      <option value="area">Fläche</option>
+    </select>
+  </div>
+</div>
+
+<!-- DOWNLOAD PANEL -->
+<div id="download-panel" class="download-panel" style="margin:12px 28px 0">
+  <h3>📥 Daten exportieren</h3>
+  <p style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text2)" id="dl-info">Keine Felder ausgewählt. Klicke auf KPI-Karten oder Tabellenzeilen um sie zu markieren.</p>
+  <div class="download-options">
+    <button class="btn btn-green" onclick="exportCSV()">⬇ CSV (Excel)</button>
+    <button class="btn btn-primary" onclick="exportJSON()">⬇ JSON</button>
+    <button class="btn" onclick="exportClipboard()">📋 Zwischenablage</button>
+    <button class="btn" style="margin-left:auto;color:var(--red)" onclick="clearSelection()">✕ Auswahl löschen</button>
   </div>
 </div>
 
 <main>
 
-  <!-- TAB: STROM -->
-  <div class="tab-panel active" id="tab-strom">
-    <div class="kpi-strip">
-      <div class="kpi-card" style="--accent-line:var(--yellow)">
-        <div class="kpi-label">Day-Ahead-Preis</div>
-        <div class="kpi-value" id="kpi-price">—</div>
-        <div class="kpi-unit">EUR/MWh</div>
-        <div class="kpi-delta" id="kpi-price-delta"></div>
-      </div>
-      <div class="kpi-card" style="--accent-line:var(--green)">
-        <div class="kpi-label">Erneuerbare Anteil</div>
-        <div class="kpi-value" id="kpi-ren">—</div>
-        <div class="kpi-unit">% der Erzeugung</div>
-      </div>
-      <div class="kpi-card" style="--accent-line:var(--wind)">
-        <div class="kpi-label">Wind (gesamt)</div>
-        <div class="kpi-value" id="kpi-wind">—</div>
-        <div class="kpi-unit">GW aktuell</div>
-      </div>
-      <div class="kpi-card" style="--accent-line:var(--solar)">
-        <div class="kpi-label">Solar</div>
-        <div class="kpi-value" id="kpi-solar">—</div>
-        <div class="kpi-unit">GW aktuell</div>
-      </div>
-      <div class="kpi-card" style="--accent-line:var(--text3)">
-        <div class="kpi-label">Last (Verbrauch)</div>
-        <div class="kpi-value" id="kpi-load">—</div>
-        <div class="kpi-unit">GW aktuell</div>
-      </div>
-      <div class="kpi-card" style="--accent-line:var(--orange)">
-        <div class="kpi-label">CO₂-Intensität</div>
-        <div class="kpi-value" id="kpi-co2">—</div>
-        <div class="kpi-unit">g CO₂/kWh (est.)</div>
-      </div>
+<!-- ══ TAB: STROM ══ -->
+<div class="tab-panel active" id="tab-strom">
+  <div class="kpi-strip" id="kpi-strom">
+    <div class="kpi-card" style="--kpi-color:var(--yellow)" data-key="day_ahead_price" onclick="toggleCard(this)">
+      <span class="kpi-check">✓</span>
+      <div class="kpi-label">Day-Ahead-Preis</div>
+      <div class="kpi-value" id="kv-price">—</div>
+      <div class="kpi-unit">EUR/MWh</div>
+      <div class="kpi-delta" id="kv-price-d"></div>
     </div>
-    <div class="chart-grid">
-      <div class="chart-card span-8">
-        <div class="card-header">
-          <span class="card-title">Stromerzeugung nach Quelle</span>
+    <div class="kpi-card" style="--kpi-color:var(--green)" data-key="ren_share" onclick="toggleCard(this)">
+      <span class="kpi-check">✓</span>
+      <div class="kpi-label">Erneuerbare</div>
+      <div class="kpi-value" id="kv-ren">—</div>
+      <div class="kpi-unit">% Erzeugung</div>
+    </div>
+    <div class="kpi-card" style="--kpi-color:var(--wind)" data-key="wind_total" onclick="toggleCard(this)">
+      <span class="kpi-check">✓</span>
+      <div class="kpi-label">Wind gesamt</div>
+      <div class="kpi-value" id="kv-wind">—</div>
+      <div class="kpi-unit">GW</div>
+    </div>
+    <div class="kpi-card" style="--kpi-color:var(--solar)" data-key="solar" onclick="toggleCard(this)">
+      <span class="kpi-check">✓</span>
+      <div class="kpi-label">Solar</div>
+      <div class="kpi-value" id="kv-solar">—</div>
+      <div class="kpi-unit">GW</div>
+    </div>
+    <div class="kpi-card" style="--kpi-color:var(--text3)" data-key="load" onclick="toggleCard(this)">
+      <span class="kpi-check">✓</span>
+      <div class="kpi-label">Verbrauch (Last)</div>
+      <div class="kpi-value" id="kv-load">—</div>
+      <div class="kpi-unit">GW</div>
+    </div>
+    <div class="kpi-card" style="--kpi-color:var(--orange)" data-key="co2_intensity" onclick="toggleCard(this)">
+      <span class="kpi-check">✓</span>
+      <div class="kpi-label">CO₂-Intensität</div>
+      <div class="kpi-value" id="kv-co2">—</div>
+      <div class="kpi-unit">g CO₂/kWh</div>
+    </div>
+    <div class="kpi-card" style="--kpi-color:var(--teal)" data-key="export_balance" onclick="toggleCard(this)">
+      <span class="kpi-check">✓</span>
+      <div class="kpi-label">Export-Saldo</div>
+      <div class="kpi-value" id="kv-export">—</div>
+      <div class="kpi-unit">GW (+ = Export)</div>
+    </div>
+    <div class="kpi-card" style="--kpi-color:var(--nuclear)" data-key="nuclear" onclick="toggleCard(this)">
+      <span class="kpi-check">✓</span>
+      <div class="kpi-label">Kernkraft</div>
+      <div class="kpi-value" id="kv-nuclear">—</div>
+      <div class="kpi-unit">GW</div>
+    </div>
+  </div>
+
+  <div class="chart-grid">
+    <div class="chart-card span-8">
+      <div class="card-header">
+        <span class="card-title">Stromerzeugung nach Quelle</span>
+        <div class="card-meta">
           <span class="card-source">SMARD · Bundesnetzagentur</span>
         </div>
-        <div class="chart-wrap" style="height:240px"><canvas id="chart-generation"></canvas></div>
       </div>
-      <div class="chart-card span-4">
-        <div class="card-header">
-          <span class="card-title">Erzeugungsmix</span>
-          <span class="card-source">Letzter Wert</span>
-        </div>
-        <div id="mix-donut" class="donut-wrap">
-          <div class="loading-state"><span class="spinner"></span> Lädt…</div>
-        </div>
+      <div class="chart-wrap" style="height:240px"><canvas id="ch-generation"></canvas></div>
+    </div>
+    <div class="chart-card span-4">
+      <div class="card-header"><span class="card-title">Erzeugungsmix</span><span class="card-source">aktuell</span></div>
+      <div id="mix-donut" class="donut-wrap"><div class="loading"><span class="spinner"></span>Lädt…</div></div>
+    </div>
+    <div class="chart-card span-12">
+      <div class="card-header">
+        <span class="card-title">Day-Ahead-Strompreis DE-LU</span>
+        <div class="card-meta"><span class="card-source">Energy-Charts · Fraunhofer ISE</span></div>
       </div>
-      <div class="chart-card span-12">
-        <div class="card-header">
-          <span class="card-title">Day-Ahead-Strompreis DE-LU</span>
-          <span class="card-source">Energy-Charts · Fraunhofer ISE</span>
-        </div>
-        <div class="chart-wrap" style="height:200px"><canvas id="chart-price"></canvas></div>
-      </div>
+      <div class="chart-wrap" style="height:200px"><canvas id="ch-price"></canvas></div>
+    </div>
+    <div class="chart-card span-6">
+      <div class="card-header"><span class="card-title">Anteil Erneuerbare am Strommix</span><span class="card-source">Energy-Charts</span></div>
+      <div class="chart-wrap" style="height:200px"><canvas id="ch-ren-share"></canvas></div>
+    </div>
+    <div class="chart-card span-6">
+      <div class="card-header"><span class="card-title">Last vs. Prognose</span><span class="card-source">SMARD</span></div>
+      <div class="chart-wrap" style="height:200px"><canvas id="ch-load"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TAB: SPOTPREISE ══ -->
+<div class="tab-panel" id="tab-spotpreise">
+  <div class="kpi-strip">
+    <div class="kpi-card" style="--kpi-color:var(--accent)" data-key="spot_current" onclick="toggleCard(this)">
+      <span class="kpi-check">✓</span>
+      <div class="kpi-label">Aktueller Spotpreis</div>
+      <div class="kpi-value" id="kv-spot-now">—</div>
+      <div class="kpi-unit">EUR/MWh</div>
+    </div>
+    <div class="kpi-card" style="--kpi-color:var(--green)" data-key="spot_avg_today" onclick="toggleCard(this)">
+      <span class="kpi-check">✓</span>
+      <div class="kpi-label">Ø Heute</div>
+      <div class="kpi-value" id="kv-spot-avg">—</div>
+      <div class="kpi-unit">EUR/MWh</div>
+    </div>
+    <div class="kpi-card" style="--kpi-color:var(--red)" data-key="spot_min" onclick="toggleCard(this)">
+      <span class="kpi-check">✓</span>
+      <div class="kpi-label">Min heute</div>
+      <div class="kpi-value" id="kv-spot-min">—</div>
+      <div class="kpi-unit">EUR/MWh</div>
+    </div>
+    <div class="kpi-card" style="--kpi-color:var(--yellow)" data-key="spot_max" onclick="toggleCard(this)">
+      <span class="kpi-check">✓</span>
+      <div class="kpi-label">Max heute</div>
+      <div class="kpi-value" id="kv-spot-max">—</div>
+      <div class="kpi-unit">EUR/MWh</div>
+    </div>
+  </div>
+  <div class="chart-grid">
+    <div class="chart-card span-12">
+      <div class="card-header"><span class="card-title">Intraday Spotpreis (15-min)</span><span class="card-source">SMARD · letzte 48h</span></div>
+      <div class="chart-wrap" style="height:220px"><canvas id="ch-intraday"></canvas></div>
+    </div>
+    <div class="chart-card span-6">
+      <div class="card-header"><span class="card-title">Monatliche Ø-Spotpreise</span><span class="card-source">Energy-Charts · bis 20 Jahre</span></div>
+      <div class="chart-wrap" style="height:220px"><canvas id="ch-spot-monthly"></canvas></div>
+    </div>
+    <div class="chart-card span-6">
+      <div class="card-header"><span class="card-title">Preise für Morgen</span><span class="card-source">Energy-Charts · Day-Ahead Auktion</span></div>
+      <div id="tomorrow-wrap" class="chart-wrap" style="height:220px"><canvas id="ch-tomorrow"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TAB: MARKTPREISE ══ -->
+<div class="tab-panel" id="tab-markt">
+  <div class="kpi-strip">
+    <div class="kpi-card" style="--kpi-color:var(--accent)" data-key="da_price" onclick="toggleCard(this)">
+      <span class="kpi-check">✓</span>
+      <div class="kpi-label">Day-Ahead DE-LU</div>
+      <div class="kpi-value" id="mkv-da">—</div>
+      <div class="kpi-unit">EUR/MWh</div>
+    </div>
+    <div class="kpi-card" style="--kpi-color:var(--purple)" data-key="co2_ets" onclick="toggleCard(this)">
+      <span class="kpi-check">✓</span>
+      <div class="kpi-label">EU ETS CO₂</div>
+      <div class="kpi-value" id="mkv-co2">—</div>
+      <div class="kpi-unit">EUR/tCO₂</div>
+    </div>
+    <div class="kpi-card" style="--kpi-color:var(--orange)" data-key="ttf_gas" onclick="toggleCard(this)">
+      <span class="kpi-check">✓</span>
+      <div class="kpi-label">TTF Erdgas</div>
+      <div class="kpi-value" id="mkv-ttf">—</div>
+      <div class="kpi-unit">EUR/MWh</div>
+    </div>
+  </div>
+  <div class="chart-grid">
+    <div class="chart-card span-6">
+      <div class="card-header"><span class="card-title">Strompreis Langfrist (bis 20 J)</span><span class="card-source">Energy-Charts · historisch</span></div>
+      <div class="chart-wrap" style="height:220px"><canvas id="ch-price-long"></canvas></div>
+    </div>
+    <div class="chart-card span-6">
+      <div class="card-header"><span class="card-title">CO₂-Zertifikate EU ETS</span><span class="card-source">Ember Climate</span></div>
+      <div class="chart-wrap" style="height:220px"><canvas id="ch-co2-ets"></canvas></div>
+    </div>
+    <div class="chart-card span-12">
+      <div class="card-header"><span class="card-title">TTF Erdgas (EUR/MWh)</span><span class="card-source">Energy-Charts / Yahoo Finance</span></div>
+      <div class="chart-wrap" style="height:180px"><canvas id="ch-ttf"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TAB: ROHSTOFFE ══ -->
+<div class="tab-panel" id="tab-rohstoffe">
+  <div class="kpi-strip">
+    <div class="kpi-card" style="--kpi-color:var(--orange)" data-key="brent" onclick="toggleCard(this)">
+      <span class="kpi-check">✓</span><div class="kpi-label">Brent Crude</div>
+      <div class="kpi-value" id="rv-brent">—</div><div class="kpi-unit" id="rv-brent-u">USD/Barrel</div>
+    </div>
+    <div class="kpi-card" style="--kpi-color:var(--yellow)" data-key="wti" onclick="toggleCard(this)">
+      <span class="kpi-check">✓</span><div class="kpi-label">WTI Crude</div>
+      <div class="kpi-value" id="rv-wti">—</div><div class="kpi-unit" id="rv-wti-u">USD/Barrel</div>
+    </div>
+    <div class="kpi-card" style="--kpi-color:var(--accent2)" data-key="natgas" onclick="toggleCard(this)">
+      <span class="kpi-check">✓</span><div class="kpi-label">Nat. Gas (Henry Hub)</div>
+      <div class="kpi-value" id="rv-ng">—</div><div class="kpi-unit">USD/MMBtu</div>
+    </div>
+    <div class="kpi-card" style="--kpi-color:var(--coal)" data-key="coal" onclick="toggleCard(this)">
+      <span class="kpi-check">✓</span><div class="kpi-label">Kohle (API2)</div>
+      <div class="kpi-value" id="rv-coal">—</div><div class="kpi-unit">USD/t</div>
+    </div>
+    <div class="kpi-card" style="--kpi-color:var(--red)" data-key="heizoel" onclick="toggleCard(this)">
+      <span class="kpi-check">✓</span><div class="kpi-label">Heizöl</div>
+      <div class="kpi-value" id="rv-ho">—</div><div class="kpi-unit">USD/gal</div>
+    </div>
+  </div>
+  <div class="chart-grid">
+    <div class="chart-card span-6">
+      <div class="card-header"><span class="card-title">Brent & WTI Rohöl</span><span class="card-source">Yahoo Finance</span></div>
+      <div class="chart-wrap" style="height:220px"><canvas id="ch-crude"></canvas></div>
+    </div>
+    <div class="chart-card span-6">
+      <div class="card-header"><span class="card-title">Erdgas & Kohle</span><span class="card-source">Yahoo Finance</span></div>
+      <div class="chart-wrap" style="height:220px"><canvas id="ch-gas-coal"></canvas></div>
+    </div>
+    <div class="chart-card span-12">
+      <div class="card-header"><span class="card-title">Rohstoffe Langfrist (bis 20 J, monatlich)</span><span class="card-source">Yahoo Finance</span></div>
+      <div class="chart-wrap" style="height:200px"><canvas id="ch-commodities-long"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TAB: KRAFTSTOFF ══ -->
+<div class="tab-panel" id="tab-kraftstoff">
+  <p class="section-title">Kraftstoffpreise Deutschland · Tankerkönig · 20+ Regionen</p>
+  <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
+    <span class="ctrl-label">Filter nach:</span>
+    <button class="btn" onclick="fuelFilter('all')" id="ff-all">Alle Regionen</button>
+    <button class="btn" onclick="fuelFilter('north')">Nord</button>
+    <button class="btn" onclick="fuelFilter('south')">Süd</button>
+    <button class="btn" onclick="fuelFilter('west')">West</button>
+    <button class="btn" onclick="fuelFilter('east')">Ost</button>
+    <div class="toolbar-sep"></div>
+    <span class="ctrl-label">Kraftstoff:</span>
+    <select id="fuel-type" onchange="renderKraftstoff()" style="font-family:'DM Mono',monospace;font-size:11px;border:1px solid var(--border);background:var(--bg2);padding:3px 6px;border-radius:3px">
+      <option value="e5">Super E5</option>
+      <option value="e10">Super E10</option>
+      <option value="diesel">Diesel</option>
+    </select>
+  </div>
+
+  <div class="kpi-strip" id="kpi-fuel-national">
+    <div class="kpi-card" style="--kpi-color:var(--yellow)" data-key="e5_nat" onclick="toggleCard(this)">
+      <span class="kpi-check">✓</span><div class="kpi-label">E5 bundesweit Ø</div>
+      <div class="kpi-value" id="fv-e5">—</div><div class="kpi-unit">EUR/Liter</div>
+    </div>
+    <div class="kpi-card" style="--kpi-color:var(--accent2)" data-key="e10_nat" onclick="toggleCard(this)">
+      <span class="kpi-check">✓</span><div class="kpi-label">E10 bundesweit Ø</div>
+      <div class="kpi-value" id="fv-e10">—</div><div class="kpi-unit">EUR/Liter</div>
+    </div>
+    <div class="kpi-card" style="--kpi-color:var(--text2)" data-key="diesel_nat" onclick="toggleCard(this)">
+      <span class="kpi-check">✓</span><div class="kpi-label">Diesel bundesweit Ø</div>
+      <div class="kpi-value" id="fv-diesel">—</div><div class="kpi-unit">EUR/Liter</div>
     </div>
   </div>
 
-  <!-- TAB: MARKTPREISE -->
-  <div class="tab-panel" id="tab-markt">
-    <p class="section-title">Börsenpreise · Day-Ahead & CO₂</p>
-    <div class="kpi-strip">
-      <div class="kpi-card" style="--accent-line:var(--accent)">
-        <div class="kpi-label">Day-Ahead DE-LU</div>
-        <div class="kpi-value" id="m-da-price">—</div>
-        <div class="kpi-unit">EUR/MWh</div>
-      </div>
-      <div class="kpi-card" style="--accent-line:var(--purple)">
-        <div class="kpi-label">EU ETS CO₂</div>
-        <div class="kpi-value" id="m-co2-price">—</div>
-        <div class="kpi-unit">EUR/tCO₂</div>
-      </div>
-      <div class="kpi-card" style="--accent-line:var(--orange)">
-        <div class="kpi-label">TTF Erdgas</div>
-        <div class="kpi-value" id="m-ttf-price">—</div>
-        <div class="kpi-unit">EUR/MWh</div>
-      </div>
-    </div>
-    <div class="chart-grid">
-      <div class="chart-card span-6">
-        <div class="card-header">
-          <span class="card-title">Day-Ahead Preisverlauf</span>
-          <span class="card-source">Energy-Charts</span>
-        </div>
-        <div class="chart-wrap" style="height:220px"><canvas id="chart-da-history"></canvas></div>
-      </div>
-      <div class="chart-card span-6">
-        <div class="card-header">
-          <span class="card-title">CO₂-Zertifikate (EU ETS)</span>
-          <span class="card-source">Ember Climate</span>
-        </div>
-        <div class="chart-wrap" style="height:220px"><canvas id="chart-co2-ets"></canvas></div>
-      </div>
+  <div id="fuel-regions-grid" class="fuel-grid"></div>
+
+  <div class="chart-grid">
+    <div class="chart-card span-12">
+      <div class="card-header"><span class="card-title">Kraftstoffpreise nach Region (Balkenvergleich)</span><span class="card-source">Tankerkönig</span></div>
+      <div class="chart-wrap" style="height:260px"><canvas id="ch-fuel-bar"></canvas></div>
     </div>
   </div>
 
-  <!-- TAB: ROHSTOFFE -->
-  <div class="tab-panel" id="tab-rohstoffe">
-    <p class="section-title">Energierohstoffe & Kraftstoffpreise</p>
-    <div class="kpi-strip">
-      <div class="kpi-card" style="--accent-line:var(--orange)">
-        <div class="kpi-label">Brent Crude</div>
-        <div class="kpi-value" id="r-brent">—</div>
-        <div class="kpi-unit">USD/Barrel</div>
-      </div>
-      <div class="kpi-card" style="--accent-line:var(--accent2)">
-        <div class="kpi-label">Nat. Gas (Henry Hub)</div>
-        <div class="kpi-value" id="r-natgas">—</div>
-        <div class="kpi-unit">USD/MMBtu</div>
-      </div>
-      <div class="kpi-card" style="--accent-line:var(--yellow)">
-        <div class="kpi-label">Super E5 (DE Ø)</div>
-        <div class="kpi-value" id="r-e5">—</div>
-        <div class="kpi-unit">EUR/Liter</div>
-      </div>
-      <div class="kpi-card" style="--accent-line:var(--yellow)">
-        <div class="kpi-label">Super E10 (DE Ø)</div>
-        <div class="kpi-value" id="r-e10">—</div>
-        <div class="kpi-unit">EUR/Liter</div>
-      </div>
-      <div class="kpi-card" style="--accent-line:var(--text2)">
-        <div class="kpi-label">Diesel (DE Ø)</div>
-        <div class="kpi-value" id="r-diesel">—</div>
-        <div class="kpi-unit">EUR/Liter</div>
-      </div>
-    </div>
-    <div class="chart-grid">
-      <div class="chart-card span-6">
-        <div class="card-header">
-          <span class="card-title">Brent Rohöl – 6 Monate</span>
-          <span class="card-source">Yahoo Finance</span>
-        </div>
-        <div class="chart-wrap" style="height:220px"><canvas id="chart-brent"></canvas></div>
-      </div>
-      <div class="chart-card span-6">
-        <div class="card-header">
-          <span class="card-title">Kraftstoffpreise DE</span>
-          <span class="card-source">Tankerkönig</span>
-        </div>
-        <div id="fuel-table-wrap">
-          <div class="loading-state"><span class="spinner"></span> Lädt…</div>
-        </div>
-      </div>
+  <!-- DE Karte (SVG schematisch) -->
+  <div class="chart-grid">
+    <div class="chart-card span-12">
+      <div class="card-header"><span class="card-title">Deutschland-Karte – Kraftstoffpreise</span><span class="card-source">Schematisch nach Bundesland</span></div>
+      <div id="de-map-wrap"></div>
     </div>
   </div>
+</div>
 
-  <!-- TAB: ERNEUERBARE -->
-  <div class="tab-panel" id="tab-erneuerbare">
-    <p class="section-title">Ausbau Erneuerbare Energien · Deutschland</p>
-    <div class="chart-grid">
-      <div class="chart-card span-6">
-        <div class="card-header">
-          <span class="card-title">Installierte Leistung nach Technologie</span>
-          <span class="card-source">Energy-Charts · Fraunhofer ISE</span>
-        </div>
-        <div class="chart-wrap" style="height:240px"><canvas id="chart-installed"></canvas></div>
-      </div>
-      <div class="chart-card span-6">
-        <div class="card-header">
-          <span class="card-title">Anteil Erneuerbare am Strommix</span>
-          <span class="card-source">Energy-Charts</span>
-        </div>
-        <div class="chart-wrap" style="height:240px"><canvas id="chart-ren-share"></canvas></div>
-      </div>
-      <div class="chart-card span-12">
-        <div class="card-header">
-          <span class="card-title">Installierte Leistung gesamt (Wind + Solar + Biomasse)</span>
-          <span class="card-source">BNetzA · wöchentlich</span>
-        </div>
-        <div id="bundesland-chart-wrap" style="height:260px"></div>
-      </div>
+<!-- ══ TAB: EUROPA ══ -->
+<div class="tab-panel" id="tab-europa">
+  <p class="section-title">Europäische Strompreise & Erzeugung im Vergleich</p>
+  <div class="country-grid" id="eu-price-cards"></div>
+  <div class="chart-grid" style="margin-top:14px">
+    <div class="chart-card span-12">
+      <div class="card-header"><span class="card-title">Strompreisvergleich Europa</span><span class="card-source">Energy-Charts · Fraunhofer ISE</span></div>
+      <div class="chart-wrap" style="height:240px"><canvas id="ch-eu-prices"></canvas></div>
+    </div>
+    <div class="chart-card span-6">
+      <div class="card-header"><span class="card-title">Gasspeicher nach Land</span><span class="card-source">GIE AGSI+</span></div>
+      <div id="gas-country-wrap" class="chart-wrap" style="height:240px"><canvas id="ch-gas-countries"></canvas></div>
+    </div>
+    <div class="chart-card span-6">
+      <div class="card-header"><span class="card-title">Installierte EE-Kapazität Europa</span><span class="card-source">Energy-Charts</span></div>
+      <div class="chart-wrap" style="height:240px"><canvas id="ch-eu-installed"></canvas></div>
     </div>
   </div>
+</div>
 
-  <!-- TAB: GAS -->
-  <div class="tab-panel" id="tab-gas">
-    <p class="section-title">Gasspeicher Europa · GIE AGSI+</p>
-    <div class="kpi-strip">
-      <div class="kpi-card" style="--accent-line:var(--accent2)">
-        <div class="kpi-label">EU Gasspeicher</div>
-        <div class="kpi-value" id="g-eu-fill">—</div>
-        <div class="kpi-unit">% Füllstand</div>
-      </div>
-      <div class="kpi-card" style="--accent-line:var(--accent)">
-        <div class="kpi-label">DE Gasspeicher</div>
-        <div class="kpi-value" id="g-de-fill">—</div>
-        <div class="kpi-unit">% Füllstand</div>
-      </div>
+<!-- ══ TAB: GAS ══ -->
+<div class="tab-panel" id="tab-gas">
+  <div class="kpi-strip">
+    <div class="kpi-card" style="--kpi-color:var(--accent2)" data-key="gas_eu" onclick="toggleCard(this)">
+      <span class="kpi-check">✓</span><div class="kpi-label">EU Gasspeicher</div>
+      <div class="kpi-value" id="gv-eu">—</div><div class="kpi-unit">% Füllstand</div>
     </div>
-    <div class="chart-grid">
-      <div class="chart-card span-12">
-        <div class="card-header">
-          <span class="card-title">Europäische Gasspeicher-Füllstände</span>
-          <span class="card-source">GIE AGSI+</span>
-        </div>
-        <div class="chart-wrap" style="height:240px"><canvas id="chart-gas-storage"></canvas></div>
-      </div>
+    <div class="kpi-card" style="--kpi-color:var(--accent)" data-key="gas_de" onclick="toggleCard(this)">
+      <span class="kpi-check">✓</span><div class="kpi-label">DE Gasspeicher</div>
+      <div class="kpi-value" id="gv-de">—</div><div class="kpi-unit">% Füllstand</div>
+    </div>
+    <div class="kpi-card" style="--kpi-color:var(--yellow)" data-key="ttf_now" onclick="toggleCard(this)">
+      <span class="kpi-check">✓</span><div class="kpi-label">TTF Spot (aktuell)</div>
+      <div class="kpi-value" id="gv-ttf">—</div><div class="kpi-unit">EUR/MWh</div>
     </div>
   </div>
+  <div class="chart-grid">
+    <div class="chart-card span-12">
+      <div class="card-header"><span class="card-title">EU Gasspeicher-Füllstände – 2 Jahre</span><span class="card-source">GIE AGSI+</span></div>
+      <div class="chart-wrap" style="height:240px"><canvas id="ch-gas-eu"></canvas></div>
+    </div>
+    <div class="chart-card span-12">
+      <div class="card-header"><span class="card-title">Gasspeicher nach Land</span><span class="card-source">GIE AGSI+</span></div>
+      <div class="chart-wrap" style="height:260px"><canvas id="ch-gas-bar"></canvas></div>
+    </div>
+  </div>
+</div>
 
-  <!-- TAB: WETTER -->
-  <div class="tab-panel" id="tab-wetter">
-    <p class="section-title">Wetterdaten für Erneuerbare-Prognose · Open-Meteo</p>
-    <div class="kpi-strip" id="kpi-weather"></div>
-    <div class="chart-grid">
-      <div class="chart-card span-6">
-        <div class="card-header">
-          <span class="card-title">Solarstrahlung 72h (Berlin)</span>
-          <span class="card-source">Open-Meteo</span>
-        </div>
-        <div class="chart-wrap" style="height:220px"><canvas id="chart-radiation"></canvas></div>
-      </div>
-      <div class="chart-card span-6">
-        <div class="card-header">
-          <span class="card-title">Windgeschwindigkeit 72h (Berlin)</span>
-          <span class="card-source">Open-Meteo</span>
-        </div>
-        <div class="chart-wrap" style="height:220px"><canvas id="chart-wind-speed"></canvas></div>
-      </div>
+<!-- ══ TAB: ERNEUERBARE ══ -->
+<div class="tab-panel" id="tab-erneuerbare">
+  <div class="chart-grid">
+    <div class="chart-card span-6">
+      <div class="card-header"><span class="card-title">Installierte Leistung DE – Historisch</span><span class="card-source">Energy-Charts · Fraunhofer ISE</span></div>
+      <div class="chart-wrap" style="height:240px"><canvas id="ch-installed-long"></canvas></div>
+    </div>
+    <div class="chart-card span-6">
+      <div class="card-header"><span class="card-title">Anteil EE – Jahresentwicklung</span><span class="card-source">Energy-Charts</span></div>
+      <div class="chart-wrap" style="height:240px"><canvas id="ch-ren-yearly"></canvas></div>
+    </div>
+    <div class="chart-card span-12">
+      <div class="card-header"><span class="card-title">Installierte Leistung nach Bundesland (Wind + Solar, ~2023)</span><span class="card-source">BDEW / Fraunhofer ISE</span></div>
+      <div class="chart-wrap" style="height:300px"><canvas id="ch-bundesland"></canvas></div>
     </div>
   </div>
+</div>
 
-  <!-- TAB: MAKRO -->
-  <div class="tab-panel" id="tab-makro">
-    <p class="section-title">Inflation & Makro · EZB</p>
-    <div class="kpi-strip">
-      <div class="kpi-card" style="--accent-line:var(--red)">
-        <div class="kpi-label">HVPI Deutschland</div>
-        <div class="kpi-value" id="mk-hicp">—</div>
-        <div class="kpi-unit">% p.a. (aktuell)</div>
-      </div>
-      <div class="kpi-card" style="--accent-line:var(--accent2)">
-        <div class="kpi-label">EUR/USD</div>
-        <div class="kpi-value" id="mk-eurusd">—</div>
-        <div class="kpi-unit">Wechselkurs</div>
-      </div>
+<!-- ══ TAB: WETTER ══ -->
+<div class="tab-panel" id="tab-wetter">
+  <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+    <span class="ctrl-label">Stadt:</span>
+    <select id="weather-city" onchange="renderWetter()" style="font-family:'DM Mono',monospace;font-size:11px;border:1px solid var(--border);background:var(--bg2);padding:3px 8px;border-radius:3px">
+      <option value="berlin">Berlin</option>
+      <option value="hamburg">Hamburg</option>
+      <option value="munich">München</option>
+      <option value="cologne">Köln</option>
+      <option value="frankfurt">Frankfurt</option>
+      <option value="stuttgart">Stuttgart</option>
+      <option value="leipzig">Leipzig</option>
+      <option value="paris">Paris</option>
+      <option value="vienna">Wien</option>
+    </select>
+  </div>
+  <div class="kpi-strip" id="kpi-weather"></div>
+  <div class="chart-grid">
+    <div class="chart-card span-6">
+      <div class="card-header"><span class="card-title">Solarstrahlung 7 Tage</span><span class="card-source">Open-Meteo</span></div>
+      <div class="chart-wrap" style="height:220px"><canvas id="ch-radiation"></canvas></div>
     </div>
-    <div class="chart-grid">
-      <div class="chart-card span-12">
-        <div class="card-header">
-          <span class="card-title">HVPI Inflation Deutschland (monatlich, 36 Monate)</span>
-          <span class="card-source">EZB Statistical Data Warehouse</span>
-        </div>
-        <div class="chart-wrap" style="height:220px"><canvas id="chart-inflation"></canvas></div>
-      </div>
-      <div class="chart-card span-6">
-        <div class="card-header">
-          <span class="card-title">EUR/USD Wechselkurs</span>
-          <span class="card-source">EZB</span>
-        </div>
-        <div class="chart-wrap" style="height:200px"><canvas id="chart-eurusd"></canvas></div>
-      </div>
+    <div class="chart-card span-6">
+      <div class="card-header"><span class="card-title">Windgeschwindigkeit (100m) 7 Tage</span><span class="card-source">Open-Meteo</span></div>
+      <div class="chart-wrap" style="height:220px"><canvas id="ch-windspeed"></canvas></div>
+    </div>
+    <div class="chart-card span-12">
+      <div class="card-header"><span class="card-title">Alle Stationen – aktuelle Werte</span><span class="card-source">Open-Meteo</span></div>
+      <div id="weather-table-wrap"><div class="loading"><span class="spinner"></span>Lädt…</div></div>
     </div>
   </div>
+</div>
+
+<!-- ══ TAB: MAKRO ══ -->
+<div class="tab-panel" id="tab-makro">
+  <div class="kpi-strip">
+    <div class="kpi-card" style="--kpi-color:var(--red)" data-key="hicp_de" onclick="toggleCard(this)">
+      <span class="kpi-check">✓</span><div class="kpi-label">HVPI DE</div>
+      <div class="kpi-value" id="mv-hicp">—</div><div class="kpi-unit">% p.a.</div>
+    </div>
+    <div class="kpi-card" style="--kpi-color:var(--orange)" data-key="hicp_energy" onclick="toggleCard(this)">
+      <span class="kpi-check">✓</span><div class="kpi-label">HVPI Energie DE</div>
+      <div class="kpi-value" id="mv-hicp-e">—</div><div class="kpi-unit">% p.a.</div>
+    </div>
+    <div class="kpi-card" style="--kpi-color:var(--accent2)" data-key="eurusd" onclick="toggleCard(this)">
+      <span class="kpi-check">✓</span><div class="kpi-label">EUR/USD</div>
+      <div class="kpi-value" id="mv-eurusd">—</div><div class="kpi-unit">Wechselkurs</div>
+    </div>
+    <div class="kpi-card" style="--kpi-color:var(--purple)" data-key="ecb_rate" onclick="toggleCard(this)">
+      <span class="kpi-check">✓</span><div class="kpi-label">EZB Leitzins</div>
+      <div class="kpi-value" id="mv-ecbrate">—</div><div class="kpi-unit">% p.a.</div>
+    </div>
+  </div>
+  <div class="chart-grid">
+    <div class="chart-card span-8">
+      <div class="card-header"><span class="card-title">HVPI Inflation (DE, EU, AT, FR) – 20 Jahre</span><span class="card-source">EZB SDW</span></div>
+      <div class="chart-wrap" style="height:220px"><canvas id="ch-inflation"></canvas></div>
+    </div>
+    <div class="chart-card span-4">
+      <div class="card-header"><span class="card-title">EZB Leitzins</span><span class="card-source">EZB SDW</span></div>
+      <div class="chart-wrap" style="height:220px"><canvas id="ch-ecb-rate"></canvas></div>
+    </div>
+    <div class="chart-card span-6">
+      <div class="card-header"><span class="card-title">EUR/USD & EUR/GBP</span><span class="card-source">EZB</span></div>
+      <div class="chart-wrap" style="height:200px"><canvas id="ch-fx"></canvas></div>
+    </div>
+    <div class="chart-card span-6">
+      <div class="card-header"><span class="card-title">Energie-Inflation vs. Gesamt-HVPI</span><span class="card-source">EZB SDW</span></div>
+      <div class="chart-wrap" style="height:200px"><canvas id="ch-inflation-energy"></canvas></div>
+    </div>
+  </div>
+</div>
 
 </main>
 
 <div class="status-bar">
-  <span id="st-smard">● SMARD</span>
-  <span id="st-echarts">● Energy-Charts</span>
-  <span id="st-agsi">● AGSI</span>
-  <span id="st-ecb">● EZB</span>
-  <span id="st-weather">● Open-Meteo</span>
-  <span id="st-tank">● Tankerkönig</span>
-  <span style="margin-left:auto">Alle Preise ohne Gewähr · Nur öffentliche APIs · Kein Login erforderlich</span>
+  <span class="st-item st-ok" id="st-smard">SMARD</span>
+  <span class="st-item st-ok" id="st-ec">Energy-Charts</span>
+  <span class="st-item st-ok" id="st-agsi">AGSI</span>
+  <span class="st-item st-ok" id="st-ecb">EZB</span>
+  <span class="st-item st-ok" id="st-weather">Open-Meteo</span>
+  <span class="st-item st-ok" id="st-fuel">Tankerkönig</span>
+  <span class="st-item st-ok" id="st-yahoo">Yahoo Finance</span>
+  <span style="margin-left:auto">Alle Preise ohne Gewähr · Öffentliche APIs · Kein Login</span>
+  <span id="next-update-label" style="color:var(--text3)"></span>
 </div>
 
 <script>
-const STATE = { data:{}, charts:{}, eurUsd:1.09 };
-const BASE_URL = './data/';
+// ══════════════════════════════════════════════════════════
+// STATE & CONFIG
+// ══════════════════════════════════════════════════════════
+const S = {
+  data: {},
+  charts: {},
+  eurUsd: 1.09,
+  selectedCards: new Set(),
+  selectMode: false,
+};
+const D = './data/';
 
-Chart.defaults.color = '#8493b0';
-Chart.defaults.borderColor = '#1e2535';
-Chart.defaults.font.family = "'IBM Plex Mono', monospace";
-Chart.defaults.font.size = 11;
+// Chart.js defaults – light theme
+Chart.defaults.color = '#5a5449';
+Chart.defaults.borderColor = '#d8d3c5';
+Chart.defaults.font.family = "'DM Mono', monospace";
+Chart.defaults.font.size = 10;
 Chart.defaults.plugins.legend.display = false;
-Chart.defaults.plugins.tooltip.backgroundColor = '#10131a';
-Chart.defaults.plugins.tooltip.borderColor = '#2a3248';
+Chart.defaults.plugins.tooltip.backgroundColor = '#fffef9';
+Chart.defaults.plugins.tooltip.borderColor = '#d8d3c5';
 Chart.defaults.plugins.tooltip.borderWidth = 1;
-Chart.defaults.plugins.tooltip.titleColor = '#d4dbe8';
-Chart.defaults.plugins.tooltip.bodyColor = '#8493b0';
+Chart.defaults.plugins.tooltip.titleColor = '#1a1714';
+Chart.defaults.plugins.tooltip.bodyColor = '#5a5449';
 Chart.defaults.plugins.tooltip.padding = 10;
 
-const LINE_OPTS = {
+const LINE_BASE = {
   responsive:true, maintainAspectRatio:false,
   interaction:{mode:'index',intersect:false},
   scales:{
-    x:{grid:{color:'#1e2535'},ticks:{maxTicksLimit:8}},
-    y:{grid:{color:'#1e2535'},ticks:{maxTicksLimit:6}}
+    x:{grid:{color:'#edeae0'},ticks:{maxTicksLimit:9}},
+    y:{grid:{color:'#edeae0'},ticks:{maxTicksLimit:6}}
   },
-  elements:{point:{radius:0,hoverRadius:4},line:{tension:0.3,borderWidth:1.5}}
+  elements:{point:{radius:0,hoverRadius:4},line:{tension:0.3,borderWidth:1.8}}
 };
 
-async function loadFile(name){
-  try{
-    const r=await fetch(`${BASE_URL}${name}.json?t=${Date.now()}`);
-    if(!r.ok)throw new Error(r.status);
+// ══════════════════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════════════════
+const fmtN = (n, d=1) => n==null||isNaN(n) ? '—' : (+n).toLocaleString('de-DE',{minimumFractionDigits:d,maximumFractionDigits:d});
+const fmtDt = iso => { if(!iso)return'—'; const d=new Date(iso); return d.toLocaleString('de-DE',{dateStyle:'short',timeStyle:'short'}); };
+const fmtTs = ts => { const d=new Date(ts); return d.toLocaleString('de-DE',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}); };
+const fmtTsShort = ts => { const d=new Date(ts); return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; };
+
+function smooth(arr, w) {
+  if (!w || w < 2) return arr;
+  return arr.map((v, i) => {
+    const sl = arr.slice(Math.max(0, i-w+1), i+1).filter(x=>x!=null);
+    return sl.length ? sl.reduce((a,b)=>a+b,0)/sl.length : null;
+  });
+}
+
+function applyInflation(values, dates, series, baseYear) {
+  if (!series?.length) return values;
+  const cpi = {};
+  series.forEach(p => cpi[p.period] = p.value);
+  const basePts = series.filter(p => p.period.startsWith(String(baseYear)));
+  if (!basePts.length) return values;
+  const baseAvg = basePts.reduce((a,b)=>a+b.value,0)/basePts.length;
+  return values.map((v, i) => {
+    if (v==null) return null;
+    const mo = dates[i]?.substring(0,7);
+    const rate = cpi[mo] ?? baseAvg;
+    const yrs = (new Date(dates[i]) - new Date(`${baseYear}-07-01`))/(365.25*86400000);
+    const factor = Math.pow(1 + rate/100, yrs);
+    return +(v / factor).toFixed(2);
+  });
+}
+
+function getFilters() {
+  return {
+    range:    parseInt(document.getElementById('ctrl-range').value),
+    inflation: document.getElementById('ctrl-inflation').checked,
+    baseYear:  parseInt(document.getElementById('ctrl-base-year').value),
+    currency:  document.getElementById('ctrl-currency').value,
+    smoothW:   parseInt(document.getElementById('ctrl-smooth').value),
+    chartType: document.getElementById('ctrl-charttype').value,
+  };
+}
+
+function filterRange(items, days, keyTs='ts') {
+  const cutoff = Date.now() - days*86400*1000;
+  return items.filter(p => (p[keyTs]||0) >= cutoff);
+}
+
+function downsample(arr, maxPts=200) {
+  if (arr.length <= maxPts) return arr;
+  const step = Math.ceil(arr.length/maxPts);
+  return arr.filter((_,i)=>i%step===0);
+}
+
+function mkChart(id, type, labels, datasets, extraOpts={}) {
+  if (S.charts[id]) S.charts[id].destroy();
+  const el = document.getElementById(id);
+  if (!el) return;
+  const opts = JSON.parse(JSON.stringify(LINE_BASE));
+  Object.assign(opts, extraOpts);
+  if (type === 'bar') {
+    opts.elements = {};
+    opts.scales.x.grid = {color:'#edeae0'};
+  }
+  S.charts[id] = new Chart(el, {type, data:{labels, datasets}, options:opts});
+  return S.charts[id];
+}
+
+function mkLine(id, labels, datasets, extraOpts={}) {
+  const f = getFilters();
+  const type = f.chartType === 'bar' ? 'bar' : 'line';
+  if (f.chartType === 'area') {
+    datasets = datasets.map(ds => ({...ds, fill:true, backgroundColor: (ds.borderColor||'#000')+'18'}));
+  }
+  return mkChart(id, type, labels, datasets, extraOpts);
+}
+
+// ══════════════════════════════════════════════════════════
+// DATA LOADING
+// ══════════════════════════════════════════════════════════
+async function loadFile(name) {
+  try {
+    const r = await fetch(`${D}${name}.json?t=${Date.now()}`);
+    if (!r.ok) throw new Error(r.status);
     return await r.json();
-  }catch(e){console.warn(`Failed ${name}:`,e);return null;}
+  } catch(e) { console.warn(`Load ${name}:`, e); return null; }
 }
 
-async function loadAll(){
-  const files=['meta','smard','energy_charts','gas_storage','macro','weather','commodities','expansion'];
-  const res=await Promise.allSettled(files.map(f=>loadFile(f)));
-  files.forEach((f,i)=>{if(res[i].status==='fulfilled'&&res[i].value)STATE.data[f]=res[i].value;});
-  updateMeta(); renderAll();
-}
-
-function updateMeta(){
-  const m=STATE.data.meta;
-  if(!m)return;
-  document.getElementById('last-update').textContent=fmtDt(m.last_fetch);
-  document.getElementById('next-update').textContent=fmtDt(m.next_fetch_approx);
-  const macro=STATE.data.macro;
-  if(macro?.eur_usd?.length)STATE.eurUsd=macro.eur_usd[macro.eur_usd.length-1].value;
-}
-
-function renderAll(){renderStrom();renderMarkt();renderRohstoffe();renderErneuerbare();renderGas();renderWetter();renderMakro();}
-
-function fmtDt(iso){if(!iso)return'—';const d=new Date(iso);return d.toLocaleString('de-DE',{dateStyle:'short',timeStyle:'short'});}
-function fmtNum(n,dec=1){if(n==null||isNaN(n))return'—';return Number(n).toLocaleString('de-DE',{minimumFractionDigits:dec,maximumFractionDigits:dec});}
-function fmtTs(ts){const d=new Date(ts);return d.toLocaleString('de-DE',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});}
-function rollingAvg(arr,w){if(!w||w<2)return arr;return arr.map((v,i)=>{const s=arr.slice(Math.max(0,i-w+1),i+1).filter(x=>x!=null);return s.reduce((a,b)=>a+b,0)/s.length;});}
-
-function mkLine(id,labels,datasets){
-  if(STATE.charts[id])STATE.charts[id].destroy();
-  STATE.charts[id]=new Chart(document.getElementById(id),{type:'line',data:{labels,datasets},options:JSON.parse(JSON.stringify(LINE_OPTS))});
-}
-
-function renderStrom(){
-  const ec=STATE.data.energy_charts, sm=STATE.data.smard;
-  const range=parseInt(document.getElementById('ctrl-range').value);
-  const smooth=parseInt(document.getElementById('ctrl-smooth').value);
-
-  if(ec?.day_ahead_price?.unix_seconds?.length){
-    const prices=ec.day_ahead_price.price, times=ec.day_ahead_price.unix_seconds;
-    const cutoff=Date.now()/1000-range*86400;
-    const f=times.map((t,i)=>({t,p:prices[i]})).filter(x=>x.t>=cutoff);
-    const last=f[f.length-1]?.p, prev=f[f.length-2]?.p;
-    document.getElementById('kpi-price').textContent=fmtNum(last,1);
-    document.getElementById('m-da-price').textContent=fmtNum(last,1);
-    if(last!=null&&prev!=null){
-      const d=last-prev, el=document.getElementById('kpi-price-delta');
-      el.textContent=(d>=0?'▲ +':'▼ ')+fmtNum(d,1)+' €/MWh';
-      el.className='kpi-delta '+(d>=0?'delta-up':'delta-down');
-    }
-    const labels=f.map(x=>fmtTs(x.t*1000));
-    let vals=f.map(x=>x.p);
-    if(smooth)vals=rollingAvg(vals,smooth*4);
-    mkLine('chart-price',labels,[{label:'Day-Ahead EUR/MWh',data:vals,borderColor:'#eab308',backgroundColor:'rgba(234,179,8,0.08)',fill:true}]);
-    mkLine('chart-da-history',labels,[{label:'Day-Ahead EUR/MWh',data:vals,borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,0.08)',fill:true}]);
-  }
-
-  if(sm?.series){
-    const s=sm.series;
-    const cutoff=Date.now()-range*86400*1000;
-    const keys=['wind_onshore','wind_offshore','solar','biomass','hydro','nuclear','lignite','hard_coal','natural_gas'];
-    const colors={wind_onshore:'#3b82f6',wind_offshore:'#1d4ed8',solar:'#eab308',biomass:'#22c55e',hydro:'#06b6d4',nuclear:'#a855f7',lignite:'#92400e',hard_coal:'#6b7280',natural_gas:'#f97316'};
-    const lde={wind_onshore:'Wind Onshore',wind_offshore:'Wind Offshore',solar:'Solar',biomass:'Biomasse',hydro:'Wasserkraft',nuclear:'Kernkraft',lignite:'Braunkohle',hard_coal:'Steinkohle',natural_gas:'Erdgas'};
-    const allTs=(s.wind_onshore||[]).filter(p=>p.ts>=cutoff).map(p=>p.ts);
-    const step=Math.max(1,Math.floor(allTs.length/120));
-    const sampled=allTs.filter((_,i)=>i%step===0);
-    const labels=sampled.map(fmtTs);
-    const datasets=keys.map(k=>{
-      let vals=sampled.map(ts=>{const pt=(s[k]||[]).find(p=>p.ts===ts);return pt?pt.value/1000:null;});
-      if(smooth)vals=rollingAvg(vals,smooth*4);
-      return{label:lde[k],data:vals,borderColor:colors[k],backgroundColor:colors[k]+'22',fill:true,borderWidth:1.5};
-    });
-    mkLine('chart-generation',labels,datasets);
-
-    const lastVal=k=>{const arr=s[k]||[];for(let i=arr.length-1;i>=0;i--)if(arr[i].value!=null)return arr[i].value/1000;return null;};
-    const wOn=lastVal('wind_onshore')||0, wOff=lastVal('wind_offshore')||0;
-    const sol=lastVal('solar')||0, bio=lastVal('biomass')||0;
-    const hyd=lastVal('hydro')||0, nuc=lastVal('nuclear')||0;
-    const lig=lastVal('lignite')||0, coal=lastVal('hard_coal')||0, gas=lastVal('natural_gas')||0;
-    const load=lastVal('load')||0;
-    document.getElementById('kpi-wind').textContent=fmtNum(wOn+wOff,1);
-    document.getElementById('kpi-solar').textContent=fmtNum(sol,1);
-    document.getElementById('kpi-load').textContent=fmtNum(load,1);
-    const total=wOn+wOff+sol+bio+hyd+nuc+lig+coal+gas;
-    const ren=wOn+wOff+sol+bio+hyd;
-    document.getElementById('kpi-ren').textContent=total>0?Math.round(ren/total*100):0;
-    document.getElementById('kpi-co2').textContent=total>0?Math.round((lig*900+coal*800+gas*400+nuc*5+ren*20)/total):0;
-    renderMixDonut({wOn,wOff,sol,bio,hyd,nuc,lig,coal,gas,renPct:total>0?Math.round(ren/total*100):0});
-  }
-}
-
-function renderMixDonut({wOn,wOff,sol,bio,hyd,nuc,lig,coal,gas,renPct}){
-  const wrap=document.getElementById('mix-donut');
-  wrap.innerHTML=`<div class="donut-canvas-wrap"><canvas id="chart-donut" width="180" height="180"></canvas><div class="donut-center"><div class="donut-pct">${renPct}%</div><div class="donut-sub">Erneuerb.</div></div></div><div class="legend-grid" id="donut-legend"></div>`;
-  const items=[
-    {k:'Wind',v:wOn+wOff,c:'#3b82f6'},{k:'Solar',v:sol,c:'#eab308'},
-    {k:'Biomasse',v:bio,c:'#22c55e'},{k:'Wasser',v:hyd,c:'#06b6d4'},
-    {k:'Kernkraft',v:nuc,c:'#a855f7'},{k:'Braunkohle',v:lig,c:'#92400e'},
-    {k:'Steinkohle',v:coal,c:'#6b7280'},{k:'Erdgas',v:gas,c:'#f97316'},
-  ].filter(i=>i.v>0);
-  const tot=items.reduce((a,b)=>a+b.v,0);
-  const leg=document.getElementById('donut-legend');
-  items.forEach(item=>{
-    const pct=tot>0?Math.round(item.v/tot*100):0;
-    leg.innerHTML+=`<div class="legend-item"><span class="legend-dot" style="background:${item.c}"></span><span class="legend-name">${item.k}</span><span class="legend-val">${pct}%</span></div>`;
+async function loadAll() {
+  const files = ['meta','smard','energy_charts','gas_storage','macro','weather','fuel','commodities','expansion','spot_prices','entsoe'];
+  const res = await Promise.allSettled(files.map(f => loadFile(f)));
+  files.forEach((f,i) => {
+    const ok = res[i].status==='fulfilled' && res[i].value;
+    S.data[f] = ok ? res[i].value : null;
+    const el = document.getElementById(`st-${f}`);
+    if (el) { el.className = `st-item ${ok?'st-ok':'st-err'}`; }
   });
-  if(STATE.charts['chart-donut'])STATE.charts['chart-donut'].destroy();
-  STATE.charts['chart-donut']=new Chart(document.getElementById('chart-donut'),{
-    type:'doughnut',
-    data:{labels:items.map(i=>i.k),datasets:[{data:items.map(i=>i.v),backgroundColor:items.map(i=>i.c),borderWidth:0,hoverOffset:4}]},
-    options:{responsive:false,cutout:'68%',plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${fmtNum(ctx.raw,1)} GW`}}}}
-  });
-}
-
-function renderMarkt(){
-  const comm=STATE.data.commodities;
-  if(comm?.eu_ets_co2?.series?.length){
-    const series=comm.eu_ets_co2.series.slice(-90);
-    const last=series[series.length-1]?.price_eur;
-    document.getElementById('m-co2-price').textContent=fmtNum(last,1);
-    mkLine('chart-co2-ets',series.map(p=>p.date),[{label:'EU ETS EUR/tCO₂',data:series.map(p=>p.price_eur),borderColor:'#a855f7',backgroundColor:'rgba(168,85,247,0.08)',fill:true}]);
-  }
-  if(comm?.ttf_gas){
-    const d=comm.ttf_gas, vals=d.values||d.price||[];
-    if(vals.length)document.getElementById('m-ttf-price').textContent=fmtNum(vals[vals.length-1],1);
-  }
-}
-
-function renderRohstoffe(){
-  const comm=STATE.data.commodities;
-  if(!comm)return;
-  const currency=document.getElementById('ctrl-currency').value;
-  if(comm.brent_crude?.series?.length){
-    const series=comm.brent_crude.series;
-    const last=series[series.length-1]?.price;
-    document.getElementById('r-brent').textContent=fmtNum(currency==='USD'?last:last/STATE.eurUsd,2);
-    mkLine('chart-brent',series.map(p=>new Date(p.ts*1000).toLocaleDateString('de-DE')),[{label:`Brent (${currency})`,data:series.map(p=>currency==='USD'?p.price:p.price/STATE.eurUsd),borderColor:'#f97316',backgroundColor:'rgba(249,115,22,0.08)',fill:true}]);
-  }
-  if(comm.natgas_henry_hub?.series?.length)document.getElementById('r-natgas').textContent=fmtNum(comm.natgas_henry_hub.series.at(-1)?.price,2);
-  if(comm.retail_fuel_de){
-    const f=comm.retail_fuel_de;
-    document.getElementById('r-e5').textContent=fmtNum(f.e5_avg,3);
-    document.getElementById('r-e10').textContent=fmtNum(f.e10_avg,3);
-    document.getElementById('r-diesel').textContent=fmtNum(f.diesel_avg,3);
-    document.getElementById('fuel-table-wrap').innerHTML=`<table class="data-table"><thead><tr><th>Kraftstoff</th><th style="text-align:right">Ø DE</th><th style="text-align:right">Einheit</th></tr></thead><tbody><tr><td>Super E5</td><td class="val">${fmtNum(f.e5_avg,3)}</td><td class="val" style="color:var(--text3)">EUR/L</td></tr><tr><td>Super E10</td><td class="val">${fmtNum(f.e10_avg,3)}</td><td class="val" style="color:var(--text3)">EUR/L</td></tr><tr><td>Diesel</td><td class="val">${fmtNum(f.diesel_avg,3)}</td><td class="val" style="color:var(--text3)">EUR/L</td></tr></tbody></table><p style="font-size:10px;color:var(--text3);margin-top:8px;font-family:monospace">Quelle: Tankerkönig · ${fmtDt(f.fetched_at)}</p>`;
-  }
-}
-
-function renderErneuerbare(){
-  const ec=STATE.data.energy_charts;
-  if(ec?.installed_capacity?.time){
-    const d=ec.installed_capacity, years=d.time, series=d.production_types||[];
-    const colors={'Wind onshore':'#3b82f6','Wind offshore':'#1d4ed8','Solar':'#eab308','Biomass':'#22c55e','Hydro Power':'#06b6d4','Nuclear':'#a855f7'};
-    const datasets=series.filter(s=>colors[s.name]).map(s=>({label:s.name,data:s.data,borderColor:colors[s.name],backgroundColor:colors[s.name]+'30',fill:false,tension:0.3}));
-    if(datasets.length){
-      if(STATE.charts['chart-installed'])STATE.charts['chart-installed'].destroy();
-      STATE.charts['chart-installed']=new Chart(document.getElementById('chart-installed'),{type:'line',data:{labels:years,datasets},options:{...JSON.parse(JSON.stringify(LINE_OPTS)),plugins:{legend:{display:true,labels:{color:'#8493b0',boxWidth:10,font:{size:10}}}}}});
-    }
-  }
-  if(ec?.renewables_share){
-    const d=ec.renewables_share, times=d.unix_seconds||[], vals=d.ren_share||d.share_of_generation_capacity||[];
-    const range=parseInt(document.getElementById('ctrl-range').value);
-    const cutoff=Date.now()/1000-range*86400;
-    const f=times.map((t,i)=>({t,v:vals[i]})).filter(x=>x.t>=cutoff);
-    mkLine('chart-ren-share',f.map(x=>fmtTs(x.t*1000)),[{label:'% Erneuerbare',data:f.map(x=>x.v),borderColor:'#22c55e',backgroundColor:'rgba(34,197,94,0.1)',fill:true}]);
-  }
-  const wrap=document.getElementById('bundesland-chart-wrap');
-  const installed=STATE.data.expansion?.installed_power_yearly||ec?.installed_power_yearly;
-  if(installed?.time){
-    wrap.innerHTML='<canvas id="chart-bundesland" style="height:240px"></canvas>';
-    const lastIdx=(installed.time||[]).length-1;
-    const types=(installed.production_types||[]).filter(s=>['Wind onshore','Wind offshore','Solar','Biomass'].includes(s.name));
-    const colors2={'Wind onshore':'#3b82f6','Wind offshore':'#1d4ed8','Solar':'#eab308','Biomass':'#22c55e'};
-    const datasets=types.map(s=>({label:s.name,data:[s.data[lastIdx]||0],backgroundColor:colors2[s.name]||'#4a5570'}));
-    if(STATE.charts['chart-bundesland'])STATE.charts['chart-bundesland'].destroy();
-    STATE.charts['chart-bundesland']=new Chart(document.getElementById('chart-bundesland'),{type:'bar',data:{labels:[`Deutschland ${installed.time?.[lastIdx]||''}`],datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{color:'#8493b0',boxWidth:10,font:{size:10}}}},scales:{x:{grid:{color:'#1e2535'},stacked:true},y:{grid:{color:'#1e2535'},stacked:true,title:{display:true,text:'GW',color:'#4a5570'}}}}});
-  } else {
-    wrap.innerHTML='<div class="map-placeholder"><span style="font-size:24px">🗺</span><span>Bundesländer-Daten: Wöchentlich via GitHub Actions</span><span style="font-size:10px;color:var(--text3)">Startet nach erstem Actions-Run</span></div>';
-  }
-}
-
-function renderGas(){
-  const g=STATE.data.gas_storage;
-  if(!g?.data?.length)return;
-  const data=g.data.slice(-90);
-  const fill=data.map(d=>parseFloat(d.full_is_percentage??d.status?.full_is_percentage??0));
-  document.getElementById('g-eu-fill').textContent=fmtNum(fill[fill.length-1],1);
-  mkLine('chart-gas-storage',data.map(d=>d.gasDayStart||d.date||''),[{label:'EU Gasspeicher %',data:fill,borderColor:'#06b6d4',backgroundColor:'rgba(6,182,212,0.1)',fill:true}]);
-}
-
-function renderWetter(){
-  const w=STATE.data.weather;
-  if(!w?.cities)return;
-  const strip=document.getElementById('kpi-weather');
-  strip.innerHTML='';
-  Object.entries(w.cities).forEach(([city,d])=>{
-    const cur=d.current;if(!cur)return;
-    const name=city.charAt(0).toUpperCase()+city.slice(1);
-    strip.innerHTML+=`<div class="kpi-card" style="--accent-line:var(--accent2)"><div class="kpi-label">${name}</div><div class="kpi-value">${fmtNum(cur.temperature_2m,1)}°</div><div class="kpi-unit">Wind: ${fmtNum(cur.wind_speed_10m,0)} km/h</div><div class="kpi-unit">☀ ${fmtNum(cur.direct_radiation,0)} W/m²</div></div>`;
-  });
-  const berlin=w.cities.berlin;
-  if(berlin?.hourly){
-    const h=berlin.hourly, times=h.time||[];
-    mkLine('chart-radiation',times.map(t=>t.substring(5)),[{label:'W/m²',data:h.direct_radiation||[],borderColor:'#eab308',backgroundColor:'rgba(234,179,8,0.1)',fill:true}]);
-    mkLine('chart-wind-speed',times.map(t=>t.substring(5)),[{label:'Wind 100m km/h',data:h.wind_speed_100m||[],borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,0.1)',fill:true}]);
-  }
-}
-
-function renderMakro(){
-  const m=STATE.data.macro;if(!m)return;
-  if(m.hicp_de?.series?.length){
-    const s=m.hicp_de.series;
-    document.getElementById('mk-hicp').textContent=fmtNum(s[s.length-1]?.value,1);
-    mkLine('chart-inflation',s.map(p=>p.period),[{label:'HVPI % p.a.',data:s.map(p=>p.value),borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,0.08)',fill:true}]);
-  }
-  if(m.eur_usd?.length){
-    document.getElementById('mk-eurusd').textContent=fmtNum(m.eur_usd[m.eur_usd.length-1]?.value,4);
-    mkLine('chart-eurusd',m.eur_usd.map(p=>p.date),[{label:'EUR/USD',data:m.eur_usd.map(p=>p.value),borderColor:'#06b6d4',backgroundColor:'rgba(6,182,212,0.08)',fill:true}]);
-  }
-}
-
-function applyFilters(){
-  const inf=document.getElementById('ctrl-inflation');
-  document.getElementById('inflation-opts').style.display=inf.checked?'flex':'none';
+  // update cross-source status
+  updateStatus();
+  updateMeta();
   renderAll();
 }
 
-document.querySelectorAll('.tab-btn').forEach(btn=>{
-  btn.addEventListener('click',()=>{
-    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
+function updateStatus() {
+  const map = {
+    'st-smard': 'smard', 'st-ec': 'energy_charts', 'st-agsi': 'gas_storage',
+    'st-ecb': 'macro', 'st-weather': 'weather', 'st-fuel': 'fuel', 'st-yahoo': 'commodities'
+  };
+  Object.entries(map).forEach(([elId, key]) => {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    const hasData = S.data[key] && Object.keys(S.data[key]).length > 2;
+    el.className = `st-item ${hasData ? 'st-ok' : 'st-warn'}`;
   });
-});
-
-function downloadView(){
-  const tab=document.querySelector('.tab-btn.active')?.dataset.tab||'strom';
-  const key={strom:'smard',markt:'commodities',rohstoffe:'commodities',erneuerbare:'expansion',gas:'gas_storage',wetter:'weather',makro:'macro'}[tab]||'meta';
-  const d=STATE.data[key];if(!d){alert('Keine Daten vorhanden.');return;}
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([JSON.stringify(d,null,2)],{type:'application/json'}));
-  a.download=`energie_${key}_${new Date().toISOString().substring(0,10)}.json`;
-  a.click();
 }
 
-function forceRefresh(){document.getElementById('last-update').textContent='Lädt…';loadAll();}
+function updateMeta() {
+  const m = S.data.meta;
+  if (!m) return;
+  document.getElementById('last-update').textContent = fmtDt(m.last_fetch);
+  document.getElementById('next-update-label').textContent = `Nächstes Update: ${fmtDt(m.next_fetch_approx)}`;
+  // EUR/USD
+  const macro = S.data.macro;
+  if (macro?.eur_usd?.length) S.eurUsd = macro.eur_usd.at(-1).value;
+}
 
-loadAll();
-setInterval(loadAll,15*60*1000);
-</script>
-</body>
-</html>
+// ══════════════════════════════════════════════════════════
+// RENDER ALL
+// ══════════════════════════════════════════════════════════
+function renderAll() {
+  renderStrom();
+  renderSpotpreise();
+  renderMarkt();
+  renderRohstoffe();
+  renderKraftstoff();
+  renderEuropa();
+  renderGas();
+  renderErneuerbare();
+  renderWetter();
+  renderMakro();
+}
+
+// ── STROM ────────────────────────────────────────────────
+function renderStrom() {
+  const ec = S.data.energy_charts;
+  const sm = S.data.smard;
+  const f  = getFilters();
+
+  // Day-ahead price
+  if (ec?.day_ahead_price_7d?.unix_seconds?.length) {
+    const times  = ec.day_ahead
