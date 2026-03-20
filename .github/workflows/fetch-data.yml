@@ -25,12 +25,12 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install requests
+        run: pip install requests pytz
 
       - name: Fetch all energy data
         run: python scripts/fetch_all.py
 
-      - name: Show data folder
+      - name: Show results
         run: ls -lh data/
 
       - name: Commit and push
