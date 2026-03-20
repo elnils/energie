@@ -29,9 +29,10 @@ jobs:
 
       - name: Fetch all energy data
         run: python scripts/fetch_all.py
+        continue-on-error: true
 
       - name: Show results
-        run: ls -lh data/
+        run: ls -lh data/ || echo "data folder empty"
 
       - name: Commit and push
         run: |
