@@ -327,7 +327,7 @@ def fetch_fuel():
                     except Exception as e:
                         print(f"Fehler bei {city}: {e}")
             
-    return all_results
+            return all_results
 
             d = r.json()
             if not d.get('ok'):
