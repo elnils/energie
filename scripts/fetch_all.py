@@ -298,34 +298,34 @@ def fetch_fuel():
 
     for city, (lat, lon) in FUEL_CITIES.items():
         try:
-import time
-
-def fetch_all_cities():
-    all_results = {}
-    
-    for city, coords in CITIES.items():
-        try:
-            r = get(
-                'https://tankerkoenig.de',
-                params={
-                    'lat': coords[0],
-                    'lng': coords[1],
-                    'rad': 10,        # 10km Radius reicht für Stadtgebiete meist aus
-                    'sort': 'dist',   # 'dist' nutzen, da type='all'
-                    'type': 'all',
-                    'apikey': api_key
-                },
-                timeout=20
-            )
-            data = r.json()
-            if data.get('ok'):
-                all_results[city] = data.get('stations', [])
+            import time
             
-            # WICHTIG: Kurze Pause, um das Rate-Limit nicht zu sprengen
-            time.sleep(1) 
-            
-        except Exception as e:
-            print(f"Fehler bei {city}: {e}")
+            def fetch_all_cities():
+                all_results = {}
+                
+                for city, coords in CITIES.items():
+                    try:
+                        r = get(
+                            'https://tankerkoenig.de',
+                            params={
+                                'lat': coords[0],
+                                'lng': coords[1],
+                                'rad': 10,        # 10km Radius reicht für Stadtgebiete meist aus
+                                'sort': 'dist',   # 'dist' nutzen, da type='all'
+                                'type': 'all',
+                                'apikey': api_key
+                            },
+                            timeout=20
+                        )
+                        data = r.json()
+                        if data.get('ok'):
+                            all_results[city] = data.get('stations', [])
+                        
+                        # WICHTIG: Kurze Pause, um das Rate-Limit nicht zu sprengen
+                        time.sleep(1) 
+                        
+                    except Exception as e:
+                        print(f"Fehler bei {city}: {e}")
             
     return all_results
 
