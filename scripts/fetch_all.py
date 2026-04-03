@@ -1,10 +1,3 @@
-Hier sind beide Dateien komplett zum Kopieren.
-
----
-
-# `scripts/fetch_all.py` — komplett
-
-```python
 """
 Energy Dashboard – Data Fetcher v3
 Korrekte SMARD-URL: /chart_data/{filter}/DE/{filter}_DE_{resolution}_{ts}.json
@@ -175,6 +168,7 @@ def fetch_energy_charts():
     results = {}
 
     # Strompreise – alle relevanten Bidding Zones
+    # DE hat Sonderfall: vor Okt 2018 = DE-AT-LU, danach = DE-LU
     bzn_list = [
         ('DE-LU',    'price_de'),
         ('AT',       'price_at'),
@@ -204,8 +198,11 @@ def fetch_energy_charts():
     # Historische Preise DE-LU monatlich (für 20-Jahre-Chart)
     try:
         end_str = now_utc().strftime('%Y-%m-%d')
+        # Neue Zone ab Okt 2018
         d1 = ec_get('price', {'bzn': 'DE-LU', 'start': '2018-10-01', 'end': end_str, 'interval': 'month'})
+        # Alte Zone
         d2 = ec_get('price', {'bzn': 'DE-AT-LU', 'start': '2005-01-01', 'end': '2018-09-30', 'interval': 'month'})
+        # Zusammenführen
         ts_combined = (d2.get('unix_seconds', []) + d1.get('unix_seconds', []))
         pr_combined = (d2.get('price', []) + d1.get('price', []))
         results['price_de_monthly_hist'] = {
@@ -296,6 +293,7 @@ def fetch_agsi():
             raw = r.json().get('data', [])
             cleaned = []
             for entry in raw:
+                # Mehrere mögliche Feldnamen normalisieren
                 fill = None
                 for field in ['full_is_percentage', 'trend', 'gasInStorage', 'fillLevelFull']:
                     val = entry.get(field)
@@ -508,7 +506,7 @@ def fetch_tankerkoenig():
                 'e10_avg':     avg(e10),  'e10_min': e10[0] if e10 else None, 'e10_max': e10[-1] if e10 else None,
                 'diesel_avg':  avg(die),  'diesel_min': die[0] if die else None, 'diesel_max': die[-1] if die else None,
                 'count': len(stations),
-                'cheapest_e5': {'name': stations[0].get('name',''), 'price': stations[0].get('e5',0), 'brand': stations[0].get('brand','')} if stations else None,
+                'cheapest_e5':    {'name': stations[0].get('name',''), 'price': stations[0].get('e5',0), 'brand': stations[0].get('brand','')} if stations else None,
             }
             time.sleep(0.25)
         except Exception as e:
@@ -528,4 +526,444 @@ def fetch_tankerkoenig():
         e10 = [s['e10']    for s in stations if isinstance(s.get('e10'), float)    and s['e10']    > 0.5]
         die = [s['diesel'] for s in stations if isinstance(s.get('diesel'), float) and s['diesel'] > 0.5]
         results['_national'] = {
-            'e5
+            'e5_avg': avg(e5), 'e10_avg': avg(e10), 'diesel_avg': avg(die),
+            'count': len(stations), 'unit': 'EUR/liter',
+        }
+    except Exception as e:
+        print(f'  ! tankerkoenig national: {e}')
+
+    save('fuel', {'updated': now_utc().isoformat(), 'source': 'Tankerkoenig CC', 'cities': results})
+
+# ════════════════════════════════════════════════════════
+# 7. YAHOO FINANCE – Rohstoffe
+#    Fallback: stooq.com (kein Auth, CSV)
+# ════════════════════════════════════════════════════════
+TICKERS = {
+    'brent_crude':   ('BZ=F',    'USD/Barrel'),
+    'wti_crude':     ('CL=F',    'USD/Barrel'),
+    'natgas_henry':  ('NG=F',    'USD/MMBtu'),
+    'coal':          ('MTF=F',   'USD/t'),
+    'gold':          ('GC=F',    'USD/oz'),
+    'silver':        ('SI=F',    'USD/oz'),
+    'uran':          ('UX=F',    'USD/lbs'),
+    'eur_usd_fx':    ('EURUSD=X',''),
+    'carbon_etf':    ('KRBN',    'USD'),
+}
+
+def yahoo_fetch(ticker, range_='2y'):
+    encoded = ticker.replace('=', '%3D')
+    url = f'https://query1.finance.yahoo.com/v8/finance/chart/{encoded}?range={range_}&interval=1d'
+    r = SESSION.get(url, timeout=20, headers={
+        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36',
+        'Accept': 'application/json',
+        'Referer': 'https://finance.yahoo.com',
+    })
+    r.raise_for_status()
+    result = r.json()['chart']['result'][0]
+    ts     = result['timestamp']
+    meta   = result.get('meta', {})
+    closes = result['indicators']['quote'][0]['close']
+    return {
+        'currency': meta.get('currency', ''),
+        'series': [{'ts': t, 'p': round(c, 4)} for t, c in zip(ts, closes) if c is not None]
+    }
+
+def stooq_fetch(symbol):
+    """Fallback-Quelle stooq.com – gibt CSV zurück"""
+    url = f'https://stooq.com/q/d/l/?s={symbol}&i=d'
+    r = SESSION.get(url, timeout=15, headers={'User-Agent': 'Mozilla/5.0'})
+    r.raise_for_status()
+    lines = r.text.strip().split('\n')
+    if len(lines) < 2:
+        return []
+    series = []
+    for line in lines[1:]:
+        parts = line.split(',')
+        if len(parts) >= 5:
+            try:
+                from datetime import datetime as dt
+                ts = int(dt.strptime(parts[0], '%Y-%m-%d').timestamp())
+                close = float(parts[4])
+                series.append({'ts': ts, 'p': round(close, 4)})
+            except:
+                pass
+    return series
+
+def fetch_commodities():
+    results = {}
+
+    for name, (ticker, unit) in TICKERS.items():
+        try:
+            d = yahoo_fetch(ticker)
+            results[name] = {'source': 'Yahoo Finance', 'unit': unit, 'ticker': ticker, **d}
+            print(f'    yahoo {name}: {len(d["series"])} Punkte')
+            time.sleep(0.35)
+        except Exception as e:
+            print(f'  ! Yahoo {name}: {e} – versuche Stooq...')
+            # Stooq Fallback
+            stooq_map = {
+                'brent_crude': 'cb.f',
+                'wti_crude':   'cl.f',
+                'natgas_henry':'ng.f',
+                'gold':        'gc.f',
+            }
+            if name in stooq_map:
+                try:
+                    series = stooq_fetch(stooq_map[name])
+                    results[name] = {'source': 'Stooq', 'unit': unit, 'series': series}
+                    print(f'    stooq {name}: {len(series)} Punkte')
+                except Exception as e2:
+                    print(f'  ! Stooq {name}: {e2}')
+                    results[name] = {'source': '', 'unit': unit, 'series': []}
+            else:
+                results[name] = {'source': '', 'unit': unit, 'series': []}
+
+    # EU ETS CO2 – Ember Climate (CSV, öffentlich)
+    try:
+        r = SESSION.get(
+            'https://ember-climate.org/app/uploads/2022/03/Carbon-Price-Viewer.csv',
+            timeout=20
+        )
+        if r.status_code == 200:
+            lines = r.text.strip().split('\n')
+            series = []
+            for line in lines[1:]:
+                parts = line.split(',')
+                if len(parts) >= 2:
+                    try:
+                        series.append({'date': parts[0].strip(), 'p': float(parts[1].strip())})
+                    except:
+                        pass
+            results['eu_ets_co2'] = {'source': 'Ember Climate', 'unit': 'EUR/tCO2', 'series': series}
+            print(f'    ember CO2: {len(series)} Punkte')
+    except Exception as e:
+        print(f'  ! Ember CO2: {e}')
+
+    # Benzinpreise Europa – GlobalPetrolPrices (öffentliche JSON-Daten)
+    try:
+        r = SESSION.get(
+            'https://www.globalpetrolprices.com/gasoline_prices/',
+            timeout=15,
+            headers={'User-Agent': 'Mozilla/5.0'}
+        )
+        # Diese Seite gibt HTML zurück, kein JSON – nur als Referenz
+        # Wir nutzen stattdessen den Tankerkoenig für DE
+        results['fuel_note'] = 'Tankerkoenig fuer DE, GlobalPetrolPrices als Referenz'
+    except:
+        pass
+
+    save('commodities', {'updated': now_utc().isoformat(), **results})
+
+# ════════════════════════════════════════════════════════
+# 8. OPEN POWER SYSTEM DATA – Bundesland-Kapazitäten
+#    https://open-power-system-data.org
+# ════════════════════════════════════════════════════════
+def fetch_bundesland():
+    results = {}
+
+    # OPSD Renewable Power Plants DE
+    try:
+        url = 'https://data.open-power-system-data.org/renewable_power_plants/latest/renewable_power_plants_DE.csv'
+        r = SESSION.get(url, timeout=90, stream=True)
+        content = b''
+        for chunk in r.iter_content(chunk_size=131072):
+            content += chunk
+            if len(content) > 8 * 1024 * 1024:
+                break
+
+        lines = content.decode('utf-8', errors='replace').split('\n')
+        header = [h.strip().strip('"').lower() for h in lines[0].split(',')]
+
+        def col(*names):
+            for n in names:
+                if n in header:
+                    return header.index(n)
+            return -1
+
+        state_idx    = col('federal_state', 'bundesland', 'state', 'land')
+        type_idx     = col('energy_source_level_2', 'energy_source', 'energietraeger', 'type')
+        cap_idx      = col('electrical_capacity', 'capacity_net_bnetza', 'nettonennleistung', 'capacity')
+        year_idx     = col('commissioning_date', 'start_up_date', 'inbetriebnahmedatum')
+
+        if state_idx < 0 or cap_idx < 0:
+            raise ValueError(f'Spalten nicht gefunden. Header: {header[:20]}')
+
+        # Aggregieren nach Bundesland + Technologie + Jahr
+        agg = {}  # {state: {type: {year: MW}}}
+        for line in lines[1:]:
+            parts = line.split(',')
+            if len(parts) <= max(state_idx, cap_idx):
+                continue
+            try:
+                state = parts[state_idx].strip().strip('"').strip()
+                etype = parts[type_idx].strip().strip('"') if type_idx >= 0 else 'Unbekannt'
+                cap   = float(parts[cap_idx].strip().replace('"', '') or 0)
+                year  = parts[year_idx][:4] if year_idx >= 0 and len(parts) > year_idx else 'unbekannt'
+                if not state or cap <= 0:
+                    continue
+                if state not in agg:
+                    agg[state] = {}
+                if etype not in agg[state]:
+                    agg[state][etype] = {}
+                agg[state][etype][year] = agg[state][etype].get(year, 0) + cap / 1000  # MW → GW
+            except (ValueError, IndexError):
+                pass
+
+        # Aufräumen: auf 3 Stellen runden
+        clean = {}
+        for state, types in agg.items():
+            clean[state] = {t: {yr: round(v, 3) for yr, v in yrs.items()} for t, yrs in types.items()}
+        results['by_bundesland'] = clean
+        results['source'] = 'OPSD – Open Power System Data'
+        results['row_count'] = len(lines)
+    except Exception as e:
+        print(f'  ! OPSD: {e}')
+        results['by_bundesland'] = {}
+        results['opsd_error'] = str(e)
+
+    # Fallback national via Energy-Charts
+    try:
+        r = SESSION.get(f'{EC}/installed_power', params={'country': 'de', 'time_step': 'yearly'}, timeout=20)
+        r.raise_for_status()
+        results['national_ec'] = r.json()
+    except Exception as e:
+        print(f'  ! EC national: {e}')
+
+    save('bundesland', {'updated': now_utc().isoformat(), **results})
+
+# ════════════════════════════════════════════════════════
+# 9. SPOT HISTORY – 20 Jahre monatliche Preise
+#    Energy-Charts Fraunhofer ISE
+# ════════════════════════════════════════════════════════
+def fetch_spot_history():
+    results = {}
+    end_str = now_utc().strftime('%Y-%m-%d')
+
+    # Monatliche Preise pro Land seit 2005
+    zones = [
+        ('DE-LU',    'de', '2018-10-01', end_str),
+        ('DE-AT-LU', 'de_old', '2005-01-01', '2018-09-30'),
+        ('FR',       'fr', '2005-01-01', end_str),
+        ('AT',       'at', '2005-01-01', end_str),
+        ('ES',       'es', '2005-01-01', end_str),
+        ('IT-North', 'it', '2010-01-01', end_str),
+        ('NL',       'nl', '2010-01-01', end_str),
+        ('PL',       'pl', '2010-01-01', end_str),
+    ]
+
+    for bzn, key, start, end in zones:
+        try:
+            r = SESSION.get(f'{EC}/price', params={
+                'bzn': bzn, 'start': start, 'end': end, 'interval': 'month'
+            }, timeout=35)
+            r.raise_for_status()
+            d = r.json()
+            results[f'monthly_{key}'] = {
+                'bzn': bzn,
+                'unix_seconds': d.get('unix_seconds', []),
+                'price': d.get('price', []),
+                'unit': 'EUR/MWh'
+            }
+            print(f'    spot history {bzn}: {len(d.get("price",[]))} Monate')
+            time.sleep(0.2)
+        except Exception as e:
+            print(f'  ! spot {bzn}: {e}')
+
+    # Jährliche Durchschnitte DE
+    try:
+        r = SESSION.get(f'{EC}/price', params={
+            'bzn': 'DE-LU', 'start': '2005-01-01', 'end': end_str, 'interval': 'year'
+        }, timeout=30)
+        r.raise_for_status()
+        d = r.json()
+        results['yearly_de'] = {
+            'unix_seconds': d.get('unix_seconds', []),
+            'price': d.get('price', []),
+            'unit': 'EUR/MWh'
+        }
+    except Exception as e:
+        print(f'  ! yearly DE: {e}')
+
+    save('spot_history', {'updated': now_utc().isoformat(), 'source': 'Fraunhofer ISE / Energy-Charts', **results})
+
+# ════════════════════════════════════════════════════════
+# 10. NEWS – RSS Feeds Energie
+# ════════════════════════════════════════════════════════
+RSS_FEEDS = [
+    ('PV Magazine DE',    'https://www.pv-magazine.de/feed/'),
+    ('Energie Zukunft',   'https://www.energiezukunft.eu/feed/'),
+    ('Solar Server',      'https://www.solarserver.de/feed/'),
+    ('IWR',               'https://www.iwr.de/uploads/tx_vxnewsrss/iwr_rss_feed.xml'),
+    ('BNetzA',            'https://www.bundesnetzagentur.de/SiteGlobals/Functions/RSS/DE/RSS-Newsfeed.xml'),
+    ('Netzausbau',        'https://www.netzausbau.de/service/rss/de.xml'),
+    ('Energiewirtschaft', 'https://www.bdew.de/service/pressemitteilungen/?format=feed&type=rss'),
+]
+
+def _strip_html(text):
+    return re.sub(r'<[^>]+>', '', text or '').strip()
+
+def fetch_news():
+    articles = []
+    NS_ATOM = 'http://www.w3.org/2005/Atom'
+
+    for source_name, url in RSS_FEEDS:
+        try:
+            r = SESSION.get(url, timeout=15, headers={
+                'Accept': 'application/rss+xml, application/xml, text/xml, */*'
+            })
+            r.raise_for_status()
+            root = ET.fromstring(r.content)
+            # RSS 2.0
+            channel = root.find('channel')
+            if channel is not None:
+                items = channel.findall('item')
+                for item in items[:12]:
+                    title   = _strip_html(item.findtext('title', ''))
+                    link    = item.findtext('link', '').strip()
+                    pubdate = item.findtext('pubDate', '')
+                    desc    = _strip_html(item.findtext('description', ''))[:250]
+                    if title and link:
+                        articles.append({'source': source_name, 'title': title,
+                                         'link': link, 'date': pubdate, 'summary': desc})
+            else:
+                # Atom feed
+                ns = {'a': NS_ATOM}
+                for entry in root.findall(f'{{{NS_ATOM}}}entry')[:12]:
+                    title = _strip_html(entry.findtext(f'{{{NS_ATOM}}}title', ''))
+                    link_el = entry.find(f'{{{NS_ATOM}}}link')
+                    link = link_el.get('href', '') if link_el is not None else ''
+                    pubdate = entry.findtext(f'{{{NS_ATOM}}}published', '') or \
+                              entry.findtext(f'{{{NS_ATOM}}}updated', '')
+                    desc = _strip_html(entry.findtext(f'{{{NS_ATOM}}}summary', '') or
+                                       entry.findtext(f'{{{NS_ATOM}}}content', ''))[:250]
+                    if title and link:
+                        articles.append({'source': source_name, 'title': title,
+                                         'link': link, 'date': pubdate, 'summary': desc})
+            print(f'    news {source_name}: {min(12,len(articles))} Artikel (gesamt {len(articles)})')
+            time.sleep(0.3)
+        except Exception as e:
+            print(f'  ! news {source_name}: {e}')
+
+    save('news', {'updated': now_utc().isoformat(), 'articles': articles[:120]})
+
+# ════════════════════════════════════════════════════════
+# 11. LADESÄULEN – OpenChargeMap (kein API-Key nötig)
+#     https://api.openchargemap.io/v3/
+# ════════════════════════════════════════════════════════
+CHARGE_CITIES = {
+    'berlin':     (52.52,  13.41),
+    'hamburg':    (53.55,  10.00),
+    'munich':     (48.14,  11.58),
+    'cologne':    (50.94,   6.96),
+    'frankfurt':  (50.11,   8.68),
+    'stuttgart':  (48.78,   9.18),
+    'dusseldorf': (51.22,   6.77),
+    'leipzig':    (51.34,  12.38),
+    'nuremberg':  (49.45,  11.08),
+    'dortmund':   (51.51,   7.47),
+    'bremen':     (53.08,   8.80),
+    'hannover':   (52.38,   9.74),
+}
+
+def fetch_charging():
+    results = {}
+    for city, (lat, lon) in CHARGE_CITIES.items():
+        try:
+            r = SESSION.get('https://api.openchargemap.io/v3/poi/', params={
+                'output': 'json',
+                'latitude': lat,
+                'longitude': lon,
+                'distance': 15,
+                'distanceunit': 'KM',
+                'maxresults': 400,
+                'compact': 'true',
+                'verbose': 'false',
+            }, timeout=25)
+            r.raise_for_status()
+            stations = r.json()
+            if not isinstance(stations, list):
+                raise ValueError('unexpected format')
+
+            total = len(stations)
+            fast = 0
+            operators = {}
+            connector_types = {}
+            for s in stations:
+                conns = s.get('Connections') or []
+                for c in conns:
+                    kw = c.get('PowerKW') or 0
+                    if kw >= 50:
+                        fast += 1
+                        break
+                op = (s.get('OperatorInfo') or {}).get('Title') or 'Unbekannt'
+                operators[op] = operators.get(op, 0) + 1
+
+            top_ops = sorted(operators.items(), key=lambda x: -x[1])[:5]
+            results[city] = {
+                'total': total,
+                'fast_chargers': fast,
+                'top_operators': dict(top_ops),
+            }
+            print(f'    charging {city}: {total} Stationen, {fast} DC-Schnelllader')
+            time.sleep(0.35)
+        except Exception as e:
+            print(f'  ! charging {city}: {e}')
+            results[city] = {'total': 0, 'fast_chargers': 0, 'error': str(e)}
+
+    save('charging', {'updated': now_utc().isoformat(), 'source': 'OpenChargeMap', 'cities': results})
+
+# ════════════════════════════════════════════════════════
+# 12. METADATA
+# ════════════════════════════════════════════════════════
+def write_meta():
+    save('meta', {
+        'last_fetch': now_utc().isoformat(),
+        'next_fetch_approx': (now_utc() + timedelta(minutes=15)).isoformat(),
+        'version': '3.0',
+        'sources': {
+            'smard':         'smard.de – Bundesnetzagentur (15-min, korrekte URL mit /DE/)',
+            'energy_charts': 'api.energy-charts.info – Fraunhofer ISE (Preise, Erzeugung, CO2, Gas, Kohle)',
+            'gas_storage':   'agsi.gie.eu – GIE AGSI+ (10 Länder)',
+            'macro':         'data-api.ecb.europa.eu – EZB (HICP 8 Länder + FX)',
+            'weather':       'api.open-meteo.com – 15 Städte, kein API-Key',
+            'fuel':          'creativecommons.tankerkoenig.de – 20 Städte DE',
+            'commodities':   'Yahoo Finance + Stooq (Fallback) + Ember Climate (CO2)',
+            'bundesland':    'open-power-system-data.org – OPSD (nach Bundesland + Jahr)',
+            'spot_history':  'api.energy-charts.info – monatlich ab 2005, 8 Länder',
+            'news':          'RSS-Feeds: PV Magazine, Energie Zukunft, Solar Server, IWR, BNetzA, Netzausbau, BDEW',
+            'charging':      'OpenChargeMap – Ladesäulen DE, 12 Städte',
+        }
+    })
+
+# ════════════════════════════════════════════════════════
+# MAIN
+# ════════════════════════════════════════════════════════
+if __name__ == '__main__':
+    print(f'=== Energy Dashboard Fetch v3 ===')
+    print(f'Start: {now_utc().isoformat()}\n')
+
+    steps = [
+        ('SMARD (korrekte URLs)',              fetch_smard),
+        ('SMARD History 20yr',                fetch_smard_history),
+        ('Energy-Charts Fraunhofer',          fetch_energy_charts),
+        ('AGSI+ Gas Storage 12 Laender',      fetch_agsi),
+        ('ECB Inflation + FX',                fetch_ecb),
+        ('Open-Meteo 15 Staedte',             fetch_weather),
+        ('Tankerkoenig 20 Staedte',           fetch_tankerkoenig),
+        ('Commodities Yahoo+Stooq+Ember',     fetch_commodities),
+        ('Bundesland OPSD',                   fetch_bundesland),
+        ('Spot History 20yr 8 Laender',       fetch_spot_history),
+        ('News RSS-Feeds',                    fetch_news),
+        ('Ladesaeulen OpenChargeMap',         fetch_charging),
+        ('Metadata',                          write_meta),
+    ]
+
+    for label, fn in steps:
+        print(f'[{label}]')
+        try:
+            fn()
+        except Exception as e:
+            print(f'  !! FEHLER: {e}')
+        print()
+
+    print(f'=== Fertig: {now_utc().isoformat()} ===')
