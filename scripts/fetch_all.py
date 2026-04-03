@@ -1,7 +1,6 @@
 """
-Energy Dashboard – Fetcher v4.2
-Fixes: AGSI+ field names, Tankerkoenig key check, News feeds updated,
-       Energy-Charts field name normalization with debug output
+Energy Dashboard – Fetcher v4.3
+Fixes: Tankerkoenig key cleaning, AGSI+ EIC codes, Energy-Charts field normalization
 """
 import json, os, re, time, requests, pytz
 import xml.etree.ElementTree as ET
@@ -12,7 +11,7 @@ os.makedirs(OUT, exist_ok=True)
 
 SESSION = requests.Session()
 SESSION.headers.update({
-    'User-Agent': 'Mozilla/5.0 EnergyDashboard/4.2',
+    'User-Agent': 'Mozilla/5.0 EnergyDashboard/4.3',
     'Accept': 'application/json, */*',
 })
 
@@ -20,14 +19,10 @@ def save(name, data):
     path = os.path.join(OUT, f'{name}.json')
     with open(path, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, separators=(',', ':'))
-    print(f'  ✓ {name}.json ({os.path.getsize(path)//1024} KB)')
+    print(f'  v {name}.json ({os.path.getsize(path)//1024} KB)')
 
 def now_utc():
     return datetime.now(timezone.utc)
-
-def sf(v, default=0.0):
-    try: return float(v or default)
-    except: return default
 
 # ════════════════════════════════
 # 1. SMARD
@@ -84,20 +79,18 @@ def ec_get(path, params=None):
     r.raise_for_status()
     return r.json()
 
-def pick(d, *keys, default=None):
-    """Pick first non-empty value from dict by trying multiple keys."""
+def first_list(d, *keys):
     for k in keys:
         v = d.get(k)
-        if v is not None and v != [] and v != {}:
+        if isinstance(v, list) and len(v) > 0:
             return v
-    return default if default is not None else []
+    return []
 
 def fetch_energy_charts():
     results = {}
     end = now_utc()
     end_str = end.strftime('%Y-%m-%d')
 
-    # Strompreise
     for bzn, key in [('DE-LU','price_de'),('AT','price_at'),('FR','price_fr'),('PL','price_pl'),('CH','price_ch')]:
         try:
             d = ec_get('price', {'bzn': bzn, 'start': 'P7D'})
@@ -108,7 +101,6 @@ def fetch_energy_charts():
             print(f'  ! ec/{key}: {e}')
             results[key] = {'unix_seconds':[], 'price':[], 'unit':'EUR/MWh'}
 
-    # Monatliche Preise DE (20 Jahre)
     try:
         d1 = ec_get('price', {'bzn':'DE-LU','start':'2018-10-01','end':end_str,'interval':'month'})
         d2 = ec_get('price', {'bzn':'DE-AT-LU','start':'2005-01-01','end':'2018-09-30','interval':'month'})
@@ -122,7 +114,6 @@ def fetch_energy_charts():
         print(f'  ! ec/monthly: {e}')
         results['price_de_monthly'] = {'unix_seconds':[], 'price':[]}
 
-    # Öffentliche Erzeugung DE
     try:
         d = ec_get('public_power', {
             'country': 'de',
@@ -130,19 +121,16 @@ def fetch_energy_charts():
             'end': end.strftime('%Y-%m-%dT%H:%MZ'),
         })
         results['public_power_de'] = d
-        print(f'    ec/public_power: keys={list(d.keys())}')
         time.sleep(0.2)
     except Exception as e:
         print(f'  ! ec/public_power: {e}')
 
-    # EE-Anteil
     try:
         d = ec_get('ren_share_in_public_power', {'country':'de','start':'P30D'})
-        print(f'    ec/ren_share raw keys: {list(d.keys())}')
-        ren_vals = pick(d, 'share_of_generation_capacity', 'ren_share', 'renewable_share', 'ren_share_in_public_power')
+        print(f'    ec/ren_share keys: {list(d.keys())}')
         results['ren_share_de'] = {
             'unix_seconds': d.get('unix_seconds', []),
-            'ren_share': ren_vals,
+            'ren_share': first_list(d, 'share_of_generation_capacity','ren_share','renewable_share','ren_share_in_public_power'),
         }
         print(f'    ec/ren_share: {len(results["ren_share_de"]["unix_seconds"])} pts')
         time.sleep(0.15)
@@ -150,78 +138,85 @@ def fetch_energy_charts():
         print(f'  ! ec/ren_share: {e}')
         results['ren_share_de'] = {'unix_seconds':[], 'ren_share':[]}
 
-    # Installierte Leistung
     try:
         d = ec_get('installed_power', {'country':'de','time_step':'yearly'})
         results['installed_de'] = d
-        print(f'    ec/installed_de: keys={list(d.keys())}')
         time.sleep(0.15)
     except Exception as e:
         print(f'  ! ec/installed_de: {e}')
 
-    # TTF Gas
     try:
         d = ec_get('gas_price', {'start':'P730D'})
-        print(f'    ec/gas_price raw keys: {list(d.keys())}')
-        gas_vals = pick(d, 'Gas Price', 'price', 'gas_price', 'value')
-        gas_ts   = pick(d, 'unix_seconds', 'timestamp', 'time')
-        results['gas_price'] = {'unix_seconds': gas_ts, 'price': gas_vals}
-        print(f'    ec/gas_price: {len(gas_ts)} pts')
+        print(f'    ec/gas_price keys: {list(d.keys())}')
+        results['gas_price'] = {
+            'unix_seconds': first_list(d, 'unix_seconds','timestamp','time'),
+            'price': first_list(d, 'Gas Price','price','gas_price','value','data'),
+        }
+        print(f'    ec/gas_price: {len(results["gas_price"]["unix_seconds"])} pts')
         time.sleep(0.15)
     except Exception as e:
         print(f'  ! ec/gas_price: {e}')
         results['gas_price'] = {'unix_seconds':[], 'price':[]}
 
-    # CO2 Preis
     try:
         d = ec_get('co2_price', {'start':'P730D'})
-        print(f'    ec/co2_price raw keys: {list(d.keys())}')
-        co2_vals = pick(d, 'CO2 Price', 'co2_price', 'price', 'value')
-        co2_ts   = pick(d, 'unix_seconds', 'timestamp', 'time')
-        results['co2_price'] = {'unix_seconds': co2_ts, 'price': co2_vals}
-        print(f'    ec/co2_price: {len(co2_ts)} pts')
+        print(f'    ec/co2_price keys: {list(d.keys())}')
+        results['co2_price'] = {
+            'unix_seconds': first_list(d, 'unix_seconds','timestamp','time'),
+            'price': first_list(d, 'CO2 Price','co2_price','price','value','data'),
+        }
+        print(f'    ec/co2_price: {len(results["co2_price"]["unix_seconds"])} pts')
         time.sleep(0.15)
     except Exception as e:
         print(f'  ! ec/co2_price: {e}')
         results['co2_price'] = {'unix_seconds':[], 'price':[]}
 
-    # Grenzüberschreitender Handel
     try:
         d = ec_get('cross_border_electricity_trading', {'country':'de','start':'P7D'})
-        print(f'    ec/cross_border raw keys: {list(d.keys())}')
-        # Dump small sample to see structure
+        print(f'    ec/cross_border keys: {list(d.keys())}')
+        # Dump ALL keys with types/lengths
         for k, v in d.items():
-            sample = v[:2] if isinstance(v, list) and len(v) > 2 else v
-            print(f'      {k}: {sample}')
-        net  = pick(d, 'net', 'Net', 'cross_border_de', 'total')
-        ts   = pick(d, 'unix_seconds', 'timestamp', 'time')
-        results['cross_border_de'] = {'unix_seconds': ts, 'net': net, '_all_keys': list(d.keys())}
+            if isinstance(v, list):
+                sample = v[:2]
+                print(f'      {k}[{len(v)}]: {sample}')
+        results['cross_border_de'] = d  # store entire response, JS will handle it
         time.sleep(0.15)
     except Exception as e:
         print(f'  ! ec/cross_border: {e}')
-        results['cross_border_de'] = {'unix_seconds':[], 'net':[]}
+        results['cross_border_de'] = {}
 
     save('energy_charts', {'updated': now_utc().isoformat(), **results})
 
 # ════════════════════════════════
 # 3. AGSI+ Gasspeicher
+# IMPORTANT: AGSI uses EIC codes, not ISO country codes for some countries
+# EU aggregate = 'eu', countries by ISO2
 # ════════════════════════════════
 def fetch_gas():
     results = {}
+    # AGSI+ uses these exact country parameters
     countries = {
-        'eu':'EU gesamt','de':'Deutschland','at':'Österreich',
-        'fr':'Frankreich','it':'Italien','nl':'Niederlande',
-        'be':'Belgien','pl':'Polen','es':'Spanien'
+        'eu': 'EU gesamt',
+        'de': 'Deutschland',
+        'at': 'Österreich',
+        'fr': 'Frankreich',
+        'it': 'Italien',
+        'nl': 'Niederlande',
+        'be': 'Belgien',
+        'pl': 'Polen',
+        'es': 'Spanien',
     }
 
-    # First: dump one raw entry to understand the structure
+    # Dump raw sample first
     try:
-        r = SESSION.get('https://agsi.gie.eu/api', params={'country': 'de', 'size': 3}, timeout=25)
+        r = SESSION.get('https://agsi.gie.eu/api', params={'country': 'de', 'size': 2}, timeout=25)
         r.raise_for_status()
         payload = r.json()
-        raw_sample = payload.get('data', payload) if isinstance(payload, dict) else payload
-        if raw_sample and isinstance(raw_sample, list):
-            print(f'    AGSI raw sample entry: {json.dumps(raw_sample[0], ensure_ascii=False)[:500]}')
+        print(f'    AGSI top-level keys: {list(payload.keys()) if isinstance(payload, dict) else type(payload)}')
+        raw_s = payload.get('data', payload) if isinstance(payload, dict) else payload
+        if isinstance(raw_s, list) and raw_s:
+            print(f'    AGSI DE sample[0] keys: {list(raw_s[0].keys())}')
+            print(f'    AGSI DE sample[0]: {json.dumps(raw_s[0])[:400]}')
     except Exception as e:
         print(f'  ! AGSI sample: {e}')
 
@@ -230,76 +225,87 @@ def fetch_gas():
             r = SESSION.get('https://agsi.gie.eu/api', params={'country': code, 'size': 60}, timeout=25)
             r.raise_for_status()
             payload = r.json()
-            raw = payload.get('data', payload) if isinstance(payload, dict) else payload
+
+            # Handle both {data: [...]} and [...] responses
+            if isinstance(payload, dict) and 'data' in payload:
+                raw = payload['data']
+            elif isinstance(payload, list):
+                raw = payload
+            elif isinstance(payload, dict):
+                # Maybe it's {status, data, ...} or the entries are direct
+                raw = payload.get('data') or payload.get('result') or payload.get('entries') or []
+            else:
+                raw = []
+
             if not isinstance(raw, list):
-                print(f'    agsi/{code}: unexpected format: {type(raw)}')
-                results[code] = {'name': name, 'data': []}
-                continue
+                raw = []
+
+            print(f'    agsi/{code}: {len(raw)} raw entries')
 
             cleaned = []
             for entry in raw:
-                # ── Date ──
+                if not isinstance(entry, dict):
+                    continue
+
+                # Date
                 date = ''
-                for df in ['gasDayStart', 'date', 'reportingPeriod', 'datetime']:
+                for df in ['gasDayStart', 'date', 'reportingPeriod', 'datetime', 'period']:
                     v = str(entry.get(df) or '')
-                    if v and len(v) >= 10:
-                        date = v[:10]; break
+                    if len(v) >= 10:
+                        date = v[:10]
+                        break
 
-                # ── Fill percentage ──
-                # GIE API uses: full (%), gasInStorage (TWh), trend (%), status (%)
+                # Fill % - try every conceivable field name
                 fill = None
-
-                # Direct percentage fields
-                for fld in ['full', 'trend', 'status', 'full_is_percentage', 'fillLevelFull']:
+                for fld in ['full', 'trend', 'status', 'full_is_percentage',
+                             'fillLevelFull', 'gasInStoragePercent', 'percentFull']:
                     v = entry.get(fld)
-                    if v is not None and v != '' and v != 'NaN':
+                    if v is not None and str(v) not in ('', 'NaN', 'null', 'None'):
                         try:
                             fv = float(str(v).replace(',', '.'))
-                            if 0 <= fv <= 100:  # must be a percentage
-                                fill = round(fv, 1)
+                            if 0.0 <= fv <= 100.0:
+                                fill = round(fv, 2)
                                 break
-                        except: pass
+                        except:
+                            pass
 
-                # If still None: gasInStorage / workingGasVolume as % via capacity
+                # Fallback: gasInStorage / workingGasVolume ratio
                 if fill is None:
-                    stored = None
-                    cap = None
-                    for sf_fld in ['gasInStorage', 'workingGasVolume', 'currentStorage']:
-                        v = entry.get(sf_fld)
-                        if v is not None and v != '':
-                            try: stored = float(str(v).replace(',','.')); break
-                            except: pass
-                    for cf_fld in ['workingGasVolume', 'full', 'capacity', 'totalStorage']:
-                        v = entry.get(cf_fld)
-                        if v is not None and v != '' and cf_fld != sf_fld:
-                            try: cap = float(str(v).replace(',','.')); break
-                            except: pass
-                    if stored and cap and cap > 0:
-                        fill = round(stored / cap * 100, 1)
+                    try:
+                        stored = float(str(entry.get('gasInStorage') or '0').replace(',','.'))
+                        wgv = float(str(entry.get('workingGasVolume') or '0').replace(',','.'))
+                        if wgv > 0:
+                            fill = round(stored / wgv * 100, 2)
+                    except:
+                        pass
 
-                # ── Injection / Withdrawal ──
-                def get_float(entry, *fields):
+                def gf(entry, *fields):
                     for f in fields:
                         v = entry.get(f)
-                        if v is not None and v != '' and v != 'NaN':
-                            try: return float(str(v).replace(',','.'))
+                        if v is not None and str(v) not in ('', 'NaN', 'null'):
+                            try: return round(float(str(v).replace(',','.')), 4)
                             except: pass
                     return 0.0
 
-                inj = get_float(entry, 'injection', 'ins', 'inflow', 'injectionCapacity')
-                con = get_float(entry, 'withdrawal', 'con', 'outflow', 'consumption', 'withdrawalCapacity')
+                inj = gf(entry, 'injection', 'ins', 'inflow')
+                con = gf(entry, 'withdrawal', 'con', 'outflow', 'consumption')
 
                 if date:
                     cleaned.append({
                         'date': date,
                         'fill_pct': fill,
-                        'injection': round(inj, 3),
-                        'withdrawal': round(con, 3),
+                        'injection': inj,
+                        'withdrawal': con,
                     })
 
             cleaned.sort(key=lambda x: x['date'])
-            last_entry = cleaned[-1] if cleaned else {}
-            print(f'    agsi/{code}: {len(cleaned)} entries, last={last_entry}')
+            if cleaned:
+                print(f'    agsi/{code}: {len(cleaned)} cleaned, last={cleaned[-1]}')
+            else:
+                print(f'    agsi/{code}: 0 cleaned (raw had {len(raw)} entries)')
+                if raw:
+                    print(f'      first raw entry: {json.dumps(raw[0])[:300]}')
+
             results[code] = {'name': name, 'data': cleaned}
             time.sleep(0.2)
 
@@ -325,17 +331,39 @@ FUEL_CITIES = {
 }
 
 def fetch_fuel():
-    api_key = os.environ.get('TANKERKOENIG_API_KEY', '').strip()
-    if not api_key:
-        print('  ! Tankerkoenig: TANKERKOENIG_API_KEY nicht gesetzt!')
+    # Clean key: strip whitespace + quotes only, preserve dashes (UUID format)
+    raw_key = os.environ.get('TANKERKOENIG_API_KEY', '')
+    print(f'    raw key hex: {raw_key[:50].encode("utf-8").hex()}')
+    api_key = raw_key.strip().strip('"').strip("'").strip()
+    print(f'    cleaned key: len={len(api_key)}, value={api_key[:8]}...')
+
+    if len(api_key) < 10:
+        print('  ! API-Key zu kurz oder fehlt')
         save('fuel', {'updated': now_utc().isoformat(), 'error': 'no_api_key', 'cities': {}})
         return
-    print(f'    API-Key: {api_key[:8]}…')
+
+    # Test call
+    try:
+        test_r = SESSION.get(
+            'https://creativecommons.tankerkoenig.de/json/list.php',
+            params={'lat': 52.52, 'lng': 13.405, 'rad': 2, 'sort': 'price', 'type': 'e5', 'apikey': api_key},
+            timeout=10
+        )
+        test_r.raise_for_status()
+        td = test_r.json()
+        if not td.get('ok'):
+            print(f'  !! Key-Test fehlgeschlagen: {td.get("message")} – prüfe Secret im Repo')
+            save('fuel', {'updated': now_utc().isoformat(), 'error': str(td.get('message')), 'cities': {}})
+            return
+        print(f'    Key-Test OK: {len(td.get("stations",[]))} Stationen gefunden')
+    except Exception as e:
+        print(f'  ! Key-Test: {e}')
+        save('fuel', {'updated': now_utc().isoformat(), 'error': str(e), 'cities': {}})
+        return
 
     def avg(lst): return round(sum(lst)/len(lst), 3) if lst else None
 
-    def get_stations(lat, lon, rad=10, fuel_type='e5'):
-        """Fetch stations for a specific fuel type (type != all avoids sort restriction)."""
+    def fetch_type(lat, lon, fuel_type, rad=10):
         r = SESSION.get(
             'https://creativecommons.tankerkoenig.de/json/list.php',
             params={'lat': lat, 'lng': lon, 'rad': rad, 'sort': 'price', 'type': fuel_type, 'apikey': api_key},
@@ -349,37 +377,32 @@ def fetch_fuel():
 
     results = {}
     for city, (lat, lon) in FUEL_CITIES.items():
-        try:
-            city_data = {'count': 0}
-            for fuel_type, key in [('e5', 'e5'), ('e10', 'e10'), ('diesel', 'diesel')]:
-                try:
-                    stations = get_stations(lat, lon, rad=10, fuel_type=fuel_type)
-                    prices = sorted([s[fuel_type] for s in stations
-                                     if isinstance(s.get(fuel_type), float) and s[fuel_type] > 0.5])
-                    city_data[f'{key}_avg'] = avg(prices)
-                    city_data[f'{key}_min'] = prices[0] if prices else None
-                    city_data['count'] = max(city_data['count'], len(stations))
-                    time.sleep(0.2)
-                except Exception as e2:
-                    print(f'      {city}/{fuel_type}: {e2}')
-            results[city] = city_data
-            print(f'    fuel/{city}: E5={city_data.get("e5_avg")}, E10={city_data.get("e10_avg")}, Diesel={city_data.get("diesel_avg")}')
-            time.sleep(0.1)
-        except Exception as e:
-            print(f'  ! fuel/{city}: {e}')
+        city_data = {'count': 0}
+        for ft in ['e5', 'e10', 'diesel']:
+            try:
+                stations = fetch_type(lat, lon, ft, rad=10)
+                prices = sorted([s[ft] for s in stations if isinstance(s.get(ft), float) and s[ft] > 0.5])
+                city_data[f'{ft}_avg'] = avg(prices)
+                city_data[f'{ft}_min'] = prices[0] if prices else None
+                city_data['count'] = max(city_data['count'], len(stations))
+                time.sleep(0.25)
+            except Exception as e:
+                print(f'      {city}/{ft}: {e}')
+        results[city] = city_data
+        print(f'    fuel/{city}: E5={city_data.get("e5_avg")}, Diesel={city_data.get("diesel_avg")}')
+        time.sleep(0.1)
 
-    # Nationaler Durchschnitt
+    # National average
     nat = {'count': 0}
-    for fuel_type in ['e5', 'e10', 'diesel']:
+    for ft in ['e5', 'e10', 'diesel']:
         try:
-            stations = get_stations(51.163, 10.447, rad=150, fuel_type=fuel_type)
-            prices = [s[fuel_type] for s in stations
-                      if isinstance(s.get(fuel_type), float) and s[fuel_type] > 0.5]
-            nat[f'{fuel_type}_avg'] = avg(prices)
+            stations = fetch_type(51.163, 10.447, ft, rad=150)
+            prices = [s[ft] for s in stations if isinstance(s.get(ft), float) and s[ft] > 0.5]
+            nat[f'{ft}_avg'] = avg(prices)
             nat['count'] = max(nat['count'], len(stations))
-            time.sleep(0.3)
+            time.sleep(0.4)
         except Exception as e:
-            print(f'  ! fuel/national/{fuel_type}: {e}')
+            print(f'  ! national/{ft}: {e}')
     results['_national'] = nat
 
     save('fuel', {'updated': now_utc().isoformat(), 'cities': results})
@@ -465,7 +488,6 @@ def strip_html(text):
 
 def clean_xml(content_bytes):
     text = content_bytes.decode('utf-8', errors='replace')
-    # Fix unescaped ampersands
     text = re.sub(r'&(?!(amp|lt|gt|quot|apos|#\d+|#x[0-9a-fA-F]+);)', '&amp;', text)
     return text.encode('utf-8')
 
@@ -474,41 +496,23 @@ def fetch_news():
     ATOM = 'http://www.w3.org/2005/Atom'
     for source, url in RSS_FEEDS:
         try:
-            r = SESSION.get(url, timeout=12, headers={
-                'Accept':'application/rss+xml,application/xml,text/xml,*/*',
-                'User-Agent':'Mozilla/5.0',
-            })
+            r = SESSION.get(url, timeout=12, headers={'Accept':'application/rss+xml,*/*','User-Agent':'Mozilla/5.0'})
             r.raise_for_status()
             try:
                 root = ET.fromstring(r.content)
             except ET.ParseError:
                 root = ET.fromstring(clean_xml(r.content))
-
             channel = root.find('channel')
             items = channel.findall('item') if channel is not None else []
             if not items:
                 items = root.findall(f'{{{ATOM}}}entry')
-
             count = 0
             for item in items[:8]:
-                title = strip_html(
-                    item.findtext('title','') or
-                    item.findtext(f'{{{ATOM}}}title','')
-                )
+                title = strip_html(item.findtext('title','') or item.findtext(f'{{{ATOM}}}title',''))
                 link_el = item.find(f'{{{ATOM}}}link')
-                link = (
-                    (link_el.get('href','') if link_el is not None else '') or
-                    (item.findtext('link','') or '').strip()
-                )
-                pubdate = (
-                    item.findtext('pubDate','') or
-                    item.findtext(f'{{{ATOM}}}published','') or
-                    item.findtext(f'{{{ATOM}}}updated','')
-                )
-                desc = strip_html(
-                    item.findtext('description','') or
-                    item.findtext(f'{{{ATOM}}}summary','')
-                )[:280]
+                link = ((link_el.get('href','') if link_el is not None else '') or (item.findtext('link','') or '').strip())
+                pubdate = (item.findtext('pubDate','') or item.findtext(f'{{{ATOM}}}published','') or item.findtext(f'{{{ATOM}}}updated',''))
+                desc = strip_html(item.findtext('description','') or item.findtext(f'{{{ATOM}}}summary',''))[:280]
                 if title and link:
                     articles.append({'source':source,'title':title,'link':link,'date':pubdate,'summary':desc})
                     count += 1
@@ -516,7 +520,6 @@ def fetch_news():
             time.sleep(0.3)
         except Exception as e:
             print(f'  ! news/{source}: {e}')
-
     save('news', {'updated': now_utc().isoformat(), 'articles': articles[:120]})
 
 # ════════════════════════════════
@@ -526,11 +529,11 @@ def write_meta():
     save('meta', {
         'last_fetch': now_utc().isoformat(),
         'next_fetch_approx': (now_utc() + timedelta(minutes=15)).isoformat(),
-        'version': '4.2',
+        'version': '4.3',
     })
 
 if __name__ == '__main__':
-    print(f'=== Energy Dashboard Fetch v4.2 – {now_utc().isoformat()} ===\n')
+    print(f'=== Energy Dashboard Fetch v4.3 – {now_utc().isoformat()} ===\n')
     for label, fn in [
         ('SMARD',         fetch_smard),
         ('Energy-Charts', fetch_energy_charts),
