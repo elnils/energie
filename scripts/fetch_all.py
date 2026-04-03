@@ -320,7 +320,7 @@ def fetch_fuel():
     try:
         r = get(
             'https://creativecommons.tankerkoenig.de/json/list.php',
-            params={'lat': 51.163, 'lng': 10.447, 'rad': 200, 'sort': 'price', 'type': 'all', 'apikey': api_key},
+            params={'lat': 51.163, 'lng': 10.447, 'rad': 25, 'sort': 'price', 'type': 'all', 'apikey': api_key},
             timeout=30
         )
         stations = r.json().get('stations', [])
