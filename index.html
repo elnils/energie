@@ -1515,7 +1515,7 @@ function renderNews() {
       sources.map(s => {
         const cnt = news.articles.filter(a => a.source === s).length;
         const active = newsActiveSource === s ? 'active' : '';
-        return `<button class="news-filter-btn ${active}" data-source="${s}" onclick="filterNews('${s.replace(/'/g,'\\\')}',this)">${s} (${cnt})</button>`;
+        return `<button class="news-filter-btn ${active}" data-source="${s}" onclick="filterNews(this.dataset.source,this)">${s} (${cnt})</button>`;
       }).join('');
   }
   renderNewsGrid();
