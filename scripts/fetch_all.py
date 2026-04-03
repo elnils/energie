@@ -7,6 +7,17 @@ import json, os, re, time, requests, pytz
 import xml.etree.ElementTree as ET
 from datetime import datetime, timezone, timedelta
 
+CITIES = {
+    "Berlin": (52.520, 13.405), "Hamburg": (53.551, 9.993),
+    "München": (48.135, 11.582), "Köln": (50.937, 6.960),
+    "Frankfurt": (50.110, 8.682), "Stuttgart": (48.775, 9.183),
+    "Düsseldorf": (51.227, 6.773), "Leipzig": (51.340, 12.374),
+    "Dortmund": (51.513, 7.465), "Essen": (51.455, 7.011),
+    "Bremen": (53.079, 8.801), "Dresden": (51.050, 13.737),
+    "Hannover": (52.375, 9.732), "Nürnberg": (49.452, 11.077),
+    "Duisburg": (51.434, 6.762), "Bochum": (51.481, 7.216)
+}
+
 OUT = os.path.join(os.path.dirname(__file__), '..', 'data')
 os.makedirs(OUT, exist_ok=True)
 
@@ -287,11 +298,37 @@ def fetch_fuel():
 
     for city, (lat, lon) in FUEL_CITIES.items():
         try:
+import time
+
+def fetch_all_cities():
+    all_results = {}
+    
+    for city, coords in CITIES.items():
+        try:
             r = get(
-                'https://creativecommons.tankerkoenig.de/json/list.php',
-                params={'lat': lat, 'lng': lon, 'rad': 10, 'sort': 'price', 'type': 'all', 'apikey': api_key},
-                timeout=15
+                'https://tankerkoenig.de',
+                params={
+                    'lat': coords[0],
+                    'lng': coords[1],
+                    'rad': 10,        # 10km Radius reicht für Stadtgebiete meist aus
+                    'sort': 'dist',   # 'dist' nutzen, da type='all'
+                    'type': 'all',
+                    'apikey': api_key
+                },
+                timeout=20
             )
+            data = r.json()
+            if data.get('ok'):
+                all_results[city] = data.get('stations', [])
+            
+            # WICHTIG: Kurze Pause, um das Rate-Limit nicht zu sprengen
+            time.sleep(1) 
+            
+        except Exception as e:
+            print(f"Fehler bei {city}: {e}")
+            
+    return all_results
+
             d = r.json()
             if not d.get('ok'):
                 print(f'    fuel/{city}: API error – {d.get("message","?")}')
