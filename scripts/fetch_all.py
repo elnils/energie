@@ -334,8 +334,11 @@ FUEL_CITIES = {
 }
 
 def fetch_fuel():
-    api_key = os.environ.get('TANKERKOENIG_API_KEY', '').strip()
+    # Clean key: strip whitespace + quotes only, preserve dashes (UUID format)
+    raw_key = os.environ.get('TANKERKOENIG_API_KEY', '')
+    api_key = raw_key.strip()
     print(f'    API-Key: {api_key[:8]}... (len={len(api_key)})')
+
     if len(api_key) < 10:
         print('  ! API-Key fehlt')
         save('fuel', {'updated': now_utc().isoformat(), 'error': 'no_api_key', 'cities': {}})
@@ -343,80 +346,69 @@ def fetch_fuel():
 
     def avg(lst): return round(sum(lst)/len(lst), 3) if lst else None
 
-    # Tankerkoenig sometimes blocks GitHub Actions IPs with 503
-    # Use realistic browser headers and add delays
-    fuel_session = requests.Session()
-    fuel_session.headers.update({
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'application/json, text/plain, */*',
-        'Accept-Language': 'de-DE,de;q=0.9',
-        'Accept-Encoding': 'gzip, deflate, br',
-        'Referer': 'https://creativecommons.tankerkoenig.de/',
-        'Origin': 'https://creativecommons.tankerkoenig.de',
-    })
+    def fetch_type(lat, lon, fuel_type, rad=10):
+        r = SESSION.get(
+            'https://creativecommons.tankerkoenig.de/json/list.php',
+            params={'lat': lat, 'lng': lon, 'rad': rad, 'sort': 'price', 'type': fuel_type, 'apikey': api_key},
+            timeout=15
+        )
+        r.raise_for_status()
+        d = r.json()
+        if not d.get('ok'):
+            raise ValueError(d.get('message', 'api_error'))
+        return d.get('stations', [])
 
-    def fetch_prices(lat, lon, fuel_type, rad=10, retries=4):
-        for attempt in range(retries):
-            try:
-                r = fuel_session.get(
-                    'https://creativecommons.tankerkoenig.de/json/list.php',
-                    params={'lat': lat, 'lng': lon, 'rad': rad,
-                            'sort': 'price', 'type': fuel_type, 'apikey': api_key},
-                    timeout=25
-                )
-                if r.status_code == 503:
-                    wait = 20 + (30 * attempt)
-                    print(f'      503 attempt {attempt+1} – sleep {wait}s')
-                    time.sleep(wait)
-                    continue
-                r.raise_for_status()
-                d = r.json()
-                if not d.get('ok'):
-                    raise ValueError(d.get('message',''))
-                prices = []
-                for s in d.get('stations', []):
-                    # type-specific API returns price in 'price' field
-                    v = s.get('price') or s.get(fuel_type)
-                    if v and 0.5 < float(v) < 5.0:
-                        prices.append(round(float(v), 3))
-                return sorted(prices)
-            except ValueError:
-                raise
-            except Exception as e:
-                if attempt == retries - 1:
-                    raise
-                time.sleep(10)
-        return []
+    # Debug: test one call and dump a raw station to see field names
+    try:
+        test_st = fetch_type(52.52, 13.405, 'e5', rad=5)
+        print(f'    Test Berlin e5: {len(test_st)} stations')
+        if test_st:
+            s0 = test_st[0]
+            print(f'    Station sample: id={s0.get("id","?")}, e5={s0.get("e5")}, brand={s0.get("brand","?")}')
+    except Exception as e:
+        print(f'    Test failed: {e}')
 
     results = {}
     for city, (lat, lon) in FUEL_CITIES.items():
         city_data = {'count': 0}
         for ft in ['e5', 'e10', 'diesel']:
             try:
-                prices = fetch_prices(lat, lon, ft, rad=10)
+                stations = fetch_type(lat, lon, ft, rad=10)
+                # Price can be float or None/False - filter carefully
+                prices = []
+                for s in stations:
+                    v = s.get(ft)
+                    if v is not None and v is not False and v != 0:
+                        try:
+                            fv = float(v)
+                            if 0.5 < fv < 5.0:  # sane price range
+                                prices.append(fv)
+                        except: pass
+                prices.sort()
                 city_data[f'{ft}_avg'] = avg(prices)
                 city_data[f'{ft}_min'] = prices[0] if prices else None
-                city_data['count'] = max(city_data['count'], len(prices))
-                time.sleep(2)
+                city_data['count'] = max(city_data['count'], len(stations))
+                time.sleep(0.25)
             except Exception as e:
                 print(f'      {city}/{ft}: {e}')
-                time.sleep(5)
         results[city] = city_data
         print(f'    fuel/{city}: E5={city_data.get("e5_avg")}, Diesel={city_data.get("diesel_avg")}')
+        time.sleep(0.1)
 
+    # National average
     nat = {'count': 0}
     for ft in ['e5', 'e10', 'diesel']:
         try:
-            prices = fetch_prices(51.163, 10.447, ft, rad=100)
+            stations = fetch_type(51.163, 10.447, ft, rad=150)
+            prices = [s[ft] for s in stations if isinstance(s.get(ft), float) and s[ft] > 0.5]
             nat[f'{ft}_avg'] = avg(prices)
-            nat['count'] = max(nat['count'], len(prices))
-            time.sleep(3)
+            nat['count'] = max(nat['count'], len(stations))
+            time.sleep(0.4)
         except Exception as e:
             print(f'  ! national/{ft}: {e}')
     results['_national'] = nat
 
     save('fuel', {'updated': now_utc().isoformat(), 'cities': results})
-
 
 # ════════════════════════════════
 # 5. WETTER
