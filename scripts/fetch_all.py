@@ -3,7 +3,8 @@ Energy Dashboard – Data Fetcher v3
 Korrekte SMARD-URL: /chart_data/{filter}/DE/{filter}_DE_{resolution}_{ts}.json
 Alle Quellen getestet gegen echte API-Dokumentation.
 """
-import json, os, time, requests, pytz
+import json, os, re, time, requests, pytz
+import xml.etree.ElementTree as ET
 from datetime import datetime, timezone, timedelta
 
 OUT = os.path.join(os.path.dirname(__file__), '..', 'data')
@@ -478,7 +479,7 @@ FUEL_CITIES = {
 
 def fetch_tankerkoenig():
     results = {}
-    api_key = '00000000-0000-0000-0000-000000000002'
+    api_key = os.environ.get('TANKERKOENIG_API_KEY', '00000000-0000-0000-0000-000000000002')
 
     def avg(lst):
         return round(sum(lst) / len(lst), 3) if lst else None
@@ -786,7 +787,133 @@ def fetch_spot_history():
     save('spot_history', {'updated': now_utc().isoformat(), 'source': 'Fraunhofer ISE / Energy-Charts', **results})
 
 # ════════════════════════════════════════════════════════
-# 10. METADATA
+# 10. NEWS – RSS Feeds Energie
+# ════════════════════════════════════════════════════════
+RSS_FEEDS = [
+    ('PV Magazine DE',    'https://www.pv-magazine.de/feed/'),
+    ('Energie Zukunft',   'https://www.energiezukunft.eu/feed/'),
+    ('Solar Server',      'https://www.solarserver.de/feed/'),
+    ('IWR',               'https://www.iwr.de/uploads/tx_vxnewsrss/iwr_rss_feed.xml'),
+    ('BNetzA',            'https://www.bundesnetzagentur.de/SiteGlobals/Functions/RSS/DE/RSS-Newsfeed.xml'),
+    ('Netzausbau',        'https://www.netzausbau.de/service/rss/de.xml'),
+    ('Energiewirtschaft', 'https://www.bdew.de/service/pressemitteilungen/?format=feed&type=rss'),
+]
+
+def _strip_html(text):
+    return re.sub(r'<[^>]+>', '', text or '').strip()
+
+def fetch_news():
+    articles = []
+    NS_ATOM = 'http://www.w3.org/2005/Atom'
+
+    for source_name, url in RSS_FEEDS:
+        try:
+            r = SESSION.get(url, timeout=15, headers={
+                'Accept': 'application/rss+xml, application/xml, text/xml, */*'
+            })
+            r.raise_for_status()
+            root = ET.fromstring(r.content)
+            # RSS 2.0
+            channel = root.find('channel')
+            if channel is not None:
+                items = channel.findall('item')
+                for item in items[:12]:
+                    title   = _strip_html(item.findtext('title', ''))
+                    link    = item.findtext('link', '').strip()
+                    pubdate = item.findtext('pubDate', '')
+                    desc    = _strip_html(item.findtext('description', ''))[:250]
+                    if title and link:
+                        articles.append({'source': source_name, 'title': title,
+                                         'link': link, 'date': pubdate, 'summary': desc})
+            else:
+                # Atom feed
+                ns = {'a': NS_ATOM}
+                for entry in root.findall(f'{{{NS_ATOM}}}entry')[:12]:
+                    title = _strip_html(entry.findtext(f'{{{NS_ATOM}}}title', ''))
+                    link_el = entry.find(f'{{{NS_ATOM}}}link')
+                    link = link_el.get('href', '') if link_el is not None else ''
+                    pubdate = entry.findtext(f'{{{NS_ATOM}}}published', '') or \
+                              entry.findtext(f'{{{NS_ATOM}}}updated', '')
+                    desc = _strip_html(entry.findtext(f'{{{NS_ATOM}}}summary', '') or
+                                       entry.findtext(f'{{{NS_ATOM}}}content', ''))[:250]
+                    if title and link:
+                        articles.append({'source': source_name, 'title': title,
+                                         'link': link, 'date': pubdate, 'summary': desc})
+            print(f'    news {source_name}: {min(12,len(articles))} Artikel (gesamt {len(articles)})')
+            time.sleep(0.3)
+        except Exception as e:
+            print(f'  ! news {source_name}: {e}')
+
+    save('news', {'updated': now_utc().isoformat(), 'articles': articles[:120]})
+
+# ════════════════════════════════════════════════════════
+# 11. LADESÄULEN – OpenChargeMap (kein API-Key nötig)
+#     https://api.openchargemap.io/v3/
+# ════════════════════════════════════════════════════════
+CHARGE_CITIES = {
+    'berlin':     (52.52,  13.41),
+    'hamburg':    (53.55,  10.00),
+    'munich':     (48.14,  11.58),
+    'cologne':    (50.94,   6.96),
+    'frankfurt':  (50.11,   8.68),
+    'stuttgart':  (48.78,   9.18),
+    'dusseldorf': (51.22,   6.77),
+    'leipzig':    (51.34,  12.38),
+    'nuremberg':  (49.45,  11.08),
+    'dortmund':   (51.51,   7.47),
+    'bremen':     (53.08,   8.80),
+    'hannover':   (52.38,   9.74),
+}
+
+def fetch_charging():
+    results = {}
+    for city, (lat, lon) in CHARGE_CITIES.items():
+        try:
+            r = SESSION.get('https://api.openchargemap.io/v3/poi/', params={
+                'output': 'json',
+                'latitude': lat,
+                'longitude': lon,
+                'distance': 15,
+                'distanceunit': 'KM',
+                'maxresults': 400,
+                'compact': 'true',
+                'verbose': 'false',
+            }, timeout=25)
+            r.raise_for_status()
+            stations = r.json()
+            if not isinstance(stations, list):
+                raise ValueError('unexpected format')
+
+            total = len(stations)
+            fast = 0
+            operators = {}
+            connector_types = {}
+            for s in stations:
+                conns = s.get('Connections') or []
+                for c in conns:
+                    kw = c.get('PowerKW') or 0
+                    if kw >= 50:
+                        fast += 1
+                        break
+                op = (s.get('OperatorInfo') or {}).get('Title') or 'Unbekannt'
+                operators[op] = operators.get(op, 0) + 1
+
+            top_ops = sorted(operators.items(), key=lambda x: -x[1])[:5]
+            results[city] = {
+                'total': total,
+                'fast_chargers': fast,
+                'top_operators': dict(top_ops),
+            }
+            print(f'    charging {city}: {total} Stationen, {fast} DC-Schnelllader')
+            time.sleep(0.35)
+        except Exception as e:
+            print(f'  ! charging {city}: {e}')
+            results[city] = {'total': 0, 'fast_chargers': 0, 'error': str(e)}
+
+    save('charging', {'updated': now_utc().isoformat(), 'source': 'OpenChargeMap', 'cities': results})
+
+# ════════════════════════════════════════════════════════
+# 12. METADATA
 # ════════════════════════════════════════════════════════
 def write_meta():
     save('meta', {
@@ -803,6 +930,8 @@ def write_meta():
             'commodities':   'Yahoo Finance + Stooq (Fallback) + Ember Climate (CO2)',
             'bundesland':    'open-power-system-data.org – OPSD (nach Bundesland + Jahr)',
             'spot_history':  'api.energy-charts.info – monatlich ab 2005, 8 Länder',
+            'news':          'RSS-Feeds: PV Magazine, Energie Zukunft, Solar Server, IWR, BNetzA, Netzausbau, BDEW',
+            'charging':      'OpenChargeMap – Ladesäulen DE, 12 Städte',
         }
     })
 
@@ -824,6 +953,8 @@ if __name__ == '__main__':
         ('Commodities Yahoo+Stooq+Ember',     fetch_commodities),
         ('Bundesland OPSD',                   fetch_bundesland),
         ('Spot History 20yr 8 Laender',       fetch_spot_history),
+        ('News RSS-Feeds',                    fetch_news),
+        ('Ladesaeulen OpenChargeMap',         fetch_charging),
         ('Metadata',                          write_meta),
     ]
 
@@ -836,11 +967,3 @@ if __name__ == '__main__':
         print()
 
     print(f'=== Fertig: {now_utc().isoformat()} ===')
-```
-
----
-
-## `requirements.txt` (neue Datei!)
-```
-requests
-pytz

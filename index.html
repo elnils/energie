@@ -172,6 +172,31 @@ input:checked+.tog-track::after{left:15px}
 .inner-tab{background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-1px;color:var(--text3);padding:5px 12px;cursor:pointer;font-size:11px;font-family:'Inter',sans-serif;font-weight:500;transition:all .15s}
 .inner-tab:hover{color:var(--text)}
 .inner-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* NEWS CARDS */
+.news-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.news-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px;box-shadow:var(--shadow);transition:box-shadow .15s;display:flex;flex-direction:column;gap:6px}
+.news-card:hover{box-shadow:var(--shadow2);border-color:var(--border2)}
+.news-source{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--accent);background:#eff6ff;border-radius:3px;padding:2px 6px;display:inline-block;margin-bottom:2px}
+.news-title{font-size:13px;font-weight:600;color:var(--text);line-height:1.4}
+.news-title a{color:inherit;text-decoration:none}
+.news-title a:hover{color:var(--accent)}
+.news-summary{font-size:11px;color:var(--text2);line-height:1.5;flex:1}
+.news-date{font-size:10px;color:var(--text3)}
+.news-filter-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.news-filter-btn{background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:11px;cursor:pointer;font-family:'Inter',sans-serif;color:var(--text2);transition:all .15s}
+.news-filter-btn:hover,.news-filter-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* CHARGING / LADESÄULEN */
+.charge-badge{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;border-radius:4px;padding:2px 7px}
+.charge-badge.fast{background:#fef3c7;color:#d97706}
+.charge-badge.total{background:#eff6ff;color:var(--accent)}
+.charge-city-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px}
+.charge-city-card{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:10px}
+.charge-city-name{font-size:11px;font-weight:600;color:var(--text);margin-bottom:6px}
+.charge-stat{display:flex;justify-content:space-between;align-items:center;font-size:11px;margin-top:3px}
+.charge-stat-label{color:var(--text3)}
+.charge-stat-val{font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--text)}
 </style>
 </head>
 <body>
@@ -196,8 +221,9 @@ input:checked+.tog-track::after{left:15px}
   <button class="tab-btn" data-tab="erneuerbare">🌱 Ausbau EE</button>
   <button class="tab-btn" data-tab="gas">🔵 Gas</button>
   <button class="tab-btn" data-tab="wetter">🌤 Wetter</button>
-  <button class="tab-btn" data-tab="makro">📊 Makro</button>
+  <button class="tab-btn" data-tab="makro">🔋 Energie-Makro</button>
   <button class="tab-btn" data-tab="historisch">📅 20-Jahres-Chart</button>
+  <button class="tab-btn" data-tab="news">📰 News</button>
 </nav>
 
 <!-- TOOLBAR -->
@@ -211,19 +237,6 @@ input:checked+.tog-track::after{left:15px}
       <option value="30">30 Tage</option>
       <option value="90">90 Tage</option>
       <option value="365">1 Jahr</option>
-    </select>
-  </div>
-  <div class="ctrl-group">
-    <label>Inflationsber.</label>
-    <label class="tog-wrap"><input type="checkbox" id="ctrl-inflation" onchange="applyFilters()"><span class="tog-track"></span></label>
-  </div>
-  <div class="ctrl-group" id="inflation-opts" style="display:none">
-    <label>Basisjahr</label>
-    <select id="ctrl-base-year" onchange="applyFilters()">
-      <option value="2005">2005</option><option value="2010">2010</option>
-      <option value="2015">2015</option><option value="2019">2019</option>
-      <option value="2020" selected>2020</option><option value="2021">2021</option>
-      <option value="2022">2022</option><option value="2023">2023</option>
     </select>
   </div>
   <div class="ctrl-group">
@@ -416,6 +429,22 @@ input:checked+.tog-track::after{left:15px}
       <div class="chart-wrap" style="height:200px"><canvas id="chart-fuel-cities"></canvas></div>
     </div>
   </div>
+
+  <div class="sec-title" style="margin-top:20px">🔌 Ladesäulen</div>
+  <div class="grid">
+    <div class="card g4">
+      <div class="card-hdr"><div><div class="card-title">Ladepunkte gesamt DE</div><div class="card-sub">OpenChargeMap · 15 km Radius je Stadt</div></div></div>
+      <div id="charge-kpi-wrap"><div class="loading"><span class="spin"></span>Lädt…</div></div>
+    </div>
+    <div class="card g8">
+      <div class="card-hdr"><div><div class="card-title">Ladesäulen nach Stadt</div><div class="card-sub">Gesamt / davon DC-Schnelllader (≥50 kW)</div></div></div>
+      <div class="charge-city-grid" id="charge-city-grid"><div class="loading"><span class="spin"></span>Lädt…</div></div>
+    </div>
+    <div class="card g12">
+      <div class="card-hdr"><div><div class="card-title">Schnelllader-Anteil nach Stadt</div><div class="card-sub">DC-Lader ≥50 kW</div></div></div>
+      <div class="chart-wrap" style="height:180px"><canvas id="chart-charging"></canvas></div>
+    </div>
+  </div>
 </div>
 
 <!-- ═══════════════════════════════════════ -->
@@ -524,12 +553,12 @@ input:checked+.tog-track::after{left:15px}
 </div>
 
 <!-- ═══════════════════════════════════════ -->
-<!-- TAB: MAKRO                             -->
+<!-- TAB: ENERGIE-MAKRO                    -->
 <!-- ═══════════════════════════════════════ -->
 <div class="tab-panel" id="tab-makro">
   <div class="kpi-strip">
-    <div class="kpi-card"><div class="kpi-accent" style="background:var(--red)"></div><div class="kpi-label">HVPI Deutschland</div><div class="kpi-value" id="mk-hicp-de">—</div><div class="kpi-unit">% p.a.</div></div>
-    <div class="kpi-card"><div class="kpi-accent" style="background:#f97316"></div><div class="kpi-label">HVPI Eurozone</div><div class="kpi-value" id="mk-hicp-eu">—</div><div class="kpi-unit">% p.a.</div></div>
+    <div class="kpi-card"><div class="kpi-accent" style="background:var(--red)"></div><div class="kpi-label">Energie-Inflation DE</div><div class="kpi-value" id="mk-hicp-energy">—</div><div class="kpi-unit">% p.a. (HVPI Energie)</div></div>
+    <div class="kpi-card"><div class="kpi-accent" style="background:#f97316"></div><div class="kpi-label">Gesamt-Inflation DE</div><div class="kpi-value" id="mk-hicp-de">—</div><div class="kpi-unit">% p.a. (HVPI gesamt)</div></div>
     <div class="kpi-card"><div class="kpi-accent" style="background:var(--accent2)"></div><div class="kpi-label">EUR/USD</div><div class="kpi-value" id="mk-eurusd">—</div><div class="kpi-unit">Wechselkurs</div></div>
     <div class="kpi-card"><div class="kpi-accent" style="background:#8b5cf6"></div><div class="kpi-label">EUR/GBP</div><div class="kpi-value" id="mk-eurgbp">—</div><div class="kpi-unit">Wechselkurs</div></div>
     <div class="kpi-card"><div class="kpi-accent" style="background:#ef4444"></div><div class="kpi-label">EUR/CNY</div><div class="kpi-value" id="mk-eurcny">—</div><div class="kpi-unit">Wechselkurs</div></div>
@@ -537,13 +566,13 @@ input:checked+.tog-track::after{left:15px}
   <div class="grid">
     <div class="card g8">
       <div class="card-hdr">
-        <div><div class="card-title">HVPI Inflation – Ländervergleich</div><div class="card-sub">EZB SDW · monatlich · letzte 5 Jahre</div></div>
-        <button class="icon-btn" onclick="downloadChart('chart-inflation','Inflation')">⬇</button>
+        <div><div class="card-title">Energie-Inflation vs. Gesamt-Inflation DE</div><div class="card-sub">EZB SDW · HVPI Energie vs. HVPI gesamt · monatlich</div></div>
+        <button class="icon-btn" onclick="downloadChart('chart-inflation','Energie_Inflation')">⬇</button>
       </div>
       <div class="chart-wrap" style="height:220px"><canvas id="chart-inflation"></canvas></div>
     </div>
     <div class="card g4">
-      <div class="card-hdr"><div><div class="card-title">Wechselkurse</div><div class="card-sub">EZB · täglich</div></div></div>
+      <div class="card-hdr"><div><div class="card-title">Wechselkurse</div><div class="card-sub">EZB · täglich · relevant für Energieimporte</div></div></div>
       <div class="chart-wrap" style="height:220px"><canvas id="chart-fx"></canvas></div>
     </div>
   </div>
@@ -579,6 +608,18 @@ input:checked+.tog-track::after{left:15px}
   </div>
 </div>
 
+<!-- ═══════════════════════════════════════ -->
+<!-- TAB: NEWS                              -->
+<!-- ═══════════════════════════════════════ -->
+<div class="tab-panel" id="tab-news">
+  <div class="news-filter-bar" id="news-filter-bar">
+    <button class="news-filter-btn active" data-source="alle" onclick="filterNews('alle',this)">Alle Quellen</button>
+  </div>
+  <div id="news-grid-wrap">
+    <div class="loading"><span class="spin"></span>Energie-News werden geladen…</div>
+  </div>
+</div>
+
 </main>
 
 <!-- STATUS BAR -->
@@ -590,6 +631,8 @@ input:checked+.tog-track::after{left:15px}
   <div class="st-item st-ok" id="st-weather"><span class="st-dot"></span>Open-Meteo</div>
   <div class="st-item st-ok" id="st-fuel"><span class="st-dot"></span>Tankerkönig</div>
   <div class="st-item st-ok" id="st-yahoo"><span class="st-dot"></span>Yahoo Finance</div>
+  <div class="st-item st-ok" id="st-news"><span class="st-dot"></span>News</div>
+  <div class="st-item st-ok" id="st-charging"><span class="st-dot"></span>Ladesäulen</div>
   <div style="margin-left:auto;color:var(--text3)">Alle Preise ohne Gewähr · Nur öffentliche APIs</div>
 </div>
 
@@ -597,8 +640,23 @@ input:checked+.tog-track::after{left:15px}
 // ═══════════════════════════════════════════════
 // STATE + CONFIG
 // ═══════════════════════════════════════════════
-const S = { data:{}, charts:{}, selected:[], selectMode:false, fuelType:'e5', eurUsd:1.09, eurGbp:0.86 };
+const S = { data:{}, charts:{}, selected:[], selectMode:false, fuelType:'e5', eurUsd:1.09, eurGbp:0.86, activeTab:'strom' };
 const DATA_URL = './data/';
+const CACHE_TTL = 10 * 60 * 1000; // 10 Minuten localStorage-Cache
+
+// Welche JSON-Dateien braucht jeder Tab?
+const TAB_FILES = {
+  strom:       ['smard','energy_charts'],
+  markt:       ['energy_charts','commodities'],
+  rohstoffe:   ['commodities'],
+  kraftstoff:  ['fuel','charging'],
+  erneuerbare: ['energy_charts','bundesland'],
+  gas:         ['gas_storage','energy_charts'],
+  wetter:      ['weather'],
+  makro:       ['macro'],
+  historisch:  ['spot_history','energy_charts','commodities','smard_history'],
+  news:        ['news'],
+};
 const COLORS = {
   wind_onshore:'#3b82f6', wind_offshore:'#1d4ed8', solar:'#eab308',
   biomass:'#22c55e', hydro:'#06b6d4', nuclear:'#7c3aed',
@@ -655,31 +713,56 @@ function mkChart(id, type, labels, datasets, extraOpts={}) {
 // DATA LOADING
 // ═══════════════════════════════════════════════
 async function loadFile(name) {
+  // Erst localStorage-Cache prüfen
   try {
-    const r = await fetch(`${DATA_URL}${name}.json?t=${Date.now()}`);
+    const raw = localStorage.getItem(`ed_${name}`);
+    if (raw) {
+      const { ts, d } = JSON.parse(raw);
+      if (Date.now() - ts < CACHE_TTL) return d;
+    }
+  } catch(e) {}
+  // Frischer Fetch (kein ?t= nötig, weil Cache durch TTL gesteuert)
+  try {
+    const r = await fetch(`${DATA_URL}${name}.json`);
     if(!r.ok) throw new Error(r.status);
-    return await r.json();
+    const d = await r.json();
+    try { localStorage.setItem(`ed_${name}`, JSON.stringify({ts: Date.now(), d})); } catch(e) {}
+    return d;
   } catch(e) { console.warn(`Load failed: ${name}`, e); return null; }
 }
 
-async function loadAll() {
-  const files = ['meta','smard','energy_charts','gas_storage','macro','weather','fuel','commodities','bundesland','spot_history','smard_history'];
+function invalidateCache(name) {
+  try { localStorage.removeItem(`ed_${name}`); } catch(e) {}
+}
+
+async function loadForTab(tabId) {
+  const files = (TAB_FILES[tabId] || []).filter(f => !S.data[f]);
+  if (!files.length) return;
   const res = await Promise.allSettled(files.map(f => loadFile(f)));
   files.forEach((f,i) => { if(res[i].status==='fulfilled' && res[i].value) S.data[f] = res[i].value; });
+}
+
+// Initialer Load: meta + aktiver Tab
+async function loadAll() {
+  // Meta immer frisch
+  const meta = await loadFile('meta');
+  if (meta) { S.data.meta = meta; updateMeta(); }
+  await loadForTab(S.activeTab);
   updateStatus();
-  updateMeta();
-  renderAll();
+  renderActiveTab();
 }
 
 function updateStatus() {
   const checks = {
     'st-smard':    S.data.smard?.series?.wind_onshore?.length > 0,
-    'st-echarts':  S.data.energy_charts?.day_ahead_de?.price?.length > 0,
+    'st-echarts':  S.data.energy_charts?.price_de?.price?.length > 0,
     'st-agsi':     S.data.gas_storage?.eu?.data?.length > 0,
     'st-ecb':      S.data.macro?.hicp_de?.series?.length > 0,
     'st-weather':  !!S.data.weather?.cities?.berlin,
     'st-fuel':     !!S.data.fuel?.cities?.berlin?.e5_avg,
     'st-yahoo':    S.data.commodities?.brent_crude?.series?.length > 0,
+    'st-news':     (S.data.news?.articles?.length || 0) > 0,
+    'st-charging': !!S.data.charging?.cities?.berlin,
   };
   Object.entries(checks).forEach(([id, ok]) => {
     const el = document.getElementById(id);
@@ -727,11 +810,26 @@ function convertPrice(val, from='EUR') {
 function smooth() { return parseInt(document.getElementById('ctrl-smooth').value); }
 function range()  { return parseInt(document.getElementById('ctrl-range').value); }
 
-function renderAll() {
-  renderStrom(); renderMarkt(); renderRohstoffe(); renderKraftstoff();
-  renderErneuerbare(); renderGas(); renderWetter(); renderMakro();
-  renderHistorical();
+const RENDER_FNS = {
+  strom:       () => renderStrom(),
+  markt:       () => renderMarkt(),
+  rohstoffe:   () => renderRohstoffe(),
+  kraftstoff:  () => renderKraftstoff(),
+  erneuerbare: () => renderErneuerbare(),
+  gas:         () => renderGas(),
+  wetter:      () => renderWetter(),
+  makro:       () => renderMakro(),
+  historisch:  () => renderHistorical(),
+  news:        () => renderNews(),
+};
+
+function renderActiveTab() {
+  const fn = RENDER_FNS[S.activeTab];
+  if (fn) fn();
 }
+
+// Für applyFilters (Filter-Änderung re-rendert nur aktiven Tab)
+function renderAll() { renderActiveTab(); }
 
 // ═══════════════════════════════════════════════
 // STROM
@@ -740,8 +838,8 @@ function renderStromPrice() {
   const ec = S.data.energy_charts;
   if(!ec) return;
   const country = document.getElementById('price-country')?.value || 'de';
-  const key = `day_ahead_${country}`;
-  const d = ec[key] || ec.day_ahead_de;
+  const key = `price_${country}`;
+  const d = ec[key] || ec.price_de;
   if(!d?.unix_seconds?.length) return;
   const cutoff = Date.now()/1000 - range()*86400;
   const f = d.unix_seconds.map((t,i)=>({t,p:d.price[i]})).filter(x=>x.t>=cutoff && x.p!=null);
@@ -760,9 +858,9 @@ function renderStrom() {
   const ec = S.data.energy_charts;
   const sm = S.data.smard;
 
-  // KPIs from Energy-Charts day_ahead_de
-  if(ec?.day_ahead_de?.price?.length) {
-    const prices = ec.day_ahead_de.price;
+  // KPIs from Energy-Charts price_de
+  if(ec?.price_de?.price?.length) {
+    const prices = ec.price_de.price;
     const last = prices.filter(p=>p!=null).at(-1);
     const prev = prices.filter(p=>p!=null).at(-2);
     document.getElementById('k-da-price').textContent = fmtN(last,1);
@@ -786,7 +884,7 @@ function renderStrom() {
     const sampled = allTs.filter((_,i)=>i%step===0);
 
     const datasets = keys.map(k => {
-      let vals = sampled.map(ts => { const pt=(s[k]||[]).find(p=>p.ts===ts); return pt?pt.value/1000:null; });
+      let vals = sampled.map(ts => { const pt=(s[k]||[]).find(p=>p.ts===ts); return pt!=null?(pt.v??pt.value??0)/1000:null; });
       if(smooth()) vals = rollingAvg(vals, smooth()*4);
       return { label:LABELS_DE[k]||k, data:vals, borderColor:COLORS[k], backgroundColor:COLORS[k]+'18', fill:true, borderWidth:1.5 };
     });
@@ -794,7 +892,7 @@ function renderStrom() {
       plugins:{legend:{display:true,labels:{color:'#475569',boxWidth:8,font:{size:10}}}}
     });
 
-    const lv = k => { const a=s[k]||[]; for(let i=a.length-1;i>=0;i--) if(a[i].value!=null) return a[i].value/1000; return 0; };
+    const lv = k => { const a=s[k]||[]; for(let i=a.length-1;i>=0;i--) { const v=a[i].v??a[i].value; if(v!=null) return v/1000; } return 0; };
     const wOn=lv('wind_onshore'), wOff=lv('wind_offshore'), sol=lv('solar');
     const bio=lv('biomass'), hyd=lv('hydro'), nuc=lv('nuclear');
     const lig=lv('lignite'), coal=lv('hard_coal'), gas=lv('natural_gas');
@@ -812,8 +910,8 @@ function renderStrom() {
   }
 
   // Cross-border export
-  if(ec?.cross_border) {
-    const cb = ec.cross_border;
+  if(ec?.cross_border_de) {
+    const cb = ec.cross_border_de;
     const net = cb.net?.at(-1);
     if(net!=null) document.getElementById('k-export').textContent = fmtN(net/1000,1);
   }
@@ -864,7 +962,7 @@ function renderMarkt() {
 
   // Multi-country day-ahead
   if(ec) {
-    const countries = [{key:'day_ahead_de',color:COLORS.de,label:'DE-LU'},{key:'day_ahead_at',color:COLORS.at,label:'AT'},{key:'day_ahead_fr',color:COLORS.fr,label:'FR'},{key:'day_ahead_pl',color:COLORS.pl,label:'PL'}];
+    const countries = [{key:'price_de',color:COLORS.de,label:'DE-LU'},{key:'price_at',color:COLORS.at,label:'AT'},{key:'price_fr',color:COLORS.fr,label:'FR'},{key:'price_pl',color:COLORS.pl,label:'PL'}];
     const cutoff = Date.now()/1000 - range()*86400;
     let labels=[], datasets=[];
     countries.forEach(c => {
@@ -876,15 +974,15 @@ function renderMarkt() {
       if(smooth()) vals = rollingAvg(vals, smooth()*4);
       datasets.push({label:c.label,data:vals,borderColor:c.color,backgroundColor:'transparent',borderWidth:1.5});
       const last = vals.filter(v=>v!=null).at(-1);
-      const kpiId = {day_ahead_de:'m-da',day_ahead_at:'m-at',day_ahead_fr:'m-fr'}[c.key];
+      const kpiId = {price_de:'m-da',price_at:'m-at',price_fr:'m-fr'}[c.key];
       if(kpiId) document.getElementById(kpiId).textContent = fmtN(last,1);
     });
     if(datasets.length) mkChart('chart-da-multi','line',labels,datasets,{plugins:{legend:{display:true,labels:{color:'#475569',boxWidth:8,font:{size:10}}}}});
 
-    // TTF Gas
-    if(ec.ttf_gas?.values?.length || ec.ttf_gas?.price?.length) {
-      const d = ec.ttf_gas;
-      const vals = d.values || d.price || [];
+    // TTF Gas (gespeichert als gas_price)
+    if(ec.gas_price?.unix_seconds?.length || ec.gas_price?.price?.length) {
+      const d = ec.gas_price;
+      const vals = d.price || d.values || [];
       const times = d.unix_seconds || d.timestamp || [];
       document.getElementById('m-ttf').textContent = fmtN(vals[vals.length-1],1);
       if(times.length) {
@@ -896,13 +994,14 @@ function renderMarkt() {
     }
   }
 
-  // CO2 ETS
-  if(comm?.eu_ets_ember?.series?.length) {
-    const s = comm.eu_ets_ember.series.slice(-90);
-    const last = s[s.length-1]?.price_eur;
+  // CO2 ETS (gespeichert als eu_ets_co2 mit Feld p)
+  const co2src = comm?.eu_ets_co2 || ec?.co2_price;
+  if(co2src?.series?.length) {
+    const s = co2src.series.slice(-90);
+    const last = s[s.length-1]?.p ?? s[s.length-1]?.price;
     document.getElementById('m-co2').textContent = fmtN(last,1);
     mkChart('chart-co2-ets','line',s.map(p=>p.date),[{
-      label:'EU ETS EUR/tCO₂',data:s.map(p=>p.price_eur),
+      label:'EU ETS EUR/tCO₂',data:s.map(p=>p.p??p.price),
       borderColor:'#7c3aed',backgroundColor:'rgba(124,58,237,0.07)',fill:true
     }]);
   }
@@ -933,8 +1032,8 @@ function renderRohstoffe() {
   kpiMap.forEach(({key,id,unitId,unitBase,deltaId}) => {
     const d = comm[key];
     if(!d?.series?.length) return;
-    const last = d.series.at(-1)?.price;
-    const prev = d.series.at(-2)?.price;
+    const last = d.series.at(-1)?.p ?? d.series.at(-1)?.price;
+    const prev = d.series.at(-2)?.p ?? d.series.at(-2)?.price;
     const disp = toDisp(last);
     const el = document.getElementById(id);
     if(el) el.textContent = fmtN(disp,2);
@@ -953,8 +1052,8 @@ function renderRohstoffe() {
   if(maxLen>0) {
     const src = brent.length>=wti.length ? brent : wti;
     const labels = src.map(p=>fmtDate(p.ts*1000));
-    let bVals = brent.map(p=>toDisp(p.price));
-    let wVals = wti.map(p=>toDisp(p.price));
+    let bVals = brent.map(p=>toDisp(p.p??p.price));
+    let wVals = wti.map(p=>toDisp(p.p??p.price));
     if(smooth()){bVals=rollingAvg(bVals,smooth());wVals=rollingAvg(wVals,smooth());}
     mkChart('chart-oil','line',labels,[
       {label:`Brent (${cur})`,data:bVals,borderColor:COLORS.brent,backgroundColor:'transparent',borderWidth:2},
@@ -965,7 +1064,7 @@ function renderRohstoffe() {
   // HH gas chart
   const hh = comm.natgas_henry?.series||[];
   if(hh.length) {
-    let vals = hh.map(p=>p.price);
+    let vals = hh.map(p=>p.p??p.price);
     if(smooth()) vals=rollingAvg(vals,smooth());
     mkChart('chart-hh','line',hh.map(p=>fmtDate(p.ts*1000)),[{
       label:'Henry Hub USD/MMBtu',data:vals,borderColor:COLORS.natgas,
@@ -982,7 +1081,7 @@ function renderRohstoffe() {
       {name:'Nat. Gas (HH)',  key:'natgas_henry',  unit:'USD/MMBtu',  fromUSD:true},
       {name:'Kohle-Futures',  key:'coal_futures',  unit:'USD/t',      fromUSD:true},
       {name:'Gold',           key:'gold',           unit:'USD/oz',     fromUSD:true},
-      {name:'EU ETS CO₂',    key:'eu_ets_ember',   unit:'EUR/tCO₂',   fromUSD:false, priceKey:'price_eur', tsKey:'date'},
+      {name:'EU ETS CO₂',    key:'eu_ets_co2',     unit:'EUR/tCO₂',   fromUSD:false, priceKey:'p', tsKey:'date'},
     ];
     tbody.innerHTML = rows.map((row,i) => {
       const d = comm[row.key];
@@ -992,7 +1091,7 @@ function renderRohstoffe() {
       const prev = s.at(-2);
       const d7   = s.find(p=>{const ts=p.ts||0;return (Date.now()/1000-ts)<7*86400;});
       const d30  = s.find(p=>{const ts=p.ts||0;return (Date.now()/1000-ts)<30*86400;});
-      const pk = row.priceKey||'price';
+      const pk = row.priceKey||'p';
       const v = p => p ? (row.fromUSD ? toDisp(p[pk]) : p[pk]) : null;
       const vLast=v(last), vPrev=v(prev);
       const chg1 = vLast&&vPrev ? (vLast-vPrev)/vPrev*100 : null;
@@ -1022,6 +1121,7 @@ function setFuelType(type, btn) {
 
 function renderKraftstoff() {
   const fuel = S.data.fuel;
+  renderCharging();
   if(!fuel?.cities) { document.getElementById('fuel-city-grid').innerHTML='<div class="loading"><span class="spin"></span>Lädt…</div>'; return; }
 
   const type = S.fuelType;
@@ -1072,7 +1172,7 @@ function downloadFuelCSV() {
 function renderInstalledCountry() {
   const ec = S.data.energy_charts;
   const cc = document.getElementById('installed-country')?.value || 'de';
-  const d = ec?.[`installed_${cc}`] || ec?.installed_capacity;
+  const d = ec?.[`installed_${cc}`];
   if(!d?.time) return;
   const colors_inst = {'Wind onshore':COLORS.wind_onshore,'Wind offshore':COLORS.wind_offshore,'Solar':COLORS.solar,'Biomass':COLORS.biomass,'Hydro Power':COLORS.hydro,'Nuclear':COLORS.nuclear};
   const datasets = (d.production_types||[]).filter(s=>colors_inst[s.name]).map(s=>({
@@ -1086,8 +1186,8 @@ function renderErneuerbare() {
   const ec = S.data.energy_charts;
   if(!ec) return;
 
-  // Installed capacity DE
-  const d = ec.installed_capacity;
+  // Installed capacity DE (gespeichert als installed_de)
+  const d = ec.installed_de;
   if(d?.time) {
     const colors_inst = {'Wind onshore':COLORS.wind_onshore,'Wind offshore':COLORS.wind_offshore,'Solar':COLORS.solar,'Biomass':COLORS.biomass,'Hydro Power':COLORS.hydro,'Nuclear':COLORS.nuclear};
     const datasets = (d.production_types||[]).filter(s=>colors_inst[s.name]).map(s=>({
@@ -1099,9 +1199,9 @@ function renderErneuerbare() {
 
   renderInstalledCountry();
 
-  // Renewables share
-  if(ec.renewables_share) {
-    const r = ec.renewables_share;
+  // Renewables share (gespeichert als ren_share_de)
+  if(ec.ren_share_de) {
+    const r = ec.ren_share_de;
     const times = r.unix_seconds||[], vals = r.ren_share||r.share_of_generation_capacity||[];
     const cutoff = Date.now()/1000 - range()*86400;
     const f = times.map((t,i)=>({t,v:vals[i]})).filter(x=>x.t>=cutoff && x.v!=null);
@@ -1243,53 +1343,60 @@ function renderWetter() {
 }
 
 // ═══════════════════════════════════════════════
-// MAKRO
+// ENERGIE-MAKRO
 // ═══════════════════════════════════════════════
 function renderMakro() {
   const m = S.data.macro;
   if(!m) return;
 
-  // HICP KPIs
-  ['de','eu'].forEach(cc => {
-    const d = m[`hicp_${cc}`];
-    const last = d?.series?.at(-1)?.value;
-    const el = document.getElementById(`mk-hicp-${cc}`);
-    if(el && last!=null) el.textContent = fmtN(last,1);
-  });
+  // Energie-Inflation KPI (HICP Energie DE)
+  const energy = m.hicp_de_energy;
+  const lastEnergy = energy?.series?.at(-1)?.value;
+  const elEnergy = document.getElementById('mk-hicp-energy');
+  if(elEnergy && lastEnergy!=null) elEnergy.textContent = fmtN(lastEnergy,1);
 
-  // FX KPIs
+  // Gesamt-Inflation DE
+  const total = m.hicp_de;
+  const lastTotal = total?.series?.at(-1)?.value;
+  const elTotal = document.getElementById('mk-hicp-de');
+  if(elTotal && lastTotal!=null) elTotal.textContent = fmtN(lastTotal,1);
+
+  // FX KPIs (wichtig für Energieimportpreise)
   [['eur_usd','mk-eurusd'],['eur_gbp','mk-eurgbp'],['eur_cny','mk-eurcny']].forEach(([key,id]) => {
     const last = m[key]?.at(-1)?.value;
     const el = document.getElementById(id);
     if(el && last!=null) el.textContent = fmtN(last,4);
   });
 
-  // Inflation multi-country chart
-  const countries = [
-    {key:'hicp_de',color:COLORS.de,label:'DE'},
-    {key:'hicp_eu',color:COLORS.fr,label:'EU'},
-    {key:'hicp_fr',color:COLORS.at,label:'FR'},
-    {key:'hicp_at',color:COLORS.pl,label:'AT'},
-    {key:'hicp_es',color:'#d97706',label:'ES'},
-  ];
-  let inflLabels = [], inflDatasets = [];
-  countries.forEach(c => {
-    const d = m[c.key];
-    if(!d?.series?.length) return;
-    const s = d.series.slice(-60);
+  // Chart: Energie-Inflation vs. Gesamt-Inflation DE
+  const inflDatasets = [];
+  let inflLabels = [];
+
+  if(energy?.series?.length) {
+    const s = energy.series.slice(-60);
     if(!inflLabels.length) inflLabels = s.map(p=>p.period);
-    inflDatasets.push({label:c.label,data:s.map(p=>p.value),borderColor:c.color,backgroundColor:'transparent',borderWidth:1.8});
-  });
+    inflDatasets.push({label:'HVPI Energie DE',data:s.map(p=>p.value),borderColor:COLORS.orange||'#ea580c',backgroundColor:'rgba(234,88,12,0.07)',fill:true,borderWidth:2});
+  }
+  if(total?.series?.length) {
+    const s = total.series.slice(-60);
+    if(!inflLabels.length) inflLabels = s.map(p=>p.period);
+    inflDatasets.push({label:'HVPI gesamt DE',data:s.map(p=>p.value),borderColor:COLORS.de,backgroundColor:'transparent',borderWidth:1.8,borderDash:[4,3]});
+  }
   if(inflDatasets.length) mkChart('chart-inflation','line',inflLabels,inflDatasets,{
-    plugins:{legend:{display:true,labels:{color:'#475569',boxWidth:8,font:{size:10}}}}
+    plugins:{legend:{display:true,labels:{color:'#475569',boxWidth:8,font:{size:10}}}},
+    scales:{x:{grid:{color:'#f1f5f9'},ticks:{maxTicksLimit:8,color:'#94a3b8'}},
+            y:{grid:{color:'#f1f5f9'},ticks:{color:'#94a3b8'},title:{display:true,text:'% p.a.',color:'#94a3b8',font:{size:10}}}}
   });
 
-  // FX chart
+  // FX chart (EUR/USD, EUR/GBP)
   if(m.eur_usd?.length) {
-    mkChart('chart-fx','line',m.eur_usd.map(p=>p.date),[{
-      label:'EUR/USD',data:m.eur_usd.map(p=>p.value),
-      borderColor:'#0891b2',backgroundColor:'transparent',borderWidth:1.8
-    }]);
+    const cutoff = Date.now() - range()*86400*1000;
+    const fx = m.eur_usd.filter(p => new Date(p.period||p.date||'').getTime() >= cutoff || m.eur_usd.length < 100);
+    const fxGbp = m.eur_gbp || [];
+    mkChart('chart-fx','line',m.eur_usd.map(p=>p.period||p.date),[
+      {label:'EUR/USD',data:m.eur_usd.map(p=>p.value),borderColor:'#0891b2',backgroundColor:'transparent',borderWidth:1.8},
+      {label:'EUR/GBP',data:fxGbp.map(p=>p.value),borderColor:'#8b5cf6',backgroundColor:'transparent',borderWidth:1.5},
+    ],{plugins:{legend:{display:true,labels:{color:'#475569',boxWidth:8,font:{size:10}}}}});
   }
 }
 
@@ -1330,8 +1437,8 @@ function renderHistorical() {
   }
 
   // Historical installed capacity
-  if(ec?.installed_capacity?.time) {
-    const d = ec.installed_capacity;
+  if(ec?.installed_de?.time) {
+    const d = ec.installed_de;
     const colors_inst = {'Wind onshore':COLORS.wind_onshore,'Wind offshore':COLORS.wind_offshore,'Solar':COLORS.solar,'Biomass':COLORS.biomass,'Hydro Power':COLORS.hydro,'Nuclear':COLORS.nuclear};
     const datasets = (d.production_types||[]).filter(s=>colors_inst[s.name]).map(s=>({
       label:s.name, data:s.data, borderColor:colors_inst[s.name],
@@ -1346,7 +1453,7 @@ function renderHistorical() {
   // Historical Brent (2y from Yahoo, use full series)
   if(comm?.brent_crude?.series?.length) {
     const s = comm.brent_crude.series;
-    let vals = s.map(p=>convertPrice(p.price, false));  // USD stays USD unless converted
+    let vals = s.map(p=>convertPrice(p.p??p.price, false));  // USD stays USD unless converted
     if(smooth()) vals = rollingAvg(vals, smooth());
     const cur = document.getElementById('ctrl-currency').value;
     mkChart('chart-hist-oil','line',s.map(p=>fmtDate(p.ts*1000)),[{
@@ -1354,6 +1461,113 @@ function renderHistorical() {
       borderColor:COLORS.brent, backgroundColor:'rgba(234,88,12,0.06)', fill:true
     }]);
   }
+}
+
+// ═══════════════════════════════════════════════
+// NEWS
+// ═══════════════════════════════════════════════
+let newsActiveSource = 'alle';
+
+function filterNews(source, btn) {
+  newsActiveSource = source;
+  document.querySelectorAll('.news-filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderNewsGrid();
+}
+
+function renderNewsGrid() {
+  const news = S.data.news;
+  if (!news?.articles?.length) return;
+  const articles = newsActiveSource === 'alle'
+    ? news.articles
+    : news.articles.filter(a => a.source === newsActiveSource);
+
+  const wrap = document.getElementById('news-grid-wrap');
+  if (!wrap) return;
+  if (!articles.length) {
+    wrap.innerHTML = '<div class="no-data"><span>Keine Artikel für diese Quelle</span></div>';
+    return;
+  }
+  wrap.innerHTML = `<div class="news-grid">${articles.map(a => {
+    const date = a.date ? new Date(a.date).toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit',year:'numeric'}) : '';
+    return `<div class="news-card">
+      <div><span class="news-source">${a.source}</span></div>
+      <div class="news-title"><a href="${a.link}" target="_blank" rel="noopener">${a.title}</a></div>
+      ${a.summary ? `<div class="news-summary">${a.summary}</div>` : ''}
+      <div class="news-date">${date}</div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function renderNews() {
+  const news = S.data.news;
+  const wrap = document.getElementById('news-grid-wrap');
+  if (!news?.articles?.length) {
+    if (wrap) wrap.innerHTML = '<div class="no-data"><span style="font-size:24px">📰</span><span>Noch keine News-Daten – bitte GitHub Actions ausführen</span></div>';
+    return;
+  }
+
+  // Filter-Buttons für Quellen aufbauen
+  const sources = [...new Set(news.articles.map(a => a.source))];
+  const filterBar = document.getElementById('news-filter-bar');
+  if (filterBar) {
+    filterBar.innerHTML = `<button class="news-filter-btn ${newsActiveSource==='alle'?'active':''}" data-source="alle" onclick="filterNews('alle',this)">Alle (${news.articles.length})</button>` +
+      sources.map(s => {
+        const cnt = news.articles.filter(a => a.source === s).length;
+        const active = newsActiveSource === s ? 'active' : '';
+        return `<button class="news-filter-btn ${active}" data-source="${s}" onclick="filterNews('${s.replace(/'/g,'\\\')}',this)">${s} (${cnt})</button>`;
+      }).join('');
+  }
+  renderNewsGrid();
+}
+
+// ═══════════════════════════════════════════════
+// LADESÄULEN
+// ═══════════════════════════════════════════════
+function renderCharging() {
+  const ch = S.data.charging;
+  const kpiWrap = document.getElementById('charge-kpi-wrap');
+  const cityGrid = document.getElementById('charge-city-grid');
+  if (!ch?.cities) {
+    if (kpiWrap) kpiWrap.innerHTML = '<div class="no-data"><span>Noch keine Daten</span></div>';
+    if (cityGrid) cityGrid.innerHTML = '<div class="no-data"><span>Noch keine Daten</span></div>';
+    return;
+  }
+
+  const cities = Object.entries(ch.cities).filter(([k]) => k !== '_national_fast');
+  const totalAll = cities.reduce((s, [,d]) => s + (d.total || 0), 0);
+  const fastAll  = cities.reduce((s, [,d]) => s + (d.fast_chargers || 0), 0);
+
+  if (kpiWrap) kpiWrap.innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:10px;padding:4px 0">
+      <div><div class="kpi-label">Ladepunkte gesamt</div>
+        <div class="kpi-value" style="font-size:28px">${totalAll.toLocaleString('de-DE')}</div>
+        <div class="kpi-unit">in ${cities.length} Städten</div></div>
+      <div><div class="kpi-label">Davon DC-Schnelllader</div>
+        <div class="kpi-value" style="font-size:24px;color:var(--yellow)">${fastAll.toLocaleString('de-DE')}</div>
+        <div class="kpi-unit">≥ 50 kW</div></div>
+      <div style="font-size:10px;color:var(--text3);margin-top:4px">Quelle: OpenChargeMap<br>Stand: ${ch.updated ? new Date(ch.updated).toLocaleDateString('de-DE') : '—'}</div>
+    </div>`;
+
+  const sorted = [...cities].sort((a,b) => (b[1].total||0) - (a[1].total||0));
+  if (cityGrid) cityGrid.innerHTML = sorted.map(([city, d]) => `
+    <div class="charge-city-card">
+      <div class="charge-city-name">${city.charAt(0).toUpperCase()+city.slice(1)}</div>
+      <div class="charge-stat"><span class="charge-stat-label">Gesamt</span><span class="charge-stat-val">${(d.total||0).toLocaleString('de-DE')}</span></div>
+      <div class="charge-stat"><span class="charge-stat-label">Schnelllader</span><span class="charge-stat-val" style="color:var(--yellow)">${d.fast_chargers||0}</span></div>
+      <div class="charge-stat"><span class="charge-stat-label">Anteil DC</span><span class="charge-stat-val">${d.total?(Math.round(d.fast_chargers/d.total*100))+'%':'—'}</span></div>
+    </div>`).join('');
+
+  // Bar chart
+  mkChart('chart-charging', 'bar',
+    sorted.map(([c]) => c.charAt(0).toUpperCase()+c.slice(1)),
+    [
+      {label:'Gesamt', data:sorted.map(([,d])=>d.total||0), backgroundColor:'rgba(37,99,235,0.5)', borderColor:'#2563eb', borderWidth:1, borderRadius:3},
+      {label:'Schnelllader (≥50kW)', data:sorted.map(([,d])=>d.fast_chargers||0), backgroundColor:'rgba(234,179,8,0.7)', borderColor:'#d97706', borderWidth:1, borderRadius:3},
+    ],
+    {plugins:{legend:{display:true,labels:{color:'#475569',boxWidth:8,font:{size:10}}}},
+     scales:{x:{grid:{display:false},ticks:{color:'#475569',font:{size:11}}},y:{grid:{color:'#f1f5f9'}}}}
+  );
 }
 
 // ═══════════════════════════════════════════════
@@ -1458,11 +1672,15 @@ function downloadChart(chartId, name) {
 // TABS
 // ═══════════════════════════════════════════════
 document.querySelectorAll('.tab-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
+  btn.addEventListener('click', async () => {
+    const tabId = btn.dataset.tab;
     document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
     document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
     btn.classList.add('active');
-    document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
+    document.getElementById('tab-'+tabId).classList.add('active');
+    S.activeTab = tabId;
+    await loadForTab(tabId);
+    renderActiveTab();
   });
 });
 
@@ -1470,13 +1688,14 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 // CONTROLS
 // ═══════════════════════════════════════════════
 function applyFilters() {
-  document.getElementById('inflation-opts').style.display =
-    document.getElementById('ctrl-inflation').checked ? 'flex' : 'none';
   renderAll();
 }
 
 function forceRefresh() {
   document.getElementById('last-update').textContent = 'Lädt…';
+  // Cache des aktuellen Tabs + meta invalidieren
+  (TAB_FILES[S.activeTab] || []).forEach(invalidateCache);
+  invalidateCache('meta');
   loadAll();
 }
 
@@ -1484,7 +1703,12 @@ function forceRefresh() {
 // INIT
 // ═══════════════════════════════════════════════
 loadAll();
-setInterval(loadAll, 15*60*1000);
+// Alle 15 Min: Cache des aktiven Tabs invalidieren + neu laden
+setInterval(() => {
+  (TAB_FILES[S.activeTab] || []).forEach(invalidateCache);
+  invalidateCache('meta');
+  loadAll();
+}, 15 * 60 * 1000);
 </script>
 </body>
 </html>
