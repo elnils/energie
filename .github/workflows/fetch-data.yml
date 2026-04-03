@@ -16,29 +16,25 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
       - name: Install dependencies
         run: pip install requests pytz
-
       - name: Fetch all energy data
         run: python scripts/fetch_all.py
         continue-on-error: true
         env:
           TANKERKOENIG_API_KEY: ${{ secrets.TANKERKOENIG_API_KEY }}
-
       - name: Show results
         run: ls -lh data/ || echo "data folder empty"
-
       - name: Commit and push
         run: |
           git config user.name github-actions-bot
           git config user.email actions@github.com
+          git fetch origin main
+          git reset --soft origin/main
           git add data/
           git diff --cached --quiet || git commit -m "update energy data"
-          git pull --rebase origin main
-          git push
+          git push origin main
