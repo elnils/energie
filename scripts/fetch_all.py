@@ -213,6 +213,18 @@ def fetch_gas():
         'fr':'Frankreich','it':'Italien','nl':'Niederlande',
         'be':'Belgien','pl':'Polen','es':'Spanien'
     }
+
+    # First: dump one raw entry to understand the structure
+    try:
+        r = SESSION.get('https://agsi.gie.eu/api', params={'country': 'de', 'size': 3}, timeout=25)
+        r.raise_for_status()
+        payload = r.json()
+        raw_sample = payload.get('data', payload) if isinstance(payload, dict) else payload
+        if raw_sample and isinstance(raw_sample, list):
+            print(f'    AGSI raw sample entry: {json.dumps(raw_sample[0], ensure_ascii=False)[:500]}')
+    except Exception as e:
+        print(f'  ! AGSI sample: {e}')
+
     for code, name in countries.items():
         try:
             r = SESSION.get('https://agsi.gie.eu/api', params={'country': code, 'size': 60}, timeout=25)
@@ -220,49 +232,77 @@ def fetch_gas():
             payload = r.json()
             raw = payload.get('data', payload) if isinstance(payload, dict) else payload
             if not isinstance(raw, list):
-                raw = []
-
-            if raw:
-                print(f'    agsi/{code}: {len(raw)} entries, sample keys={list(raw[0].keys())}')
+                print(f'    agsi/{code}: unexpected format: {type(raw)}')
+                results[code] = {'name': name, 'data': []}
+                continue
 
             cleaned = []
             for entry in raw:
-                # full = fill percentage directly
-                fill = None
-                for fld in ['full', 'full_is_percentage', 'fillLevelFull']:
-                    v = entry.get(fld)
-                    if v is not None:
-                        try: fill = round(float(v), 1); break
-                        except: pass
-
-                # gasInStorage = TWh stored; full = TWh capacity -> calculate %
-                if fill is None:
-                    stored = sf(entry.get('gasInStorage'))
-                    cap = sf(entry.get('capacity') or entry.get('full'))
-                    if stored > 0 and cap > 0:
-                        fill = round(stored / cap * 100, 1)
-
-                # date
+                # ── Date ──
                 date = ''
-                for df in ['gasDayStart','date','reportingPeriod']:
-                    v = str(entry.get(df, '') or '')
-                    if v:
+                for df in ['gasDayStart', 'date', 'reportingPeriod', 'datetime']:
+                    v = str(entry.get(df) or '')
+                    if v and len(v) >= 10:
                         date = v[:10]; break
 
-                inj = sf(entry.get('injection') or entry.get('ins'))
-                con = sf(entry.get('withdrawal') or entry.get('con') or entry.get('consumption'))
-                # Values sometimes in GWh, normalize to TWh if huge
-                if inj > 5000: inj = round(inj/1000, 3)
-                if con > 5000: con = round(con/1000, 3)
+                # ── Fill percentage ──
+                # GIE API uses: full (%), gasInStorage (TWh), trend (%), status (%)
+                fill = None
+
+                # Direct percentage fields
+                for fld in ['full', 'trend', 'status', 'full_is_percentage', 'fillLevelFull']:
+                    v = entry.get(fld)
+                    if v is not None and v != '' and v != 'NaN':
+                        try:
+                            fv = float(str(v).replace(',', '.'))
+                            if 0 <= fv <= 100:  # must be a percentage
+                                fill = round(fv, 1)
+                                break
+                        except: pass
+
+                # If still None: gasInStorage / workingGasVolume as % via capacity
+                if fill is None:
+                    stored = None
+                    cap = None
+                    for sf_fld in ['gasInStorage', 'workingGasVolume', 'currentStorage']:
+                        v = entry.get(sf_fld)
+                        if v is not None and v != '':
+                            try: stored = float(str(v).replace(',','.')); break
+                            except: pass
+                    for cf_fld in ['workingGasVolume', 'full', 'capacity', 'totalStorage']:
+                        v = entry.get(cf_fld)
+                        if v is not None and v != '' and cf_fld != sf_fld:
+                            try: cap = float(str(v).replace(',','.')); break
+                            except: pass
+                    if stored and cap and cap > 0:
+                        fill = round(stored / cap * 100, 1)
+
+                # ── Injection / Withdrawal ──
+                def get_float(entry, *fields):
+                    for f in fields:
+                        v = entry.get(f)
+                        if v is not None and v != '' and v != 'NaN':
+                            try: return float(str(v).replace(',','.'))
+                            except: pass
+                    return 0.0
+
+                inj = get_float(entry, 'injection', 'ins', 'inflow', 'injectionCapacity')
+                con = get_float(entry, 'withdrawal', 'con', 'outflow', 'consumption', 'withdrawalCapacity')
 
                 if date:
-                    cleaned.append({'date': date, 'fill_pct': fill, 'injection': inj, 'withdrawal': con})
+                    cleaned.append({
+                        'date': date,
+                        'fill_pct': fill,
+                        'injection': round(inj, 3),
+                        'withdrawal': round(con, 3),
+                    })
 
             cleaned.sort(key=lambda x: x['date'])
-            last = cleaned[-1] if cleaned else {}
-            print(f'    agsi/{code}: {len(cleaned)} cleaned, last={last}')
+            last_entry = cleaned[-1] if cleaned else {}
+            print(f'    agsi/{code}: {len(cleaned)} entries, last={last_entry}')
             results[code] = {'name': name, 'data': cleaned}
             time.sleep(0.2)
+
         except Exception as e:
             print(f'  ! agsi/{code}: {e}')
             results[code] = {'name': name, 'data': []}
@@ -294,50 +334,53 @@ def fetch_fuel():
 
     def avg(lst): return round(sum(lst)/len(lst), 3) if lst else None
 
+    def get_stations(lat, lon, rad=10, fuel_type='e5'):
+        """Fetch stations for a specific fuel type (type != all avoids sort restriction)."""
+        r = SESSION.get(
+            'https://creativecommons.tankerkoenig.de/json/list.php',
+            params={'lat': lat, 'lng': lon, 'rad': rad, 'sort': 'price', 'type': fuel_type, 'apikey': api_key},
+            timeout=15
+        )
+        r.raise_for_status()
+        d = r.json()
+        if not d.get('ok'):
+            raise ValueError(d.get('message', 'api_error'))
+        return d.get('stations', [])
+
     results = {}
     for city, (lat, lon) in FUEL_CITIES.items():
         try:
-            r = SESSION.get(
-                'https://creativecommons.tankerkoenig.de/json/list.php',
-                params={'lat':lat,'lng':lon,'rad':10,'sort':'price','type':'all','apikey':api_key},
-                timeout=15
-            )
-            r.raise_for_status()
-            d = r.json()
-            if not d.get('ok'):
-                print(f'    fuel/{city}: {d.get("message")}')
-                results[city] = {'error': d.get('message','')}
-                continue
-            st = d.get('stations',[])
-            e5  = sorted([s['e5']     for s in st if isinstance(s.get('e5'),float)     and s['e5']>0.5])
-            e10 = sorted([s['e10']    for s in st if isinstance(s.get('e10'),float)    and s['e10']>0.5])
-            die = sorted([s['diesel'] for s in st if isinstance(s.get('diesel'),float) and s['diesel']>0.5])
-            results[city] = {
-                'e5_avg':avg(e5),'e5_min':e5[0] if e5 else None,
-                'e10_avg':avg(e10),'e10_min':e10[0] if e10 else None,
-                'diesel_avg':avg(die),'diesel_min':die[0] if die else None,
-                'count':len(st),
-            }
-            print(f'    fuel/{city}: E5={results[city]["e5_avg"]}')
-            time.sleep(0.3)
+            city_data = {'count': 0}
+            for fuel_type, key in [('e5', 'e5'), ('e10', 'e10'), ('diesel', 'diesel')]:
+                try:
+                    stations = get_stations(lat, lon, rad=10, fuel_type=fuel_type)
+                    prices = sorted([s[fuel_type] for s in stations
+                                     if isinstance(s.get(fuel_type), float) and s[fuel_type] > 0.5])
+                    city_data[f'{key}_avg'] = avg(prices)
+                    city_data[f'{key}_min'] = prices[0] if prices else None
+                    city_data['count'] = max(city_data['count'], len(stations))
+                    time.sleep(0.2)
+                except Exception as e2:
+                    print(f'      {city}/{fuel_type}: {e2}')
+            results[city] = city_data
+            print(f'    fuel/{city}: E5={city_data.get("e5_avg")}, E10={city_data.get("e10_avg")}, Diesel={city_data.get("diesel_avg")}')
+            time.sleep(0.1)
         except Exception as e:
             print(f'  ! fuel/{city}: {e}')
 
-    try:
-        r = SESSION.get(
-            'https://creativecommons.tankerkoenig.de/json/list.php',
-            params={'lat':51.163,'lng':10.447,'rad':200,'sort':'price','type':'all','apikey':api_key},
-            timeout=30
-        )
-        d = r.json()
-        if d.get('ok'):
-            st = d.get('stations',[])
-            e5  = [s['e5']     for s in st if isinstance(s.get('e5'),float)     and s['e5']>0.5]
-            e10 = [s['e10']    for s in st if isinstance(s.get('e10'),float)    and s['e10']>0.5]
-            die = [s['diesel'] for s in st if isinstance(s.get('diesel'),float) and s['diesel']>0.5]
-            results['_national'] = {'e5_avg':avg(e5),'e10_avg':avg(e10),'diesel_avg':avg(die),'count':len(st)}
-    except Exception as e:
-        print(f'  ! fuel/national: {e}')
+    # Nationaler Durchschnitt
+    nat = {'count': 0}
+    for fuel_type in ['e5', 'e10', 'diesel']:
+        try:
+            stations = get_stations(51.163, 10.447, rad=150, fuel_type=fuel_type)
+            prices = [s[fuel_type] for s in stations
+                      if isinstance(s.get(fuel_type), float) and s[fuel_type] > 0.5]
+            nat[f'{fuel_type}_avg'] = avg(prices)
+            nat['count'] = max(nat['count'], len(stations))
+            time.sleep(0.3)
+        except Exception as e:
+            print(f'  ! fuel/national/{fuel_type}: {e}')
+    results['_national'] = nat
 
     save('fuel', {'updated': now_utc().isoformat(), 'cities': results})
 
