@@ -1,7 +1,11 @@
 """
-Energy Dashboard – Fetcher v5
-Fixes: Energy-Charts API params, AGSI+ Felder, ren_share, Tab-State
-Neu: Bundesnetzagentur Ladesäulen-Statistik, robustere Fehlerbehandlung
+Energy Dashboard – Fetcher v5.1
+Fixes:
+  - Energy-Charts: ren_share_in_public_power → ren_share_daily_avg
+  - Energy-Charts: cross_border_electricity_trading → /cbet
+  - Energy-Charts: gas_price + co2_price entfernt (nicht mehr in API)
+  - Tankerkoenig: verschachtelte Funktion entfernt, direkter Fetch pro Stadt
+  - News: tote RSS-Feeds entfernt/ersetzt
 """
 import json, os, re, time, requests, pytz
 import xml.etree.ElementTree as ET
@@ -23,7 +27,7 @@ os.makedirs(OUT, exist_ok=True)
 
 SESSION = requests.Session()
 SESSION.headers.update({
-    'User-Agent': 'Mozilla/5.0 EnergyDashboard/5.0',
+    'User-Agent': 'Mozilla/5.0 EnergyDashboard/5.1',
     'Accept': 'application/json, */*',
 })
 
@@ -123,7 +127,6 @@ def fetch_energy_charts():
     end_str = now.strftime('%Y-%m-%d')
     start_7d = (now - timedelta(days=7)).strftime('%Y-%m-%d')
     start_30d = (now - timedelta(days=30)).strftime('%Y-%m-%d')
-    start_1y = (now - timedelta(days=365)).strftime('%Y-%m-%d')
 
     # Day-Ahead Preise – mehrere Länder (7 Tage, stündlich)
     for bzn, key in [('DE-LU','price_de'),('AT','price_at'),('FR','price_fr'),('PL','price_pl'),('CH','price_ch')]:
@@ -152,23 +155,22 @@ def fetch_energy_charts():
     # Öffentliche Stromerzeugung DE (7 Tage)
     d = ec_get('public_power', {
         'country': 'de',
-        'start': start_7d + 'T00:00Z',
-        'end': end_str + 'T23:59Z',
+        'start': start_7d,
+        'end': end_str,
     })
     if d:
         results['public_power_de'] = d
     time.sleep(0.2)
 
-    # EE-Anteil (30 Tage) – WICHTIG: Feldname ist 'share_of_generation_capacity' ODER 'ren_share'
-    d = ec_get('ren_share_in_public_power', {'country': 'de', 'start': start_30d, 'end': end_str})
+    # FIX: ren_share_in_public_power existiert nicht mehr → ren_share_daily_avg verwenden
+    # Gibt tägliche Durchschnittswerte der letzten 365 Tage zurück (kein start/end nötig)
+    d = ec_get('ren_share_daily_avg', {'country': 'de'})
     if d:
-        # Normalisiere: stelle sicher dass 'ren_share' Feld existiert
-        share_vals = d.get('ren_share') or d.get('share_of_generation_capacity') or d.get('share') or []
         results['ren_share_de'] = {
-            'unix_seconds': d.get('unix_seconds', []),
-            'ren_share': share_vals,  # immer unter diesem Key speichern
+            'days': d.get('days', []),
+            'ren_share': d.get('data', []),
         }
-        print(f'    ec/ren_share: {len(share_vals)} pts')
+        print(f'    ec/ren_share_daily_avg: {len(d.get("data", []))} pts')
     time.sleep(0.2)
 
     # Installierte Leistung DE (jährlich)
@@ -177,28 +179,18 @@ def fetch_energy_charts():
         results['installed_de'] = d
     time.sleep(0.2)
 
-    # TTF Gaspreis (1 Jahr)
-    d = ec_get('gas_price', {'start': start_1y, 'end': end_str})
-    if d:
-        results['gas_price'] = d
-        print(f'    ec/gas_price: {len(d.get("price", []))} pts')
-    time.sleep(0.2)
+    # FIX: gas_price + co2_price gibt es nicht mehr in der Energy-Charts API → entfernt
+    # Diese Daten können bei Bedarf aus anderen Quellen (z.B. Yahoo Finance) geholt werden
 
-    # CO2 Preis (1 Jahr)
-    d = ec_get('co2_price', {'start': start_1y, 'end': end_str})
-    if d:
-        results['co2_price'] = d
-        print(f'    ec/co2_price: {len(d.get("price", []))} pts')
-    time.sleep(0.2)
-
-    # Grenzüberschreitender Handel DE (7 Tage)
-    d = ec_get('cross_border_electricity_trading', {
+    # FIX: cross_border_electricity_trading → neuer Endpunkt ist /cbet
+    d = ec_get('cbet', {
         'country': 'de',
-        'start': start_7d + 'T00:00Z',
-        'end': end_str + 'T23:59Z',
+        'start': start_7d,
+        'end': end_str,
     })
     if d:
         results['cross_border_de'] = d
+        print(f'    ec/cbet: OK')
     time.sleep(0.2)
 
     save('energy_charts', {'updated': now_utc().isoformat(), **results})
@@ -208,7 +200,6 @@ def fetch_energy_charts():
 # ════════════════════════════════
 def fetch_gas():
     results = {}
-    # Korrekte AGSI+ API-Struktur
     country_map = {
         'eu': {'name': 'EU gesamt', 'param': {'country': 'eu'}},
         'de': {'name': 'Deutschland', 'param': {'country': 'de'}},
@@ -225,15 +216,12 @@ def fetch_gas():
         try:
             params = {**meta['param'], 'size': 300}
             r = get('https://agsi.gie.eu/api', params=params, timeout=25,
-                    extra_headers={'x-key': ''})  # AGSI+ braucht keinen Key für EU-Daten
+                    extra_headers={'x-key': ''})
             raw = r.json()
-
-            # AGSI+ gibt data-Array zurück
             entries = raw if isinstance(raw, list) else raw.get('data', [])
 
             cleaned = []
             for entry in entries:
-                # Füllstand: verschiedene mögliche Felder
                 fill = None
                 for field in ['full_is_percentage', 'fillLevel', 'trend']:
                     val = entry.get(field)
@@ -261,7 +249,6 @@ def fetch_gas():
                     'capacity': sf(entry.get('capacity') or entry.get('workingGasCapacity') or 0),
                 })
 
-            # Sortiere nach Datum absteigend, entferne leere Daten
             cleaned = [c for c in cleaned if c['date']]
             cleaned.sort(key=lambda x: x['date'], reverse=True)
             results[code] = {'name': meta['name'], 'data': cleaned}
@@ -275,6 +262,7 @@ def fetch_gas():
 
 # ════════════════════════════════
 # 4. TANKERKOENIG – Kraftstoff
+# FIX: verschachtelte Funktion entfernt, direkter Fetch pro Stadt
 # ════════════════════════════════
 FUEL_CITIES = {
     'Berlin':     (52.520, 13.405), 'Hamburg':    (53.550, 10.000),
@@ -298,41 +286,21 @@ def fetch_fuel():
 
     for city, (lat, lon) in FUEL_CITIES.items():
         try:
-            import time
-            
-            def fetch_all_cities():
-                all_results = {}
-                
-                for city, coords in CITIES.items():
-                    try:
-                        r = get(
-                            'https://tankerkoenig.de',
-                            params={
-                                'lat': coords[0],
-                                'lng': coords[1],
-                                'rad': 10,        # 10km Radius reicht für Stadtgebiete meist aus
-                                'sort': 'dist',   # 'dist' nutzen, da type='all'
-                                'type': 'all',
-                                'apikey': api_key
-                            },
-                            timeout=20
-                        )
-                        data = r.json()
-                        if data.get('ok'):
-                            all_results[city] = data.get('stations', [])
-                        
-                        # WICHTIG: Kurze Pause, um das Rate-Limit nicht zu sprengen
-                        time.sleep(1) 
-                        
-                    except Exception as e:
-                        print(f"Fehler bei {city}: {e}")
-            
-            return all_results
-
+            # FIX: Direkter Fetch – keine verschachtelte Funktion mehr
+            r = get(
+                'https://creativecommons.tankerkoenig.de/json/list.php',
+                params={
+                    'lat': lat, 'lng': lon,
+                    'rad': 10, 'sort': 'dist',
+                    'type': 'all', 'apikey': api_key
+                },
+                timeout=20
+            )
             d = r.json()
             if not d.get('ok'):
                 print(f'    fuel/{city}: API error – {d.get("message","?")}')
                 results[city] = {'error': d.get('message', 'api_error')}
+                time.sleep(0.4)
                 continue
 
             stations = d.get('stations', [])
@@ -348,7 +316,7 @@ def fetch_fuel():
                 'lat': lat, 'lon': lon,
             }
             print(f'    fuel/{city}: E5={results[city]["e5_avg"]} ({len(stations)} Stationen)')
-            time.sleep(0.4)  # Rate-Limit respektieren
+            time.sleep(0.4)
         except Exception as e:
             print(f'  ! fuel/{city}: {e}')
             results[city] = {}
@@ -376,83 +344,35 @@ def fetch_fuel():
 
 # ════════════════════════════════
 # 5. LADESÄULEN – Bundesnetzagentur
+# FIX: tote Endpunkte entfernt, nur Fallback + Trend bleibt
 # ════════════════════════════════
 def fetch_charging():
-    """
-    Bundesnetzagentur Ladesäulenregister – öffentliche API
-    Liefert Statistiken über Ladesäulen in Deutschland
-    """
     results = {}
-    try:
-        # Statistik-Endpunkt der BNetzA
-        r = get(
-            'https://ladestationen.api.bund.dev/api/StationStatistic',
-            timeout=30,
-            extra_headers={'Accept': 'application/json'}
-        )
-        data = r.json()
-        results['statistics'] = data
-        print(f'    charging/statistics: OK')
-    except Exception as e:
-        print(f'  ! charging/statistics: {e}')
 
-    # Lade-Tarife der großen Anbieter via chargeprice (öffentliche Daten)
-    # Wir holen die Top-Anbieter Ladestationen-Zahlen aus einer alternativen Quelle
-    try:
-        # BUNDESNETZAGENTUR öffentliches Datenportal – CSV für Statistiken
-        r = get(
-            'https://www.bundesnetzagentur.de/SharedDocs/Downloads/DE/Sachgebiete/Energie/Unternehmen_Institutionen/E_Mobilitaet/Ladesaeulenregister.xlsx',
-            timeout=60,
-            extra_headers={'Accept': '*/*'}
-        )
-        # Wir speichern nur die Größe als Indikator
-        results['register_size_bytes'] = len(r.content)
-        print(f'    charging/register: {len(r.content)//1024} KB')
-    except Exception as e:
-        print(f'  ! charging/register: {e}')
+    # Fallback: BNetzA Bericht (Stand Q4/2024)
+    results['by_state'] = [
+        {'bundesland': 'Bayern', 'anzahl_ladepunkte': 24831},
+        {'bundesland': 'Nordrhein-Westfalen', 'anzahl_ladepunkte': 22134},
+        {'bundesland': 'Baden-Württemberg', 'anzahl_ladepunkte': 19876},
+        {'bundesland': 'Niedersachsen', 'anzahl_ladepunkte': 11234},
+        {'bundesland': 'Hessen', 'anzahl_ladepunkte': 10987},
+        {'bundesland': 'Berlin', 'anzahl_ladepunkte': 8234},
+        {'bundesland': 'Rheinland-Pfalz', 'anzahl_ladepunkte': 6543},
+        {'bundesland': 'Sachsen', 'anzahl_ladepunkte': 5876},
+        {'bundesland': 'Brandenburg', 'anzahl_ladepunkte': 5123},
+        {'bundesland': 'Hamburg', 'anzahl_ladepunkte': 4987},
+        {'bundesland': 'Schleswig-Holstein', 'anzahl_ladepunkte': 4567},
+        {'bundesland': 'Thüringen', 'anzahl_ladepunkte': 3234},
+        {'bundesland': 'Sachsen-Anhalt', 'anzahl_ladepunkte': 2987},
+        {'bundesland': 'Mecklenburg-Vorpommern', 'anzahl_ladepunkte': 2345},
+        {'bundesland': 'Saarland', 'anzahl_ladepunkte': 1654},
+        {'bundesland': 'Bremen', 'anzahl_ladepunkte': 1234},
+    ]
+    results['by_state_source'] = 'fallback_bnetza_q4_2024'
+    print('    charging/by_state: Fallback-Daten')
 
-    # Einfachere Statistik: Wir aggregieren aus dem Fetched-Data
-    # Anzahl Ladesäulen pro Bundesland aus offener Datenquelle
-    try:
-        r = get(
-            'https://opendata.rhein-kreis-neuss.de/api/explore/v2.1/catalog/datasets/ladesaeulen-bestand-bundeslaender/records',
-            params={'limit': 20, 'order_by': 'bundesland'},
-            timeout=20
-        )
-        d = r.json()
-        records = d.get('results', [])
-        if records:
-            results['by_state'] = records
-            print(f'    charging/by_state: {len(records)} Bundesländer')
-    except Exception as e:
-        print(f'  ! charging/by_state: {e}')
-
-    # Fallback: hardcodierte aktuelle Werte aus BNetzA Bericht (Stand Q4/2024)
-    if not results.get('by_state'):
-        results['by_state'] = [
-            {'bundesland': 'Bayern', 'anzahl_ladepunkte': 24831},
-            {'bundesland': 'Nordrhein-Westfalen', 'anzahl_ladepunkte': 22134},
-            {'bundesland': 'Baden-Württemberg', 'anzahl_ladepunkte': 19876},
-            {'bundesland': 'Niedersachsen', 'anzahl_ladepunkte': 11234},
-            {'bundesland': 'Hessen', 'anzahl_ladepunkte': 10987},
-            {'bundesland': 'Berlin', 'anzahl_ladepunkte': 8234},
-            {'bundesland': 'Rheinland-Pfalz', 'anzahl_ladepunkte': 6543},
-            {'bundesland': 'Sachsen', 'anzahl_ladepunkte': 5876},
-            {'bundesland': 'Brandenburg', 'anzahl_ladepunkte': 5123},
-            {'bundesland': 'Hamburg', 'anzahl_ladepunkte': 4987},
-            {'bundesland': 'Schleswig-Holstein', 'anzahl_ladepunkte': 4567},
-            {'bundesland': 'Thüringen', 'anzahl_ladepunkte': 3234},
-            {'bundesland': 'Sachsen-Anhalt', 'anzahl_ladepunkte': 2987},
-            {'bundesland': 'Mecklenburg-Vorpommern', 'anzahl_ladepunkte': 2345},
-            {'bundesland': 'Saarland', 'anzahl_ladepunkte': 1654},
-            {'bundesland': 'Bremen', 'anzahl_ladepunkte': 1234},
-        ]
-        results['by_state_source'] = 'fallback_bnetza_q4_2024'
-        print('    charging/by_state: Fallback-Daten verwendet')
-
-    # Wachstumstrend (monatlich, aus BNetzA Pressemitteilungen)
     results['trend'] = {
-        'total_charging_points': 135000,  # aktuell ca. 135.000 (Q4/2024)
+        'total_charging_points': 135000,
         'total_stations': 89000,
         'growth_2024_pct': 38,
         'ac_share_pct': 82,
@@ -527,20 +447,21 @@ def fetch_commodities():
 
 # ════════════════════════════════
 # 8. NEWS (RSS)
+# FIX: tote Feeds entfernt, funktionierende behalten
 # ════════════════════════════════
 RSS_FEEDS = [
-    ('PV Magazine',      'https://www.pv-magazine.de/feed/'),
-    ('Energie Zukunft',  'https://www.energiezukunft.eu/feed/'),
-    ('Solar Server',     'https://www.solarserver.de/feed/'),
-    ('IWR',              'https://www.iwr.de/uploads/tx_vxnewsrss/iwr_rss_feed.xml'),
-    ('BNetzA',           'https://www.bundesnetzagentur.de/SiteGlobals/Functions/RSS/DE/RSS-Newsfeed.xml'),
-    ('Netzausbau',       'https://www.netzausbau.de/service/rss/de.xml'),
-    ('BDEW',             'https://www.bdew.de/service/pressemitteilungen/?format=feed&type=rss'),
-    ('Strom-Report',     'https://strom-report.de/feed/'),
-    ('Fraunhofer ISE',   'https://www.ise.fraunhofer.de/de/presse-und-medien/news/rss.xml'),
-    ('Energy Brainpool', 'https://www.energybrainpool.com/feed/'),
-    ('Handelsblatt Energie', 'https://www.handelsblatt.com/rss/thema/energiewende'),
-    ('dena',             'https://www.dena.de/rss/newsrss.xml'),
+    ('PV Magazine',       'https://www.pv-magazine.de/feed/'),
+    ('Solar Server',      'https://www.solarserver.de/feed/'),
+    ('Energy Brainpool',  'https://www.energybrainpool.com/feed/'),
+    ('Fraunhofer ISE',    'https://www.ise.fraunhofer.de/content/dam/ise/de/documents/publications/press-releases/rss.xml'),
+    ('Netzausbau',        'https://www.netzausbau.de/service/rss/de.xml'),
+    ('Strom-Report',      'https://strom-report.de/feed/'),
+    ('Cleanthinking',     'https://cleanthinking.de/feed/'),
+    ('Energate',          'https://www.energate-messenger.de/news/rss'),
+    ('Renewables Int.',   'https://www.renewablesinternational.net/feed/'),
+    ('Handelsblatt',      'https://www.handelsblatt.com/contentexport/feed/themen/energiewende'),
+    ('T-Online Energie',  'https://www.t-online.de/themen/energiewende/rss.xml'),
+    ('Tagesschau',        'https://www.tagesschau.de/xml/rss2_themen/'),
 ]
 
 def strip_html(text):
@@ -570,7 +491,6 @@ def fetch_news():
         except Exception as e:
             print(f'  ! news/{source}: {e}')
 
-    # Sortiere nach Datum (neueste zuerst)
     def parse_date(d):
         for fmt in ['%a, %d %b %Y %H:%M:%S %z', '%a, %d %b %Y %H:%M:%S %Z', '%Y-%m-%dT%H:%M:%S%z']:
             try:
@@ -589,14 +509,14 @@ def write_meta():
     save('meta', {
         'last_fetch': now_utc().isoformat(),
         'next_fetch_approx': (now_utc() + timedelta(minutes=15)).isoformat(),
-        'version': '5.0',
+        'version': '5.1',
     })
 
 # ════════════════════════════════
 # MAIN
 # ════════════════════════════════
 if __name__ == '__main__':
-    print(f'=== Energy Dashboard Fetch v5 – {now_utc().isoformat()} ===\n')
+    print(f'=== Energy Dashboard Fetch v5.1 – {now_utc().isoformat()} ===\n')
     steps = [
         ('SMARD Stromerzeugung',          fetch_smard),
         ('Energy-Charts Fraunhofer ISE',  fetch_energy_charts),
