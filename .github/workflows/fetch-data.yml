@@ -30,6 +30,8 @@ jobs:
       - name: Fetch all energy data
         run: python scripts/fetch_all.py
         continue-on-error: true
+        env:
+          TANKERKOENIG_API_KEY: ${{ secrets.TANKERKOENIG_API_KEY }}
 
       - name: Show results
         run: ls -lh data/ || echo "data folder empty"
