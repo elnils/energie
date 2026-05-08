@@ -45,11 +45,27 @@ def _to_float(s: str) -> Optional[float]:
 
 
 def _post(endpoint: str, token: str, **params) -> dict:
+    """
+    Genesis-Online v5.0 API: credentials go in HTTP HEADERS, not the body.
+    Body contains only the actual request parameters as form-urlencoded.
+
+    Per the official "GENESIS Webservice Einführung v5.0" (May 2025):
+        "Zugangsdaten: Felder im HTTP-Header.
+         Weitere Parameter: Felder im Request-Body."
+
+    The token replaces the username field. Password header must be present
+    but empty when using token auth.
+    """
     s = http.get_session()
-    body = {'username': token, 'password': '', 'language': 'de', **params}
+    headers = {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'username': token,
+        'password': '',
+    }
+    body = {'language': 'de', **params}
     r = s.post(f'{BASE_URL}/{endpoint}',
                data=body,
-               headers={'Content-Type': 'application/x-www-form-urlencoded'},
+               headers=headers,
                timeout=30)
     r.raise_for_status()
     return r.json()
@@ -143,6 +159,17 @@ def fetch() -> dict:
     token = os.environ.get('DESTATIS_API_TOKEN', '').strip()
     if len(token) < 10:
         raise RuntimeError('DESTATIS_API_TOKEN missing — register at www-genesis.destatis.de')
+
+    # Auth probe: 'helloworld/whoami' returns caller IP + hostname when auth works.
+    # If this 401s, the token or auth method is wrong and there's no point trying tables.
+    try:
+        whoami = _post('helloworld/whoami', token)
+        ident = whoami.get('User', whoami.get('Ident', '?')) if isinstance(whoami, dict) else '?'
+        print(f'    destatis whoami: {ident}')
+    except Exception as e:
+        raise RuntimeError(f'Destatis auth probe (whoami) failed: {e}. '
+                          'Check DESTATIS_API_TOKEN. Token must be from Genesis-Online -> '
+                          'Mein Konto -> Webservice/API.')
 
     # Headline VPI: gives us the overall inflation context
     try:
