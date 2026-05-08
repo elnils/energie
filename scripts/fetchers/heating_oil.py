@@ -34,20 +34,37 @@ def _parse_de_decimal(s: str) -> Optional[float]:
 
 def _extract_reference_price(html: str) -> Optional[float]:
     """
-    Find the 'Referenzpreis aktuell' table row.
-    The page renders something like:
-        | Referenzpreis aktuell ... | am 7. Mai Ø 1,317 €/l |
-    We grab the EUR/Liter number on that line.
+    Find the current Tecson reference price for heating oil (EUR/L).
+
+    Tecson varies their HTML structure between releases. We try multiple
+    patterns in priority order. Each captures either an EUR/L or Cent/L
+    value and converts to EUR/L.
     """
-    # Look for "Ø <num> €/l" — Ø is U+00D8 in their HTML
-    m = re.search(r'Ø\s*([0-9]+[,.]?[0-9]*)\s*€\s*/\s*l', html)
-    if m:
-        return _parse_de_decimal(m.group(1))
-    # Backup: cent/liter mention in headline
-    m = re.search(r'auf\s+([0-9]+[,.][0-9]+)\s*Cent/Liter', html)
-    if m:
-        cents = _parse_de_decimal(m.group(1))
-        return round(cents / 100.0, 4) if cents is not None else None
+    patterns = [
+        # Format 1 (older): "am 7. Mai Ø 1,317 €/l"
+        (r'Ø\s*([0-9]+[,.]?[0-9]*)\s*€\s*/\s*l',     'eur_l'),
+        # Format 2 (older): "auf 131,7 Cent/Liter"
+        (r'auf\s+([0-9]+[,.][0-9]+)\s*Cent/Liter',    'cent_l'),
+        # Format 3 (current May 2026): "bei 134,7 Cent/Liter"
+        (r'bei\s+([0-9]+[,.][0-9]+)\s*Cent/Liter',    'cent_l'),
+        # Format 4 (also current): "HEL Ø-Preis ... 134,7 Cent/Liter"
+        (r'HEL\s*Ø[\-\s]*Preis[^0-9]*([0-9]+[,.][0-9]+)\s*Cent/Liter', 'cent_l'),
+        # Format 5: any "Ø ... Cent/Liter" structure
+        (r'Ø[\-\s]*Preis[^0-9]*([0-9]+[,.][0-9]+)\s*Cent\s*/\s*Liter', 'cent_l'),
+        # Format 6 (last resort): standalone "<num> Cent/Liter" preceded by news header
+        (r'Heizöl[^0-9]{0,50}([0-9]{2,3}[,.][0-9])\s*Cent/Liter', 'cent_l'),
+    ]
+    for pattern, unit in patterns:
+        m = re.search(pattern, html, re.IGNORECASE)
+        if m:
+            val = _parse_de_decimal(m.group(1))
+            if val is None:
+                continue
+            if unit == 'cent_l':
+                val = round(val / 100.0, 4)
+            # Sanity: heating oil EUR/L should be 0.3 - 5.0
+            if 0.3 < val < 5.0:
+                return val
     return None
 
 
