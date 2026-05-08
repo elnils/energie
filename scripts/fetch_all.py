@@ -4,7 +4,7 @@ Energy Dashboard fetcher — orchestrator.
 Architecture:
   - Each source has its own module under fetchers/.
   - This script reads the SCHEDULE table and asks state.should_run() per source.
-  - For each due source, runs core.io.write_with_fallback() which guarantees
+  - For each due source, runs core.store.write_with_fallback() which guarantees
     that data/<source>.json always exists with a usable schema (stale or fresh).
   - Updates _state.json after each successful run.
   - Writes meta.json with overall status.
@@ -25,7 +25,7 @@ from typing import Callable, Dict
 
 # Local imports
 sys.path.insert(0, os.path.dirname(__file__))
-from core import io, state, paths
+from core import store, state, paths
 from fetchers import (
     smard, energy_charts, gas_storage, fuel, weather,
     commodities, news, fx_ecb, heating_oil, destatis_vpi,
@@ -54,7 +54,7 @@ SCHEDULE = [
 def run_source(label: str, name: str, fetch_fn: Callable, force: bool = False) -> dict:
     print(f'\n[{label}]')
     state.mark_attempt(name)
-    result = io.write_with_fallback(name, fetch_fn)
+    result = store.write_with_fallback(name, fetch_fn)
     if result.get('stale'):
         state.mark_error(name, result.get('last_error') or 'unknown')
     else:
@@ -67,7 +67,7 @@ def write_meta(results: Dict[str, dict]) -> None:
     stale = sum(1 for r in results.values() if r.get('stale'))
     skipped = sum(1 for r in results.values() if r.get('_skipped'))
     payload = {
-        'last_fetch': io.now_iso(),
+        'last_fetch': store.now_iso(),
         'version': '5.0',
         'fresh': fresh,
         'stale': stale,
@@ -81,7 +81,7 @@ def write_meta(results: Dict[str, dict]) -> None:
             } for name, r in results.items()
         },
     }
-    io.write_atomic('meta', payload)
+    store.write_atomic('meta', payload)
 
 
 def main() -> int:
@@ -92,7 +92,7 @@ def main() -> int:
                         help='Run only a single source (by name)')
     args = parser.parse_args()
 
-    print(f'=== Energy Dashboard fetch v5.0 — {io.now_iso()} ===')
+    print(f'=== Energy Dashboard fetch v5.0 — {store.now_iso()} ===')
     if args.force:
         print('  (force mode: gating disabled)')
     if args.only:
