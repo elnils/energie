@@ -1,40 +1,96 @@
 name: Fetch Energy Data
+
 on:
   schedule:
-    - cron: '*/15 * * * *'
+    # Hourly. Each fetcher decides via its interval if it actually runs.
+    - cron: '0 * * * *'
   workflow_dispatch:
+    inputs:
+      force:
+        description: 'Ignore frequency gating and refresh everything'
+        required: false
+        default: 'false'
+        type: choice
+        options: ['false', 'true']
+      only:
+        description: 'Run a single source (e.g. ecb, smard, gas_storage)'
+        required: false
+        default: ''
+        type: string
   push:
     branches: [main]
+    paths:
+      - 'scripts/**'
+      - '.github/workflows/fetch-data.yml'
+
 permissions:
   contents: write
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+concurrency:
+  group: fetch-data
+  cancel-in-progress: false
+
 jobs:
   fetch:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 1
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          cache: 'pip'
+
       - name: Install dependencies
-        run: pip install requests pytz
-      - name: Fetch all energy data
-        run: python scripts/fetch_all.py
-        continue-on-error: true
-        env:
-          TANKERKOENIG_API_KEY: ${{ secrets.TANKERKOENIG_API_KEY }}
-      - name: Show results
-        run: ls -lh data/ || echo "data folder empty"
-      - name: Commit and push
         run: |
-          git config user.name github-actions-bot
-          git config user.email actions@github.com
-          git fetch origin main
-          git reset --soft origin/main
+          python -m pip install --upgrade pip
+          pip install requests pytz urllib3
+
+      - name: Build CLI flags
+        id: flags
+        run: |
+          FLAGS=""
+          if [ "${{ github.event.inputs.force }}" = "true" ]; then
+            FLAGS="$FLAGS --force"
+          fi
+          if [ -n "${{ github.event.inputs.only }}" ]; then
+            FLAGS="$FLAGS --only=${{ github.event.inputs.only }}"
+          fi
+          echo "flags=$FLAGS" >> $GITHUB_OUTPUT
+
+      - name: Run fetchers
+        id: run
+        run: python scripts/fetch_all.py ${{ steps.flags.outputs.flags }}
+        env:
+          GIE_API_KEY:           ${{ secrets.GIE_API_KEY }}
+          TANKERKOENIG_API_KEY:  ${{ secrets.TANKERKOENIG_API_KEY }}
+          DESTATIS_API_TOKEN:    ${{ secrets.DESTATIS_API_TOKEN }}
+          ENTSOE_SECURITY_TOKEN: ${{ secrets.ENTSOE_SECURITY_TOKEN }}
+
+      - name: Show results
+        if: always()
+        run: |
+          echo "--- data/ ---"
+          ls -lh data/ 2>/dev/null || echo "no data/"
+          echo "--- meta.json ---"
+          cat data/meta.json 2>/dev/null | head -100 || echo "no meta"
+
+      - name: Commit and push
+        if: success()
+        run: |
+          git config user.name  "github-actions-bot"
+          git config user.email "actions@github.com"
           git add data/
-          git diff --cached --quiet || git commit -m "update energy data"
-          git push origin main
+          if git diff --cached --quiet; then
+            echo "no data changes to commit"
+          else
+            git commit -m "data update $(date -u +%Y-%m-%dT%H:%MZ)"
+            # Pull --rebase to handle other concurrent commits gracefully
+            git pull --rebase origin main || true
+            git push origin main
+          fi
