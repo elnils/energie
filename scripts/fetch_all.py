@@ -25,7 +25,7 @@ from typing import Callable, Dict
 
 # Local imports
 sys.path.insert(0, os.path.dirname(__file__))
-from core import store, state, paths
+from core import store, State, paths
 from fetchers import (
     smard, energy_charts, gas_storage, fuel, weather,
     commodities, news, fx_ecb, heating_oil, destatis_vpi,
