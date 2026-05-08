@@ -3,7 +3,7 @@ Atomic writes and stale-while-error wrapper.
 
 The contract every fetcher follows:
 
-    result = io.write_with_fallback(name, fetch_fn)
+    result = store.write_with_fallback(name, fetch_fn)
 
 If `fetch_fn()` returns a dict, we validate it (caller-side) and write it
 atomically to data/<name>.json plus a tmp staging step. If the function raises,
