@@ -5,109 +5,158 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Energie Dashboard DE/EU</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#0d1117;--bg2:#161b22;--bg3:#21262d;--bg4:#30363d;
-  --border:#30363d;--border2:#484f58;
-  --text:#e6edf3;--text2:#8b949e;--text3:#484f58;
-  --accent:#58a6ff;--green:#3fb950;--yellow:#d29922;
-  --red:#f85149;--orange:#f0883e;--purple:#bc8cff;--cyan:#39d353;
+  /* ArcGIS-style light palette: white cards on cool grey canvas, dark blue anchor */
+  --bg:#eef2f6;          /* page background */
+  --bg-alt:#f7f9fc;      /* alt rows, hover */
+  --card:#ffffff;        /* card background */
+  --header:#1f3a5f;      /* dark blue anchor (header, navs, primary buttons) */
+  --header-hover:#2a4a73;
+  --border:#dde3eb;      /* card edges */
+  --border-strong:#c5cdd8;
+  --text:#1a2332;        /* primary text — near-black blue */
+  --text2:#56657a;       /* secondary */
+  --text3:#8c98a8;       /* tertiary, captions */
+  --text-on-dark:#f0f4f9;
+  --accent:#0e6cb6;      /* primary accent (links, KPIs, active tab) */
+  --accent-bg:#e7f1f9;
+  --green:#1f9d55;
+  --green-bg:#e3f5ec;
+  --yellow:#c98a04;
+  --yellow-bg:#fdf3da;
+  --red:#c0392b;
+  --red-bg:#fbe7e3;
+  --orange:#d97706;
+  --purple:#7e57c2;
+  --teal:#0891b2;
+  /* shadows */
+  --shadow:0 1px 2px rgba(15,30,55,.04),0 1px 3px rgba(15,30,55,.06);
+  --shadow-md:0 2px 4px rgba(15,30,55,.05),0 4px 12px rgba(15,30,55,.08);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:13px;line-height:1.5}
+body{background:var(--bg);color:var(--text);font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:13px;line-height:1.5;-webkit-font-smoothing:antialiased}
 a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
 
-header{display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:48px;background:var(--bg2);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:200}
-.logo{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:14px;color:var(--accent)}
-.logo span{color:var(--text2);font-weight:400}
-.hdr-right{display:flex;align-items:center;gap:10px;font-size:11px;color:var(--text2)}
-.live{display:flex;align-items:center;gap:5px;color:var(--green);font-weight:600;font-size:11px}
-.pulse{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-.btn{background:var(--bg3);color:var(--text2);border:1px solid var(--border2);border-radius:5px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:inherit;transition:all .1s}
-.btn:hover{border-color:var(--accent);color:var(--accent)}
+header{display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:52px;background:var(--header);color:var(--text-on-dark);position:sticky;top:0;z-index:200;box-shadow:var(--shadow-md)}
+.logo{font-weight:700;font-size:15px;color:#fff;letter-spacing:-0.01em}
+.logo span{color:#a8b8cd;font-weight:400;margin-left:2px}
+.hdr-right{display:flex;align-items:center;gap:14px;font-size:12px;color:#a8b8cd}
+.live{display:flex;align-items:center;gap:6px;color:#5cd29a;font-weight:600;font-size:11px}
+.pulse{width:7px;height:7px;border-radius:50%;background:#5cd29a;box-shadow:0 0 0 0 rgba(92,210,154,0.7);animation:pulse 2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(92,210,154,0.7)}70%{box-shadow:0 0 0 8px rgba(92,210,154,0)}100%{box-shadow:0 0 0 0 rgba(92,210,154,0)}}
+.btn{background:rgba(255,255,255,0.12);color:var(--text-on-dark);border:1px solid rgba(255,255,255,0.2);border-radius:5px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:500;transition:all .15s}
+.btn:hover{background:rgba(255,255,255,0.2);border-color:rgba(255,255,255,0.35)}
 
-.tabs{display:flex;padding:0 16px;background:var(--bg2);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none}
+.tabs{display:flex;padding:0 20px;background:var(--card);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;box-shadow:var(--shadow)}
 .tabs::-webkit-scrollbar{display:none}
-.tab{background:none;border:none;border-bottom:2px solid transparent;color:var(--text2);padding:9px 14px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:500;white-space:nowrap;transition:all .1s}
+.tab{background:none;border:none;border-bottom:2px solid transparent;color:var(--text2);padding:12px 16px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:500;white-space:nowrap;transition:all .15s}
 .tab:hover{color:var(--text)}
-.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
 
-main{padding:12px 16px 60px}
+main{padding:18px 20px 70px;max-width:1600px;margin:0 auto}
 .panel{display:none}
 .panel.active{display:block}
 
-.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-bottom:12px}
-.kpi{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:10px 12px;position:relative;overflow:hidden}
-.kpi-bar{position:absolute;top:0;left:0;right:0;height:2px}
-.kpi-lbl{font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:4px;margin-top:1px}
-.kpi-val{font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:600;color:var(--text);line-height:1}
-.kpi-unit{font-size:9px;color:var(--text3);margin-top:3px}
-.kpi-delta{font-size:10px;margin-top:3px;font-weight:500}
-.up{color:var(--green)}.dn{color:var(--red)}
+/* Range selector — shared across all tabs */
+.range-bar{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:8px 12px;background:var(--card);border:1px solid var(--border);border-radius:6px;box-shadow:var(--shadow);flex-wrap:wrap}
+.range-bar-lbl{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.05em}
+.range-opts{display:flex;gap:2px;background:var(--bg-alt);padding:2px;border-radius:5px}
+.range-opt{background:transparent;border:none;padding:4px 11px;font-size:11px;font-weight:500;color:var(--text2);cursor:pointer;border-radius:4px;font-family:inherit;transition:all .12s}
+.range-opt:hover:not(:disabled){color:var(--text);background:rgba(0,0,0,.04)}
+.range-opt:disabled{color:var(--text3);cursor:not-allowed;opacity:.5}
+.range-opt.active{background:var(--card);color:var(--accent);font-weight:600;box-shadow:0 1px 2px rgba(15,30,55,.08)}
 
-.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:10px;margin-bottom:12px}
-.card{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:12px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:12px 14px;position:relative;overflow:hidden;box-shadow:var(--shadow);transition:box-shadow .15s}
+.kpi:hover{box-shadow:var(--shadow-md)}
+.kpi-bar{position:absolute;top:0;left:0;right:0;height:3px}
+.kpi-lbl{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;font-weight:600;margin-bottom:5px;margin-top:2px}
+.kpi-val{font-size:24px;font-weight:700;color:var(--text);line-height:1.1;letter-spacing:-0.02em}
+.kpi-unit{font-size:10px;color:var(--text3);margin-top:4px}
+.kpi-delta{font-size:11px;margin-top:5px;font-weight:600;display:inline-flex;align-items:center;gap:3px;padding:1px 6px;border-radius:3px}
+.up{color:var(--green);background:var(--green-bg)}
+.dn{color:var(--red);background:var(--red-bg)}
+
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px;margin-bottom:14px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:14px;box-shadow:var(--shadow);transition:box-shadow .15s}
+.card:hover{box-shadow:var(--shadow-md)}
 .g12{grid-column:span 12}.g8{grid-column:span 8}.g6{grid-column:span 6}.g4{grid-column:span 4}.g3{grid-column:span 3}
 @media(max-width:900px){.g8,.g6,.g4,.g3{grid-column:span 12}}
 @media(min-width:901px) and (max-width:1200px){.g4,.g3{grid-column:span 6}}
 
-.card-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px}
-.card-title{font-size:11px;font-weight:600;color:var(--text)}
-.card-sub{font-size:9px;color:var(--text3);margin-top:1px}
+.card-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;gap:8px}
+.card-title{font-size:13px;font-weight:600;color:var(--text);letter-spacing:-0.005em}
+.card-sub{font-size:10px;color:var(--text3);margin-top:2px;font-weight:400}
 
 .chart-wrap{position:relative}
 .chart-wrap canvas{width:100%!important}
 .loading{display:flex;align-items:center;justify-content:center;height:90px;color:var(--text3);font-size:11px;gap:6px}
-.spin{width:14px;height:14px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:sp .7s linear infinite}
+.spin{width:14px;height:14px;border:2px solid var(--border-strong);border-top-color:var(--accent);border-radius:50%;animation:sp .7s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
 .nodata{display:flex;flex-direction:column;align-items:center;justify-content:center;height:90px;color:var(--text3);font-size:11px;gap:4px;text-align:center;padding:8px}
 
-.donut-wrap{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.donut-wrap{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
 .donut-ctr{position:relative;flex-shrink:0}
 .donut-inner{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
-.donut-big{font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:700;color:var(--green)}
-.donut-sm{font-size:8px;color:var(--text3);font-weight:600;text-transform:uppercase}
-.leg-grid{display:grid;grid-template-columns:1fr 1fr;gap:3px 10px;flex:1}
-.leg-row{display:flex;align-items:center;gap:5px;font-size:10px}
-.leg-dot{width:7px;height:7px;border-radius:2px;flex-shrink:0}
+.donut-big{font-size:20px;font-weight:700;color:var(--green);letter-spacing:-0.02em}
+.donut-sm{font-size:9px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.leg-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;flex:1}
+.leg-row{display:flex;align-items:center;gap:6px;font-size:11px}
+.leg-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
 .leg-lbl{color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.leg-val{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:600;color:var(--text);flex-shrink:0}
+.leg-val{margin-left:auto;font-size:10px;font-weight:600;color:var(--text);flex-shrink:0}
 
-.tbl{width:100%;border-collapse:collapse;font-size:11px}
-.tbl th{text-align:left;padding:5px 8px;color:var(--text3);font-size:9px;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border);font-weight:600}
-.tbl td{padding:5px 8px;border-bottom:1px solid var(--border);color:var(--text2)}
-.tbl tr:hover td{background:var(--bg3)}
-.tbl .num{text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:600;color:var(--text)}
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{text-align:left;padding:7px 10px;color:var(--text2);font-size:10px;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border);font-weight:600;background:var(--bg-alt)}
+.tbl td{padding:7px 10px;border-bottom:1px solid var(--border);color:var(--text)}
+.tbl tr:hover td{background:var(--bg-alt)}
+.tbl .num{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
 .pos{color:var(--green)}.neg{color:var(--red)}
 
-.city-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px}
-.city-card{background:var(--bg3);border:1px solid var(--border);border-radius:5px;padding:8px}
-.city-name{font-size:10px;font-weight:600;color:var(--text);margin-bottom:2px}
-.city-price{font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:700;color:var(--accent)}
-.city-label{font-size:8px;color:var(--text3);text-transform:uppercase}
+.city-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(135px,1fr));gap:8px}
+.city-card{background:var(--bg-alt);border:1px solid var(--border);border-radius:5px;padding:10px}
+.city-name{font-size:11px;font-weight:600;color:var(--text2);margin-bottom:3px}
+.city-price{font-size:16px;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums;letter-spacing:-0.01em}
+.city-label{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
 
-.news-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
-.news-card{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:12px;display:flex;flex-direction:column;gap:5px}
-.news-card:hover{border-color:var(--border2)}
+.news-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px}
+.news-card{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:14px;display:flex;flex-direction:column;gap:6px;box-shadow:var(--shadow);transition:box-shadow .15s}
+.news-card:hover{box-shadow:var(--shadow-md)}
 .news-src{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--accent)}
-.news-ttl{font-size:12px;font-weight:600;color:var(--text);line-height:1.4}
+.news-ttl{font-size:13px;font-weight:600;color:var(--text);line-height:1.4}
 .news-ttl a{color:inherit}
 .news-ttl a:hover{color:var(--accent)}
-.news-sum{font-size:10px;color:var(--text2);line-height:1.5}
-.news-date{font-size:9px;color:var(--text3)}
-.news-filters{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
-.nf-btn{background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:3px 9px;font-size:10px;cursor:pointer;color:var(--text2);font-family:inherit;transition:all .1s}
-.nf-btn:hover,.nf-btn.active{background:var(--accent);color:#000;border-color:var(--accent)}
+.news-sum{font-size:11px;color:var(--text2);line-height:1.5}
+.news-date{font-size:10px;color:var(--text3);font-weight:500}
+.news-filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.nf-btn{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:4px 11px;font-size:11px;cursor:pointer;color:var(--text2);font-family:inherit;font-weight:500;transition:all .12s}
+.nf-btn:hover{background:var(--bg-alt);color:var(--text);border-color:var(--border-strong)}
+.nf-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
 
-.statusbar{display:flex;align-items:center;gap:10px;padding:4px 16px;background:var(--bg2);border-top:1px solid var(--border);font-size:9px;color:var(--text3);position:fixed;bottom:0;left:0;right:0;z-index:100;overflow-x:auto;scrollbar-width:none}
+.statusbar{display:flex;align-items:center;gap:12px;padding:6px 20px;background:var(--card);border-top:1px solid var(--border);font-size:10px;color:var(--text3);position:fixed;bottom:0;left:0;right:0;z-index:100;overflow-x:auto;scrollbar-width:none;box-shadow:0 -1px 3px rgba(15,30,55,.05)}
 .statusbar::-webkit-scrollbar{display:none}
-.st{display:flex;align-items:center;gap:3px;white-space:nowrap}
-.dot{width:5px;height:5px;border-radius:50%;background:var(--text3)}
-.ok .dot{background:var(--green)}.err .dot{background:var(--red)}
+.st{display:flex;align-items:center;gap:4px;white-space:nowrap;font-weight:500}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--text3)}
+.ok .dot{background:var(--green)}
+.err .dot{background:var(--red)}
+.ok{color:var(--text2)}
+.err{color:var(--red)}
 
-select{background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:4px;font-size:11px;font-family:inherit;padding:2px 5px;cursor:pointer}
+select{background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:5px;font-size:12px;font-family:inherit;padding:4px 8px;cursor:pointer;font-weight:500;transition:border-color .12s}
+select:hover{border-color:var(--border-strong)}
+select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-bg)}
+
+/* Lage tab — special story header */
+.lage-hero{background:linear-gradient(135deg,var(--header) 0%,#2a4a73 100%);color:var(--text-on-dark);padding:18px 20px;border-radius:8px;margin-bottom:14px;box-shadow:var(--shadow-md)}
+.lage-hero-title{font-size:18px;font-weight:700;margin-bottom:4px;letter-spacing:-0.01em}
+.lage-hero-sub{font-size:12px;color:#a8b8cd;line-height:1.6}
+.lage-status{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:4px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-top:10px}
+.lage-status.ok{background:rgba(92,210,154,.15);color:#5cd29a;border:1px solid rgba(92,210,154,.3)}
+.lage-status.warn{background:rgba(220,151,4,.18);color:#f0ad4e;border:1px solid rgba(220,151,4,.3)}
+.lage-status.crit{background:rgba(220,53,69,.18);color:#ff7675;border:1px solid rgba(220,53,69,.3)}
 </style>
 </head>
 <body>
@@ -122,33 +171,30 @@ select{background:var(--bg3);color:var(--text);border:1px solid var(--border);bo
 </header>
 
 <nav class="tabs">
-  <button class="tab active" data-tab="strom">⚡ Strom</button>
-  <button class="tab" data-tab="markt">📈 Marktpreise</button>
-  <button class="tab" data-tab="rohstoffe">🛢 Rohstoffe</button>
-  <button class="tab" data-tab="kraftstoff">⛽ Kraftstoff</button>
-  <button class="tab" data-tab="heizoel">🔥 Heizöl</button>
-  <button class="tab" data-tab="erneuerbare">🌱 Erneuerbare</button>
-  <button class="tab" data-tab="gas">🔵 Gas</button>
-  <button class="tab" data-tab="wetter">🌤 Wetter</button>
-  <button class="tab" data-tab="fx">💶 FX</button>
-  <button class="tab" data-tab="krise">🚨 Krise</button>
-  <button class="tab" data-tab="historisch">📅 Historisch</button>
-  <button class="tab" data-tab="news">📰 News</button>
+  <button class="tab active" data-tab="strom">Strom</button>
+  <button class="tab" data-tab="markt">Marktpreise</button>
+  <button class="tab" data-tab="rohstoffe">Rohstoffe</button>
+  <button class="tab" data-tab="kraftstoff">Kraftstoff</button>
+  <button class="tab" data-tab="heizoel">Heizöl</button>
+  <button class="tab" data-tab="erneuerbare">Erneuerbare</button>
+  <button class="tab" data-tab="gas">Gas</button>
+  <button class="tab" data-tab="wetter">Wetter</button>
+  <button class="tab" data-tab="fx">Wechselkurse</button>
+  <button class="tab" data-tab="lage">Marktlage & Versorgung</button>
+  <button class="tab" data-tab="historisch">Historisch</button>
+  <button class="tab" data-tab="news">News</button>
 </nav>
 
 <main>
 
 <!-- STROM -->
 <div class="panel active" id="panel-strom">
+  <div class="range-bar" data-tab="strom"></div>
   <div class="kpis" id="kpi-strom"></div>
   <div class="grid">
     <div class="card g8">
       <div class="card-hdr">
         <div><div class="card-title">Stromerzeugung nach Quelle</div><div class="card-sub">SMARD · Bundesnetzagentur · 15-min</div></div>
-        <select id="strom-range" onchange="renderStrom()">
-          <option value="1">24h</option><option value="3">3 Tage</option>
-          <option value="7" selected>7 Tage</option>
-        </select>
       </div>
       <div class="chart-wrap" style="height:230px"><canvas id="chart-gen"></canvas></div>
     </div>
@@ -171,6 +217,7 @@ select{background:var(--bg3);color:var(--text);border:1px solid var(--border);bo
 
 <!-- MARKT -->
 <div class="panel" id="panel-markt">
+  <div class="range-bar" data-tab="markt"></div>
   <div class="kpis" id="kpi-markt"></div>
   <div class="grid">
     <div class="card g6">
@@ -194,6 +241,7 @@ select{background:var(--bg3);color:var(--text);border:1px solid var(--border);bo
 
 <!-- ROHSTOFFE -->
 <div class="panel" id="panel-rohstoffe">
+  <div class="range-bar" data-tab="rohstoffe"></div>
   <div class="kpis" id="kpi-rohstoffe"></div>
   <div class="grid">
     <div class="card g6">
@@ -209,6 +257,7 @@ select{background:var(--bg3);color:var(--text);border:1px solid var(--border);bo
 
 <!-- KRAFTSTOFF -->
 <div class="panel" id="panel-kraftstoff">
+  <div class="range-bar" data-tab="kraftstoff"></div>
   <div class="grid">
     <div class="card g3">
       <div class="card-hdr"><div><div class="card-title">Kraftstoffart</div></div></div>
@@ -234,6 +283,7 @@ select{background:var(--bg3);color:var(--text);border:1px solid var(--border);bo
 
 <!-- ERNEUERBARE -->
 <div class="panel" id="panel-erneuerbare">
+  <div class="range-bar" data-tab="erneuerbare"></div>
   <div class="kpis" id="kpi-ren"></div>
   <div class="grid">
     <div class="card g6">
@@ -249,6 +299,7 @@ select{background:var(--bg3);color:var(--text);border:1px solid var(--border);bo
 
 <!-- GAS -->
 <div class="panel" id="panel-gas">
+  <div class="range-bar" data-tab="gas"></div>
   <div class="kpis" id="kpi-gas"></div>
   <div class="grid">
     <div class="card g8">
@@ -276,6 +327,7 @@ select{background:var(--bg3);color:var(--text);border:1px solid var(--border);bo
 
 <!-- WETTER -->
 <div class="panel" id="panel-wetter">
+  <div class="range-bar" data-tab="wetter"></div>
   <div class="kpis" id="kpi-wetter"></div>
   <div class="grid">
     <div class="card g6">
@@ -301,6 +353,7 @@ select{background:var(--bg3);color:var(--text);border:1px solid var(--border);bo
 
 <!-- HISTORISCH -->
 <div class="panel" id="panel-historisch">
+  <div class="range-bar" data-tab="historisch"></div>
   <div class="grid">
     <div class="card g12">
       <div class="card-hdr"><div><div class="card-title">Strompreise Day-Ahead – 20 Jahre (monatliche Ø)</div><div class="card-sub">Energy-Charts · Fraunhofer ISE · ab 2005</div></div></div>
@@ -319,6 +372,7 @@ select{background:var(--bg3);color:var(--text);border:1px solid var(--border);bo
 
 <!-- HEIZÖL -->
 <div class="panel" id="panel-heizoel">
+  <div class="range-bar" data-tab="heizoel"></div>
   <div class="kpis" id="kpi-heizoel"></div>
   <div class="grid">
     <div class="card g6">
@@ -338,6 +392,7 @@ select{background:var(--bg3);color:var(--text);border:1px solid var(--border);bo
 
 <!-- FX -->
 <div class="panel" id="panel-fx">
+  <div class="range-bar" data-tab="fx"></div>
   <div class="kpis" id="kpi-fx"></div>
   <div class="grid">
     <div class="card g8">
@@ -359,25 +414,32 @@ select{background:var(--bg3);color:var(--text);border:1px solid var(--border);bo
   </div>
 </div>
 
-<!-- KRISE -->
-<div class="panel" id="panel-krise">
-  <div class="kpis" id="kpi-krise"></div>
+<!-- LAGE (Marktlage & Versorgung) -->
+<div class="panel" id="panel-lage">
+  <div class="lage-hero">
+    <div id="lage-hero-content">
+      <div class="lage-hero-title">Marktlage & Versorgung</div>
+      <div class="lage-hero-sub">Wird geladen…</div>
+    </div>
+  </div>
+  <div class="range-bar" data-tab="lage"></div>
+  <div class="kpis" id="kpi-lage"></div>
   <div class="grid">
-    <div class="card g12">
-      <div class="card-hdr"><div><div class="card-title">VPI Energie · Index 2020 = 100</div><div class="card-sub">Destatis · monatlich · ausgewählte Energieprodukte</div></div></div>
-      <div class="chart-wrap" style="height:280px"><canvas id="chart-krise-vpi"></canvas></div>
+    <div class="card g6">
+      <div class="card-hdr"><div><div class="card-title">TTF Erdgas-Spot</div><div class="card-sub">Energy-Charts · Vor-Krise-Niveau ≈ 20 EUR/MWh (gepunktet)</div></div></div>
+      <div class="chart-wrap" style="height:240px"><canvas id="chart-lage-ttf"></canvas></div>
     </div>
     <div class="card g6">
-      <div class="card-hdr"><div><div class="card-title">Energie-Krisenindikatoren</div><div class="card-sub">YoY-Vergleich aller Kennzahlen</div></div></div>
-      <div id="krise-grid"><div class="loading"><span class="spin"></span></div></div>
+      <div class="card-hdr"><div><div class="card-title">EU-Gasspeicher · Saisonal</div><div class="card-sub">AGSI+ · aktueller Verlauf vs. Vorjahr</div></div></div>
+      <div class="chart-wrap" style="height:240px"><canvas id="chart-lage-gas"></canvas></div>
     </div>
     <div class="card g6">
-      <div class="card-hdr"><div><div class="card-title">Gas-Versorgungslage</div><div class="card-sub">EU-Speicher · LNG · letzte 90 Tage</div></div></div>
-      <div class="chart-wrap" style="height:230px"><canvas id="chart-krise-gas"></canvas></div>
+      <div class="card-hdr"><div><div class="card-title">VPI Energie</div><div class="card-sub">Destatis · Index 2020=100 · Strom · Gas · Kraftstoffe</div></div></div>
+      <div class="chart-wrap" style="height:240px"><canvas id="chart-lage-vpi"></canvas></div>
     </div>
-    <div class="card g12">
-      <div class="card-hdr"><div><div class="card-title">Physikalische Gasflüsse · DE-Grenzpunkte</div><div class="card-sub">ENTSOG · Tagessummen · letzte 30 Tage</div></div></div>
-      <div class="chart-wrap" style="height:230px"><canvas id="chart-krise-flows"></canvas></div>
+    <div class="card g6">
+      <div class="card-hdr"><div><div class="card-title">Brent vs. Heizöl DE</div><div class="card-sub">Indexiert auf 100 (Start des Zeitraums)</div></div></div>
+      <div class="chart-wrap" style="height:240px"><canvas id="chart-lage-oil"></canvas></div>
     </div>
   </div>
 </div>
@@ -418,6 +480,120 @@ let fuelType = 'e5';
 let newsSource = 'alle';
 let activeTab = 'strom';
 
+// ══════════════════════════════════════════════
+// TIME RANGE — unified per-tab range selector
+// ══════════════════════════════════════════════
+// Available range tokens. Each tab declares which subset it supports.
+const RANGE_DEFS = {
+  '24h': {label:'24h',  days:1,    seconds:86400},
+  '7d':  {label:'7d',   days:7,    seconds:7*86400},
+  '30d': {label:'30d',  days:30,   seconds:30*86400},
+  '90d': {label:'90d',  days:90,   seconds:90*86400},
+  '1y':  {label:'1J',   days:365,  seconds:365*86400},
+  '2y':  {label:'2J',   days:730,  seconds:730*86400},
+  '5y':  {label:'5J',   days:1825, seconds:1825*86400},
+  'max': {label:'Max',  days:Infinity, seconds:Infinity},
+};
+
+// Per-tab: which ranges are enabled (others rendered greyed out)
+const TAB_RANGES = {
+  strom:       ['24h','7d','30d'],
+  markt:       ['7d','30d','90d','1y','2y'],
+  rohstoffe:   ['30d','90d','1y','2y','max'],
+  kraftstoff:  ['7d','30d','90d'],
+  heizoel:     ['30d','90d','1y','2y','max'],
+  erneuerbare: ['30d','90d','1y','2y','5y','max'],
+  gas:         ['30d','90d','1y','2y','max'],
+  wetter:      ['24h','7d'],
+  fx:          ['30d','90d'],
+  lage:        ['90d','1y','2y','5y','max'],
+  historisch:  ['2y','5y','max'],
+  news:        [],  // no range
+};
+
+// Default range per tab (must be in TAB_RANGES[tab])
+const TAB_DEFAULT_RANGE = {
+  strom:'7d', markt:'30d', rohstoffe:'1y', kraftstoff:'30d',
+  heizoel:'1y', erneuerbare:'5y', gas:'1y', wetter:'7d',
+  fx:'90d', lage:'2y', historisch:'5y',
+};
+
+// Active range per tab (in-memory). Initialised from URL ?range= or localStorage.
+const tabRange = {};
+
+function loadRangePersistence() {
+  // URL takes precedence
+  const params = new URLSearchParams(window.location.search);
+  const urlRange = params.get('range');
+  let stored = {};
+  try { stored = JSON.parse(localStorage.getItem('energydash:tabRange') || '{}'); } catch(e) {}
+  Object.keys(TAB_DEFAULT_RANGE).forEach(tab => {
+    const allowed = TAB_RANGES[tab] || [];
+    const fromUrl = (tab === activeTab && urlRange && allowed.includes(urlRange)) ? urlRange : null;
+    const fromStorage = (allowed.includes(stored[tab])) ? stored[tab] : null;
+    tabRange[tab] = fromUrl || fromStorage || TAB_DEFAULT_RANGE[tab];
+  });
+}
+
+function saveRangePersistence() {
+  try { localStorage.setItem('energydash:tabRange', JSON.stringify(tabRange)); } catch(e) {}
+  // Sync URL for active tab so deep links work
+  const r = tabRange[activeTab];
+  if (r && TAB_RANGES[activeTab]?.length) {
+    const params = new URLSearchParams(window.location.search);
+    params.set('range', r);
+    history.replaceState(null, '', '?' + params.toString());
+  }
+}
+
+function getRange(tab) {
+  return tabRange[tab] || TAB_DEFAULT_RANGE[tab];
+}
+
+function getRangeSeconds(tab) {
+  const def = RANGE_DEFS[getRange(tab)];
+  return def ? def.seconds : 30*86400;
+}
+
+// Cutoff timestamps relative to now, respecting tab range.
+function rangeCutoffMs(tab) {
+  const sec = getRangeSeconds(tab);
+  return sec === Infinity ? 0 : Date.now() - sec * 1000;
+}
+function rangeCutoffSec(tab) {
+  const sec = getRangeSeconds(tab);
+  return sec === Infinity ? 0 : Math.floor(Date.now()/1000) - sec;
+}
+
+// Render the range selector inside a panel. Each panel that needs one
+// gets <div class="range-bar" data-tab="<tab>"></div> and we fill it.
+function renderRangeBar(tab) {
+  const bar = document.querySelector(`.range-bar[data-tab="${tab}"]`);
+  if (!bar) return;
+  const enabled = TAB_RANGES[tab] || [];
+  if (!enabled.length) { bar.style.display = 'none'; return; }
+  const current = getRange(tab);
+  bar.innerHTML = `
+    <span class="range-bar-lbl">Zeitraum</span>
+    <div class="range-opts">
+      ${Object.keys(RANGE_DEFS).map(k => {
+        const isEnabled = enabled.includes(k);
+        const isActive = k === current;
+        return `<button class="range-opt ${isActive?'active':''}" data-range="${k}" ${isEnabled?'':'disabled'}>${RANGE_DEFS[k].label}</button>`;
+      }).join('')}
+    </div>
+  `;
+  bar.querySelectorAll('.range-opt').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (btn.disabled) return;
+      tabRange[tab] = btn.dataset.range;
+      saveRangePersistence();
+      renderRangeBar(tab);
+      renderTab(tab);
+    });
+  });
+}
+
 const TAB_FILES = {
   strom:       ['smard','energy_charts','entsoe'],
   markt:       ['energy_charts','commodities','fx'],
@@ -428,17 +604,17 @@ const TAB_FILES = {
   gas:         ['gas_storage','entsog'],
   wetter:      ['weather'],
   fx:          ['fx'],
-  krise:       ['destatis_vpi','heating_oil','fuel','energy_charts','gas_storage'],
+  lage:        ['energy_charts','gas_storage','heating_oil','commodities','destatis_vpi','entsog','fx'],
   historisch:  ['energy_charts','commodities'],
   news:        ['news'],
 };
 
 const C = {
-  wind_on:'#58a6ff',wind_off:'#1f6feb',solar:'#d29922',
-  biomass:'#3fb950',hydro:'#39d353',nuclear:'#bc8cff',
-  lignite:'#8b6914',hard_coal:'#484f58',natural_gas:'#f0883e',
-  de:'#58a6ff',fr:'#f85149',at:'#3fb950',pl:'#39d353',ch:'#bc8cff',
-  brent:'#f0883e',wti:'#d29922',
+  wind_on:'#0e6cb6',wind_off:'#1e3a8a',solar:'#d97706',
+  biomass:'#1f9d55',hydro:'#0891b2',nuclear:'#7e57c2',
+  lignite:'#7c5e2a',hard_coal:'#4a5568',natural_gas:'#dc6803',
+  de:'#0e6cb6',fr:'#c0392b',at:'#1f9d55',pl:'#7e57c2',ch:'#0891b2',
+  brent:'#dc6803',wti:'#d97706',
 };
 const LN = {
   wind_onshore:'Wind Onshore',wind_offshore:'Wind Offshore',solar:'Solar',
@@ -447,29 +623,30 @@ const LN = {
 };
 
 // ══════════════════════════════════════════════
-// CHART DEFAULTS
+// CHART DEFAULTS — light theme, ArcGIS-style
 // ══════════════════════════════════════════════
-Chart.defaults.color='#8b949e';
-Chart.defaults.borderColor='#30363d';
-Chart.defaults.font.family="'IBM Plex Sans',sans-serif";
-Chart.defaults.font.size=10;
+Chart.defaults.color='#56657a';
+Chart.defaults.borderColor='#dde3eb';
+Chart.defaults.font.family="'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif";
+Chart.defaults.font.size=11;
 Chart.defaults.plugins.legend.display=false;
-Chart.defaults.plugins.tooltip.backgroundColor='#161b22';
-Chart.defaults.plugins.tooltip.borderColor='#30363d';
-Chart.defaults.plugins.tooltip.borderWidth=1;
-Chart.defaults.plugins.tooltip.titleColor='#e6edf3';
-Chart.defaults.plugins.tooltip.bodyColor='#8b949e';
-Chart.defaults.plugins.tooltip.padding=8;
-Chart.defaults.plugins.tooltip.cornerRadius=4;
+Chart.defaults.plugins.tooltip.backgroundColor='#1a2332';
+Chart.defaults.plugins.tooltip.borderColor='#1a2332';
+Chart.defaults.plugins.tooltip.borderWidth=0;
+Chart.defaults.plugins.tooltip.titleColor='#ffffff';
+Chart.defaults.plugins.tooltip.bodyColor='#dde3eb';
+Chart.defaults.plugins.tooltip.padding=10;
+Chart.defaults.plugins.tooltip.cornerRadius=5;
+Chart.defaults.plugins.tooltip.titleFont={weight:'600',size:11};
 
 const BASE={
   responsive:true,maintainAspectRatio:false,
   interaction:{mode:'index',intersect:false},
   scales:{
-    x:{grid:{color:'#21262d'},ticks:{maxTicksLimit:8,color:'#484f58'}},
-    y:{grid:{color:'#21262d'},ticks:{maxTicksLimit:5,color:'#484f58'}}
+    x:{grid:{color:'#eef2f6',drawBorder:false},ticks:{maxTicksLimit:8,color:'#8c98a8',font:{size:10}}},
+    y:{grid:{color:'#eef2f6',drawBorder:false},ticks:{maxTicksLimit:5,color:'#8c98a8',font:{size:10}}}
   },
-  elements:{point:{radius:0,hoverRadius:3},line:{tension:0.25,borderWidth:1.6}}
+  elements:{point:{radius:0,hoverRadius:4},line:{tension:0.25,borderWidth:2}}
 };
 
 function mkChart(id, type, labels, datasets, extra={}) {
@@ -593,7 +770,6 @@ function updateStatus() {
 function renderStrom() {
   const sm = D.smard;
   const ec = D.energy_charts;
-  const days = parseInt(document.getElementById('strom-range')?.value||7);
 
   let daPrice='—', daDelta='';
   if(ec?.price_de?.price?.length) {
@@ -617,40 +793,39 @@ function renderStrom() {
     renPct=total>0?Math.round(ren/total*100)+'%':'—';
     co2i=total>0?Math.round((lig*900+coal*800+gas*400+nuc*5+ren*18)/total):'—';
     renderMixDonut({wOn,wOff,sol,bio,hyd,nuc,lig,coal,gas});
-    renderGenChart(s,days);
+    renderGenChart(s);
   } else {
     document.getElementById('mix-donut').innerHTML='<div class="nodata">SMARD-Daten fehlen</div>';
   }
 
   document.getElementById('kpi-strom').innerHTML = kpis([
-    {label:'Day-Ahead Preis',val:daPrice,unit:'EUR/MWh',delta:daDelta,color:'#d29922'},
-    {label:'Erneuerbare',val:renPct,unit:'Anteil Erzeugung',color:'#3fb950'},
-    {label:'Wind gesamt',val:windGW,unit:'GW',color:'#58a6ff'},
-    {label:'Solar',val:solarGW,unit:'GW',color:'#d29922'},
-    {label:'Last',val:loadGW,unit:'GW',color:'#8b949e'},
-    {label:'CO₂-Intensität',val:co2i,unit:'g/kWh (est.)',color:'#f0883e'},
+    {label:'Day-Ahead Preis',val:daPrice,unit:'EUR/MWh',delta:daDelta,color:'#d97706'},
+    {label:'Erneuerbare',val:renPct,unit:'Anteil Erzeugung',color:'#1f9d55'},
+    {label:'Wind gesamt',val:windGW,unit:'GW',color:'#0e6cb6'},
+    {label:'Solar',val:solarGW,unit:'GW',color:'#d97706'},
+    {label:'Last',val:loadGW,unit:'GW',color:'#56657a'},
+    {label:'CO₂-Intensität',val:co2i,unit:'g/kWh (est.)',color:'#dc6803'},
   ]);
   renderPriceChart();
 }
 
-function renderGenChart(s, days) {
-  const co = coCut(days);
+function renderGenChart(s) {
+  const co = rangeCutoffMs('strom');
   const keys=['wind_onshore','wind_offshore','solar','biomass','hydro','nuclear','lignite','hard_coal','natural_gas'];
   const baseTs=(s.wind_onshore||[]).filter(p=>p.ts>=co).map(p=>p.ts);
   if(!baseTs.length){document.getElementById('chart-gen').parentElement.innerHTML='<div class="nodata">Keine SMARD-Daten für Zeitraum</div>';return;}
   const step=Math.max(1,Math.floor(baseTs.length/150));
   const sampled=baseTs.filter((_,i)=>i%step===0);
-  // Build lookup
   const lookup={};
   keys.forEach(k=>{(s[k]||[]).forEach(p=>{if(!lookup[p.ts])lookup[p.ts]={};lookup[p.ts][k]=p.v;});});
   const datasets=keys.map(k=>({
     label:LN[k]||k,
     data:sampled.map(ts=>lookup[ts]?.[k]!=null?lookup[ts][k]/1000:null),
-    borderColor:C[k]||'#58a6ff',backgroundColor:(C[k]||'#58a6ff')+'20',
-    fill:true,borderWidth:1.4,
+    borderColor:C[k]||'#0e6cb6',backgroundColor:(C[k]||'#0e6cb6')+'25',
+    fill:true,borderWidth:1.5,
   }));
   mkChart('chart-gen','line',sampled.map(fmtTs),datasets,{
-    plugins:{legend:{display:true,labels:{color:'#8b949e',boxWidth:7,font:{size:9},padding:8}}}
+    plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10},padding:8}}}
   });
 }
 
@@ -660,12 +835,12 @@ function renderPriceChart() {
   const key=document.getElementById('price-country')?.value||'price_de';
   const d=ec[key]||ec.price_de;
   if(!d?.unix_seconds?.length) return;
-  const co=coCutS(7);
+  const co=rangeCutoffSec('strom');
   const f=d.unix_seconds.map((t,i)=>({t,p:d.price[i]})).filter(x=>x.t>=co&&x.p!=null);
   if(!f.length) return;
   mkChart('chart-price','line',f.map(x=>fmtTs(x.t*1000)),[{
     label:'EUR/MWh',data:f.map(x=>x.p),
-    borderColor:'#d29922',backgroundColor:'rgba(210,153,34,0.07)',fill:true
+    borderColor:'#d97706',backgroundColor:'rgba(217,119,6,0.10)',fill:true
   }]);
 }
 
@@ -701,7 +876,7 @@ function renderMixDonut({wOn,wOff,sol,bio,hyd,nuc,lig,coal,gas}) {
 function renderMarkt() {
   const ec=D.energy_charts;
   if(!ec) return;
-  const co=coCutS(7);
+  const co=rangeCutoffSec('markt');
   const kpiItems=[];
 
   // Multi-country
@@ -713,10 +888,10 @@ function renderMarkt() {
     const f=d.unix_seconds.map((t,i)=>({t,p:d.price[i]})).filter(x=>x.t>=co&&x.p!=null);
     if(!labels.length) labels=f.map(x=>fmtTs(x.t*1000));
     const vals=f.map(x=>x.p);
-    datasets.push({label:c.label,data:vals,borderColor:c.color,backgroundColor:'transparent',borderWidth:1.5});
+    datasets.push({label:c.label,data:vals,borderColor:c.color,backgroundColor:'transparent',borderWidth:1.8});
     kpiItems.push({label:`Day-Ahead ${c.label}`,val:fmtN(vals.filter(v=>v!=null).at(-1),1),unit:'EUR/MWh',color:c.color});
   });
-  if(datasets.length) mkChart('chart-da-multi','line',labels,datasets,{plugins:{legend:{display:true,labels:{color:'#8b949e',boxWidth:7,font:{size:9}}}}});
+  if(datasets.length) mkChart('chart-da-multi','line',labels,datasets,{plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}}});
 
   // TTF Gas
   const gp=ec.gas_price;
@@ -883,18 +1058,18 @@ function renderErneuerbare() {
   // EE-Anteil
   const ren=ec.ren_share_de;
   if(ren?.unix_seconds?.length) {
-    const co=coCutS(30);
+    const co=rangeCutoffSec('erneuerbare');
     const vals=ren.ren_share||[];
     const f=ren.unix_seconds.map((t,i)=>({t,v:vals[i]})).filter(x=>x.t>=co&&x.v!=null);
     if(f.length){
       mkChart('chart-ren-share','line',f.map(x=>fmtTs(x.t*1000)),[{
-        label:'% EE',data:f.map(x=>x.v),borderColor:'#3fb950',backgroundColor:'rgba(63,185,80,0.09)',fill:true
+        label:'% EE',data:f.map(x=>x.v),borderColor:'#1f9d55',backgroundColor:'rgba(31,157,85,0.10)',fill:true
       }]);
       document.getElementById('kpi-ren').innerHTML=kpis([
-        {label:'EE-Anteil aktuell',val:fmtN(f.at(-1)?.v,1)+'%',unit:'letzte 30 Tage',color:'#3fb950'}
+        {label:'EE-Anteil aktuell',val:fmtN(f.at(-1)?.v,1)+'%',unit:'gewählter Zeitraum',color:'#1f9d55'}
       ]);
     } else {
-      document.getElementById('chart-ren-share').parentElement.innerHTML='<div class="nodata">EE-Anteil: Daten werden geladen (field-key wird im Log diagnostiziert)</div>';
+      document.getElementById('chart-ren-share').parentElement.innerHTML='<div class="nodata">EE-Anteil: keine Daten im gewählten Zeitraum</div>';
     }
   } else {
     document.getElementById('chart-ren-share').parentElement.innerHTML='<div class="nodata">EE-Anteil: keine Daten von Energy-Charts</div>';
@@ -921,22 +1096,26 @@ function renderGasChart() {
     document.getElementById('chart-gas').parentElement.innerHTML='<div class="nodata">Keine Gasdaten für '+cc+'</div>';
     return;
   }
-  const data=d.data.filter(x=>x.fill_pct!=null).slice(-90);
+  // Range-aware filter via cutoff date
+  const sec = getRangeSeconds('gas');
+  const cutoffDate = sec === Infinity ? '0000-00-00'
+    : new Date(Date.now() - sec*1000).toISOString().substring(0,10);
+  const data=d.data.filter(x=>x.fill_pct!=null && x.date >= cutoffDate);
   if(!data.length){
-    document.getElementById('chart-gas').parentElement.innerHTML='<div class="nodata">fill_pct konnte nicht berechnet werden – Diagnose läuft</div>';
+    document.getElementById('chart-gas').parentElement.innerHTML='<div class="nodata">Keine Daten im gewählten Zeitraum</div>';
     return;
   }
   mkChart('chart-gas','line',data.map(x=>x.date),[{
     label:'Füllstand %',data:data.map(x=>x.fill_pct),
-    borderColor:'#39d353',backgroundColor:'rgba(57,211,83,0.07)',fill:true
+    borderColor:'#1f9d55',backgroundColor:'rgba(31,157,85,0.10)',fill:true
   }],{scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%'}}}});
 
-  // Einspeisung / Entnahme
-  const flow=d.data.filter(x=>(x.injection||0)>0||(x.withdrawal||0)>0).slice(-60);
+  // Einspeisung / Entnahme — same range
+  const flow=d.data.filter(x=>x.date >= cutoffDate && ((x.injection||0)>0 || (x.withdrawal||0)>0));
   if(flow.length) mkChart('chart-gas-flow','bar',flow.map(x=>x.date),[
-    {label:'Einspeisung TWh',data:flow.map(x=>x.injection||0),backgroundColor:'rgba(63,185,80,0.6)',borderRadius:2},
-    {label:'Entnahme TWh',data:flow.map(x=>-(x.withdrawal||0)),backgroundColor:'rgba(248,81,73,0.5)',borderRadius:2},
-  ],{plugins:{legend:{display:true,labels:{color:'#8b949e',boxWidth:7,font:{size:9}}}},scales:{x:{grid:{color:'#21262d'},ticks:{maxTicksLimit:10}},y:{grid:{color:'#21262d'}}}});
+    {label:'Einspeisung TWh',data:flow.map(x=>x.injection||0),backgroundColor:'rgba(31,157,85,0.65)',borderRadius:2},
+    {label:'Entnahme TWh',data:flow.map(x=>-(x.withdrawal||0)),backgroundColor:'rgba(192,57,43,0.55)',borderRadius:2},
+  ],{plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}},scales:{x:{ticks:{maxTicksLimit:10}}}});
   else
     document.getElementById('chart-gas-flow').parentElement.innerHTML='<div class="nodata">Keine Einspeisung/Entnahme-Daten</div>';
 }
@@ -1178,161 +1357,287 @@ function renderFx() {
 // ══════════════════════════════════════════════
 // KRISE
 // ══════════════════════════════════════════════
-function renderKrise() {
-  const ho=D.heating_oil;
-  const fl=D.fuel;
-  const ec=D.energy_charts;
-  const gs=D.gas_storage;
-  const vpi=D.destatis_vpi;
-  const eg=D.entsog;
+// ══════════════════════════════════════════════
+// LAGE (Marktlage & Versorgung)
+// ══════════════════════════════════════════════
 
-  // KPI tiles: pull together the headline crisis indicators
-  const kp=[];
-  if(ho?.reference_price_eur_l){
-    kp.push({label:'Heizöl DE',val:fmtN(ho.reference_price_eur_l,3),unit:'EUR/L',
-      delta:ho.changes?.year_pct!=null?(ho.changes.year_pct>=0?'▲ +':'▼ ')+fmtN(ho.changes.year_pct,1)+'% YoY':'',
-      color:'#f0883e'});
-  }
-  const natFuel=fl?.cities?._national;
-  if(natFuel?.e5_avg){
-    kp.push({label:'E5 DE',val:fmtN(natFuel.e5_avg,3),unit:'EUR/L Bundesschnitt',color:'#d29922'});
-  }
-  if(natFuel?.diesel_avg){
-    kp.push({label:'Diesel DE',val:fmtN(natFuel.diesel_avg,3),unit:'EUR/L Bundesschnitt',color:'#bc8cff'});
-  }
-  if(ec?.gas_price?.price?.length){
-    const p=ec.gas_price.price.filter(v=>v!=null);
-    kp.push({label:'TTF Erdgas',val:fmtN(p.at(-1),1),unit:'EUR/MWh',color:'#f85149'});
-  }
-  if(ec?.price_de?.price?.length){
-    const p=ec.price_de.price.filter(v=>v!=null);
-    kp.push({label:'Strom DE Day-Ahead',val:fmtN(p.at(-1),0),unit:'EUR/MWh',color:'#58a6ff'});
-  }
-  // EU gas storage avg
-  const euNode=gs?gasNode(gs,'eu'):null;
-  const euLast=euNode?.data?.filter(x=>x.fill_pct!=null).at(-1);
-  if(euLast){
-    kp.push({label:'EU Gasspeicher',val:fmtN(euLast.fill_pct,1)+'%',unit:'AGSI · EU gesamt',color:euLast.fill_pct>=70?'#3fb950':'#d29922'});
-  }
-  if(ho?.oil_notations?.brent_usd_bbl){
-    kp.push({label:'Brent Rohöl',val:fmtN(ho.oil_notations.brent_usd_bbl,1),unit:'USD/Barrel',color:C.brent});
-  }
-  document.getElementById('kpi-krise').innerHTML=kpis(kp);
+// Reference values for "ist das normal?" classifications
+const LAGE_REF = {
+  ttf_normal:        25,    // EUR/MWh, pre-crisis 2018-2021 average
+  ttf_elevated:      45,    // above this = market stress
+  ttf_critical:      80,    // crisis territory
+  gas_storage_low:   60,    // % EU storage
+  gas_storage_crit:  40,
+  brent_normal:      75,    // USD/bbl, pre-crisis decade average ~70
+  power_da_normal:   70,    // EUR/MWh DE, pre-crisis ~50, current "normal" ~80
+  power_da_high:     150,
+};
 
-  // VPI Energie chart: select interesting categories
-  if(vpi?.energy_series){
-    const series=vpi.energy_series;
-    const palette=['#f0883e','#58a6ff','#bc8cff','#3fb950','#d29922','#f85149','#39d353'];
-    const cats=Object.keys(series).slice(0,6); // first 6 categories
-    if(cats.length){
-      // Common time axis = union of all periods, sorted
-      const periodSet=new Set();
-      cats.forEach(c=>(series[c]||[]).forEach(p=>periodSet.add(p.period)));
-      const periods=Array.from(periodSet).sort();
-      const datasets=cats.map((c,i)=>{
-        const lookup={};
-        (series[c]||[]).forEach(p=>{lookup[p.period]=p.v;});
-        return {
-          label:c.length>40?c.substring(0,38)+'…':c,
-          data:periods.map(p=>lookup[p]??null),
-          borderColor:palette[i%palette.length],
-          backgroundColor:palette[i%palette.length]+'15',
-          borderWidth:1.6,fill:false,spanGaps:true,
-        };
-      });
-      mkChart('chart-krise-vpi','line',periods,datasets,{
-        plugins:{legend:{display:true,labels:{color:'#8b949e',boxWidth:7,font:{size:9},padding:6}}},
-        scales:{x:{ticks:{maxTicksLimit:12}}}
-      });
-    }
-  } else {
-    const w=document.getElementById('chart-krise-vpi')?.parentElement;
-    if(w) w.innerHTML='<div class="nodata">Destatis VPI: Token noch nicht aktiv oder API nicht erreichbar</div>';
+function classifyLage(ttf, gasStorage, powerDa) {
+  // Returns {level, headline, sub}
+  // level: 'ok' | 'warn' | 'crit'
+  let scores = [];
+  if (ttf != null) {
+    if (ttf > LAGE_REF.ttf_critical) scores.push(2);
+    else if (ttf > LAGE_REF.ttf_elevated) scores.push(1);
+    else scores.push(0);
+  }
+  if (gasStorage != null) {
+    if (gasStorage < LAGE_REF.gas_storage_crit) scores.push(2);
+    else if (gasStorage < LAGE_REF.gas_storage_low) scores.push(1);
+    else scores.push(0);
+  }
+  if (powerDa != null) {
+    if (powerDa > LAGE_REF.power_da_high) scores.push(2);
+    else if (powerDa > LAGE_REF.power_da_normal * 1.5) scores.push(1);
+    else scores.push(0);
+  }
+  const max = scores.length ? Math.max(...scores) : 0;
+  const avg = scores.length ? scores.reduce((a,b)=>a+b,0) / scores.length : 0;
+
+  if (max >= 2 || avg >= 1.5) {
+    return {level:'crit',
+      headline:'Versorgungslage angespannt',
+      sub:'Mehrere Indikatoren in kritischem Bereich. Engpassrisiko erhöht — Preise und Speicherstände werden eng beobachtet.'};
+  }
+  if (max >= 1 || avg >= 0.5) {
+    return {level:'warn',
+      headline:'Erhöhter Marktstress',
+      sub:'Einzelne Indikatoren über dem langjährigen Mittel. Versorgung gesichert, aber Preisrisiken bestehen.'};
+  }
+  return {level:'ok',
+    headline:'Versorgung stabil',
+    sub:'Speicherstände und Spotpreise im Bereich der Vor-Krisen-Niveaus. Keine akuten Engpässe sichtbar.'};
+}
+
+function renderLage() {
+  const ho = D.heating_oil;
+  const ec = D.energy_charts;
+  const gs = D.gas_storage;
+  const vpi = D.destatis_vpi;
+  const com = D.commodities;
+
+  // Pull headline indicators
+  const ttfPrice  = ec?.gas_price?.price?.filter(v=>v!=null).at(-1);
+  const daPrice   = ec?.price_de?.price?.filter(v=>v!=null).at(-1);
+  const euNode    = gs ? gasNode(gs,'eu') : null;
+  const euLast    = euNode?.data?.filter(x=>x.fill_pct!=null).at(-1);
+  const euPct     = euLast?.fill_pct;
+  const brent     = com?.brent_crude?.series?.at(-1)?.v ?? ho?.oil_notations?.brent_usd_bbl;
+  const heatoil   = ho?.reference_price_eur_l;
+
+  // Hero header — classification
+  const cls = classifyLage(ttfPrice, euPct, daPrice);
+  const dateStr = new Date().toLocaleDateString('de-DE',{day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('lage-hero-content').innerHTML = `
+    <div class="lage-hero-title">${cls.headline}</div>
+    <div class="lage-hero-sub">
+      ${cls.sub}
+      <div style="opacity:.7;font-size:11px;margin-top:6px">Stand ${dateStr} · zusammengefasst aus TTF Spot, EU-Gasspeichern, Strom Day-Ahead</div>
+    </div>
+    <span class="lage-status ${cls.level}">${cls.level==='ok'?'● Stabil':cls.level==='warn'?'● Angespannt':'● Kritisch'}</span>
+  `;
+
+  // 5 KPI tiles, with reference comparisons
+  const kp = [];
+
+  if (daPrice != null) {
+    const ratio = daPrice / LAGE_REF.power_da_normal;
+    const delta = ratio > 1.2 ? `▲ ${fmtN((ratio-1)*100,0)}% ü. Normal` : ratio < 0.8 ? `▼ ${fmtN((1-ratio)*100,0)}% u. Normal` : 'im Normalbereich';
+    const color = daPrice > LAGE_REF.power_da_high ? '#c0392b' : daPrice > LAGE_REF.power_da_normal*1.3 ? '#d97706' : '#1f9d55';
+    kp.push({label:'Strom DE Day-Ahead', val:fmtN(daPrice,0), unit:'EUR/MWh', delta, color});
   }
 
-  // Crisis indicator grid: YoY comparisons
-  const grid=document.getElementById('krise-grid');
-  if(grid){
-    const items=[];
-    if(ho?.changes?.year_pct!=null) items.push(['Heizöl',ho.changes.year_pct,'%']);
-    // Strompreis: vergleiche letzten Wert mit Wert vor ~52 Wochen
-    if(ec?.price_de_monthly?.price?.length>=13){
-      const p=ec.price_de_monthly.price.filter(v=>v!=null);
-      if(p.length>=13){
-        const yoy=(p.at(-1)-p.at(-13))/p.at(-13)*100;
-        items.push(['Strompreis Monatsmittel',yoy,'%']);
+  if (ttfPrice != null) {
+    const delta = ttfPrice > LAGE_REF.ttf_critical ? `▲ ${fmtN(ttfPrice/LAGE_REF.ttf_normal,1)}× Vor-Krise`
+              : ttfPrice > LAGE_REF.ttf_normal ? `▲ ${fmtN((ttfPrice/LAGE_REF.ttf_normal-1)*100,0)}% ü. Normal`
+              : 'Vor-Krisen-Niveau';
+    const color = ttfPrice > LAGE_REF.ttf_critical ? '#c0392b' : ttfPrice > LAGE_REF.ttf_elevated ? '#d97706' : '#1f9d55';
+    kp.push({label:'TTF Erdgas Spot', val:fmtN(ttfPrice,1), unit:'EUR/MWh', delta, color});
+  }
+
+  if (euPct != null) {
+    const delta = euPct < LAGE_REF.gas_storage_crit ? '▼ kritisch niedrig'
+              : euPct < LAGE_REF.gas_storage_low ? '▼ unter Saisonschnitt'
+              : '✓ ausreichend';
+    const color = euPct >= 70 ? '#1f9d55' : euPct >= 50 ? '#d97706' : '#c0392b';
+    kp.push({label:'EU-Gasspeicher', val:fmtN(euPct,1)+'%', unit:'AGSI · Stand '+(euLast?.date||'—'), delta, color});
+  }
+
+  if (brent != null) {
+    const delta = brent > LAGE_REF.brent_normal*1.3 ? `▲ ${fmtN((brent/LAGE_REF.brent_normal-1)*100,0)}% ü. langj. Mittel`
+              : brent < LAGE_REF.brent_normal*0.8 ? `▼ ${fmtN((1-brent/LAGE_REF.brent_normal)*100,0)}% u. langj. Mittel`
+              : 'im Normalbereich';
+    const color = brent > LAGE_REF.brent_normal*1.4 ? '#c0392b' : brent > LAGE_REF.brent_normal*1.15 ? '#d97706' : '#1f9d55';
+    kp.push({label:'Brent Rohöl', val:fmtN(brent,1), unit:'USD/Barrel', delta, color});
+  }
+
+  if (heatoil != null && ho?.changes?.year_pct != null) {
+    const yoy = ho.changes.year_pct;
+    const delta = (yoy>=0?'▲ +':'▼ ')+fmtN(yoy,1)+'% YoY';
+    const color = yoy > 20 ? '#c0392b' : yoy > 5 ? '#d97706' : '#1f9d55';
+    kp.push({label:'Heizöl DE', val:fmtN(heatoil,3), unit:'EUR/Liter · TECSON', delta, color});
+  }
+
+  document.getElementById('kpi-lage').innerHTML = kpis(kp);
+
+  // Chart 1: TTF with pre-crisis reference line
+  renderLageTtf(ec);
+  // Chart 2: EU gas storage seasonal — current + previous year
+  renderLageGas(gs);
+  // Chart 3: VPI — only Strom, Gas, Kraftstoffe
+  renderLageVpi(vpi);
+  // Chart 4: Brent vs Heizöl indexed
+  renderLageOil(com, ho);
+}
+
+function renderLageTtf(ec) {
+  const wrap = document.getElementById('chart-lage-ttf')?.parentElement;
+  if (!wrap) return;
+  if (!ec?.gas_price?.unix_seconds?.length) {
+    wrap.innerHTML='<div class="nodata">TTF-Daten werden geladen</div>';
+    return;
+  }
+  const co = rangeCutoffSec('lage');
+  const f = ec.gas_price.unix_seconds.map((t,i)=>({t,p:ec.gas_price.price[i]}))
+    .filter(x=>x.p!=null && x.t>=co);
+  if (!f.length) { wrap.innerHTML='<div class="nodata">Keine TTF-Daten im Zeitraum</div>'; return; }
+  const refLine = f.map(()=>LAGE_REF.ttf_normal);
+  mkChart('chart-lage-ttf','line', f.map(x=>fmtDate(x.t*1000)), [
+    {label:'TTF EUR/MWh', data:f.map(x=>x.p),
+      borderColor:'#0e6cb6', backgroundColor:'rgba(14,108,182,0.08)', fill:true},
+    {label:'Vor-Krise ('+LAGE_REF.ttf_normal+')', data:refLine,
+      borderColor:'#1f9d55', backgroundColor:'transparent', borderDash:[5,5], borderWidth:1.5, pointRadius:0},
+  ], {
+    plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}},
+  });
+}
+
+function renderLageGas(gs) {
+  const wrap = document.getElementById('chart-lage-gas')?.parentElement;
+  if (!wrap) return;
+  const eu = gs ? gasNode(gs,'eu') : null;
+  if (!eu?.data?.length) {
+    wrap.innerHTML='<div class="nodata">Gasspeicher-Daten fehlen</div>';
+    return;
+  }
+  const data = eu.data.filter(x=>x.fill_pct!=null);
+  // Build a "current year" line and a "previous year shifted to align" line for comparison
+  const today = new Date();
+  const oneYearAgo = new Date(today); oneYearAgo.setFullYear(today.getFullYear()-1);
+  const cutoffMs = oneYearAgo.getTime() - 30*86400*1000; // generous backfill
+  const filtered = data.filter(x=>new Date(x.date).getTime() >= cutoffMs);
+  // Split into "current" (last 365d) and "previous" (older)
+  const curCutoff = today.getTime() - 365*86400*1000;
+  const cur = filtered.filter(x=>new Date(x.date).getTime() >= curCutoff);
+  const prev = filtered.filter(x=>new Date(x.date).getTime() < curCutoff)
+    .map(x=>{
+      // Shift forward by ~1 year so it aligns on x-axis
+      const d = new Date(x.date); d.setFullYear(d.getFullYear()+1);
+      return {date:d.toISOString().substring(0,10), fill_pct:x.fill_pct};
+    });
+  const allDates = Array.from(new Set([...cur.map(x=>x.date), ...prev.map(x=>x.date)])).sort();
+  const curMap = {}; cur.forEach(x=>curMap[x.date]=x.fill_pct);
+  const prevMap = {}; prev.forEach(x=>prevMap[x.date]=x.fill_pct);
+  mkChart('chart-lage-gas','line', allDates, [
+    {label:'Aktuell', data:allDates.map(d=>curMap[d]??null),
+      borderColor:'#0e6cb6', backgroundColor:'rgba(14,108,182,0.08)', fill:true, spanGaps:true, borderWidth:2},
+    {label:'Vorjahr (verschoben)', data:allDates.map(d=>prevMap[d]??null),
+      borderColor:'#8c98a8', backgroundColor:'transparent', borderDash:[4,4], borderWidth:1.5, spanGaps:true, pointRadius:0},
+  ], {
+    plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}},
+    scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%'}}},
+  });
+}
+
+function renderLageVpi(vpi) {
+  const wrap = document.getElementById('chart-lage-vpi')?.parentElement;
+  if (!wrap) return;
+  if (!vpi?.energy_series) {
+    wrap.innerHTML='<div class="nodata">Destatis-VPI: Token noch nicht aktiv oder API offline</div>';
+    return;
+  }
+  // Pick only the 3 most relevant categories
+  const wanted = ['Strom','Gas','Kraftstoffe'];
+  const series = vpi.energy_series;
+  const matched = wanted.map(want => {
+    const key = Object.keys(series).find(k => k.toLowerCase().includes(want.toLowerCase()));
+    return key ? {label:want, data:series[key]} : null;
+  }).filter(Boolean);
+  if (!matched.length) {
+    wrap.innerHTML='<div class="nodata">VPI-Kategorien nicht gefunden</div>';
+    return;
+  }
+  // Common period axis
+  const periodSet = new Set();
+  matched.forEach(m=>m.data.forEach(p=>periodSet.add(p.period)));
+  const periods = Array.from(periodSet).sort();
+  const colors = {'Strom':'#0e6cb6','Gas':'#dc6803','Kraftstoffe':'#7e57c2'};
+  const datasets = matched.map(m=>{
+    const lookup={}; m.data.forEach(p=>{lookup[p.period]=p.v;});
+    return {
+      label:m.label, data:periods.map(p=>lookup[p]??null),
+      borderColor:colors[m.label]||'#0e6cb6', backgroundColor:'transparent',
+      borderWidth:2, spanGaps:true,
+    };
+  });
+  mkChart('chart-lage-vpi','line', periods, datasets, {
+    plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}},
+    scales:{x:{ticks:{maxTicksLimit:10}}, y:{title:{display:true,text:'Index 2020=100',color:'#8c98a8',font:{size:10}}}},
+  });
+}
+
+function renderLageOil(com, ho) {
+  const wrap = document.getElementById('chart-lage-oil')?.parentElement;
+  if (!wrap) return;
+  const brent = com?.brent_crude?.series||[];
+  if (!brent.length) {
+    wrap.innerHTML='<div class="nodata">Brent-Daten fehlen</div>';
+    return;
+  }
+  const co = rangeCutoffSec('lage');
+  const brentFiltered = brent.filter(p=>p.ts>=co);
+  if (!brentFiltered.length) { wrap.innerHTML='<div class="nodata">Keine Daten im Zeitraum</div>'; return; }
+
+  // Index Brent to 100 at start
+  const brentBase = brentFiltered[0].v;
+  const brentIdx = brentFiltered.map(p => ({ts:p.ts, v: (p.v/brentBase)*100}));
+
+  // Heizöl: we only have the current point + quarterly aggregates. Build a coarse series.
+  let heatoilIdx = [];
+  if (ho?.quarterly_avg_eur_100l) {
+    const q = ho.quarterly_avg_eur_100l;
+    const pts = Object.keys(q).map(k=>{
+      const ym = k.match(/^y(\d{4})_eur_100l$/);
+      const qm = k.match(/^q(\d)_(\d{4})_eur_100l$/);
+      let ts;
+      if (ym) ts = new Date(parseInt(ym[1]),5,30).getTime()/1000; // mid-year
+      else if (qm) {
+        const month = (parseInt(qm[1])-1)*3 + 1;
+        ts = new Date(parseInt(qm[2]),month,15).getTime()/1000;
       }
-    }
-    // VPI Energie Kategorien als YoY
-    if(vpi?.energy_series){
-      Object.entries(vpi.energy_series).slice(0,6).forEach(([cat,pts])=>{
-        if(pts.length>=13){
-          const yoy=(pts.at(-1).v-pts.at(-13).v)/pts.at(-13).v*100;
-          items.push([cat.length>30?cat.substring(0,28)+'…':cat,yoy,'%']);
-        }
-      });
-    }
-    if(items.length){
-      grid.innerHTML=`<table class="tbl">
-        <thead><tr><th>Indikator</th><th>YoY Δ</th></tr></thead>
-        <tbody>${items.map(([lbl,v,u])=>{
-          const cls=v>0?'neg':'pos';
-          return`<tr><td>${lbl}</td><td class="num ${cls}">${v>=0?'+':''}${fmtN(v,1)}${u}</td></tr>`;
-        }).join('')}</tbody></table>`;
-    } else {
-      grid.innerHTML='<div class="nodata">Noch keine YoY-Daten verfügbar</div>';
+      else return null;
+      return {ts, v: q[k]};
+    }).filter(p=>p && p.ts>=co).sort((a,b)=>a.ts-b.ts);
+    if (pts.length) {
+      const base = pts[0].v;
+      heatoilIdx = pts.map(p=>({ts:p.ts, v:(p.v/base)*100}));
     }
   }
 
-  // Gas situation chart: EU + DE storage levels last 90 days
-  if(gs){
-    const sources=['eu','de','it','fr','nl'].map(c=>{
-      const node=gasNode(gs,c);
-      if(!node?.data?.length) return null;
-      return {code:c,name:node.name||c.toUpperCase(),data:node.data.filter(x=>x.fill_pct!=null).slice(-90)};
-    }).filter(Boolean);
-    if(sources.length){
-      const baseDates=sources[0].data.map(x=>x.date);
-      const palette={eu:'#39d353',de:'#58a6ff',it:'#bc8cff',fr:'#f85149',nl:'#d29922'};
-      const datasets=sources.map(s=>{
-        const lookup={};s.data.forEach(p=>{lookup[p.date]=p.fill_pct;});
-        return {
-          label:s.name,
-          data:baseDates.map(d=>lookup[d]??null),
-          borderColor:palette[s.code]||'#8b949e',
-          backgroundColor:'transparent',borderWidth:1.5,spanGaps:true,
-        };
-      });
-      mkChart('chart-krise-gas','line',baseDates,datasets,{
-        plugins:{legend:{display:true,labels:{color:'#8b949e',boxWidth:7,font:{size:9}}}},
-        scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%'}}}
-      });
-    }
-  }
+  const allTs = Array.from(new Set([...brentIdx.map(p=>p.ts), ...heatoilIdx.map(p=>p.ts)])).sort((a,b)=>a-b);
+  const brentMap = {}; brentIdx.forEach(p=>{brentMap[p.ts]=p.v;});
+  const hoMap = {}; heatoilIdx.forEach(p=>{hoMap[p.ts]=p.v;});
 
-  // ENTSOG flows chart: physical flows at DE border points
-  const flowsWrap=document.getElementById('chart-krise-flows')?.parentElement;
-  if(eg?.points && Object.keys(eg.points).length){
-    const pts=eg.points;
-    const palette=['#58a6ff','#f85149','#3fb950','#d29922','#bc8cff','#f0883e'];
-    // Collect a common date axis
-    const dateSet=new Set();
-    Object.values(pts).forEach(p=>(p.series||[]).forEach(s=>dateSet.add(s.date)));
-    const dates=Array.from(dateSet).sort().slice(-30);
-    const datasets=Object.entries(pts).map(([id,p],i)=>{
-      const lookup={};(p.series||[]).forEach(s=>{lookup[s.date]=s.v;});
-      // Convert kWh/d to GWh/d for readability
-      const data=dates.map(d=>lookup[d]!=null?lookup[d]/1e6:null);
-      return {label:p.label||id,data,borderColor:palette[i%palette.length],
-        backgroundColor:'transparent',borderWidth:1.4,spanGaps:true};
-    });
-    mkChart('chart-krise-flows','line',dates,datasets,{
-      plugins:{legend:{display:true,labels:{color:'#8b949e',boxWidth:7,font:{size:9}}}},
-      scales:{y:{title:{display:true,text:'GWh/Tag',color:'#484f58'}}}
-    });
-  } else if(flowsWrap) {
-    flowsWrap.innerHTML='<div class="nodata">ENTSOG-Flussdaten werden beim nächsten 6h-Lauf geladen</div>';
-  }
+  mkChart('chart-lage-oil','line', allTs.map(t=>fmtDate(t*1000)), [
+    {label:'Brent (USD)', data:allTs.map(t=>brentMap[t]??null),
+      borderColor:'#dc6803', backgroundColor:'rgba(220,104,3,0.08)', fill:false, spanGaps:true, borderWidth:2},
+    {label:'Heizöl DE (EUR)', data:allTs.map(t=>hoMap[t]??null),
+      borderColor:'#7e57c2', backgroundColor:'transparent', spanGaps:true, borderWidth:2, pointRadius:3},
+  ], {
+    plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}},
+    scales:{y:{title:{display:true,text:'Index = 100 am Start',color:'#8c98a8',font:{size:10}}}},
+  });
 }
 
 // ══════════════════════════════════════════════
@@ -1341,11 +1646,15 @@ function renderKrise() {
 const RENDERS={
   strom:renderStrom,markt:renderMarkt,rohstoffe:renderRohstoffe,
   kraftstoff:renderKraftstoff,heizoel:renderHeizoel,erneuerbare:renderErneuerbare,
-  gas:renderGas,wetter:renderWetter,fx:renderFx,krise:renderKrise,
+  gas:renderGas,wetter:renderWetter,fx:renderFx,lage:renderLage,
   historisch:renderHistorisch,news:renderNews,
 };
 
-function renderTab(tab){const fn=RENDERS[tab];if(fn)fn();}
+function renderTab(tab){
+  renderRangeBar(tab);
+  const fn=RENDERS[tab];
+  if(fn) fn();
+}
 
 document.querySelectorAll('.tab').forEach(btn=>{
   btn.addEventListener('click',async()=>{
@@ -1355,6 +1664,7 @@ document.querySelectorAll('.tab').forEach(btn=>{
     btn.classList.add('active');
     document.getElementById('panel-'+tab).classList.add('active');
     activeTab=tab;
+    saveRangePersistence();
     await loadForTab(tab);
     updateStatus();
     renderTab(tab);
@@ -1364,6 +1674,7 @@ document.querySelectorAll('.tab').forEach(btn=>{
 // ══════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════
+loadRangePersistence();
 init();
 setInterval(async()=>{Object.keys(D).forEach(k=>delete D[k]);await init();},15*60*1000);
 </script>
