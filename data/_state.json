@@ -1,0 +1,74 @@
+{
+  "commodities": {
+    "last_attempt_epoch": 1778274512,
+    "last_attempt_iso": "2026-05-08T21:08:32Z",
+    "last_success_epoch": 1778274514,
+    "last_success_iso": "2026-05-08T21:08:34Z"
+  },
+  "destatis_vpi": {
+    "last_attempt_epoch": 1778274565,
+    "last_attempt_iso": "2026-05-08T21:09:25Z",
+    "last_error_epoch": 1778274566,
+    "last_error_message": "RuntimeError: Destatis auth probe (whoami) failed: 405 Client Error: 405 for url: https://www-genesis.destatis.de/genesisWS/rest/2020/helloworld/whoami. Check DESTATIS_API_TOKEN. Token must be from Genesis-Online -> Mein Konto -> Webservice/API."
+  },
+  "energy_charts": {
+    "last_attempt_epoch": 1778274433,
+    "last_attempt_iso": "2026-05-08T21:07:13Z",
+    "last_success_epoch": 1778274509,
+    "last_success_iso": "2026-05-08T21:08:29Z"
+  },
+  "entsoe": {
+    "last_attempt_epoch": 1778274566,
+    "last_attempt_iso": "2026-05-08T21:09:26Z",
+    "last_success_epoch": 1778274567,
+    "last_success_iso": "2026-05-08T21:09:27Z"
+  },
+  "entsog": {
+    "last_attempt_epoch": 1778274510,
+    "last_attempt_iso": "2026-05-08T21:08:30Z",
+    "last_success_epoch": 1778274510,
+    "last_success_iso": "2026-05-08T21:08:30Z"
+  },
+  "fuel": {
+    "last_attempt_epoch": 1778274515,
+    "last_attempt_iso": "2026-05-08T21:08:35Z",
+    "last_success_epoch": 1778274564,
+    "last_success_iso": "2026-05-08T21:09:24Z"
+  },
+  "fx": {
+    "last_attempt_epoch": 1778274514,
+    "last_attempt_iso": "2026-05-08T21:08:34Z",
+    "last_success_epoch": 1778274515,
+    "last_success_iso": "2026-05-08T21:08:35Z"
+  },
+  "gas_storage": {
+    "last_attempt_epoch": 1778274509,
+    "last_attempt_iso": "2026-05-08T21:08:29Z",
+    "last_success_epoch": 1778274510,
+    "last_success_iso": "2026-05-08T21:08:30Z"
+  },
+  "heating_oil": {
+    "last_attempt_epoch": 1778274564,
+    "last_attempt_iso": "2026-05-08T21:09:24Z",
+    "last_success_epoch": 1778274565,
+    "last_success_iso": "2026-05-08T21:09:25Z"
+  },
+  "news": {
+    "last_attempt_epoch": 1778274567,
+    "last_attempt_iso": "2026-05-08T21:09:27Z",
+    "last_success_epoch": 1778274575,
+    "last_success_iso": "2026-05-08T21:09:35Z"
+  },
+  "smard": {
+    "last_attempt_epoch": 1778274428,
+    "last_attempt_iso": "2026-05-08T21:07:08Z",
+    "last_success_epoch": 1778274433,
+    "last_success_iso": "2026-05-08T21:07:13Z"
+  },
+  "weather": {
+    "last_attempt_epoch": 1778274510,
+    "last_attempt_iso": "2026-05-08T21:08:30Z",
+    "last_success_epoch": 1778274512,
+    "last_success_iso": "2026-05-08T21:08:32Z"
+  }
+}
