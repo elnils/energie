@@ -1,4 +1,3 @@
-d
 """
 ECB euro foreign exchange reference rates.
 
