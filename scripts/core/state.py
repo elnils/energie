@@ -38,8 +38,21 @@ def _epoch() -> int:
 
 
 def should_run(name: str, interval_minutes: int, force: bool = False) -> bool:
-    """Return True if `name` is due for a refresh."""
+    """
+    Return True if `name` is due for a refresh.
+
+    Rules:
+      - force=True bypasses everything.
+      - If data/<name>.json is missing, always fetch (state file may have lied).
+      - If never succeeded (no last_success_epoch), always fetch.
+      - Otherwise, check the interval.
+    """
     if force:
+        return True
+    # Sanity: if the actual data file doesn't exist, don't trust state.
+    import os
+    from . import paths
+    if not os.path.exists(os.path.join(paths.DATA_DIR, f'{name}.json')):
         return True
     state = _read()
     last = state.get(name, {}).get('last_success_epoch')
