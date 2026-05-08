@@ -6,10 +6,10 @@
     "last_success_iso": "2026-05-08T18:15:35Z"
   },
   "destatis_vpi": {
-    "last_attempt_epoch": 1778274281,
-    "last_attempt_iso": "2026-05-08T21:04:41Z",
-    "last_error_epoch": 1778274283,
-    "last_error_message": "HTTPError: 401 Client Error: 401 for url: https://www-genesis.destatis.de/genesisWS/rest/2020/data/table"
+    "last_attempt_epoch": 1778274359,
+    "last_attempt_iso": "2026-05-08T21:05:59Z",
+    "last_error_epoch": 1778274360,
+    "last_error_message": "RuntimeError: Destatis auth probe (whoami) failed: 405 Client Error: 405 for url: https://www-genesis.destatis.de/genesisWS/rest/2020/helloworld/whoami. Check DESTATIS_API_TOKEN. Token must be from Genesis-Online -> Mein Konto -> Webservice/API."
   },
   "energy_charts": {
     "last_attempt_epoch": 1778271053,
