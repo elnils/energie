@@ -6,16 +6,16 @@
     "last_success_iso": "2026-05-08T18:15:35Z"
   },
   "destatis_vpi": {
-    "last_attempt_epoch": 1778264136,
-    "last_attempt_iso": "2026-05-08T18:15:36Z",
-    "last_error_epoch": 1778264139,
+    "last_attempt_epoch": 1778271131,
+    "last_attempt_iso": "2026-05-08T20:12:11Z",
+    "last_error_epoch": 1778271133,
     "last_error_message": "HTTPError: 401 Client Error: 401 for url: https://www-genesis.destatis.de/genesisWS/rest/2020/data/table"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1778264109,
-    "last_attempt_iso": "2026-05-08T18:15:09Z",
-    "last_success_epoch": 1778264128,
-    "last_success_iso": "2026-05-08T18:15:28Z"
+    "last_attempt_epoch": 1778271053,
+    "last_attempt_iso": "2026-05-08T20:10:53Z",
+    "last_success_epoch": 1778271130,
+    "last_success_iso": "2026-05-08T20:12:10Z"
   },
   "entsoe": {
     "last_attempt_epoch": 1778264139,
@@ -48,9 +48,9 @@
     "last_success_iso": "2026-05-08T18:15:30Z"
   },
   "heating_oil": {
-    "last_attempt_epoch": 1778264135,
-    "last_attempt_iso": "2026-05-08T18:15:35Z",
-    "last_error_epoch": 1778264136,
+    "last_attempt_epoch": 1778271130,
+    "last_attempt_iso": "2026-05-08T20:12:10Z",
+    "last_error_epoch": 1778271131,
     "last_error_message": "RuntimeError: Tecson: could not extract reference price (selector broken?)"
   },
   "news": {
@@ -60,10 +60,10 @@
     "last_success_iso": "2026-05-08T18:15:51Z"
   },
   "smard": {
-    "last_attempt_epoch": 1778264102,
-    "last_attempt_iso": "2026-05-08T18:15:02Z",
-    "last_success_epoch": 1778264109,
-    "last_success_iso": "2026-05-08T18:15:09Z"
+    "last_attempt_epoch": 1778271049,
+    "last_attempt_iso": "2026-05-08T20:10:49Z",
+    "last_success_epoch": 1778271053,
+    "last_success_iso": "2026-05-08T20:10:53Z"
   },
   "weather": {
     "last_attempt_epoch": 1778264130,
