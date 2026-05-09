@@ -8,12 +8,15 @@ Reduced footprint vs v4.3:
 
 Output schema: per city the avg/min/count for each fuel type, plus a national
 average computed from a 100km radius around Germany's geographic centre.
+
+Also writes one daily aggregate row to data/history/fuel.jsonl with the
+national averages — used by the frontend for the long-term trend chart.
 """
 import os
 import time
 from typing import Dict, List, Optional
 
-from core import http, validators
+from core import http, validators, history
 
 
 CITIES: Dict[str, tuple] = {
@@ -111,6 +114,14 @@ def fetch() -> dict:
     # Sanity: at least 1 city must have an E5 average
     if not any(v.get('e5_avg') for k, v in cities_out.items() if k != '_national'):
         raise RuntimeError('tankerkoenig: no city returned valid E5 average')
+
+    # History: append national averages so the frontend can plot trends
+    history.record_history('fuel', {
+        'e5_avg':     nat.get('e5_avg'),
+        'e10_avg':    nat.get('e10_avg'),
+        'diesel_avg': nat.get('diesel_avg'),
+        'n_stations': nat.get('count'),
+    })
 
     return {
         'data': {'cities': cities_out},
