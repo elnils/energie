@@ -1,26 +1,26 @@
 {
   "commodities": {
-    "last_attempt_epoch": 1778324627,
-    "last_attempt_iso": "2026-05-09T11:03:47Z",
-    "last_success_epoch": 1778324629,
-    "last_success_iso": "2026-05-09T11:03:49Z"
+    "last_attempt_epoch": 1778338775,
+    "last_attempt_iso": "2026-05-09T14:59:35Z",
+    "last_success_epoch": 1778338777,
+    "last_success_iso": "2026-05-09T14:59:37Z"
   },
   "destatis_vpi": {
-    "last_attempt_epoch": 1778334066,
-    "last_attempt_iso": "2026-05-09T13:41:06Z",
-    "last_error_epoch": 1778334067,
+    "last_attempt_epoch": 1778338777,
+    "last_attempt_iso": "2026-05-09T14:59:37Z",
+    "last_error_epoch": 1778338778,
     "last_error_message": "RuntimeError: Destatis auth probe (whoami) failed: 405 Client Error: 405 for url: https://www-genesis.destatis.de/genesisWS/rest/2020/helloworld/whoami. Check DESTATIS_API_TOKEN. Token must be from Genesis-Online -> Mein Konto -> Webservice/API."
   },
   "energy_charts": {
-    "last_attempt_epoch": 1778334031,
-    "last_attempt_iso": "2026-05-09T13:40:31Z",
-    "last_success_epoch": 1778334046,
-    "last_success_iso": "2026-05-09T13:40:46Z"
+    "last_attempt_epoch": 1778338757,
+    "last_attempt_iso": "2026-05-09T14:59:17Z",
+    "last_success_epoch": 1778338773,
+    "last_success_iso": "2026-05-09T14:59:33Z"
   },
   "entsoe": {
-    "last_attempt_epoch": 1778334067,
-    "last_attempt_iso": "2026-05-09T13:41:07Z",
-    "last_error_epoch": 1778334067,
+    "last_attempt_epoch": 1778338778,
+    "last_attempt_iso": "2026-05-09T14:59:38Z",
+    "last_error_epoch": 1778338780,
     "last_error_message": "ValueError: fetcher 'entsoe' returned foreign keys {'points'} — this looks like another source's data. Refusing to write.",
     "last_success_epoch": 1778300938,
     "last_success_iso": "2026-05-09T04:28:58Z"
@@ -62,15 +62,15 @@
     "last_success_iso": "2026-05-09T13:41:18Z"
   },
   "smard": {
-    "last_attempt_epoch": 1778334025,
-    "last_attempt_iso": "2026-05-09T13:40:25Z",
-    "last_success_epoch": 1778334031,
-    "last_success_iso": "2026-05-09T13:40:31Z"
+    "last_attempt_epoch": 1778338750,
+    "last_attempt_iso": "2026-05-09T14:59:10Z",
+    "last_success_epoch": 1778338757,
+    "last_success_iso": "2026-05-09T14:59:17Z"
   },
   "weather": {
-    "last_attempt_epoch": 1778324625,
-    "last_attempt_iso": "2026-05-09T11:03:45Z",
-    "last_success_epoch": 1778324627,
-    "last_success_iso": "2026-05-09T11:03:47Z"
+    "last_attempt_epoch": 1778338773,
+    "last_attempt_iso": "2026-05-09T14:59:33Z",
+    "last_success_epoch": 1778338775,
+    "last_success_iso": "2026-05-09T14:59:35Z"
   }
 }
