@@ -6,21 +6,21 @@
     "last_success_iso": "2026-05-09T18:07:45Z"
   },
   "destatis_vpi": {
-    "last_attempt_epoch": 1778354033,
-    "last_attempt_iso": "2026-05-09T19:13:53Z",
-    "last_error_epoch": 1778354290,
-    "last_error_message": "ConnectionError: HTTPSConnectionPool(host='www-genesis.destatis.de', port=443): Max retries exceeded with url: /genesisWS/rest/2020/data/table (Caused by ReadTimeoutError(\"HTTPSConnectionPool(host='www-genesis.destatis.de', port=443): Read timed out. (read timeout=30)\"))"
+    "last_attempt_epoch": 1778360032,
+    "last_attempt_iso": "2026-05-09T20:53:52Z",
+    "last_error_epoch": 1778360162,
+    "last_error_message": "RuntimeError: Destatis HTTP 404 on POST data/table: {\"Code\":6,\"Content\":\"Die Anzahl Ihrer parallelen Requests übersteigt das zulässige Limit. (Reduzieren Sie Ihre Anfragen auf maximal 3 parallele Prozesse. Rufen Sie dazu bitte den Service logincheck auf, dieser beendet länger als 15 min laufende Requests automatisch.)\",\"Type\":\"ERROR\"}"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1778354018,
-    "last_attempt_iso": "2026-05-09T19:13:38Z",
-    "last_success_epoch": 1778354033,
-    "last_success_iso": "2026-05-09T19:13:53Z"
+    "last_attempt_epoch": 1778360017,
+    "last_attempt_iso": "2026-05-09T20:53:37Z",
+    "last_success_epoch": 1778360032,
+    "last_success_iso": "2026-05-09T20:53:52Z"
   },
   "entsoe": {
-    "last_attempt_epoch": 1778354290,
-    "last_attempt_iso": "2026-05-09T19:18:10Z",
-    "last_error_epoch": 1778354291,
+    "last_attempt_epoch": 1778360162,
+    "last_attempt_iso": "2026-05-09T20:56:02Z",
+    "last_error_epoch": 1778360164,
     "last_error_message": "ValueError: fetcher 'entsoe' returned foreign keys {'points'} — this looks like another source's data. Refusing to write.",
     "last_success_epoch": 1778300938,
     "last_success_iso": "2026-05-09T04:28:58Z"
@@ -56,16 +56,16 @@
     "last_success_iso": "2026-05-09T18:08:39Z"
   },
   "news": {
-    "last_attempt_epoch": 1778350384,
-    "last_attempt_iso": "2026-05-09T18:13:04Z",
-    "last_success_epoch": 1778350406,
-    "last_success_iso": "2026-05-09T18:13:26Z"
+    "last_attempt_epoch": 1778360164,
+    "last_attempt_iso": "2026-05-09T20:56:04Z",
+    "last_success_epoch": 1778360185,
+    "last_success_iso": "2026-05-09T20:56:25Z"
   },
   "smard": {
-    "last_attempt_epoch": 1778354013,
-    "last_attempt_iso": "2026-05-09T19:13:33Z",
-    "last_success_epoch": 1778354018,
-    "last_success_iso": "2026-05-09T19:13:38Z"
+    "last_attempt_epoch": 1778360013,
+    "last_attempt_iso": "2026-05-09T20:53:33Z",
+    "last_success_epoch": 1778360017,
+    "last_success_iso": "2026-05-09T20:53:37Z"
   },
   "weather": {
     "last_attempt_epoch": 1778350054,
