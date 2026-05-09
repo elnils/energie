@@ -44,31 +44,42 @@ def _to_float(s: str) -> Optional[float]:
         return None
 
 
-def _post(endpoint: str, token: str, **params) -> dict:
+def _request(method: str, endpoint: str, token: str, **params) -> dict:
     """
-    Genesis-Online v5.0 API: credentials go in HTTP HEADERS, not the body.
-    Body contains only the actual request parameters as form-urlencoded.
+    Genesis-Online v5.0 API.
 
-    Per the official "GENESIS Webservice Einführung v5.0" (May 2025):
-        "Zugangsdaten: Felder im HTTP-Header.
-         Weitere Parameter: Felder im Request-Body."
+    Auth: HTTP headers `username` (= token) and `password` (empty).
+          Per official "GENESIS Webservice Einführung v5.0" (May 2025):
+          "Zugangsdaten: Felder im HTTP-Header. Weitere Parameter: im Request-Body."
 
-    The token replaces the username field. Password header must be present
-    but empty when using token auth.
+    Verb selection:
+      - `helloworld/*` (logincheck, whoami) → GET; POST returns 405.
+      - `data/*`, `find/*` (the actual data endpoints) → POST.
+
+    Always returns parsed JSON.
     """
     s = http.get_session()
     headers = {
-        'Content-Type': 'application/x-www-form-urlencoded',
         'username': token,
         'password': '',
     }
-    body = {'language': 'de', **params}
-    r = s.post(f'{BASE_URL}/{endpoint}',
-               data=body,
-               headers=headers,
-               timeout=30)
-    r.raise_for_status()
+    url = f'{BASE_URL}/{endpoint}'
+    if method.upper() == 'GET':
+        # Auth-probe endpoints accept GET; pass params as query string.
+        r = s.get(url, headers=headers, params={'language': 'de', **params}, timeout=30)
+    else:
+        headers['Content-Type'] = 'application/x-www-form-urlencoded'
+        r = s.post(url, data={'language': 'de', **params}, headers=headers, timeout=30)
+    if not r.ok:
+        # Surface the response body for diagnosis, then raise
+        body = r.text[:300] if r.text else ''
+        raise RuntimeError(f'Destatis HTTP {r.status_code} on {method} {endpoint}: {body}')
     return r.json()
+
+
+def _post(endpoint: str, token: str, **params) -> dict:
+    """Backwards-compatible wrapper used by data/* endpoints."""
+    return _request('POST', endpoint, token, **params)
 
 
 def _parse_table_csv(csv_text: str) -> List[dict]:
@@ -160,16 +171,25 @@ def fetch() -> dict:
     if len(token) < 10:
         raise RuntimeError('DESTATIS_API_TOKEN missing — register at www-genesis.destatis.de')
 
-    # Auth probe: 'helloworld/whoami' returns caller IP + hostname when auth works.
-    # If this 401s, the token or auth method is wrong and there's no point trying tables.
+    # Auth probe: 'helloworld/logincheck' is the official auth-test endpoint.
+    # We GET it (POST returns 405). On success the response contains
+    # {"Status":"Sie wurden erfolgreich an- und abgemeldet."}.
+    # Fall back to whoami (GET) if logincheck doesn't exist on this endpoint version.
     try:
-        whoami = _post('helloworld/whoami', token)
-        ident = whoami.get('User', whoami.get('Ident', '?')) if isinstance(whoami, dict) else '?'
-        print(f'    destatis whoami: {ident}')
-    except Exception as e:
-        raise RuntimeError(f'Destatis auth probe (whoami) failed: {e}. '
-                          'Check DESTATIS_API_TOKEN. Token must be from Genesis-Online -> '
-                          'Mein Konto -> Webservice/API.')
+        probe = _request('GET', 'helloworld/logincheck', token)
+        ident = probe.get('Status', probe.get('User', '?')) if isinstance(probe, dict) else '?'
+        print(f'    destatis logincheck: {ident}')
+    except Exception as e1:
+        try:
+            probe = _request('GET', 'helloworld/whoami', token)
+            ident = probe.get('User', probe.get('Ident', '?')) if isinstance(probe, dict) else '?'
+            print(f'    destatis whoami: {ident}')
+        except Exception as e2:
+            raise RuntimeError(
+                f'Destatis auth probe failed: logincheck → {e1}; whoami → {e2}. '
+                'Check DESTATIS_API_TOKEN at https://www-genesis.destatis.de '
+                '(Mein Konto → Webservice/API).'
+            )
 
     # Headline VPI: gives us the overall inflation context
     try:
