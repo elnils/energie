@@ -1,74 +1,76 @@
 {
   "commodities": {
-    "last_attempt_epoch": 1778300933,
-    "last_attempt_iso": "2026-05-09T04:28:53Z",
-    "last_success_epoch": 1778300936,
-    "last_success_iso": "2026-05-09T04:28:56Z"
+    "last_attempt_epoch": 1778310371,
+    "last_attempt_iso": "2026-05-09T07:06:11Z",
+    "last_success_epoch": 1778310374,
+    "last_success_iso": "2026-05-09T07:06:14Z"
   },
   "destatis_vpi": {
-    "last_attempt_epoch": 1778310289,
-    "last_attempt_iso": "2026-05-09T07:04:49Z",
-    "last_error_epoch": 1778310291,
+    "last_attempt_epoch": 1778310426,
+    "last_attempt_iso": "2026-05-09T07:07:06Z",
+    "last_error_epoch": 1778310426,
     "last_error_message": "RuntimeError: Destatis auth probe (whoami) failed: 405 Client Error: 405 for url: https://www-genesis.destatis.de/genesisWS/rest/2020/helloworld/whoami. Check DESTATIS_API_TOKEN. Token must be from Genesis-Online -> Mein Konto -> Webservice/API."
   },
   "energy_charts": {
-    "last_attempt_epoch": 1778310097,
-    "last_attempt_iso": "2026-05-09T07:01:37Z",
-    "last_success_epoch": 1778310112,
-    "last_success_iso": "2026-05-09T07:01:52Z"
+    "last_attempt_epoch": 1778310336,
+    "last_attempt_iso": "2026-05-09T07:05:36Z",
+    "last_success_epoch": 1778310351,
+    "last_success_iso": "2026-05-09T07:05:51Z"
   },
   "entsoe": {
-    "last_attempt_epoch": 1778300937,
-    "last_attempt_iso": "2026-05-09T04:28:57Z",
+    "last_attempt_epoch": 1778310426,
+    "last_attempt_iso": "2026-05-09T07:07:06Z",
+    "last_error_epoch": 1778310428,
+    "last_error_message": "ValueError: fetcher 'entsoe' returned foreign keys {'points'} — this looks like another source's data. Refusing to write.",
     "last_success_epoch": 1778300938,
     "last_success_iso": "2026-05-09T04:28:58Z"
   },
   "entsog": {
-    "last_attempt_epoch": 1778300930,
-    "last_attempt_iso": "2026-05-09T04:28:50Z",
-    "last_success_epoch": 1778300931,
-    "last_success_iso": "2026-05-09T04:28:51Z"
+    "last_attempt_epoch": 1778310368,
+    "last_attempt_iso": "2026-05-09T07:06:08Z",
+    "last_success_epoch": 1778310369,
+    "last_success_iso": "2026-05-09T07:06:09Z"
   },
   "fuel": {
-    "last_attempt_epoch": 1778274515,
-    "last_attempt_iso": "2026-05-08T21:08:35Z",
-    "last_success_epoch": 1778274564,
-    "last_success_iso": "2026-05-08T21:09:24Z"
+    "last_attempt_epoch": 1778310374,
+    "last_attempt_iso": "2026-05-09T07:06:14Z",
+    "last_success_epoch": 1778310425,
+    "last_success_iso": "2026-05-09T07:07:05Z"
   },
   "fx": {
-    "last_attempt_epoch": 1778274514,
-    "last_attempt_iso": "2026-05-08T21:08:34Z",
-    "last_success_epoch": 1778274515,
-    "last_success_iso": "2026-05-08T21:08:35Z"
+    "last_attempt_epoch": 1778310374,
+    "last_attempt_iso": "2026-05-09T07:06:14Z",
+    "last_success_epoch": 1778310374,
+    "last_success_iso": "2026-05-09T07:06:14Z"
   },
   "gas_storage": {
-    "last_attempt_epoch": 1778300929,
-    "last_attempt_iso": "2026-05-09T04:28:49Z",
-    "last_success_epoch": 1778300930,
-    "last_success_iso": "2026-05-09T04:28:50Z"
+    "last_attempt_epoch": 1778310351,
+    "last_attempt_iso": "2026-05-09T07:05:51Z",
+    "last_success_epoch": 1778310368,
+    "last_success_iso": "2026-05-09T07:06:08Z"
   },
   "heating_oil": {
-    "last_attempt_epoch": 1778274564,
-    "last_attempt_iso": "2026-05-08T21:09:24Z",
-    "last_success_epoch": 1778274565,
-    "last_success_iso": "2026-05-08T21:09:25Z"
+    "last_attempt_epoch": 1778310425,
+    "last_attempt_iso": "2026-05-09T07:07:05Z",
+    "last_success_epoch": 1778310426,
+    "last_success_iso": "2026-05-09T07:07:06Z"
   },
   "news": {
-    "last_attempt_epoch": 1778310112,
-    "last_attempt_iso": "2026-05-09T07:01:52Z",
-    "last_success_epoch": 1778310120,
-    "last_success_iso": "2026-05-09T07:02:00Z"
+    "last_attempt_epoch": 1778310428,
+    "last_attempt_iso": "2026-05-09T07:07:08Z",
+    "last_success_epoch": 1778310436,
+    "last_success_iso": "2026-05-09T07:07:16Z"
   },
   "smard": {
-    "last_attempt_epoch": 1778310092,
-    "last_attempt_iso": "2026-05-09T07:01:32Z",
-    "last_success_epoch": 1778310097,
-    "last_success_iso": "2026-05-09T07:01:37Z"
+    "last_attempt_epoch": 1778310331,
+    "last_attempt_iso": "2026-05-09T07:05:31Z",
+    "last_success_epoch": 1778310336,
+    "last_success_iso": "2026-05-09T07:05:36Z"
   },
   "weather": {
-    "last_attempt_epoch": 1778300931,
-    "last_attempt_iso": "2026-05-09T04:28:51Z",
-    "last_success_epoch": 1778300933,
-    "last_success_iso": "2026-05-09T04:28:53Z"
+    "last_attempt_epoch": 1778310369,
+    "last_attempt_iso": "2026-05-09T07:06:09Z",
+    "last_success_epoch": 1778310371,
+    "last_success_iso": "2026-05-09T07:06:11Z"
   }
 }
