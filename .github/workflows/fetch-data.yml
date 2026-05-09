@@ -26,9 +26,11 @@ on:
 permissions:
   contents: write
 
+# Cancel any in-progress run when a new one starts. Hourly cron makes this
+# safe — we'd rather have one fresh complete run than stack two stale ones.
 concurrency:
   group: fetch-data
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   fetch:
@@ -80,17 +82,70 @@ jobs:
           echo "--- meta.json ---"
           cat data/meta.json 2>/dev/null | head -100 || echo "no meta"
 
-      - name: Commit and push
+      # Conflict-free commit strategy.
+      #
+      # Why this is structured oddly: data/*.json are ALWAYS rewritten by every
+      # fetcher run. A naive `git pull --rebase` will conflict on every line of
+      # every file because timestamps/values changed concurrently. Auto-merge
+      # produces garbage. So instead we:
+      #   1. Snapshot freshly-fetched data/ to a temp location
+      #   2. Hard-reset working tree to remote main (discarding the new data
+      #      from the working tree, but they're safe in the snapshot)
+      #   3. Restore the snapshot (which becomes the new HEAD content)
+      #   4. Commit and push
+      # If push still fails (race with another runner), retry up to 3 times.
+      - name: Commit and push (conflict-safe)
         if: success()
         run: |
+          set -e
           git config user.name  "github-actions-bot"
           git config user.email "actions@github.com"
-          git add data/
-          if git diff --cached --quiet; then
-            echo "no data changes to commit"
-          else
-            git commit -m "data update $(date -u +%Y-%m-%dT%H:%MZ)"
-            # Pull --rebase to handle other concurrent commits gracefully
-            git pull --rebase origin main || true
-            git push origin main
+
+          # Bail early if no data was fetched
+          if [ ! -d data ] || [ -z "$(ls -A data 2>/dev/null)" ]; then
+            echo "no data/ to commit"
+            exit 0
           fi
+
+          for attempt in 1 2 3; do
+            echo "::group::commit attempt $attempt"
+
+            # 1. Snapshot fresh data outside the working tree
+            SNAP=$(mktemp -d)
+            cp -r data/. "$SNAP/"
+
+            # 2. Sync hard with remote main
+            git fetch origin main
+            git reset --hard origin/main
+            # Remove anything still in working data/ that came from remote
+            rm -rf data
+            mkdir data
+
+            # 3. Restore the snapshot — these become the staged changes
+            cp -r "$SNAP/." data/
+            rm -rf "$SNAP"
+
+            # 4. Stage + check if anything actually changed vs remote
+            git add data/
+            if git diff --cached --quiet; then
+              echo "no effective data changes vs remote — nothing to commit"
+              echo "::endgroup::"
+              exit 0
+            fi
+
+            git commit -m "data update $(date -u +%Y-%m-%dT%H:%MZ)"
+
+            # 5. Push. If remote moved between fetch and push, retry.
+            if git push origin main; then
+              echo "::endgroup::"
+              echo "push succeeded on attempt $attempt"
+              exit 0
+            fi
+
+            echo "push rejected (likely concurrent push); retrying..."
+            echo "::endgroup::"
+            sleep $((5 * attempt))
+          done
+
+          echo "::error::push failed after 3 attempts"
+          exit 1
