@@ -6,16 +6,16 @@
     "last_success_iso": "2026-05-09T04:28:56Z"
   },
   "destatis_vpi": {
-    "last_attempt_epoch": 1778300936,
-    "last_attempt_iso": "2026-05-09T04:28:56Z",
-    "last_error_epoch": 1778300937,
+    "last_attempt_epoch": 1778310112,
+    "last_attempt_iso": "2026-05-09T07:01:52Z",
+    "last_error_epoch": 1778310112,
     "last_error_message": "RuntimeError: Destatis auth probe (whoami) failed: 405 Client Error: 405 for url: https://www-genesis.destatis.de/genesisWS/rest/2020/helloworld/whoami. Check DESTATIS_API_TOKEN. Token must be from Genesis-Online -> Mein Konto -> Webservice/API."
   },
   "energy_charts": {
-    "last_attempt_epoch": 1778300853,
-    "last_attempt_iso": "2026-05-09T04:27:33Z",
-    "last_success_epoch": 1778300929,
-    "last_success_iso": "2026-05-09T04:28:49Z"
+    "last_attempt_epoch": 1778310097,
+    "last_attempt_iso": "2026-05-09T07:01:37Z",
+    "last_success_epoch": 1778310112,
+    "last_success_iso": "2026-05-09T07:01:52Z"
   },
   "entsoe": {
     "last_attempt_epoch": 1778300937,
@@ -54,16 +54,16 @@
     "last_success_iso": "2026-05-08T21:09:25Z"
   },
   "news": {
-    "last_attempt_epoch": 1778300938,
-    "last_attempt_iso": "2026-05-09T04:28:58Z",
-    "last_success_epoch": 1778300949,
-    "last_success_iso": "2026-05-09T04:29:09Z"
+    "last_attempt_epoch": 1778310112,
+    "last_attempt_iso": "2026-05-09T07:01:52Z",
+    "last_success_epoch": 1778310120,
+    "last_success_iso": "2026-05-09T07:02:00Z"
   },
   "smard": {
-    "last_attempt_epoch": 1778300847,
-    "last_attempt_iso": "2026-05-09T04:27:27Z",
-    "last_success_epoch": 1778300853,
-    "last_success_iso": "2026-05-09T04:27:33Z"
+    "last_attempt_epoch": 1778310092,
+    "last_attempt_iso": "2026-05-09T07:01:32Z",
+    "last_success_epoch": 1778310097,
+    "last_success_iso": "2026-05-09T07:01:37Z"
   },
   "weather": {
     "last_attempt_epoch": 1778300931,
