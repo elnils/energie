@@ -83,9 +83,15 @@ main{padding:18px 20px 70px;max-width:1600px;margin:0 auto}
 .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px;margin-bottom:14px}
 .card{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:14px;box-shadow:var(--shadow);transition:box-shadow .15s}
 .card:hover{box-shadow:var(--shadow-md)}
-.g12{grid-column:span 12}.g8{grid-column:span 8}.g6{grid-column:span 6}.g4{grid-column:span 4}.g3{grid-column:span 3}
-@media(max-width:900px){.g8,.g6,.g4,.g3{grid-column:span 12}}
+.g12{grid-column:span 12}.g8{grid-column:span 8}.g7{grid-column:span 7}.g6{grid-column:span 6}.g5{grid-column:span 5}.g4{grid-column:span 4}.g3{grid-column:span 3}
+@media(max-width:900px){.g8,.g7,.g6,.g5,.g4,.g3{grid-column:span 12}}
 @media(min-width:901px) and (max-width:1200px){.g4,.g3{grid-column:span 6}}
+
+/* Fuel tabs (sub-tabs within Kraftstoff panel) */
+.fuel-tabs{display:flex;gap:4px;background:var(--card);border:1px solid var(--border);border-radius:6px;padding:4px;margin-bottom:14px;box-shadow:var(--shadow);width:fit-content}
+.fuel-tab{background:transparent;border:none;padding:6px 16px;font-size:12px;font-weight:600;color:var(--text2);cursor:pointer;border-radius:4px;font-family:inherit;transition:all .12s}
+.fuel-tab:hover{background:var(--bg-alt);color:var(--text)}
+.fuel-tab.active{background:var(--accent);color:#fff}
 
 .card-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;gap:8px}
 .card-title{font-size:13px;font-weight:600;color:var(--text);letter-spacing:-0.005em}
@@ -258,25 +264,31 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
 <!-- KRAFTSTOFF -->
 <div class="panel" id="panel-kraftstoff">
   <div class="range-bar" data-tab="kraftstoff"></div>
+  <div class="fuel-tabs" id="fuel-tabs">
+    <button class="fuel-tab active" data-fuel="e5">Super E5</button>
+    <button class="fuel-tab" data-fuel="e10">Super E10</button>
+    <button class="fuel-tab" data-fuel="diesel">Diesel</button>
+  </div>
+  <div class="kpis" id="kpi-kraftstoff"></div>
   <div class="grid">
-    <div class="card g3">
-      <div class="card-hdr"><div><div class="card-title">Kraftstoffart</div></div></div>
-      <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:14px" id="fuel-btns">
-        <button class="btn" id="fbtn-e5" onclick="setFuel('e5',this)" style="border-color:var(--accent);color:var(--accent)">Super E5</button>
-        <button class="btn" id="fbtn-e10" onclick="setFuel('e10',this)">Super E10</button>
-        <button class="btn" id="fbtn-diesel" onclick="setFuel('diesel',this)">Diesel</button>
+    <div class="card g7">
+      <div class="card-hdr">
+        <div><div class="card-title">Preise pro Stadt</div><div class="card-sub">Tankerkönig · 10km Radius · sortierbar</div></div>
+        <select id="fuel-sort" onchange="renderKraftstoff()">
+          <option value="city">Sortierung: Stadt</option>
+          <option value="price-asc" selected>Sortierung: Preis aufsteigend</option>
+          <option value="price-desc">Sortierung: Preis absteigend</option>
+        </select>
       </div>
-      <div class="kpi-lbl">Nationaler Ø</div>
-      <div class="kpi-val" style="font-size:26px;color:var(--accent)" id="fuel-national">—</div>
-      <div class="kpi-unit">EUR/Liter · DE gesamt</div>
+      <div id="fuel-table-wrap"><div class="loading"><span class="spin"></span>Lädt…</div></div>
     </div>
-    <div class="card g9">
-      <div class="card-hdr"><div><div class="card-title">Kraftstoffpreise nach Stadt</div><div class="card-sub">Tankerkönig · 10km Radius</div></div></div>
-      <div class="city-grid" id="fuel-city-grid"><div class="loading"><span class="spin"></span>Lädt…</div></div>
+    <div class="card g5">
+      <div class="card-hdr"><div><div class="card-title">Bundesschnitt — Trend</div><div class="card-sub">Aus täglichem Snapshot-Archiv</div></div></div>
+      <div class="chart-wrap" style="height:240px"><canvas id="chart-fuel-history"></canvas></div>
     </div>
     <div class="card g12">
-      <div class="card-hdr"><div><div class="card-title">Preisvergleich Städte</div></div></div>
-      <div class="chart-wrap" style="height:190px"><canvas id="chart-fuel"></canvas></div>
+      <div class="card-hdr"><div><div class="card-title">Stadt-Spread heute</div><div class="card-sub">Differenz teuerste vs günstigste Stadt</div></div></div>
+      <div class="chart-wrap" style="height:160px"><canvas id="chart-fuel-spread"></canvas></div>
     </div>
   </div>
 </div>
@@ -600,7 +612,7 @@ const TAB_FILES = {
   rohstoffe:   ['commodities','fx'],
   kraftstoff:  ['fuel'],
   heizoel:     ['heating_oil','commodities'],
-  erneuerbare: ['energy_charts'],
+  erneuerbare: ['energy_charts','smard'],
   gas:         ['gas_storage','entsog'],
   wetter:      ['weather'],
   fx:          ['fx'],
@@ -1011,68 +1023,214 @@ function renderRohstoffe() {
 // ══════════════════════════════════════════════
 // KRAFTSTOFF
 // ══════════════════════════════════════════════
-function setFuel(type,btn) {
-  fuelType=type;
-  document.querySelectorAll('#fuel-btns .btn').forEach(b=>{b.style.borderColor='';b.style.color='';});
-  btn.style.borderColor='var(--accent)';btn.style.color='var(--accent)';
+function setFuel(type) {
+  fuelType = type;
+  document.querySelectorAll('.fuel-tab').forEach(b => {
+    b.classList.toggle('active', b.dataset.fuel === type);
+  });
   renderKraftstoff();
 }
 
-function renderKraftstoff() {
-  const fuel=D.fuel;
-  if(!fuel?.cities||Object.keys(fuel.cities).length===0) {
-    document.getElementById('fuel-city-grid').innerHTML='<div class="nodata" style="grid-column:1/-1">Tankerkönig: kein API-Key oder keine Daten.<br>Key als Secret <code>TANKERKOENIG_API_KEY</code> hinterlegen.</div>';
+// History loader (separate from D, lives under D._history)
+async function loadHistory(source) {
+  D._history = D._history || {};
+  if (D._history[source] !== undefined) return D._history[source];
+  try {
+    const r = await fetch(`./data/history/${source}.jsonl?t=${Date.now()}`);
+    if (!r.ok) { D._history[source] = []; return []; }
+    const text = await r.text();
+    const lines = text.split('\n').filter(l => l.trim());
+    const records = [];
+    for (const line of lines) {
+      try { records.push(JSON.parse(line)); } catch (e) {}
+    }
+    records.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+    D._history[source] = records;
+    return records;
+  } catch (e) {
+    D._history[source] = [];
+    return [];
+  }
+}
+
+async function renderKraftstoff() {
+  const fuel = D.fuel;
+  const wrap = document.getElementById('fuel-table-wrap');
+  if (!wrap) return;
+  if (!fuel?.cities || Object.keys(fuel.cities).length === 0) {
+    wrap.innerHTML = '<div class="nodata">Tankerkönig: kein API-Key oder keine Daten.</div>';
+    document.getElementById('kpi-kraftstoff').innerHTML = '';
     return;
   }
-  const nat=fuel.cities._national;
-  document.getElementById('fuel-national').textContent=nat?.[`${fuelType}_avg`]?fmtN(nat[`${fuelType}_avg`],3)+' €':'—';
-  const cities=Object.entries(fuel.cities).filter(([k])=>k!=='_national'&&!fuel.cities[k]?.error);
-  document.getElementById('fuel-city-grid').innerHTML=cities.map(([city,d])=>{
-    const p=d[`${fuelType}_avg`];
-    return`<div class="city-card"><div class="city-name">${city}</div><div class="city-price">${p?fmtN(p,3)+' €':'—'}</div><div class="city-label">EUR/Liter</div>${d[`${fuelType}_min`]?`<div style="font-size:8px;color:var(--green);margin-top:2px">Min: ${fmtN(d[fuelType+'_min'],3)}</div>`:''}</div>`;
-  }).join('');
-  const sorted=cities.map(([c,d])=>({c,v:d[`${fuelType}_avg`]})).filter(x=>x.v).sort((a,b)=>a.v-b.v);
-  if(sorted.length) mkChart('chart-fuel','bar',sorted.map(x=>x.c),[{
-    label:fuelType.toUpperCase()+' EUR/L',data:sorted.map(x=>x.v),
-    backgroundColor:'rgba(88,166,255,0.4)',borderColor:'#58a6ff',borderWidth:1,borderRadius:3,
-  }],{indexAxis:'y',scales:{x:{grid:{color:'#21262d'},ticks:{color:'#484f58'}},y:{grid:{display:false},ticks:{color:'#8b949e',font:{size:10}}}},plugins:{legend:{display:false}}});
+  const nat = fuel.cities._national || {};
+  const cities = Object.entries(fuel.cities).filter(([k]) => k !== '_national' && !fuel.cities[k]?.error);
+
+  // KPI tiles for all 3 fuel types — show all even when one is selected
+  const kpis_data = [
+    {key:'e5', label:'Super E5', color:'#0e6cb6'},
+    {key:'e10', label:'Super E10', color:'#1f9d55'},
+    {key:'diesel', label:'Diesel', color:'#7e57c2'},
+  ].map(({key,label,color}) => {
+    const v = nat[`${key}_avg`];
+    return {label:`${label} Ø DE`, val:v?fmtN(v,3):'—', unit:'EUR/L Bundesschnitt', color};
+  });
+  // Spread KPI
+  const fuelVals = cities.map(([c,d]) => d[`${fuelType}_avg`]).filter(v => v != null);
+  if (fuelVals.length >= 2) {
+    const spread = Math.max(...fuelVals) - Math.min(...fuelVals);
+    kpis_data.push({label:'Stadt-Spread heute', val:fmtN(spread*100,1), unit:'Cent/L Differenz', color:'#d97706'});
+  }
+  document.getElementById('kpi-kraftstoff').innerHTML = kpis(kpis_data);
+
+  // Sortable table — all 3 fuel types per city
+  const sortMode = document.getElementById('fuel-sort')?.value || 'price-asc';
+  let rows = cities.map(([city, d]) => ({
+    city,
+    e5: d.e5_avg, e10: d.e10_avg, diesel: d.diesel_avg,
+    e5_min: d.e5_min, diesel_min: d.diesel_min,
+    n: d.count || 0,
+    sortVal: d[`${fuelType}_avg`],
+  }));
+  if (sortMode === 'city') rows.sort((a, b) => a.city.localeCompare(b.city));
+  else if (sortMode === 'price-asc') rows.sort((a, b) => (a.sortVal ?? 99) - (b.sortVal ?? 99));
+  else rows.sort((a, b) => (b.sortVal ?? 0) - (a.sortVal ?? 0));
+
+  const minVal = Math.min(...rows.map(r => r.sortVal).filter(v => v != null));
+  const maxVal = Math.max(...rows.map(r => r.sortVal).filter(v => v != null));
+  wrap.innerHTML = `<table class="tbl">
+    <thead><tr>
+      <th>Stadt</th>
+      <th class="num">E5</th>
+      <th class="num">E10</th>
+      <th class="num">Diesel</th>
+      <th class="num">${fuelType.toUpperCase()} Min</th>
+      <th class="num">Stationen</th>
+    </tr></thead>
+    <tbody>${rows.map(r => {
+      const cur = r.sortVal;
+      const cls = cur === minVal ? 'pos' : cur === maxVal ? 'neg' : '';
+      const minPrice = r[`${fuelType}_min`];
+      return `<tr>
+        <td><strong>${r.city}</strong></td>
+        <td class="num ${fuelType==='e5'?cls:''}">${r.e5?fmtN(r.e5,3):'—'}</td>
+        <td class="num ${fuelType==='e10'?cls:''}">${r.e10?fmtN(r.e10,3):'—'}</td>
+        <td class="num ${fuelType==='diesel'?cls:''}">${r.diesel?fmtN(r.diesel,3):'—'}</td>
+        <td class="num" style="color:var(--green)">${minPrice?fmtN(minPrice,3):'—'}</td>
+        <td class="num" style="color:var(--text3);font-weight:400">${r.n}</td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table>`;
+
+  // Spread chart (horizontal bars, sorted by selected fuel type)
+  const spreadRows = rows.filter(r => r.sortVal != null);
+  if (spreadRows.length) {
+    mkChart('chart-fuel-spread', 'bar', spreadRows.map(r => r.city), [{
+      label: fuelType.toUpperCase() + ' EUR/L',
+      data: spreadRows.map(r => r.sortVal),
+      backgroundColor: spreadRows.map(r => r.sortVal === minVal ? '#1f9d55' : r.sortVal === maxVal ? '#c0392b' : '#0e6cb6'),
+      borderWidth: 0, borderRadius: 3,
+    }], {
+      indexAxis:'y',
+      scales:{x:{ticks:{callback:v=>v.toFixed(2)+' €'}},y:{grid:{display:false}}},
+      plugins:{legend:{display:false}}
+    });
+  }
+
+  // History trend chart
+  const history = await loadHistory('fuel');
+  const hWrap = document.getElementById('chart-fuel-history')?.parentElement;
+  if (!history.length) {
+    if (hWrap) hWrap.innerHTML = '<div class="nodata">Trend wird sichtbar, sobald Historie aufgebaut ist (1 Tag pro Run).</div>';
+  } else {
+    const co = rangeCutoffMs('kraftstoff') / 1000;
+    const filtered = history.filter(r => {
+      const t = r.date ? new Date(r.date).getTime() / 1000 : 0;
+      return t >= co;
+    });
+    const labels = filtered.map(r => r.date);
+    mkChart('chart-fuel-history', 'line', labels, [
+      {label:'E5',     data:filtered.map(r => r.e5_avg),     borderColor:'#0e6cb6', backgroundColor:'transparent', borderWidth:2},
+      {label:'E10',    data:filtered.map(r => r.e10_avg),    borderColor:'#1f9d55', backgroundColor:'transparent', borderWidth:2},
+      {label:'Diesel', data:filtered.map(r => r.diesel_avg), borderColor:'#7e57c2', backgroundColor:'transparent', borderWidth:2},
+    ], {
+      plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}},
+      scales:{y:{ticks:{callback:v=>v.toFixed(2)+' €'}}}
+    });
+  }
 }
 
 // ══════════════════════════════════════════════
 // ERNEUERBARE
 // ══════════════════════════════════════════════
 function renderErneuerbare() {
-  const ec=D.energy_charts;
-  if(!ec) return;
+  const ec = D.energy_charts;
+  const sm = D.smard;
 
-  // Installierte Leistung
-  const inst=ec.installed_de;
-  if(inst?.time) {
-    const cm={'Wind onshore':C.wind_on,'Wind offshore':C.wind_off,'Solar':C.solar,'Biomass':C.biomass,'Hydro Power':C.hydro,'Nuclear':C.nuclear};
-    const ds=(inst.production_types||[]).filter(s=>cm[s.name]).map(s=>({
-      label:s.name,data:s.data,borderColor:cm[s.name],backgroundColor:cm[s.name]+'25',fill:false,tension:0.3,borderWidth:1.8
+  // Live KPIs from SMARD: current Wind GW, Solar GW, EE share, CO2 intensity
+  const kpiItems = [];
+  if (sm?.series) {
+    const s = sm.series;
+    const lv = k => {
+      const a = s[k] || [];
+      for (let i = a.length - 1; i >= 0; i--) {
+        const v = a[i].v;
+        if (v != null) return v / 1000;
+      }
+      return 0;
+    };
+    const wOn = lv('wind_onshore'), wOff = lv('wind_offshore'), sol = lv('solar');
+    const bio = lv('biomass'), hyd = lv('hydro'), nuc = lv('nuclear');
+    const lig = lv('lignite'), coal = lv('hard_coal'), gas = lv('natural_gas');
+    const total = wOn + wOff + sol + bio + hyd + nuc + lig + coal + gas;
+    const ren = wOn + wOff + sol + bio + hyd;
+    const renPct = total > 0 ? Math.round(ren / total * 100) : null;
+    const co2 = total > 0 ? Math.round((lig*900 + coal*800 + gas*400 + nuc*5 + ren*18) / total) : null;
+
+    kpiItems.push({label:'Wind erzeugt jetzt', val:fmtN(wOn+wOff,1), unit:'GW · onshore + offshore', color:'#0e6cb6'});
+    kpiItems.push({label:'Solar erzeugt jetzt', val:fmtN(sol,1), unit:'GW', color:'#d97706'});
+    kpiItems.push({label:'Biomasse + Wasser', val:fmtN(bio+hyd,1), unit:'GW Grundlast', color:'#1f9d55'});
+    kpiItems.push({label:'EE-Anteil aktuell', val:renPct!=null?renPct+'%':'—', unit:'an Erzeugung', color:renPct>=60?'#1f9d55':renPct>=40?'#d97706':'#c0392b'});
+    kpiItems.push({label:'CO₂-Intensität', val:co2!=null?co2:'—', unit:'g/kWh DE Mix', color:co2!=null && co2<300?'#1f9d55':'#c0392b'});
+    kpiItems.push({label:'Last gesamt', val:fmtN(total,1), unit:'GW Erzeugung', color:'#56657a'});
+  } else {
+    kpiItems.push({label:'Live-Daten', val:'—', unit:'SMARD lädt', color:'#56657a'});
+  }
+  document.getElementById('kpi-ren').innerHTML = kpis(kpiItems);
+
+  if (!ec) return;
+
+  // Installed capacity (yearly)
+  const inst = ec.installed_de;
+  if (inst?.time) {
+    const cm = {'Wind onshore':C.wind_on, 'Wind offshore':C.wind_off, 'Solar':C.solar,
+                'Biomass':C.biomass, 'Hydro Power':C.hydro, 'Nuclear':C.nuclear};
+    const ds = (inst.production_types || []).filter(s => cm[s.name]).map(s => ({
+      label: s.name, data: s.data, borderColor: cm[s.name],
+      backgroundColor: cm[s.name] + '25', fill: false, tension: 0.3, borderWidth: 2
     }));
-    if(ds.length) mkChart('chart-installed','line',inst.time,ds,{plugins:{legend:{display:true,labels:{color:'#8b949e',boxWidth:7,font:{size:9}}}}});
+    if (ds.length) mkChart('chart-installed', 'line', inst.time, ds,
+      {plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}}});
   }
 
-  // EE-Anteil
-  const ren=ec.ren_share_de;
-  if(ren?.unix_seconds?.length) {
-    const co=rangeCutoffSec('erneuerbare');
-    const vals=ren.ren_share||[];
-    const f=ren.unix_seconds.map((t,i)=>({t,v:vals[i]})).filter(x=>x.t>=co&&x.v!=null);
-    if(f.length){
-      mkChart('chart-ren-share','line',f.map(x=>fmtTs(x.t*1000)),[{
-        label:'% EE',data:f.map(x=>x.v),borderColor:'#1f9d55',backgroundColor:'rgba(31,157,85,0.10)',fill:true
+  // Renewable share over time
+  const ren = ec.ren_share_de;
+  if (ren?.unix_seconds?.length) {
+    const co = rangeCutoffSec('erneuerbare');
+    const vals = ren.ren_share || [];
+    const f = ren.unix_seconds.map((t, i) => ({t, v: vals[i]}))
+      .filter(x => x.t >= co && x.v != null);
+    if (f.length) {
+      mkChart('chart-ren-share', 'line', f.map(x => fmtTs(x.t * 1000)), [{
+        label:'% EE', data:f.map(x => x.v),
+        borderColor:'#1f9d55', backgroundColor:'rgba(31,157,85,0.10)', fill:true
       }]);
-      document.getElementById('kpi-ren').innerHTML=kpis([
-        {label:'EE-Anteil aktuell',val:fmtN(f.at(-1)?.v,1)+'%',unit:'gewählter Zeitraum',color:'#1f9d55'}
-      ]);
     } else {
-      document.getElementById('chart-ren-share').parentElement.innerHTML='<div class="nodata">EE-Anteil: keine Daten im gewählten Zeitraum</div>';
+      document.getElementById('chart-ren-share').parentElement.innerHTML =
+        '<div class="nodata">Keine EE-Anteil-Daten im Zeitraum</div>';
     }
   } else {
-    document.getElementById('chart-ren-share').parentElement.innerHTML='<div class="nodata">EE-Anteil: keine Daten von Energy-Charts</div>';
+    document.getElementById('chart-ren-share').parentElement.innerHTML =
+      '<div class="nodata">EE-Anteil: keine Daten von Energy-Charts</div>';
   }
 }
 
@@ -1290,10 +1448,13 @@ function renderHeizoel() {
   if(cs.length){
     mkChart('chart-heatoil-change','bar',cs.map(x=>x.label),[{
       label:'% Veränderung',data:cs.map(x=>x.v),
-      backgroundColor:cs.map(x=>x.v>=0?'rgba(248,81,73,0.55)':'rgba(63,185,80,0.55)'),
-      borderColor:cs.map(x=>x.v>=0?'#f85149':'#3fb950'),
+      backgroundColor:cs.map(x=>x.v>=0?'rgba(192,57,43,0.55)':'rgba(31,157,85,0.55)'),
+      borderColor:cs.map(x=>x.v>=0?'#c0392b':'#1f9d55'),
       borderWidth:1,borderRadius:3,
     }],{indexAxis:'y',scales:{x:{ticks:{callback:v=>v+'%'}},y:{grid:{display:false}}},plugins:{legend:{display:false}}});
+  } else {
+    const w=document.getElementById('chart-heatoil-change')?.parentElement;
+    if(w) w.innerHTML='<div class="nodata">Veränderungs-Daten werden beim nächsten Lauf geladen</div>';
   }
 
   // Notations table
@@ -1669,6 +1830,11 @@ document.querySelectorAll('.tab').forEach(btn=>{
     updateStatus();
     renderTab(tab);
   });
+});
+
+// Fuel-type tabs (sub-tabs inside Kraftstoff panel)
+document.querySelectorAll('.fuel-tab').forEach(btn => {
+  btn.addEventListener('click', () => setFuel(btn.dataset.fuel));
 });
 
 // ══════════════════════════════════════════════
