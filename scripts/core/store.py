@@ -10,14 +10,76 @@ atomically to data/<name>.json plus a tmp staging step. If the function raises,
 we read the previous data/<name>.json and rewrite it with `stale: true` and
 `last_error` populated — the dashboard keeps showing the last good values
 instead of breaking.
+
+Defence-in-depth: we also enforce a per-source schema sanity check. If a
+fetcher accidentally returns data shaped like another source (e.g. ENTSOG-like
+'points' field appearing in gas_storage output), we refuse to write it.
 """
 import json
 import os
 import tempfile
 from datetime import datetime
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Dict, Optional, Set
 
 from . import paths
+
+
+# Minimum-required-keys per data source. Each set lists keys that MUST be
+# present at the top of the `data` dict. If any are missing OR if foreign
+# keys (from another source) appear, validation rejects.
+EXPECTED_KEYS: Dict[str, Set[str]] = {
+    'gas_storage':   {'gas'},                       # plus optional 'lng'
+    'entsog':        {'points'},                    # plus optional 'errors'
+    'entsoe':        {'flows_in', 'flows_out'},     # OR {'awaiting_key'}
+    'fuel':          {'cities'},
+    'fx':            {'current'},
+    'heating_oil':   {'reference_price_eur_l'},
+    'destatis_vpi':  {'energy_series'},
+    'smard':         {'series'},
+    'energy_charts': {'price_de'},
+    'commodities':   {'brent_crude'},
+    'weather':       {'cities'},
+    'news':          {'articles'},
+}
+
+FORBIDDEN_KEYS: Dict[str, Set[str]] = {
+    # if a source's data carries any of these, it's likely the wrong fetcher's output
+    'gas_storage':   {'points', 'flows_in', 'articles', 'cities'},
+    'entsog':        {'gas', 'flows_in', 'articles'},
+    'entsoe':        {'points', 'gas', 'articles'},
+    'fuel':          {'gas', 'points', 'articles'},
+    'fx':            {'gas', 'points', 'articles', 'cities'},
+    'heating_oil':   {'gas', 'points', 'articles'},
+    'destatis_vpi':  {'gas', 'points', 'articles'},
+    'smard':         {'gas', 'points', 'articles'},
+    'energy_charts': {'gas', 'points', 'articles'},
+    'commodities':   {'gas', 'points', 'articles'},
+    'weather':       {'gas', 'points', 'articles'},
+    'news':          {'gas', 'points', 'cities'},
+}
+
+
+def _schema_check(name: str, data: Any) -> None:
+    """Raise ValueError if `data` doesn't look like it belongs in <name>.json."""
+    if not isinstance(data, dict):
+        return  # legacy / non-dict payloads pass through
+    expected = EXPECTED_KEYS.get(name, set())
+    forbidden = FORBIDDEN_KEYS.get(name, set())
+
+    keys = set(data.keys())
+    bad = keys & forbidden
+    if bad:
+        raise ValueError(
+            f'fetcher {name!r} returned foreign keys {bad!r} — '
+            f'this looks like another source\'s data. Refusing to write.'
+        )
+    # Allow the entsoe special "awaiting_key" empty-state shape
+    if name == 'entsoe' and 'awaiting_key' in data:
+        return
+    if expected and not (expected & keys):
+        raise ValueError(
+            f'fetcher {name!r} missing expected keys {expected!r}; got {keys!r}'
+        )
 
 
 def _ensure_dirs() -> None:
@@ -66,23 +128,17 @@ def write_with_fallback(
     fetch_fn: Callable[[], dict],
 ) -> dict:
     """
-    Run fetch_fn. On success: write its result.
+    Run fetch_fn. On success: validate schema, write its result.
     On failure: read previous file, mark `stale: true`, preserve `data` field,
     write that. Always writes — never leaves dashboard with no file.
-
-    The fetcher is expected to return a dict with at least:
-        {"updated": "<iso>", "data": {...}}
-
-    Wrapped output adds:
-        "stale": bool
-        "last_success": "<iso>"
-        "last_error": str | None
     """
     prev = read_json(name) or {}
     try:
         fresh = fetch_fn()
         if not isinstance(fresh, dict) or 'data' not in fresh:
             raise ValueError(f'fetcher {name} did not return dict with "data" key')
+        # Hard schema check — refuse to write data shaped like another source
+        _schema_check(name, fresh.get('data'))
         out = {
             'updated': fresh.get('updated') or now_iso(),
             'stale': False,
