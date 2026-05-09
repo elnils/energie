@@ -12,7 +12,7 @@ import xml.etree.ElementTree as ET
 from typing import Dict, List
 from datetime import datetime
 
-from core import http, validators
+from core import http, validators, history
 
 
 URL_DAILY = 'https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml'
@@ -89,6 +89,15 @@ def fetch() -> dict:
         pts = [{'date': d['date'], 'v': d['rates'][ccy]} for d in days if ccy in d['rates']]
         if pts:
             series[ccy] = pts
+
+    # History: append today's rate for the major currencies
+    rates_today = today.get('rates', {}) if isinstance(today, dict) else {}
+    history.record_history('fx', {
+        'usd': rates_today.get('USD'),
+        'gbp': rates_today.get('GBP'),
+        'chf': rates_today.get('CHF'),
+        'jpy': rates_today.get('JPY'),
+    })
 
     return {
         'data': {
