@@ -6,21 +6,21 @@
     "last_success_iso": "2026-05-09T21:54:00Z"
   },
   "destatis_vpi": {
-    "last_attempt_epoch": 1778363640,
-    "last_attempt_iso": "2026-05-09T21:54:00Z",
-    "last_error_epoch": 1778363674,
+    "last_attempt_epoch": 1778367298,
+    "last_attempt_iso": "2026-05-09T22:54:58Z",
+    "last_error_epoch": 1778367316,
     "last_error_message": "RuntimeError: Destatis HTTP 404 on POST data/table: {\"Code\":6,\"Content\":\"Die Anzahl Ihrer parallelen Requests übersteigt das zulässige Limit. (Reduzieren Sie Ihre Anfragen auf maximal 3 parallele Prozesse. Rufen Sie dazu bitte den Service logincheck auf, dieser beendet länger als 15 min laufende Requests automatisch.)\",\"Type\":\"ERROR\"}"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1778360017,
-    "last_attempt_iso": "2026-05-09T20:53:37Z",
-    "last_success_epoch": 1778360032,
-    "last_success_iso": "2026-05-09T20:53:52Z"
+    "last_attempt_epoch": 1778367283,
+    "last_attempt_iso": "2026-05-09T22:54:43Z",
+    "last_success_epoch": 1778367298,
+    "last_success_iso": "2026-05-09T22:54:58Z"
   },
   "entsoe": {
-    "last_attempt_epoch": 1778363674,
-    "last_attempt_iso": "2026-05-09T21:54:34Z",
-    "last_error_epoch": 1778363676,
+    "last_attempt_epoch": 1778367316,
+    "last_attempt_iso": "2026-05-09T22:55:16Z",
+    "last_error_epoch": 1778367317,
     "last_error_message": "ValueError: fetcher 'entsoe' returned foreign keys {'points'} — this looks like another source's data. Refusing to write.",
     "last_success_epoch": 1778300938,
     "last_success_iso": "2026-05-09T04:28:58Z"
@@ -62,10 +62,10 @@
     "last_success_iso": "2026-05-09T20:56:25Z"
   },
   "smard": {
-    "last_attempt_epoch": 1778363624,
-    "last_attempt_iso": "2026-05-09T21:53:44Z",
-    "last_success_epoch": 1778363629,
-    "last_success_iso": "2026-05-09T21:53:49Z"
+    "last_attempt_epoch": 1778367278,
+    "last_attempt_iso": "2026-05-09T22:54:38Z",
+    "last_success_epoch": 1778367283,
+    "last_success_iso": "2026-05-09T22:54:43Z"
   },
   "weather": {
     "last_attempt_epoch": 1778363629,
