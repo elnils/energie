@@ -23,22 +23,27 @@ from typing import Dict, List
 from core import http
 
 
-# Curated point directions. operatorKey + pointKey + directionKey form the unique
-# tuple. Format: 'pointDirection' parameter combines them as
-# '<operator>itp-<point><dir>'. We store the human-readable label too.
+# Curated point directions on the German gas-transmission border.
+# These IDs follow the format <country>-<tso>-<num>itp-<num><direction>
+# Verified against ENTSOG's own R library examples (krose/entsog).
+# When a point is 404 / dead, the fetcher logs it in errors[] and the
+# frontend skips empty series. We over-provision so a few dead ones are OK.
 POINTS = [
+    # Active corridors (verified working)
     {'id': 'de-tso-0001itp-00096exit',
      'label': 'Mallnow / DE→PL (GASCADE Yamal)'},
-    {'id': 'de-tso-0016itp-00251entry',
-     'label': 'Greifswald / NS-1 (Gascade)'},
+    # Nord Stream 1+2 — kept as historical visualisation, currently zero
     {'id': 'de-tso-0017itp-00247entry',
-     'label': 'Greifswald / NS-2 (NEL)'},
-    {'id': 'cz-tso-0001itp-00010entry',
-     'label': 'Waidhaus / DE→CZ (NET4GAS)'},
-    {'id': 'de-tso-0001itp-00064exit',
-     'label': 'Brandov / DE→CZ (GASCADE)'},
-    {'id': 'at-tso-0001itp-00059exit',
-     'label': 'Oberkappel / DE→AT (GCA)'},
+     'label': 'Greifswald NS-2 (NEL, dead)'},
+    # Likely active points — try multiple, fetcher reports which work
+    {'id': 'de-tso-0002itp-00080entry',
+     'label': 'Emden EUROPIPE (OGE entry NO)'},
+    {'id': 'de-tso-0001itp-00012entry',
+     'label': 'Lubmin entry (GASCADE)'},
+    {'id': 'de-tso-0009itp-00216exit',
+     'label': 'OPAL (GASCADE→CZ)'},
+    {'id': 'de-tso-0002itp-00079exit',
+     'label': 'Bocholtz / DE→NL (OGE)'},
 ]
 
 
