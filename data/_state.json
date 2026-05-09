@@ -6,21 +6,21 @@
     "last_success_iso": "2026-05-09T18:07:45Z"
   },
   "destatis_vpi": {
-    "last_attempt_epoch": 1778350119,
-    "last_attempt_iso": "2026-05-09T18:08:39Z",
-    "last_error_epoch": 1778350382,
+    "last_attempt_epoch": 1778354033,
+    "last_attempt_iso": "2026-05-09T19:13:53Z",
+    "last_error_epoch": 1778354290,
     "last_error_message": "ConnectionError: HTTPSConnectionPool(host='www-genesis.destatis.de', port=443): Max retries exceeded with url: /genesisWS/rest/2020/data/table (Caused by ReadTimeoutError(\"HTTPSConnectionPool(host='www-genesis.destatis.de', port=443): Read timed out. (read timeout=30)\"))"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1778350003,
-    "last_attempt_iso": "2026-05-09T18:06:43Z",
-    "last_success_epoch": 1778350018,
-    "last_success_iso": "2026-05-09T18:06:58Z"
+    "last_attempt_epoch": 1778354018,
+    "last_attempt_iso": "2026-05-09T19:13:38Z",
+    "last_success_epoch": 1778354033,
+    "last_success_iso": "2026-05-09T19:13:53Z"
   },
   "entsoe": {
-    "last_attempt_epoch": 1778350382,
-    "last_attempt_iso": "2026-05-09T18:13:02Z",
-    "last_error_epoch": 1778350384,
+    "last_attempt_epoch": 1778354290,
+    "last_attempt_iso": "2026-05-09T19:18:10Z",
+    "last_error_epoch": 1778354291,
     "last_error_message": "ValueError: fetcher 'entsoe' returned foreign keys {'points'} — this looks like another source's data. Refusing to write.",
     "last_success_epoch": 1778300938,
     "last_success_iso": "2026-05-09T04:28:58Z"
@@ -62,10 +62,10 @@
     "last_success_iso": "2026-05-09T18:13:26Z"
   },
   "smard": {
-    "last_attempt_epoch": 1778349996,
-    "last_attempt_iso": "2026-05-09T18:06:36Z",
-    "last_success_epoch": 1778350003,
-    "last_success_iso": "2026-05-09T18:06:43Z"
+    "last_attempt_epoch": 1778354013,
+    "last_attempt_iso": "2026-05-09T19:13:33Z",
+    "last_success_epoch": 1778354018,
+    "last_success_iso": "2026-05-09T19:13:38Z"
   },
   "weather": {
     "last_attempt_epoch": 1778350054,
