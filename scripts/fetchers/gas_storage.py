@@ -1,116 +1,190 @@
 """
-ENTSOG Transparency Platform — physical gas flows (no auth).
+GIE AGSI+ — aggregated gas storage inventories.
+GIE ALSI    — aggregated LNG terminal inventories.
 
-The endpoint is slow (60s per call max). Strategy: pull ONE indicator
-(Physical Flow) for a small list of operator point directions on the German
-border. We return one daily series per direction.
+Bug-fix vs v4.3: the previous implementation queried the API with no auth
+header, which returns either an empty list or a generic error. AGSI/ALSI
+require the `x-key` header containing the registered API key.
 
-Reference points (relevant to the current crisis context):
-  - Mallnow (DE entry from Nord Stream / Yamal corridor) — historically high,
-    now near zero post-2022, kept as visualisation of the change
-  - Greifswald — Nord Stream landing, dead but instructive
-  - Waidhaus (DE-CZ) — still active, central European supply axis
-  - Mediesu Aurit / Brandov — connections to PL/CZ
-  - Oberkappel (DE-AT)
+Endpoints:
+  https://agsi.gie.eu/api?country=<iso2>&size=<n>
+  https://alsi.gie.eu/api?country=<iso2>&size=<n>
+  Aggregated EU: country=eu
 
-If the API is unreachable we let the wrapper preserve previous data.
-
-Docs: https://transparency.entsog.eu/api/archiveDirectories/8/api-manual/
+Rate limits: not officially documented but ~60 calls/min is safe.
+Update times: 19:30 and 23:00 CET daily.
 """
-from datetime import datetime, timedelta, timezone
+import os
+import time
 from typing import Dict, List
 
-from core import http
+from core import http, history
 
 
-# Curated point directions. operatorKey + pointKey + directionKey form the unique
-# tuple. Format: 'pointDirection' parameter combines them as
-# '<operator>itp-<point><dir>'. We store the human-readable label too.
-POINTS = [
-    {'id': 'de-tso-0001itp-00096exit',
-     'label': 'Mallnow / DE→PL (GASCADE Yamal)'},
-    {'id': 'de-tso-0016itp-00251entry',
-     'label': 'Greifswald / NS-1 (Gascade)'},
-    {'id': 'de-tso-0017itp-00247entry',
-     'label': 'Greifswald / NS-2 (NEL)'},
-    {'id': 'cz-tso-0001itp-00010entry',
-     'label': 'Waidhaus / DE→CZ (NET4GAS)'},
-    {'id': 'de-tso-0001itp-00064exit',
-     'label': 'Brandov / DE→CZ (GASCADE)'},
-    {'id': 'at-tso-0001itp-00059exit',
-     'label': 'Oberkappel / DE→AT (GCA)'},
-]
+COUNTRIES_GAS = {
+    'eu': 'EU gesamt',
+    'de': 'Deutschland',
+    'at': 'Österreich',
+    'fr': 'Frankreich',
+    'it': 'Italien',
+    'nl': 'Niederlande',
+    'be': 'Belgien',
+    'pl': 'Polen',
+    'es': 'Spanien',
+    'cz': 'Tschechien',
+    'sk': 'Slowakei',
+    'hu': 'Ungarn',
+    'ua': 'Ukraine',
+}
+
+COUNTRIES_LNG = {
+    'eu': 'EU gesamt',
+    'es': 'Spanien',
+    'fr': 'Frankreich',
+    'it': 'Italien',
+    'nl': 'Niederlande',
+    'be': 'Belgien',
+    'de': 'Deutschland',
+    'pl': 'Polen',
+    'pt': 'Portugal',
+    'gr': 'Griechenland',
+    'hr': 'Kroatien',
+    'lt': 'Litauen',
+}
 
 
-def _iso_day(d: datetime) -> str:
-    return d.strftime('%Y-%m-%d')
+def _to_float(v) -> float | None:
+    """Best-effort float parse (handles German decimals, empty strings)."""
+    if v is None:
+        return None
+    if isinstance(v, (int, float)):
+        return float(v)
+    s = str(v).strip().replace(',', '.')
+    if not s or s.lower() in ('nan', 'null', 'none', '-'):
+        return None
+    try:
+        return float(s)
+    except ValueError:
+        return None
 
 
-def _fetch_point(point_id: str, days: int = 30) -> List[dict]:
-    end = datetime.now(timezone.utc)
-    start = end - timedelta(days=days)
-    s = http.get_session()
-    params = {
-        'pointDirection': point_id,
-        'from': _iso_day(start),
-        'to': _iso_day(end),
-        'indicator': 'Physical Flow',
-        'periodType': 'day',
-        'timezone': 'CET',
-        'limit': '-1',
+def _normalize_entry(entry: dict) -> dict | None:
+    """Pick consistent fields out of one AGSI/ALSI row."""
+    if not isinstance(entry, dict):
+        return None
+    date = ''
+    for k in ('gasDayStart', 'gasDayStartedOn', 'date', 'reportingPeriod'):
+        v = str(entry.get(k) or '')
+        if len(v) >= 10:
+            date = v[:10]
+            break
+    if not date:
+        return None
+
+    # Fill % — try documented field first, then fallbacks
+    fill = _to_float(entry.get('full'))
+    if fill is None:
+        # Some endpoints use other field names; ratio fallback as last resort
+        stored = _to_float(entry.get('gasInStorage'))
+        wgv = _to_float(entry.get('workingGasVolume'))
+        if stored is not None and wgv and wgv > 0:
+            fill = round(stored / wgv * 100.0, 2)
+    if fill is not None and not (0 <= fill <= 100):
+        fill = None
+
+    return {
+        'date': date,
+        'fill_pct': fill,
+        'injection': _to_float(entry.get('injection')) or 0.0,
+        'withdrawal': _to_float(entry.get('withdrawal')) or 0.0,
+        'trend': _to_float(entry.get('trend')),
+        'gas_in_storage_twh': _to_float(entry.get('gasInStorage')),
     }
-    r = s.get('https://transparency.entsog.eu/api/v1/operationalData.json',
-              params=params, timeout=70)
-    r.raise_for_status()
+
+
+def _fetch_one(api_url: str, api_key: str, country: str, size: int) -> List[dict]:
+    """
+    AGSI/ALSI v2 API: paginated, max size=300 per request.
+    Auth via x-key header. Returns the raw `data` list from the response.
+    """
+    s = http.get_session()
+    # Cap size at 300 — API rejects larger
+    capped_size = min(size, 300)
+    r = s.get(api_url, headers={'x-key': api_key},
+              params={'country': country, 'size': capped_size}, timeout=25)
+    if not r.ok:
+        # Show the response body for diagnostics — AGSI typically returns
+        # a JSON {error: "..."} on auth/parameter problems
+        body = r.text[:200] if r.text else ''
+        print(f'      AGSI {country} HTTP {r.status_code}: {body}')
+        r.raise_for_status()
     payload = r.json()
-    rows = payload.get('operationalData') or payload.get('data') or []
-    out = []
-    for row in rows:
-        if not isinstance(row, dict):
-            continue
-        try:
-            value = row.get('value')
-            if value is None:
-                continue
-            value = float(value)
-        except (TypeError, ValueError):
-            continue
-        period = (row.get('periodFrom') or row.get('periodTo') or '')[:10]
-        if not period:
-            continue
-        unit = row.get('unit', 'kWh/d')
-        out.append({'date': period, 'v': value, 'unit': unit})
-    out.sort(key=lambda x: x['date'])
-    return out
+    if isinstance(payload, dict):
+        raw = payload.get('data') or payload.get('result') or payload.get('entries') or []
+        # Pagination info comes in last_page / total — if first page, that's enough
+        if not raw and 'data' in payload:
+            print(f'      AGSI {country}: empty data array (response: {str(payload)[:120]})')
+    elif isinstance(payload, list):
+        raw = payload
+    else:
+        raw = []
+    cleaned = []
+    for entry in raw:
+        norm = _normalize_entry(entry)
+        if norm:
+            cleaned.append(norm)
+    cleaned.sort(key=lambda x: x['date'])
+    return cleaned
 
 
 def fetch() -> dict:
-    points: Dict[str, dict] = {}
-    errors: List[str] = []
-    for p in POINTS:
-        try:
-            series = _fetch_point(p['id'])
-            points[p['id']] = {'label': p['label'], 'series': series}
-            last = series[-1] if series else None
-            print(f'    entsog/{p["id"][:30]}: {len(series)} pts, last={last["date"] if last else "—"}')
-        except Exception as e:
-            print(f'  ! entsog/{p["id"][:30]}: {e}')
-            errors.append(f'{p["id"]}: {e}')
-            points[p['id']] = {'label': p['label'], 'series': []}
+    api_key = os.environ.get('GIE_API_KEY', '').strip()
+    if len(api_key) < 10:
+        raise RuntimeError('GIE_API_KEY missing or too short — register at agsi.gie.eu')
 
-    # If literally every point failed, raise so wrapper keeps previous data
-    if all(not pt['series'] for pt in points.values()):
-        raise RuntimeError(f'ENTSOG: all {len(POINTS)} points returned empty. errors={errors[:3]}')
+    gas: Dict[str, dict] = {}
+    for code, name in COUNTRIES_GAS.items():
+        try:
+            data = _fetch_one('https://agsi.gie.eu/api', api_key, code.upper(), size=400)
+            gas[code] = {'name': name, 'data': data}
+            last = data[-1] if data else None
+            print(f'    agsi/{code}: {len(data)} pts, last={last["date"] if last else "—"} '
+                  f'fill={last["fill_pct"] if last else "—"}%')
+            time.sleep(0.2)
+        except Exception as e:
+            print(f'  ! agsi/{code}: {e}')
+            gas[code] = {'name': name, 'data': []}
+
+    lng: Dict[str, dict] = {}
+    for code, name in COUNTRIES_LNG.items():
+        try:
+            data = _fetch_one('https://alsi.gie.eu/api', api_key, code.upper(), size=400)
+            lng[code] = {'name': name, 'data': data}
+            last = data[-1] if data else None
+            print(f'    alsi/{code}: {len(data)} pts, last={last["date"] if last else "—"} '
+                  f'fill={last["fill_pct"] if last else "—"}%')
+            time.sleep(0.2)
+        except Exception as e:
+            print(f'  ! alsi/{code}: {e}')
+            lng[code] = {'name': name, 'data': []}
+
+    # History: snapshot per-country fill levels for trend analysis
+    hist_record = {}
+    for code in ('eu', 'de', 'at', 'fr', 'it', 'nl', 'pl'):
+        node = gas.get(code, {})
+        last = next((x for x in reversed(node.get('data', [])) if x.get('fill_pct') is not None), None)
+        if last:
+            hist_record[f'{code}_pct'] = last['fill_pct']
+    history.record_history('gas_storage', hist_record)
 
     return {
         'data': {
-            'points': points,
-            'errors': errors,
+            'gas': gas,
+            'lng': lng,
         },
         'meta': {
-            'source': 'ENTSOG Transparency Platform (no key required)',
-            'license': 'free, attribution requested',
-            'indicator': 'Physical Flow, daily',
-            'units': 'as reported per point (typically kWh/d)',
+            'source': 'GIE AGSI+ / ALSI',
+            'license': 'free for non-commercial use, attribution requested',
+            'units': 'fill_pct = percent of working gas volume; injection/withdrawal in TWh/day',
         },
     }
