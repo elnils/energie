@@ -1,35 +1,37 @@
 {
   "commodities": {
-    "last_attempt_epoch": 1778363631,
-    "last_attempt_iso": "2026-05-09T21:53:51Z",
-    "last_success_epoch": 1778363640,
-    "last_success_iso": "2026-05-09T21:54:00Z"
+    "last_attempt_epoch": 1778386013,
+    "last_attempt_iso": "2026-05-10T04:06:53Z",
+    "last_success_epoch": 1778386021,
+    "last_success_iso": "2026-05-10T04:07:01Z"
   },
   "destatis_vpi": {
-    "last_attempt_epoch": 1778371059,
-    "last_attempt_iso": "2026-05-09T23:57:39Z",
+    "last_attempt_epoch": 1778386021,
+    "last_attempt_iso": "2026-05-10T04:07:01Z",
     "last_error_epoch": 1778371080,
-    "last_error_message": "RuntimeError: Destatis auth probe failed: logincheck → HTTPSConnectionPool(host='www-genesis.destatis.de', port=443): Max retries exceeded with url: /genesisWS/rest/2020/helloworld/logincheck?language=de (Caused by ResponseError('too many 503 error responses')); whoami → HTTPSConnectionPool(host='www-genesis.destatis.de', port=443): Max retries exceeded with url: /genesisWS/rest/2020/helloworld/whoami?language=de (Caused by ResponseError('too many 503 error responses')). Check DESTATIS_API_TOKEN"
+    "last_error_message": "RuntimeError: Destatis auth probe failed: logincheck → HTTPSConnectionPool(host='www-genesis.destatis.de', port=443): Max retries exceeded with url: /genesisWS/rest/2020/helloworld/logincheck?language=de (Caused by ResponseError('too many 503 error responses')); whoami → HTTPSConnectionPool(host='www-genesis.destatis.de', port=443): Max retries exceeded with url: /genesisWS/rest/2020/helloworld/whoami?language=de (Caused by ResponseError('too many 503 error responses')). Check DESTATIS_API_TOKEN",
+    "last_success_epoch": 1778386028,
+    "last_success_iso": "2026-05-10T04:07:08Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1778370977,
-    "last_attempt_iso": "2026-05-09T23:56:17Z",
-    "last_success_epoch": 1778371059,
-    "last_success_iso": "2026-05-09T23:57:39Z"
+    "last_attempt_epoch": 1778385860,
+    "last_attempt_iso": "2026-05-10T04:04:20Z",
+    "last_success_epoch": 1778385934,
+    "last_success_iso": "2026-05-10T04:05:34Z"
   },
   "entsoe": {
-    "last_attempt_epoch": 1778371080,
-    "last_attempt_iso": "2026-05-09T23:58:00Z",
-    "last_error_epoch": 1778371083,
+    "last_attempt_epoch": 1778386028,
+    "last_attempt_iso": "2026-05-10T04:07:08Z",
+    "last_error_epoch": 1778386029,
     "last_error_message": "ValueError: fetcher 'entsoe' returned foreign keys {'points'} — this looks like another source's data. Refusing to write.",
     "last_success_epoch": 1778300938,
     "last_success_iso": "2026-05-09T04:28:58Z"
   },
   "entsog": {
-    "last_attempt_epoch": 1778350052,
-    "last_attempt_iso": "2026-05-09T18:07:32Z",
-    "last_success_epoch": 1778350054,
-    "last_success_iso": "2026-05-09T18:07:34Z"
+    "last_attempt_epoch": 1778386009,
+    "last_attempt_iso": "2026-05-10T04:06:49Z",
+    "last_success_epoch": 1778386011,
+    "last_success_iso": "2026-05-10T04:06:51Z"
   },
   "fuel": {
     "last_attempt_epoch": 1778350066,
@@ -44,10 +46,10 @@
     "last_success_iso": "2026-05-09T18:07:46Z"
   },
   "gas_storage": {
-    "last_attempt_epoch": 1778350018,
-    "last_attempt_iso": "2026-05-09T18:06:58Z",
-    "last_success_epoch": 1778350052,
-    "last_success_iso": "2026-05-09T18:07:32Z"
+    "last_attempt_epoch": 1778385934,
+    "last_attempt_iso": "2026-05-10T04:05:34Z",
+    "last_success_epoch": 1778386009,
+    "last_success_iso": "2026-05-10T04:06:49Z"
   },
   "heating_oil": {
     "last_attempt_epoch": 1778350117,
@@ -56,21 +58,21 @@
     "last_success_iso": "2026-05-09T18:08:39Z"
   },
   "news": {
-    "last_attempt_epoch": 1778371083,
-    "last_attempt_iso": "2026-05-09T23:58:03Z",
-    "last_success_epoch": 1778371104,
-    "last_success_iso": "2026-05-09T23:58:24Z"
+    "last_attempt_epoch": 1778386029,
+    "last_attempt_iso": "2026-05-10T04:07:09Z",
+    "last_success_epoch": 1778386049,
+    "last_success_iso": "2026-05-10T04:07:29Z"
   },
   "smard": {
-    "last_attempt_epoch": 1778370970,
-    "last_attempt_iso": "2026-05-09T23:56:10Z",
-    "last_success_epoch": 1778370977,
-    "last_success_iso": "2026-05-09T23:56:17Z"
+    "last_attempt_epoch": 1778385855,
+    "last_attempt_iso": "2026-05-10T04:04:15Z",
+    "last_success_epoch": 1778385860,
+    "last_success_iso": "2026-05-10T04:04:20Z"
   },
   "weather": {
-    "last_attempt_epoch": 1778363629,
-    "last_attempt_iso": "2026-05-09T21:53:49Z",
-    "last_success_epoch": 1778363631,
-    "last_success_iso": "2026-05-09T21:53:51Z"
+    "last_attempt_epoch": 1778386011,
+    "last_attempt_iso": "2026-05-10T04:06:51Z",
+    "last_success_epoch": 1778386013,
+    "last_success_iso": "2026-05-10T04:06:53Z"
   }
 }
