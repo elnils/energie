@@ -652,7 +652,7 @@ const TAB_FILES = {
   gas:         ['gas_storage','entsog'],
   wetter:      ['weather'],
   fx:          ['fx'],
-  lage:        ['energy_charts','gas_storage','heating_oil','commodities','destatis_vpi','entsog','fx'],
+  lage:        ['energy_charts','gas_storage','heating_oil','commodities','destatis_vpi'],
   historisch:  ['energy_charts','commodities'],
   news:        ['news'],
 };
@@ -677,6 +677,11 @@ Chart.defaults.color='#56657a';
 Chart.defaults.borderColor='#dde3eb';
 Chart.defaults.font.family="'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif";
 Chart.defaults.font.size=11;
+// Faster animations — defaults are 1000ms; trim to 200ms so tab-switches feel snappy.
+// Wrapped in try because some Chart.js builds expose `animation` differently.
+try {
+  if (Chart.defaults.animation) Chart.defaults.animation.duration = 200;
+} catch(e){}
 Chart.defaults.plugins.legend.display=false;
 Chart.defaults.plugins.tooltip.backgroundColor='#1a2332';
 Chart.defaults.plugins.tooltip.borderColor='#1a2332';
@@ -1385,40 +1390,74 @@ function renderErneuerbare() {
   const ec = D.energy_charts;
   const sm = D.smard;
 
-  // Live KPIs from SMARD: current Wind GW, Solar GW, EE share, CO2 intensity
+  // ─── KPIs: trend-focused, NOT duplicating Strom-Tab live values ───
   const kpiItems = [];
   if (sm?.series) {
     const s = sm.series;
-    const lv = k => {
-      const a = s[k] || [];
-      for (let i = a.length - 1; i >= 0; i--) {
-        const v = a[i].v;
-        if (v != null) return v / 1000;
-      }
-      return 0;
-    };
-    const wOn = lv('wind_onshore'), wOff = lv('wind_offshore'), sol = lv('solar');
-    const bio = lv('biomass'), hyd = lv('hydro'), nuc = lv('nuclear');
-    const lig = lv('lignite'), coal = lv('hard_coal'), gas = lv('natural_gas');
-    const total = wOn + wOff + sol + bio + hyd + nuc + lig + coal + gas;
-    const ren = wOn + wOff + sol + bio + hyd;
-    const renPct = total > 0 ? Math.round(ren / total * 100) : null;
-    const co2 = total > 0 ? Math.round((lig*900 + coal*800 + gas*400 + nuc*5 + ren*18) / total) : null;
 
-    kpiItems.push({label:'Wind erzeugt jetzt', val:fmtN(wOn+wOff,1), unit:'GW · onshore + offshore', color:'#0e6cb6'});
-    kpiItems.push({label:'Solar erzeugt jetzt', val:fmtN(sol,1), unit:'GW', color:'#d97706'});
-    kpiItems.push({label:'Biomasse + Wasser', val:fmtN(bio+hyd,1), unit:'GW Grundlast', color:'#1f9d55'});
-    kpiItems.push({label:'EE-Anteil aktuell', val:renPct!=null?renPct+'%':'—', unit:'an Erzeugung', color:renPct>=60?'#1f9d55':renPct>=40?'#d97706':'#c0392b'});
-    kpiItems.push({label:'CO₂-Intensität', val:co2!=null?co2:'—', unit:'g/kWh DE Mix', color:co2!=null && co2<300?'#1f9d55':'#c0392b'});
-    kpiItems.push({label:'Last gesamt', val:fmtN(total,1), unit:'GW Erzeugung', color:'#56657a'});
+    // 7-day Wind/Solar peaks (highest single 15-min value over last 7 days)
+    const sevenDayCutoff = Date.now() - 7 * 86400 * 1000;
+    const peakOf = (key) => {
+      const arr = s[key] || [];
+      let peak = 0;
+      for (const p of arr) {
+        if (p.ts >= sevenDayCutoff && p.v != null && p.v > peak) peak = p.v;
+      }
+      return peak / 1000; // MW → GW
+    };
+    const windPeak = peakOf('wind_onshore') + peakOf('wind_offshore');
+    const solarPeak = peakOf('solar');
+
+    // 30-day average wind / solar generation share
+    const thirtyDayCutoff = Date.now() - 30 * 86400 * 1000;
+    const avgOf = (key) => {
+      const arr = (s[key] || []).filter(p => p.ts >= thirtyDayCutoff && p.v != null);
+      if (!arr.length) return 0;
+      return arr.reduce((sum, p) => sum + p.v, 0) / arr.length / 1000;
+    };
+    const wOn30 = avgOf('wind_onshore'), wOff30 = avgOf('wind_offshore');
+    const sol30 = avgOf('solar'), bio30 = avgOf('biomass'), hyd30 = avgOf('hydro');
+    const nuc30 = avgOf('nuclear'), lig30 = avgOf('lignite');
+    const coal30 = avgOf('hard_coal'), gas30 = avgOf('natural_gas');
+    const total30 = wOn30+wOff30+sol30+bio30+hyd30+nuc30+lig30+coal30+gas30;
+    const ren30 = wOn30+wOff30+sol30+bio30+hyd30;
+    const renShare30 = total30 > 0 ? Math.round(ren30 / total30 * 100) : null;
+
+    // Wind 30d vs Solar 30d in absolute GW averages
+    kpiItems.push({
+      label: 'Wind 7d Peak',
+      val: fmtN(windPeak, 1), unit: 'GW Höchstwert · onshore+offshore',
+      color: '#0e6cb6',
+    });
+    kpiItems.push({
+      label: 'Solar 7d Peak',
+      val: fmtN(solarPeak, 1), unit: 'GW Höchstwert',
+      color: '#d97706',
+    });
+    kpiItems.push({
+      label: 'Wind Ø 30 Tage',
+      val: fmtN(wOn30+wOff30, 1), unit: 'GW Durchschnitt',
+      color: '#0e6cb6',
+    });
+    kpiItems.push({
+      label: 'Solar Ø 30 Tage',
+      val: fmtN(sol30, 1), unit: 'GW Durchschnitt',
+      color: '#d97706',
+    });
+    kpiItems.push({
+      label: 'EE-Anteil Ø 30 T.',
+      val: renShare30 != null ? renShare30 + '%' : '—',
+      unit: 'an Stromerzeugung',
+      color: renShare30 >= 60 ? '#1f9d55' : renShare30 >= 40 ? '#d97706' : '#c0392b',
+    });
   } else {
-    kpiItems.push({label:'Live-Daten', val:'—', unit:'SMARD lädt', color:'#56657a'});
+    kpiItems.push({label:'Trend-Daten', val:'—', unit:'SMARD lädt', color:'#56657a'});
   }
   document.getElementById('kpi-ren').innerHTML = kpis(kpiItems);
 
   if (!ec) return;
 
-  // Installed capacity (yearly)
+  // ─── Chart 1: Installed capacity (yearly) — long-term build-out story ───
   const inst = ec.installed_de;
   if (inst?.time) {
     const cm = {'Wind onshore':C.wind_on, 'Wind offshore':C.wind_off, 'Solar':C.solar,
@@ -1431,7 +1470,7 @@ function renderErneuerbare() {
       {plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}}});
   }
 
-  // Renewable share over time
+  // ─── Chart 2: Renewable share trajectory ───
   const ren = ec.ren_share_de;
   if (ren?.unix_seconds?.length) {
     const co = rangeCutoffSec('erneuerbare');
