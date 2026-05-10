@@ -39,12 +39,18 @@ def fetch() -> dict:
     out: Dict[str, dict] = {}
     end = datetime.now(timezone.utc)
     end_str = end.strftime('%Y-%m-%d')
+    # Pre-computed start dates for relative ranges. The API does NOT accept
+    # ISO-8601 durations (P7D/P30D etc.) — those return 400 Bad Request.
+    # Required format: 'YYYY-MM-DD' or 'YYYY-MM-DDTHH:MMZ'.
+    start_7d   = (end - timedelta(days=7)).strftime('%Y-%m-%d')
+    start_30d  = (end - timedelta(days=30)).strftime('%Y-%m-%d')
+    start_730d = (end - timedelta(days=730)).strftime('%Y-%m-%d')
 
     # 7-day day-ahead per bidding zone
     for bzn, key in [('DE-LU', 'price_de'), ('AT', 'price_at'),
                      ('FR', 'price_fr'), ('PL', 'price_pl'), ('CH', 'price_ch')]:
         try:
-            d = _get('price', {'bzn': bzn, 'start': 'P7D'})
+            d = _get('price', {'bzn': bzn, 'start': start_7d, 'end': end_str})
             out[key] = {
                 'unix_seconds': d.get('unix_seconds', []),
                 'price': d.get('price', []),
@@ -84,7 +90,8 @@ def fetch() -> dict:
 
     # Renewable share 30d
     try:
-        d = _get('ren_share_in_public_power', {'country': 'de', 'start': 'P30D'})
+        d = _get('ren_share_in_public_power', {'country': 'de',
+                                               'start': start_30d, 'end': end_str})
         out['ren_share_de'] = {
             'unix_seconds': d.get('unix_seconds', []),
             'ren_share': _first_list(d, 'share_of_generation_capacity', 'ren_share',
@@ -102,9 +109,9 @@ def fetch() -> dict:
     except Exception as e:
         print(f'  ! ec/installed: {e}')
 
-    # TTF gas
+    # TTF gas (730 days back)
     try:
-        d = _get('gas_price', {'start': 'P730D'})
+        d = _get('gas_price', {'start': start_730d, 'end': end_str})
         out['gas_price'] = {
             'unix_seconds': _first_list(d, 'unix_seconds', 'timestamp', 'time'),
             'price': _first_list(d, 'Gas Price', 'price', 'gas_price', 'value', 'data'),
@@ -115,9 +122,9 @@ def fetch() -> dict:
         print(f'  ! ec/gas_price: {e}')
         out['gas_price'] = {'unix_seconds': [], 'price': []}
 
-    # CO2
+    # CO2 (730 days back)
     try:
-        d = _get('co2_price', {'start': 'P730D'})
+        d = _get('co2_price', {'start': start_730d, 'end': end_str})
         out['co2_price'] = {
             'unix_seconds': _first_list(d, 'unix_seconds', 'timestamp', 'time'),
             'price': _first_list(d, 'CO2 Price', 'co2_price', 'price', 'value', 'data'),
