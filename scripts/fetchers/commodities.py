@@ -82,25 +82,34 @@ def _yahoo_chart(ticker: str, range_str: str = '2y', interval: str = '1d') -> Op
     return series
 
 
-def _yahoo_quote_batch(tickers: List[str]) -> Dict[str, dict]:
-    if not tickers:
-        return {}
-    s = http.get_session()
-    symbols = ','.join(tickers)
-    url = 'https://query1.finance.yahoo.com/v7/finance/quote'
-    try:
-        r = s.get(url, params={'symbols': symbols}, timeout=15,
-                  headers={
-                      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                      'Referer': 'https://finance.yahoo.com',
-                      'Accept': 'application/json',
-                  })
-        r.raise_for_status()
-        results = r.json().get('quoteResponse', {}).get('result', [])
-        return {q['symbol']: q for q in results if 'symbol' in q}
-    except Exception as e:
-        print(f'  ! quote batch failed: {e}')
-        return {}
+def _synthesize_quote_from_series(series: List[dict]) -> Optional[dict]:
+    """
+    Build a {price, change, change_pct, ...} quote from the last two
+    points of a chart series. End-of-day delayed but always works,
+    unlike the v7/quote endpoint which now requires a fragile crumb
+    cookie that frequently 401s from cloud IPs.
+    """
+    if not series or len(series) < 1:
+        return None
+    last = series[-1]
+    prev = series[-2] if len(series) >= 2 else None
+    price = last.get('v')
+    if price is None:
+        return None
+    change = None
+    change_pct = None
+    if prev is not None and prev.get('v') is not None and prev['v'] != 0:
+        change = round(price - prev['v'], 4)
+        change_pct = round((price - prev['v']) / prev['v'] * 100, 4)
+    return {
+        'price':           price,
+        'change':          change,
+        'change_pct':      change_pct,
+        'previous_close':  prev.get('v') if prev else None,
+        'time':            last.get('ts'),
+        'state':           'EOD',           # end-of-day, not real-time
+        'currency':        None,            # unknown without quote endpoint
+    }
 
 
 def fetch() -> dict:
@@ -122,6 +131,10 @@ def fetch() -> dict:
                 'label': label,
                 'series': series,
             }
+            # 2) Synthesize quote from the last two daily closes
+            q = _synthesize_quote_from_series(series)
+            if q:
+                out[tid]['quote'] = q
             if series:
                 success += 1
                 print(f'    commodity/{tid} ({symbol}): {len(series)} pts')
@@ -135,36 +148,16 @@ def fetch() -> dict:
                 'label': label, 'series': [],
             }
 
-    # 2) One batched call for live quotes
-    quotes = _yahoo_quote_batch([t[1] for t in TICKERS])
-    quotes_count = 0
-    for tid, symbol, *_ in TICKERS:
-        q = quotes.get(symbol)
-        if q:
-            out[tid]['quote'] = {
-                'price':           q.get('regularMarketPrice'),
-                'change':          q.get('regularMarketChange'),
-                'change_pct':      q.get('regularMarketChangePercent'),
-                'previous_close':  q.get('regularMarketPreviousClose'),
-                'time':            q.get('regularMarketTime'),
-                'state':           q.get('marketState'),
-                'currency':        q.get('currency'),
-            }
-            quotes_count += 1
-    print(f'    commodity/quotes: {quotes_count}/{len(TICKERS)} live prices')
-
     if success == 0:
         raise RuntimeError('Yahoo: all commodities failed')
 
-    # Schema-friendly: brent_crude must remain a top-level key for the
-    # store.py validator. Other tickers stay alongside it.
     return {
         'data': out,
         'meta': {
-            'source': 'Yahoo Finance (chart + quote endpoints)',
+            'source': 'Yahoo Finance (v8 chart endpoint)',
             'license': 'see Yahoo Finance terms; non-commercial display ok',
             'tickers_total': len(TICKERS),
             'tickers_with_history': success,
-            'tickers_with_live_quote': quotes_count,
+            'note': 'quote field is synthesized from last 2 daily closes; v7/quote endpoint requires fragile crumb auth and is intentionally not used',
         },
     }
