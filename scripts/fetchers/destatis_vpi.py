@@ -46,17 +46,11 @@ def _to_float(s: str) -> Optional[float]:
 
 def _request(method: str, endpoint: str, token: str, **params) -> dict:
     """
-    Genesis-Online v5.0 API.
+    Genesis-Online v5.0 API. Auth via headers, parameters via query (GET) or body (POST).
 
-    Auth: HTTP headers `username` (= token) and `password` (empty).
-          Per official "GENESIS Webservice Einführung v5.0" (May 2025):
-          "Zugangsdaten: Felder im HTTP-Header. Weitere Parameter: im Request-Body."
-
-    Verb selection:
-      - `helloworld/*` (logincheck, whoami) → GET; POST returns 405.
-      - `data/*`, `find/*` (the actual data endpoints) → POST.
-
-    Always returns parsed JSON.
+    Long timeout because Destatis API is notoriously slow at peak times
+    (queries to certain large tables routinely take 30-60s server-side).
+    Retries once on transport-level errors (timeout, connection reset).
     """
     s = http.get_session()
     headers = {
@@ -64,17 +58,34 @@ def _request(method: str, endpoint: str, token: str, **params) -> dict:
         'password': '',
     }
     url = f'{BASE_URL}/{endpoint}'
-    if method.upper() == 'GET':
-        # Auth-probe endpoints accept GET; pass params as query string.
-        r = s.get(url, headers=headers, params={'language': 'de', **params}, timeout=30)
-    else:
-        headers['Content-Type'] = 'application/x-www-form-urlencoded'
-        r = s.post(url, data={'language': 'de', **params}, headers=headers, timeout=30)
-    if not r.ok:
-        # Surface the response body for diagnosis, then raise
-        body = r.text[:300] if r.text else ''
-        raise RuntimeError(f'Destatis HTTP {r.status_code} on {method} {endpoint}: {body}')
-    return r.json()
+    # Genesis is slow. Use 90s for data calls, 30s for auth probes.
+    timeout = 30 if 'helloworld' in endpoint else 90
+
+    last_exc = None
+    for attempt in (1, 2):
+        try:
+            if method.upper() == 'GET':
+                r = s.get(url, headers=headers,
+                          params={'language': 'de', **params}, timeout=timeout)
+            else:
+                headers['Content-Type'] = 'application/x-www-form-urlencoded'
+                r = s.post(url, data={'language': 'de', **params},
+                           headers=headers, timeout=timeout)
+            if not r.ok:
+                body = r.text[:300] if r.text else ''
+                raise RuntimeError(f'Destatis HTTP {r.status_code} on {method} {endpoint}: {body}')
+            return r.json()
+        except Exception as e:
+            last_exc = e
+            err = str(e).lower()
+            transient = ('timeout' in err or 'timed out' in err
+                         or 'connection' in err or 'remote end closed' in err)
+            if attempt == 1 and transient:
+                print(f'    destatis {endpoint} attempt 1 failed ({type(e).__name__}); '
+                      f'retrying with same timeout')
+                continue
+            raise
+    raise last_exc  # type: ignore[misc]
 
 
 def _post(endpoint: str, token: str, **params) -> dict:
