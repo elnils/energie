@@ -20,9 +20,9 @@
     "last_success_iso": "2026-05-10T13:22:56Z"
   },
   "entsoe": {
-    "last_attempt_epoch": 1778419455,
-    "last_attempt_iso": "2026-05-10T13:24:15Z",
-    "last_error_epoch": 1778419456,
+    "last_attempt_epoch": 1778420589,
+    "last_attempt_iso": "2026-05-10T13:43:09Z",
+    "last_error_epoch": 1778420590,
     "last_error_message": "ValueError: fetcher 'entsoe' returned foreign keys {'points'} — this looks like another source's data. Refusing to write.",
     "last_success_epoch": 1778300938,
     "last_success_iso": "2026-05-09T04:28:58Z"
