@@ -1,78 +1,78 @@
 {
   "commodities": {
-    "last_attempt_epoch": 1778398119,
-    "last_attempt_iso": "2026-05-10T07:28:39Z",
-    "last_success_epoch": 1778398127,
-    "last_success_iso": "2026-05-10T07:28:47Z"
+    "last_attempt_epoch": 1778401896,
+    "last_attempt_iso": "2026-05-10T08:31:36Z",
+    "last_success_epoch": 1778401904,
+    "last_success_iso": "2026-05-10T08:31:44Z"
   },
   "destatis_vpi": {
-    "last_attempt_epoch": 1778386021,
-    "last_attempt_iso": "2026-05-10T04:07:01Z",
-    "last_error_epoch": 1778371080,
-    "last_error_message": "RuntimeError: Destatis auth probe failed: logincheck → HTTPSConnectionPool(host='www-genesis.destatis.de', port=443): Max retries exceeded with url: /genesisWS/rest/2020/helloworld/logincheck?language=de (Caused by ResponseError('too many 503 error responses')); whoami → HTTPSConnectionPool(host='www-genesis.destatis.de', port=443): Max retries exceeded with url: /genesisWS/rest/2020/helloworld/whoami?language=de (Caused by ResponseError('too many 503 error responses')). Check DESTATIS_API_TOKEN",
+    "last_attempt_epoch": 1778401958,
+    "last_attempt_iso": "2026-05-10T08:32:38Z",
+    "last_error_epoch": 1778401960,
+    "last_error_message": "RuntimeError: Destatis HTTP 404 on POST data/table: {\"Code\":2,\"Content\":\"Ein Fehler ist aufgetreten. (Bitte geben Sie Ihr Passwort ein.)\",\"Type\":\"ERROR\"}",
     "last_success_epoch": 1778386028,
     "last_success_iso": "2026-05-10T04:07:08Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1778398099,
-    "last_attempt_iso": "2026-05-10T07:28:19Z",
-    "last_success_epoch": 1778398117,
-    "last_success_iso": "2026-05-10T07:28:37Z"
+    "last_attempt_epoch": 1778401793,
+    "last_attempt_iso": "2026-05-10T08:29:53Z",
+    "last_success_epoch": 1778401874,
+    "last_success_iso": "2026-05-10T08:31:14Z"
   },
   "entsoe": {
-    "last_attempt_epoch": 1778401690,
-    "last_attempt_iso": "2026-05-10T08:28:10Z",
-    "last_error_epoch": 1778401692,
+    "last_attempt_epoch": 1778401960,
+    "last_attempt_iso": "2026-05-10T08:32:40Z",
+    "last_error_epoch": 1778401962,
     "last_error_message": "ValueError: fetcher 'entsoe' returned foreign keys {'points'} — this looks like another source's data. Refusing to write.",
     "last_success_epoch": 1778300938,
     "last_success_iso": "2026-05-09T04:28:58Z"
   },
   "entsog": {
-    "last_attempt_epoch": 1778386009,
-    "last_attempt_iso": "2026-05-10T04:06:49Z",
-    "last_success_epoch": 1778386011,
-    "last_success_iso": "2026-05-10T04:06:51Z"
+    "last_attempt_epoch": 1778401892,
+    "last_attempt_iso": "2026-05-10T08:31:32Z",
+    "last_success_epoch": 1778401894,
+    "last_success_iso": "2026-05-10T08:31:34Z"
   },
   "fuel": {
-    "last_attempt_epoch": 1778398127,
-    "last_attempt_iso": "2026-05-10T07:28:47Z",
-    "last_success_epoch": 1778398177,
-    "last_success_iso": "2026-05-10T07:29:37Z"
+    "last_attempt_epoch": 1778401905,
+    "last_attempt_iso": "2026-05-10T08:31:45Z",
+    "last_success_epoch": 1778401957,
+    "last_success_iso": "2026-05-10T08:32:37Z"
   },
   "fx": {
-    "last_attempt_epoch": 1778398127,
-    "last_attempt_iso": "2026-05-10T07:28:47Z",
-    "last_success_epoch": 1778398127,
-    "last_success_iso": "2026-05-10T07:28:47Z"
+    "last_attempt_epoch": 1778401904,
+    "last_attempt_iso": "2026-05-10T08:31:44Z",
+    "last_success_epoch": 1778401905,
+    "last_success_iso": "2026-05-10T08:31:45Z"
   },
   "gas_storage": {
-    "last_attempt_epoch": 1778385934,
-    "last_attempt_iso": "2026-05-10T04:05:34Z",
-    "last_success_epoch": 1778386009,
-    "last_success_iso": "2026-05-10T04:06:49Z"
+    "last_attempt_epoch": 1778401874,
+    "last_attempt_iso": "2026-05-10T08:31:14Z",
+    "last_success_epoch": 1778401892,
+    "last_success_iso": "2026-05-10T08:31:32Z"
   },
   "heating_oil": {
-    "last_attempt_epoch": 1778398177,
-    "last_attempt_iso": "2026-05-10T07:29:37Z",
-    "last_success_epoch": 1778398178,
-    "last_success_iso": "2026-05-10T07:29:38Z"
+    "last_attempt_epoch": 1778401957,
+    "last_attempt_iso": "2026-05-10T08:32:37Z",
+    "last_success_epoch": 1778401958,
+    "last_success_iso": "2026-05-10T08:32:38Z"
   },
   "news": {
-    "last_attempt_epoch": 1778398179,
-    "last_attempt_iso": "2026-05-10T07:29:39Z",
-    "last_success_epoch": 1778398198,
-    "last_success_iso": "2026-05-10T07:29:58Z"
+    "last_attempt_epoch": 1778401962,
+    "last_attempt_iso": "2026-05-10T08:32:42Z",
+    "last_success_epoch": 1778401986,
+    "last_success_iso": "2026-05-10T08:33:06Z"
   },
   "smard": {
-    "last_attempt_epoch": 1778398094,
-    "last_attempt_iso": "2026-05-10T07:28:14Z",
-    "last_success_epoch": 1778398099,
-    "last_success_iso": "2026-05-10T07:28:19Z"
+    "last_attempt_epoch": 1778401786,
+    "last_attempt_iso": "2026-05-10T08:29:46Z",
+    "last_success_epoch": 1778401793,
+    "last_success_iso": "2026-05-10T08:29:53Z"
   },
   "weather": {
-    "last_attempt_epoch": 1778398117,
-    "last_attempt_iso": "2026-05-10T07:28:37Z",
-    "last_success_epoch": 1778398119,
-    "last_success_iso": "2026-05-10T07:28:39Z"
+    "last_attempt_epoch": 1778401894,
+    "last_attempt_iso": "2026-05-10T08:31:34Z",
+    "last_success_epoch": 1778401896,
+    "last_success_iso": "2026-05-10T08:31:36Z"
   }
 }
