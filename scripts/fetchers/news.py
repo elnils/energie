@@ -22,30 +22,47 @@ from core import http
 
 
 DIRECT_FEEDS: List[Tuple[str, str, str]] = [
+    # Verified working as of May 2026
     ('PV Magazine',     'DE Energie',  'https://www.pv-magazine.de/feed/'),
-    ('Energie Zukunft', 'DE Energie',  'https://www.energiezukunft.eu/feed/'),
     ('Solar Server',    'DE Energie',  'https://www.solarserver.de/feed/'),
-    ('Klimareporter',   'DE Energie',  'https://www.klimareporter.de/feed'),
-    ('Heise Energie',   'DE Tech',     'https://www.heise.de/thema/Energiewende/feed/atom.xml'),
-    ('SMARD Ticker',    'DE Behörden', 'https://www.smard.de/home/rss'),
+    # German mainstream press (very stable RSS)
+    ('Tagesschau Wirtschaft', 'DE Wirtschaft', 'https://www.tagesschau.de/wirtschaft/index~rss2.xml'),
+    ('Spiegel Wirtschaft',    'DE Wirtschaft', 'https://www.spiegel.de/wirtschaft/index.rss'),
+    ('FAZ Wirtschaft',        'DE Wirtschaft', 'https://www.faz.net/rss/aktuell/wirtschaft/'),
+    # Heise: the /thema/<topic>/feed/atom.xml URLs were broken;
+    # the main RDF feed works and we filter for energy keywords later.
+    ('Heise Newsticker', 'DE Tech', 'https://www.heise.de/rss/heise-atom.xml'),
+    # NOTE: 'Energie Zukunft', 'Klimareporter', 'SMARD Ticker' had stable RSS
+    # feeds historically but their URLs no longer respond as of May 2026.
+    # We get them via Google News searches below.
 ]
 
 GOOGLE_NEWS_FEEDS: List[Tuple[str, str, str, str]] = [
+    # German official sources
     ('BNetzA',          'DE Behörden', 'site:bundesnetzagentur.de Energie OR Strom OR Gas', 'de'),
     ('BDEW',            'DE Verbände', 'site:bdew.de Pressemitteilung', 'de'),
     ('IWR',             'DE Energie',  'site:iwr.de Energie', 'de'),
+    # German press (replacing dead direct feeds)
+    ('Energiezukunft',  'DE Energie',  'site:energiezukunft.eu', 'de'),
+    ('Klimareporter',   'DE Energie',  'site:klimareporter.de', 'de'),
+    ('Heise Energie',   'DE Tech',     'site:heise.de Energiewende OR Strompreis', 'de'),
+    # German topical
     ('Energiekrise DE', 'DE Themen',   'Energiekrise OR Gaspreise OR Strompreise Deutschland', 'de'),
     ('Energiepolitik',  'DE Themen',   'Energiepolitik OR Energiewende Bundesregierung', 'de'),
+    # International
     ('Financial Times', 'EN Wirtschaft', 'site:ft.com energy OR oil OR gas OR LNG', 'en'),
     ('WSJ Energy',      'EN Wirtschaft', 'site:wsj.com energy', 'en'),
     ('NYT Energy',      'EN Wirtschaft', 'site:nytimes.com energy OR oil OR gas', 'en'),
     ('Reuters Energy',  'EN Wirtschaft', 'site:reuters.com energy OR oil OR gas', 'en'),
     ('Bloomberg Energy','EN Wirtschaft', 'site:bloomberg.com energy OR oil OR gas', 'en'),
+    # European
     ('EurActiv Energy', 'EU Politik',  'site:euractiv.com energy', 'en'),
     ('Politico EU',     'EU Politik',  'site:politico.eu energy', 'en'),
     ('Le Monde Energie','EU Politik',  'site:lemonde.fr énergie OR pétrole OR gaz', 'fr'),
+    # Specialty
     ('ICIS',            'Spezial',     'site:icis.com gas OR LNG OR power', 'en'),
     ('S&P Platts',      'Spezial',     '"S&P Global" OR Platts gas OR LNG OR power', 'en'),
+    # Crisis
     ('Hormus Crisis',   'Krise',       'Strait of Hormuz OR Iran oil tanker', 'en'),
 ]
 
