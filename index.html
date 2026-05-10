@@ -116,11 +116,21 @@ main{padding:18px 20px 70px;max-width:1600px;margin:0 auto}
 .leg-val{margin-left:auto;font-size:10px;font-weight:600;color:var(--text);flex-shrink:0}
 
 .tbl{width:100%;border-collapse:collapse;font-size:12px}
-.tbl th{text-align:left;padding:7px 10px;color:var(--text2);font-size:10px;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border);font-weight:600;background:var(--bg-alt)}
+.tbl thead{position:sticky;top:0;background:var(--card);z-index:5}
+.tbl th{text-align:left;padding:7px 10px;color:var(--text2);font-size:10px;text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid var(--border-strong);font-weight:700;background:var(--bg-alt)}
 .tbl td{padding:7px 10px;border-bottom:1px solid var(--border);color:var(--text)}
 .tbl tr:hover td{background:var(--bg-alt)}
 .tbl .num{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
 .pos{color:var(--green)}.neg{color:var(--red)}
+/* Range bar visualizing position in 1-year low/high */
+.range-pos{display:inline-block;width:60px;height:8px;background:var(--bg-alt);border-radius:4px;position:relative;vertical-align:middle;border:1px solid var(--border)}
+.range-pos-fill{position:absolute;top:-2px;width:3px;height:12px;border-radius:2px;background:var(--accent)}
+.range-pos-low{position:absolute;left:-32px;top:-3px;font-size:9px;color:var(--text3);font-weight:500}
+.range-pos-high{position:absolute;right:-32px;top:-3px;font-size:9px;color:var(--text3);font-weight:500}
+/* Detail-Card Stats Pills */
+.stat-pill{display:flex;flex-direction:column;padding:8px 12px;background:var(--bg-alt);border-radius:5px;border:1px solid var(--border);min-width:90px}
+.stat-pill-lbl{font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;font-weight:600;margin-bottom:3px}
+.stat-pill-val{font-size:14px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
 
 .city-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(135px,1fr));gap:8px}
 .city-card{background:var(--bg-alt);border:1px solid var(--border);border-radius:5px;padding:10px}
@@ -259,19 +269,30 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
     <button class="fuel-tab" data-cat="indices">Indizes</button>
     <button class="fuel-tab" data-cat="energy_eq">Energie-ETFs</button>
   </div>
-  <div class="kpis" id="kpi-rohstoffe"></div>
   <div class="grid">
-    <div class="card g7">
-      <div class="card-hdr">
-        <div><div class="card-title">Live-Marktdaten</div><div class="card-sub">Yahoo Finance · 15-min delayed für Futures, Realtime für Aktien</div></div>
+    <div class="card g7" style="display:flex;flex-direction:column">
+      <div class="card-hdr" style="margin-bottom:8px">
+        <div>
+          <div class="card-title">Marktdaten</div>
+          <div class="card-sub">Yahoo Finance · End-of-Day · <strong>Klick</strong> auf Zeile zeigt Chart-Detail rechts</div>
+        </div>
       </div>
-      <div id="comm-table-wrap"><div class="loading"><span class="spin"></span>Lädt…</div></div>
+      <div id="comm-table-wrap" style="overflow-y:auto;max-height:420px;border:1px solid var(--border);border-radius:5px"><div class="loading"><span class="spin"></span>Lädt…</div></div>
+      <div style="font-size:10px;color:var(--text3);margin-top:6px;line-height:1.5">
+        <strong>Δ Tag:</strong> Veränderung zum letzten Schlusskurs in % ·
+        <strong>Δ 30 T.:</strong> Veränderung über die letzten 30 Handelstage ·
+        <strong>1J Range:</strong> blauer Strich = aktuelle Position zwischen 52-Wochen-Tief (links) und -Hoch (rechts)
+      </div>
     </div>
-    <div class="card g5">
-      <div class="card-hdr">
-        <div><div class="card-title">Chart: <span id="comm-chart-label">Brent Rohöl</span></div><div class="card-sub">Klick auf Tabellenzeile für Details</div></div>
+    <div class="card g5" style="display:flex;flex-direction:column">
+      <div class="card-hdr" style="margin-bottom:8px">
+        <div>
+          <div class="card-title" id="comm-chart-label">Brent Rohöl</div>
+          <div class="card-sub" id="comm-chart-sub">Yahoo Finance · End-of-Day</div>
+        </div>
       </div>
-      <div class="chart-wrap" style="height:280px"><canvas id="chart-comm-detail"></canvas></div>
+      <div id="comm-detail-stats" style="display:flex;gap:14px;margin-bottom:10px;flex-wrap:wrap"></div>
+      <div class="chart-wrap" style="height:340px"><canvas id="chart-comm-detail"></canvas></div>
     </div>
   </div>
 </div>
@@ -1049,67 +1070,59 @@ function setCommDetail(key) {
 
 function renderRohstoffe() {
   const comm = D.commodities;
-  const kpiWrap = document.getElementById('kpi-rohstoffe');
   const tableWrap = document.getElementById('comm-table-wrap');
   if (!comm) {
     if (tableWrap) tableWrap.innerHTML = '<div class="nodata">Commodities-Daten werden geladen</div>';
-    if (kpiWrap) kpiWrap.innerHTML = '';
     return;
   }
 
-  // Build a flat list of all tickers with derived values
+  // Build a flat list with full context: today's Δ, 30d Δ, 1y range position
   const tickers = Object.entries(comm)
     .filter(([k, v]) => v && typeof v === 'object' && (v.series || v.quote))
     .map(([key, v]) => {
       const series = v.series || [];
       const last = series.length ? series.at(-1) : null;
       const prev = series.length >= 2 ? series.at(-2) : null;
-      // Prefer live quote if available
       const q = v.quote || {};
-      const livePrice = q.price ?? last?.v;
+      const price = q.price ?? last?.v;
       const change = q.change ?? (last && prev ? last.v - prev.v : null);
       const changePct = q.change_pct ?? (last && prev && prev.v ? (last.v - prev.v) / prev.v * 100 : null);
+
+      // 30-day change
+      let chg30Pct = null;
+      if (series.length >= 30) {
+        const ref = series[series.length - 30].v;
+        if (ref && price != null) chg30Pct = (price - ref) / ref * 100;
+      }
+
+      // 1-year range position
+      let yearLow = null, yearHigh = null, rangePos = null;
+      if (series.length >= 1) {
+        const yearSlice = series.slice(-365);
+        const vals = yearSlice.map(p => p.v).filter(v => v != null);
+        if (vals.length) {
+          yearLow = Math.min(...vals);
+          yearHigh = Math.max(...vals);
+          if (price != null && yearHigh > yearLow) {
+            rangePos = (price - yearLow) / (yearHigh - yearLow);
+          }
+        }
+      }
+
       return {
-        key,
-        label: v.label || key,
-        symbol: v.symbol || '',
-        unit: v.unit || '',
-        category: v.category || 'other',
-        price: livePrice,
-        change: change,
-        changePct: changePct,
-        liveTime: q.time,
-        marketState: q.state,
+        key, label: v.label || key, symbol: v.symbol || '',
+        unit: v.unit || '', category: v.category || 'other',
+        price, change, changePct, chg30Pct,
+        yearLow, yearHigh, rangePos,
         seriesLen: series.length,
       };
     })
     .filter(t => t.price != null);
 
-  // Filter by category
   const filtered = commCategory === 'all'
     ? tickers
     : tickers.filter(t => t.category === commCategory);
 
-  // KPI tiles: top 6 by category importance
-  const headlineKeys = ['brent_crude', 'wti_crude', 'natgas_henry', 'coal_atw', 'gold', 'vix'];
-  const headlineTiles = headlineKeys
-    .map(k => tickers.find(t => t.key === k))
-    .filter(Boolean)
-    .map(t => ({
-      label: t.label,
-      val: fmtN(t.price, t.price > 100 ? 1 : 2),
-      unit: t.unit,
-      delta: t.change != null
-        ? (t.change >= 0 ? '▲ +' : '▼ ') + fmtN(Math.abs(t.change), 2)
-            + (t.changePct != null ? ` (${fmtN(Math.abs(t.changePct), 2)}%)` : '')
-        : '',
-      color: t.change == null ? '#56657a'
-            : t.change >= 0 ? '#1f9d55'
-            : '#c0392b',
-    }));
-  if (kpiWrap) kpiWrap.innerHTML = kpis(headlineTiles);
-
-  // Sortable, clickable table
   if (tableWrap) {
     if (!filtered.length) {
       tableWrap.innerHTML = '<div class="nodata">Keine Tickers in dieser Kategorie verfügbar</div>';
@@ -1118,27 +1131,40 @@ function renderRohstoffe() {
         <table class="tbl">
           <thead><tr>
             <th>Ticker</th>
-            <th class="num">Preis</th>
-            <th class="num">Δ abs.</th>
-            <th class="num">Δ %</th>
-            <th>Markt</th>
+            <th class="num" title="Aktueller Schlusskurs">Preis</th>
+            <th class="num" title="Veränderung gegenüber Vortag">Δ Tag</th>
+            <th class="num" title="Veränderung über 30 Handelstage">Δ 30 T.</th>
+            <th title="Position aktueller Preis innerhalb 52-Wochen-Range. Links = Tief, rechts = Hoch">1J Range</th>
           </tr></thead>
           <tbody>
             ${filtered.map(t => {
               const isActive = t.key === commDetailKey;
-              const cls = t.changePct == null ? ''
-                        : t.changePct > 0 ? 'pos' : t.changePct < 0 ? 'neg' : '';
-              const stateLabel = ({REGULAR:'offen', PRE:'pre', POST:'post', CLOSED:'zu'})[t.marketState] || '—';
+              const dayCls = t.changePct == null ? ''
+                          : t.changePct > 0 ? 'pos' : t.changePct < 0 ? 'neg' : '';
+              const m30Cls = t.chg30Pct == null ? ''
+                          : t.chg30Pct > 0 ? 'pos' : t.chg30Pct < 0 ? 'neg' : '';
+              const decimals = Math.abs(t.price) > 100 ? 1 : 3;
+              // Range bar — visualizes 1y low/high with current marker
+              let rangeBar = '—';
+              if (t.rangePos != null && t.yearLow != null && t.yearHigh != null) {
+                const lowFmt = t.yearLow > 100 ? fmtN(t.yearLow, 0) : fmtN(t.yearLow, 2);
+                const highFmt = t.yearHigh > 100 ? fmtN(t.yearHigh, 0) : fmtN(t.yearHigh, 2);
+                const pos = Math.max(0, Math.min(100, t.rangePos * 100));
+                rangeBar = `<div class="range-pos" title="L: ${lowFmt} / H: ${highFmt}">
+                  <div class="range-pos-fill" style="left:${pos}%"></div>
+                </div>
+                <span style="font-size:9px;color:var(--text3);margin-left:6px">${fmtN(pos,0)}%</span>`;
+              }
               return `
                 <tr style="cursor:pointer;${isActive?'background:var(--accent-bg)':''}" onclick="setCommDetail('${t.key}')">
                   <td>
                     <strong>${t.label}</strong>
                     <div style="font-size:9px;color:var(--text3);font-weight:400">${t.symbol} · ${t.unit}</div>
                   </td>
-                  <td class="num">${fmtN(t.price, t.price > 100 ? 1 : 3)}</td>
-                  <td class="num ${cls}">${t.change != null ? (t.change>=0?'+':'')+fmtN(t.change,2) : '—'}</td>
-                  <td class="num ${cls}">${t.changePct != null ? (t.changePct>=0?'+':'')+fmtN(t.changePct,2)+'%' : '—'}</td>
-                  <td style="color:var(--text3);font-size:10px">${stateLabel}</td>
+                  <td class="num">${fmtN(t.price, decimals)}</td>
+                  <td class="num ${dayCls}">${t.changePct != null ? (t.changePct>=0?'+':'')+fmtN(t.changePct,2)+'%' : '—'}</td>
+                  <td class="num ${m30Cls}">${t.chg30Pct != null ? (t.chg30Pct>=0?'+':'')+fmtN(t.chg30Pct,1)+'%' : '—'}</td>
+                  <td style="white-space:nowrap">${rangeBar}</td>
                 </tr>
               `;
             }).join('')}
@@ -1146,25 +1172,60 @@ function renderRohstoffe() {
         </table>`;
     }
   }
-
-  // Detail chart for the currently selected ticker
   renderCommDetailChart();
 }
 
 function renderCommDetailChart() {
   const comm = D.commodities;
-  const wrap = document.getElementById('chart-comm-detail')?.parentElement;
-  if (!comm || !wrap) return;
+  if (!comm) return;
   const ticker = comm[commDetailKey];
-  document.getElementById('comm-chart-label').textContent = ticker?.label || commDetailKey;
+  const labelEl = document.getElementById('comm-chart-label');
+  const subEl = document.getElementById('comm-chart-sub');
+  const statsEl = document.getElementById('comm-detail-stats');
+  const wrap = document.getElementById('chart-comm-detail')?.parentElement;
+  if (!wrap) return;
+
+  if (labelEl) labelEl.textContent = ticker?.label || commDetailKey;
+  if (subEl) subEl.textContent = ticker ? `${ticker.symbol || ''} · ${ticker.unit || ''}` : '';
+
   if (!ticker?.series?.length) {
+    if (statsEl) statsEl.innerHTML = '';
     wrap.innerHTML = `<div class="nodata">Keine Historie für ${ticker?.label || commDetailKey}</div>`;
     return;
   }
+
+  // Stats pills above chart
+  if (statsEl) {
+    const series = ticker.series;
+    const price = ticker.quote?.price ?? series.at(-1)?.v;
+    const prev = series.length >= 2 ? series.at(-2)?.v : null;
+    const dayPct = (price != null && prev) ? (price - prev) / prev * 100 : null;
+    const ref30 = series.length >= 30 ? series[series.length - 30].v : null;
+    const m30Pct = (price != null && ref30) ? (price - ref30) / ref30 * 100 : null;
+    const yearSlice = series.slice(-365).map(p => p.v).filter(v => v != null);
+    const yLow = yearSlice.length ? Math.min(...yearSlice) : null;
+    const yHigh = yearSlice.length ? Math.max(...yearSlice) : null;
+    const dec = price && Math.abs(price) > 100 ? 1 : 3;
+
+    const pill = (lbl, val, color) =>
+      `<div class="stat-pill"><span class="stat-pill-lbl">${lbl}</span>
+       <span class="stat-pill-val"${color?` style="color:${color}"`:''}>${val}</span></div>`;
+
+    statsEl.innerHTML = [
+      pill('Aktuell', price != null ? fmtN(price, dec) : '—'),
+      pill('Δ Tag', dayPct != null ? (dayPct>=0?'+':'')+fmtN(dayPct, 2)+'%' : '—',
+            dayPct == null ? null : dayPct >= 0 ? 'var(--green)' : 'var(--red)'),
+      pill('Δ 30 T.', m30Pct != null ? (m30Pct>=0?'+':'')+fmtN(m30Pct, 1)+'%' : '—',
+            m30Pct == null ? null : m30Pct >= 0 ? 'var(--green)' : 'var(--red)'),
+      pill('1J Tief', yLow != null ? fmtN(yLow, dec) : '—'),
+      pill('1J Hoch', yHigh != null ? fmtN(yHigh, dec) : '—'),
+    ].join('');
+  }
+
   const co = rangeCutoffSec('rohstoffe');
   const filtered = ticker.series.filter(p => p.ts >= co);
   const data = filtered.length ? filtered : ticker.series.slice(-100);
-  // Re-create canvas in case we replaced wrap content
+
   if (!document.getElementById('chart-comm-detail')) {
     wrap.innerHTML = '<canvas id="chart-comm-detail"></canvas>';
   }
