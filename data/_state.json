@@ -26,9 +26,9 @@
     "last_success_iso": "2026-05-11T18:16:31Z"
   },
   "entsoe": {
-    "last_attempt_epoch": 1778523482,
-    "last_attempt_iso": "2026-05-11T18:18:02Z",
-    "last_error_epoch": 1778523484,
+    "last_attempt_epoch": 1778526108,
+    "last_attempt_iso": "2026-05-11T19:01:48Z",
+    "last_error_epoch": 1778526110,
     "last_error_message": "ValueError: fetcher 'entsoe' returned foreign keys {'points'} — this looks like another source's data. Refusing to write.",
     "last_success_epoch": 1778300938,
     "last_success_iso": "2026-05-09T04:28:58Z"
@@ -40,10 +40,12 @@
     "last_success_iso": "2026-05-11T18:16:51Z"
   },
   "eurostat_oil": {
-    "last_attempt_epoch": 1778523495,
-    "last_attempt_iso": "2026-05-11T18:18:15Z",
+    "last_attempt_epoch": 1778526110,
+    "last_attempt_iso": "2026-05-11T19:01:50Z",
     "last_error_epoch": 1778523496,
-    "last_error_message": "RuntimeError: Eurostat: all series failed"
+    "last_error_message": "RuntimeError: Eurostat: all series failed",
+    "last_success_epoch": 1778526193,
+    "last_success_iso": "2026-05-11T19:03:13Z"
   },
   "fred_energy": {
     "last_attempt_epoch": 1778523484,
