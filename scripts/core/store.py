@@ -40,10 +40,13 @@ EXPECTED_KEYS: Dict[str, Set[str]] = {
     'commodities':   {'brent_crude'},
     'weather':       {'cities'},
     'news':          {'articles'},
+    # New 2026: jet-fuel monitoring stack
+    'eia_petroleum': {'jet_fuel_us_gulf_weekly'},
+    'fred_energy':   {'DJFUELUSGULF'},
+    'eurostat_oil':  {'jet_stocks'},
 }
 
 FORBIDDEN_KEYS: Dict[str, Set[str]] = {
-    # if a source's data carries any of these, it's likely the wrong fetcher's output
     'gas_storage':   {'points', 'flows_in', 'articles', 'cities'},
     'entsog':        {'gas', 'flows_in', 'articles'},
     'entsoe':        {'points', 'gas', 'articles'},
@@ -56,6 +59,9 @@ FORBIDDEN_KEYS: Dict[str, Set[str]] = {
     'commodities':   {'gas', 'points', 'articles'},
     'weather':       {'gas', 'points', 'articles'},
     'news':          {'gas', 'points', 'cities'},
+    'eia_petroleum': {'gas', 'points', 'articles', 'cities'},
+    'fred_energy':   {'gas', 'points', 'articles', 'cities'},
+    'eurostat_oil':  {'gas', 'points', 'articles', 'cities'},
 }
 
 
