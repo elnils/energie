@@ -74,6 +74,8 @@ jobs:
           DESTATIS_API_TOKEN:    ${{ secrets.DESTATIS_API_TOKEN }}
           DESTATIS_USERNAME:     ${{ secrets.DESTATIS_USERNAME }}
           DESTATIS_PASSWORD:     ${{ secrets.DESTATIS_PASSWORD }}
+          EIA_API_KEY:           ${{ secrets.EIA_API_KEY }}
+          FRED_API_KEY:          ${{ secrets.FRED_API_KEY }}
           ENTSOE_SECURITY_TOKEN: ${{ secrets.ENTSOE_SECURITY_TOKEN }}
 
       - name: Show results
