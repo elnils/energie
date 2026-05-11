@@ -193,6 +193,7 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
   <button class="tab" data-tab="rohstoffe">Rohstoffe</button>
   <button class="tab" data-tab="kraftstoff">Kraftstoff</button>
   <button class="tab" data-tab="heizoel">Heizöl</button>
+  <button class="tab" data-tab="treibstoff">Treibstoff-Versorgung</button>
   <button class="tab" data-tab="erneuerbare">Erneuerbare</button>
   <button class="tab" data-tab="gas">Gas</button>
   <button class="tab" data-tab="wetter">Wetter</button>
@@ -439,7 +440,87 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
   </div>
 </div>
 
-<!-- FX -->
+<!-- TREIBSTOFF-VERSORGUNG -->
+<div class="panel" id="panel-treibstoff">
+  <div class="range-bar" data-tab="treibstoff"></div>
+
+  <!-- Status hero: Versorgungslage-Indikator -->
+  <div class="lage-hero" id="treibstoff-hero">
+    <div id="treibstoff-hero-content">
+      <div class="loading"><span class="spin"></span>Versorgungslage wird berechnet…</div>
+    </div>
+  </div>
+
+  <!-- KPI-Kacheln -->
+  <div class="kpis" id="kpi-treibstoff"></div>
+
+  <div class="grid">
+    <!-- EU Jet Fuel Stocks (das Hauptchart) -->
+    <div class="card g8">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">EU Jet-Fuel-Lagerbestände</div>
+          <div class="card-sub">Eurostat · monatlich · 2 Monate Lag · Thousand Tonnes</div>
+        </div>
+        <select id="treibstoff-geo" onchange="renderTreibstoff()" style="font-size:11px">
+          <option value="EU27_2020">EU27</option>
+          <option value="EA20">Eurozone (EA20)</option>
+          <option value="DE">Deutschland</option>
+          <option value="FR">Frankreich</option>
+          <option value="IT">Italien</option>
+          <option value="ES">Spanien</option>
+          <option value="NL">Niederlande</option>
+          <option value="PL">Polen</option>
+          <option value="BE">Belgien</option>
+        </select>
+      </div>
+      <div class="chart-wrap" style="height:280px"><canvas id="chart-eu-stocks"></canvas></div>
+    </div>
+
+    <!-- US Jet Fuel Spot Price (Frühindikator) -->
+    <div class="card g4">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">US Gulf Jet-Fuel Spot</div>
+          <div class="card-sub">FRED · USD/Gallone · täglich</div>
+        </div>
+      </div>
+      <div class="chart-wrap" style="height:280px"><canvas id="chart-us-jet-spot"></canvas></div>
+    </div>
+
+    <!-- US Petroleum Stocks (Frühindikator) -->
+    <div class="card g6">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">US Lager-Frühindikator</div>
+          <div class="card-sub">EIA · wöchentlich · Mittwoch ~16:30 MEZ · Thousand Barrels</div>
+        </div>
+      </div>
+      <div class="chart-wrap" style="height:240px"><canvas id="chart-us-stocks"></canvas></div>
+    </div>
+
+    <!-- EU Imports per Country -->
+    <div class="card g6">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">EU Jet-Fuel Importe</div>
+          <div class="card-sub">Eurostat · Top-Länder · letzte 24 Monate</div>
+        </div>
+      </div>
+      <div class="chart-wrap" style="height:240px"><canvas id="chart-eu-imports"></canvas></div>
+    </div>
+
+    <!-- Macro context table -->
+    <div class="card g12">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">Makro-Kontext</div>
+          <div class="card-sub">FRED · Anleihen, Dollar, Volatilität — Indikatoren für globalen Energiepreis-Druck</div>
+        </div>
+      </div>
+      <div id="treibstoff-macro-table"><div class="loading"><span class="spin"></span></div></div>
+    </div>
+  </div>
 <div class="panel" id="panel-fx">
   <div class="range-bar" data-tab="fx"></div>
   <div class="kpis" id="kpi-fx"></div>
@@ -515,6 +596,9 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
   <div class="st" id="st-vpi"><span class="dot"></span>Destatis VPI</div>
   <div class="st" id="st-weather"><span class="dot"></span>Open-Meteo</div>
   <div class="st" id="st-comm"><span class="dot"></span>Yahoo Finance</div>
+  <div class="st" id="st-fred"><span class="dot"></span>FRED</div>
+  <div class="st" id="st-eia"><span class="dot"></span>EIA</div>
+  <div class="st" id="st-eurostat"><span class="dot"></span>Eurostat</div>
   <div class="st" id="st-news"><span class="dot"></span>News</div>
   <div style="margin-left:auto;white-space:nowrap">Alle Preise ohne Gewähr</div>
 </div>
@@ -551,6 +635,7 @@ const TAB_RANGES = {
   rohstoffe:   ['30d','90d','1y','2y','max'],
   kraftstoff:  ['7d','30d','90d'],
   heizoel:     ['30d','90d','1y','2y','max'],
+  treibstoff:  ['90d','1y','2y','5y','max'],
   erneuerbare: ['30d','90d','1y','2y','5y','max'],
   gas:         ['30d','90d','1y','2y','max'],
   wetter:      ['24h','7d'],
@@ -649,6 +734,7 @@ const TAB_FILES = {
   rohstoffe:   ['commodities','fx'],
   kraftstoff:  ['fuel'],
   heizoel:     ['heating_oil','commodities'],
+  treibstoff:  ['eurostat_oil','eia_petroleum','fred_energy','commodities'],
   erneuerbare: ['energy_charts','smard'],
   gas:         ['gas_storage','entsog'],
   wetter:      ['weather'],
@@ -810,6 +896,9 @@ function updateStatus() {
     'st-vpi':         isOk('destatis_vpi',  () => Object.keys(D.destatis_vpi?.energy_series||{}).length>0),
     'st-weather':     isOk('weather',       () => !!D.weather?.cities?.Berlin),
     'st-comm':        isOk('commodities',   () => (D.commodities?.brent_crude?.series?.length||0)>0),
+    'st-fred':        isOk('fred_energy',   () => (D.fred_energy?.DJFUELUSGULF?.series?.length||0)>0),
+    'st-eia':         isOk('eia_petroleum', () => (D.eia_petroleum?.jet_fuel_us_gulf_weekly?.series?.length||0)>0),
+    'st-eurostat':    isOk('eurostat_oil',  () => Object.keys(D.eurostat_oil?.jet_stocks?.series_per_country||{}).length>0),
     'st-news':        isOk('news',          () => (D.news?.articles?.length||0)>0),
   };
   Object.entries(chk).forEach(([id,ok])=>{
@@ -1899,6 +1988,231 @@ function classifyLage(ttf, gasStorage, powerDa) {
     sub:'Speicherstände und Spotpreise im Bereich der Vor-Krisen-Niveaus. Keine akuten Engpässe sichtbar.'};
 }
 
+// ══════════════════════════════════════════════
+// TREIBSTOFF-VERSORGUNG (Jet Fuel monitoring)
+// ══════════════════════════════════════════════
+
+/**
+ * Compute the supply situation classification from EU jet fuel stocks.
+ * Compares latest stock value vs the 5-year mean of the same calendar month.
+ * Returns { level: 'ok'|'warn'|'crit', headline, sub, pct }
+ */
+function classifyJetFuelStatus() {
+  const eu = D.eurostat_oil?.jet_stocks?.series_per_country?.EU27_2020 || [];
+  if (eu.length < 13) return {level:'unknown', headline:'Datenlage unklar',
+                              sub:'Eurostat-Daten unvollständig — vermutlich erst nach nächstem Update verfügbar.', pct:null};
+  const latest = eu[eu.length - 1];
+  // 5-year window of the same calendar month
+  const latestMonth = parseInt(latest.period.split('-')[1] || '0', 10);
+  const sameMonthValues = eu.filter(p => parseInt(p.period.split('-')[1] || '0', 10) === latestMonth)
+                            .slice(-5).map(p => p.v);
+  if (sameMonthValues.length < 3) return {level:'unknown', headline:'Datenbasis zu klein',
+                                          sub:'Nicht genug historische Daten für Vergleich.', pct:null};
+  const mean = sameMonthValues.reduce((a, b) => a + b, 0) / sameMonthValues.length;
+  const pct = mean > 0 ? Math.round((latest.v / mean) * 100) : null;
+  if (pct == null) return {level:'unknown', headline:'Berechnung nicht möglich', sub:'', pct:null};
+  if (pct < 50) {
+    return {level:'crit', headline:'Versorgungslage kritisch',
+            sub:`EU-Jetfuel-Lagerbestand bei ${pct}% des 5-Jahres-Mittels für diesen Monat. Lieferengpässe wahrscheinlich.`, pct};
+  } else if (pct < 80) {
+    return {level:'warn', headline:'Versorgungslage angespannt',
+            sub:`Lagerbestand bei ${pct}% des 5-Jahres-Mittels. Erhöhte Preisrisiken, noch keine akute Knappheit.`, pct};
+  }
+  return {level:'ok', headline:'Versorgung stabil',
+          sub:`Lagerbestand bei ${pct}% des 5-Jahres-Mittels. Versorgung im Normalbereich.`, pct};
+}
+
+function renderTreibstoff() {
+  // ── Status-Hero ──
+  const status = classifyJetFuelStatus();
+  const colorMap = {ok:'#1f9d55', warn:'#d97706', crit:'#c0392b', unknown:'#56657a'};
+  const iconMap = {ok:'✓', warn:'!', crit:'⚠', unknown:'?'};
+  const heroEl = document.getElementById('treibstoff-hero-content');
+  if (heroEl) {
+    heroEl.innerHTML = `
+      <div style="display:flex;align-items:center;gap:16px;padding:6px 0">
+        <div style="width:54px;height:54px;border-radius:50%;background:${colorMap[status.level]};
+                    color:#fff;display:flex;align-items:center;justify-content:center;
+                    font-size:28px;font-weight:700">${iconMap[status.level]}</div>
+        <div style="flex:1">
+          <div style="font-size:18px;font-weight:700;color:${colorMap[status.level]};margin-bottom:3px">${status.headline}</div>
+          <div style="font-size:12px;color:var(--text2)">${status.sub}</div>
+        </div>
+      </div>`;
+  }
+
+  // ── KPIs from FRED daily series ──
+  const fred = D.fred_energy || {};
+  const lastVal = (id) => {
+    const s = fred[id]?.series || [];
+    return s.length ? s[s.length - 1].v : null;
+  };
+  const prevVal = (id, daysAgo = 7) => {
+    const s = fred[id]?.series || [];
+    return s.length >= daysAgo + 1 ? s[s.length - 1 - daysAgo].v : null;
+  };
+  const trend = (id) => {
+    const cur = lastVal(id), prev = prevVal(id);
+    if (cur == null || prev == null) return null;
+    return ((cur - prev) / prev * 100);
+  };
+
+  const jetPrice = lastVal('DJFUELUSGULF');
+  const brent = lastVal('DCOILBRENTEU');
+  const heating = lastVal('DHOILNYH');
+  const diesel = lastVal('DDFUELUSGULF');
+  const jetTrend = trend('DJFUELUSGULF');
+  const brentTrend = trend('DCOILBRENTEU');
+
+  const kpiItems = [
+    {label:'Jet Fuel Spot US Gulf', val:jetPrice!=null?fmtN(jetPrice,3):'—', unit:'USD/Gallone · FRED',
+     color:'#7e57c2',
+     delta:jetTrend!=null?(jetTrend>=0?'▲ +':'▼ ')+fmtN(Math.abs(jetTrend),1)+'% 7 Tage':''},
+    {label:'Brent Rohöl', val:brent!=null?fmtN(brent,1):'—', unit:'USD/Barrel · FRED',
+     color:'#dc6803',
+     delta:brentTrend!=null?(brentTrend>=0?'▲ +':'▼ ')+fmtN(Math.abs(brentTrend),1)+'% 7 Tage':''},
+    {label:'Heizöl NY Harbor', val:heating!=null?fmtN(heating,3):'—', unit:'USD/Gallone · FRED', color:'#f0883e'},
+    {label:'Diesel US Gulf', val:diesel!=null?fmtN(diesel,3):'—', unit:'USD/Gallone · FRED', color:'#1f9d55'},
+  ];
+  document.getElementById('kpi-treibstoff').innerHTML = kpis(kpiItems);
+
+  // ── Chart: EU jet stocks per country (selectable) ──
+  const geoSel = document.getElementById('treibstoff-geo');
+  const geo = geoSel ? geoSel.value : 'EU27_2020';
+  const eu = D.eurostat_oil?.jet_stocks?.series_per_country?.[geo] || [];
+  if (eu.length) {
+    mkChart('chart-eu-stocks', 'line',
+      eu.map(p => p.period),
+      [{label:`Jet-Fuel Stocks ${geo}`, data:eu.map(p => p.v),
+        borderColor:'#0e6cb6', backgroundColor:'rgba(14,108,182,0.10)',
+        fill:true, tension:0.2, borderWidth:2}],
+      {scales:{y:{title:{display:true, text:'Tausend Tonnen'}}}});
+  } else {
+    const wrap = document.getElementById('chart-eu-stocks')?.parentElement;
+    if (wrap) wrap.innerHTML = `<div class="nodata">Keine Eurostat-Daten für ${geo} verfügbar`+
+                                ` <span style="font-size:10px">(2-Monats-Lag, eventuell beim nächsten Run da)</span></div>`;
+  }
+
+  // ── Chart: US Gulf Jet Fuel Spot (FRED daily) ──
+  const usJetSpot = fred['DJFUELUSGULF']?.series || [];
+  if (usJetSpot.length) {
+    const recent = usJetSpot.slice(-365);  // last year
+    mkChart('chart-us-jet-spot', 'line',
+      recent.map(p => p.date),
+      [{label:'Jet Fuel USD/gal', data:recent.map(p => p.v),
+        borderColor:'#7e57c2', backgroundColor:'rgba(126,87,194,0.10)',
+        fill:true, tension:0.2, borderWidth:2, pointRadius:0}],
+      {scales:{x:{ticks:{maxTicksLimit:10}}}});
+  } else {
+    const wrap = document.getElementById('chart-us-jet-spot')?.parentElement;
+    if (wrap) wrap.innerHTML = '<div class="nodata">FRED-Daten werden geladen…</div>';
+  }
+
+  // ── Chart: US Petroleum Stocks (multi-line: Jet, Distillate, Crude) ──
+  const eia = D.eia_petroleum || {};
+  const lines = [];
+  const C2 = {jet:'#7e57c2', distillate:'#dc6803', crude:'#0e6cb6', gasoline:'#1f9d55'};
+  for (const [key, label, color] of [
+    ['us_jet_fuel_stocks',   'US Jet Fuel',   C2.jet],
+    ['us_distillate_stocks', 'Distillate',    C2.distillate],
+    ['us_crude_stocks',      'Crude Oil',     C2.crude],
+    ['us_gasoline_stocks',   'Gasoline',      C2.gasoline],
+  ]) {
+    const s = eia[key]?.series || [];
+    if (s.length) {
+      // Normalize to first-value=100 so series fit on one scale
+      const ref = s[Math.max(0, s.length - 104)].v;  // 2 years ago
+      lines.push({
+        label, data:s.slice(-104).map(p => (p.v / ref * 100)),
+        borderColor:color, backgroundColor:color+'10', fill:false,
+        tension:0.2, borderWidth:1.5, pointRadius:0,
+      });
+    }
+  }
+  if (lines.length) {
+    // Use longest series for x-axis labels
+    const longestSeries = ['us_crude_stocks', 'us_distillate_stocks', 'us_jet_fuel_stocks']
+      .map(k => eia[k]?.series || []).sort((a, b) => b.length - a.length)[0];
+    const labels = longestSeries.slice(-104).map(p => p.date);
+    mkChart('chart-us-stocks', 'line', labels, lines, {
+      plugins:{legend:{display:true, labels:{color:'#56657a', boxWidth:6, font:{size:9}}}},
+      scales:{x:{ticks:{maxTicksLimit:8}}, y:{title:{display:true, text:'Index (vor 2 Jahren = 100)'}}}
+    });
+  } else {
+    const wrap = document.getElementById('chart-us-stocks')?.parentElement;
+    if (wrap) wrap.innerHTML = '<div class="nodata">EIA-Daten werden geladen…</div>';
+  }
+
+  // ── Chart: EU Imports per country ──
+  const imports = D.eurostat_oil?.jet_imports?.series_per_country || {};
+  const importCountries = Object.entries(imports)
+    .filter(([k, v]) => k !== 'EU27_2020' && k !== 'EA20' && v?.length)
+    .sort((a, b) => {
+      const aLast = a[1][a[1].length - 1]?.v || 0;
+      const bLast = b[1][b[1].length - 1]?.v || 0;
+      return bLast - aLast;
+    })
+    .slice(0, 5);
+  if (importCountries.length) {
+    // Use the longest series for x-axis
+    const longest = importCountries.sort((a, b) => b[1].length - a[1].length)[0][1];
+    const periods = longest.slice(-24).map(p => p.period);
+    const countryColors = ['#0e6cb6', '#dc6803', '#1f9d55', '#7e57c2', '#c0392b'];
+    const datasets = importCountries.map(([geo, series], i) => {
+      // Align series to common period axis
+      const lookup = Object.fromEntries(series.map(p => [p.period, p.v]));
+      return {
+        label:geo, data:periods.map(p => lookup[p] ?? null),
+        borderColor:countryColors[i % 5], backgroundColor:countryColors[i % 5]+'15',
+        fill:false, tension:0.2, borderWidth:1.5,
+      };
+    });
+    mkChart('chart-eu-imports', 'line', periods, datasets, {
+      plugins:{legend:{display:true, labels:{color:'#56657a', boxWidth:8, font:{size:10}}}},
+      scales:{y:{title:{display:true, text:'Tausend Tonnen'}}}
+    });
+  } else {
+    const wrap = document.getElementById('chart-eu-imports')?.parentElement;
+    if (wrap) wrap.innerHTML = '<div class="nodata">Eurostat-Importdaten werden geladen…</div>';
+  }
+
+  // ── Macro context table from FRED ──
+  const macroTable = document.getElementById('treibstoff-macro-table');
+  if (macroTable) {
+    const macroSeries = [
+      ['DTB3',      '3-Monats-Treasury',    'USA Geldmarktzins',     '%'],
+      ['DGS10',     '10-Jahres-Treasury',    'USA Langzins',          '%'],
+      ['DTWEXBGS',  'USD Index (Broad)',     'Trade-Weighted Dollar', 'Index'],
+      ['VIXCLS',    'VIX',                   'Volatilität S&P 500',   'Index'],
+    ];
+    const rows = macroSeries.map(([id, label, desc, unit]) => {
+      const cur = lastVal(id);
+      const prv = prevVal(id, 7);
+      const m1 = prevVal(id, 30);
+      const dWeek = (cur != null && prv != null) ? cur - prv : null;
+      const dMonth = (cur != null && m1 != null) ? cur - m1 : null;
+      const fmt = (v) => v != null ? fmtN(v, Math.abs(v) > 100 ? 0 : 2) : '—';
+      const cls = (v) => v == null ? '' : v > 0 ? 'pos' : v < 0 ? 'neg' : '';
+      return `<tr>
+        <td><strong>${label}</strong><div style="font-size:9px;color:var(--text3)">${desc}</div></td>
+        <td class="num">${fmt(cur)} <span style="font-size:9px;color:var(--text3)">${unit}</span></td>
+        <td class="num ${cls(dWeek)}">${dWeek!=null?(dWeek>=0?'+':'')+fmtN(dWeek, 2):'—'}</td>
+        <td class="num ${cls(dMonth)}">${dMonth!=null?(dMonth>=0?'+':'')+fmtN(dMonth, 2):'—'}</td>
+      </tr>`;
+    }).join('');
+    macroTable.innerHTML = `
+      <table class="tbl" style="margin-top:6px">
+        <thead><tr>
+          <th>Indikator</th>
+          <th class="num">Aktuell</th>
+          <th class="num">Δ 7 Tage</th>
+          <th class="num">Δ 30 Tage</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+  }
+}
+
 function renderLage() {
   const ho = D.heating_oil;
   const ec = D.energy_charts;
@@ -2134,7 +2448,8 @@ function renderLageOil(com, ho) {
 // ══════════════════════════════════════════════
 const RENDERS={
   strom:renderStrom,markt:renderMarkt,rohstoffe:renderRohstoffe,
-  kraftstoff:renderKraftstoff,heizoel:renderHeizoel,erneuerbare:renderErneuerbare,
+  kraftstoff:renderKraftstoff,heizoel:renderHeizoel,
+  treibstoff:renderTreibstoff,erneuerbare:renderErneuerbare,
   gas:renderGas,wetter:renderWetter,fx:renderFx,lage:renderLage,
   historisch:renderHistorisch,news:renderNews,
 };
