@@ -72,6 +72,8 @@ jobs:
           GIE_API_KEY:           ${{ secrets.GIE_API_KEY }}
           TANKERKOENIG_API_KEY:  ${{ secrets.TANKERKOENIG_API_KEY }}
           DESTATIS_API_TOKEN:    ${{ secrets.DESTATIS_API_TOKEN }}
+          DESTATIS_USERNAME:     ${{ secrets.DESTATIS_USERNAME }}
+          DESTATIS_PASSWORD:     ${{ secrets.DESTATIS_PASSWORD }}
           ENTSOE_SECURITY_TOKEN: ${{ secrets.ENTSOE_SECURITY_TOKEN }}
 
       - name: Show results
