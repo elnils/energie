@@ -1,9 +1,9 @@
 {
   "commodities": {
-    "last_attempt_epoch": 1778489254,
-    "last_attempt_iso": "2026-05-11T08:47:34Z",
-    "last_success_epoch": 1778489263,
-    "last_success_iso": "2026-05-11T08:47:43Z"
+    "last_attempt_epoch": 1778503544,
+    "last_attempt_iso": "2026-05-11T12:45:44Z",
+    "last_success_epoch": 1778503553,
+    "last_success_iso": "2026-05-11T12:45:53Z"
   },
   "destatis_vpi": {
     "last_attempt_epoch": 1778489317,
@@ -14,15 +14,15 @@
     "last_success_iso": "2026-05-11T08:48:55Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1778493237,
-    "last_attempt_iso": "2026-05-11T09:53:57Z",
-    "last_success_epoch": 1778493376,
-    "last_success_iso": "2026-05-11T09:56:16Z"
+    "last_attempt_epoch": 1778503404,
+    "last_attempt_iso": "2026-05-11T12:43:24Z",
+    "last_success_epoch": 1778503542,
+    "last_success_iso": "2026-05-11T12:45:42Z"
   },
   "entsoe": {
-    "last_attempt_epoch": 1778493376,
-    "last_attempt_iso": "2026-05-11T09:56:16Z",
-    "last_error_epoch": 1778493378,
+    "last_attempt_epoch": 1778503553,
+    "last_attempt_iso": "2026-05-11T12:45:53Z",
+    "last_error_epoch": 1778503555,
     "last_error_message": "ValueError: fetcher 'entsoe' returned foreign keys {'points'} — this looks like another source's data. Refusing to write.",
     "last_success_epoch": 1778300938,
     "last_success_iso": "2026-05-09T04:28:58Z"
@@ -58,21 +58,21 @@
     "last_success_iso": "2026-05-11T08:48:37Z"
   },
   "news": {
-    "last_attempt_epoch": 1778489337,
-    "last_attempt_iso": "2026-05-11T08:48:57Z",
-    "last_success_epoch": 1778489360,
-    "last_success_iso": "2026-05-11T08:49:20Z"
+    "last_attempt_epoch": 1778503555,
+    "last_attempt_iso": "2026-05-11T12:45:55Z",
+    "last_success_epoch": 1778503583,
+    "last_success_iso": "2026-05-11T12:46:23Z"
   },
   "smard": {
-    "last_attempt_epoch": 1778493231,
-    "last_attempt_iso": "2026-05-11T09:53:51Z",
-    "last_success_epoch": 1778493237,
-    "last_success_iso": "2026-05-11T09:53:57Z"
+    "last_attempt_epoch": 1778503397,
+    "last_attempt_iso": "2026-05-11T12:43:17Z",
+    "last_success_epoch": 1778503404,
+    "last_success_iso": "2026-05-11T12:43:24Z"
   },
   "weather": {
-    "last_attempt_epoch": 1778489252,
-    "last_attempt_iso": "2026-05-11T08:47:32Z",
-    "last_success_epoch": 1778489254,
-    "last_success_iso": "2026-05-11T08:47:34Z"
+    "last_attempt_epoch": 1778503542,
+    "last_attempt_iso": "2026-05-11T12:45:42Z",
+    "last_success_epoch": 1778503544,
+    "last_success_iso": "2026-05-11T12:45:44Z"
   }
 }
