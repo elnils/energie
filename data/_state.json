@@ -14,15 +14,15 @@
     "last_success_iso": "2026-05-11T08:48:55Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1778488969,
-    "last_attempt_iso": "2026-05-11T08:42:49Z",
-    "last_success_epoch": 1778489230,
-    "last_success_iso": "2026-05-11T08:47:10Z"
+    "last_attempt_epoch": 1778493237,
+    "last_attempt_iso": "2026-05-11T09:53:57Z",
+    "last_success_epoch": 1778493376,
+    "last_success_iso": "2026-05-11T09:56:16Z"
   },
   "entsoe": {
-    "last_attempt_epoch": 1778489335,
-    "last_attempt_iso": "2026-05-11T08:48:55Z",
-    "last_error_epoch": 1778489337,
+    "last_attempt_epoch": 1778493376,
+    "last_attempt_iso": "2026-05-11T09:56:16Z",
+    "last_error_epoch": 1778493378,
     "last_error_message": "ValueError: fetcher 'entsoe' returned foreign keys {'points'} — this looks like another source's data. Refusing to write.",
     "last_success_epoch": 1778300938,
     "last_success_iso": "2026-05-09T04:28:58Z"
@@ -64,10 +64,10 @@
     "last_success_iso": "2026-05-11T08:49:20Z"
   },
   "smard": {
-    "last_attempt_epoch": 1778488963,
-    "last_attempt_iso": "2026-05-11T08:42:43Z",
-    "last_success_epoch": 1778488969,
-    "last_success_iso": "2026-05-11T08:42:49Z"
+    "last_attempt_epoch": 1778493231,
+    "last_attempt_iso": "2026-05-11T09:53:51Z",
+    "last_success_epoch": 1778493237,
+    "last_success_iso": "2026-05-11T09:53:57Z"
   },
   "weather": {
     "last_attempt_epoch": 1778489252,
