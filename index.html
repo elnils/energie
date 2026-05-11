@@ -142,6 +142,7 @@ main{padding:18px 20px 70px;max-width:1600px;margin:0 auto}
 .news-card{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:14px;display:flex;flex-direction:column;gap:6px;box-shadow:var(--shadow);transition:box-shadow .15s}
 .news-card:hover{box-shadow:var(--shadow-md)}
 .news-src{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--accent)}
+.news-cat{display:inline-block;padding:1px 6px;background:var(--bg-alt);color:var(--text2);border-radius:3px;font-size:8px;letter-spacing:.04em;margin-left:6px;border:1px solid var(--border)}
 .news-ttl{font-size:13px;font-weight:600;color:var(--text);line-height:1.4}
 .news-ttl a{color:inherit}
 .news-ttl a:hover{color:var(--accent)}
@@ -494,9 +495,9 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
 
 <!-- NEWS -->
 <div class="panel" id="panel-news">
-  <div class="news-filters" id="news-filters">
-    <button class="nf-btn active" onclick="filterNews('alle',this)">Alle</button>
-  </div>
+  <div class="fuel-tabs" id="news-category-tabs" style="margin-bottom:8px"></div>
+  <div class="news-filters" id="news-filters" style="margin-bottom:12px"></div>
+  <div id="news-meta" style="font-size:11px;color:var(--text3);margin-bottom:10px"></div>
   <div id="news-wrap"><div class="loading"><span class="spin"></span>News werden geladen…</div></div>
 </div>
 
@@ -1621,36 +1622,105 @@ function renderHistorisch() {
 // ══════════════════════════════════════════════
 // NEWS
 // ══════════════════════════════════════════════
-function filterNews(src,btn) {
-  newsSource=src;
-  document.querySelectorAll('.nf-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
+// State for news tab
+let newsCategory = 'alle';
+
+function setNewsCategory(cat) {
+  newsCategory = cat;
+  newsSource = 'alle';  // reset source filter when category changes
+  document.querySelectorAll('#news-category-tabs .fuel-tab').forEach(b => {
+    b.classList.toggle('active', b.dataset.newscat === cat);
+  });
+  renderNews();
+}
+
+function filterNews(src) {
+  newsSource = src;
+  document.querySelectorAll('#news-filters .nf-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.src === src);
+  });
   renderNewsGrid();
 }
 
 function renderNewsGrid() {
-  const news=D.news;
-  if(!news?.articles?.length) return;
-  const arts=newsSource==='alle'?news.articles:news.articles.filter(a=>a.source===newsSource);
-  const wrap=document.getElementById('news-wrap');
-  if(!arts.length){wrap.innerHTML='<div class="nodata">Keine Artikel für diese Quelle</div>';return;}
-  wrap.innerHTML=`<div class="news-grid">${arts.map(a=>{
-    const date=a.date?new Date(a.date).toLocaleDateString('de-DE'):'';
-    return`<div class="news-card"><div class="news-src">${a.source}</div><div class="news-ttl"><a href="${a.link}" target="_blank" rel="noopener">${a.title}</a></div>${a.summary?`<div class="news-sum">${a.summary}</div>`:''}<div class="news-date">${date}</div></div>`;
+  const news = D.news;
+  const wrap = document.getElementById('news-wrap');
+  if (!news?.articles?.length) return;
+
+  // Filter by category first
+  let arts = newsCategory === 'alle'
+    ? news.articles
+    : news.articles.filter(a => a.category === newsCategory);
+  // Then by source
+  if (newsSource !== 'alle') {
+    arts = arts.filter(a => a.source === newsSource);
+  }
+
+  if (!arts.length) {
+    wrap.innerHTML = '<div class="nodata">Keine Artikel mit diesen Filtern</div>';
+    return;
+  }
+
+  wrap.innerHTML = `<div class="news-grid">${arts.map(a => {
+    const date = a.date ? new Date(a.date).toLocaleDateString('de-DE',
+                  {day:'2-digit',month:'2-digit',year:'numeric'}) : '';
+    const cat = a.category ? `<span class="news-cat">${a.category}</span>` : '';
+    return `<div class="news-card">
+      <div class="news-src">${a.source} ${cat}</div>
+      <div class="news-ttl"><a href="${a.link}" target="_blank" rel="noopener">${a.title}</a></div>
+      ${a.summary ? `<div class="news-sum">${a.summary}</div>` : ''}
+      <div class="news-date">${date}</div>
+    </div>`;
   }).join('')}</div>`;
 }
 
 function renderNews() {
-  const news=D.news;
-  const wrap=document.getElementById('news-wrap');
-  if(!news?.articles?.length){
-    wrap.innerHTML='<div class="nodata" style="height:200px"><span style="font-size:32px">📰</span><span>Noch keine News – GitHub Actions einmal manuell starten</span></div>';
+  const news = D.news;
+  const wrap = document.getElementById('news-wrap');
+  if (!news?.articles?.length) {
+    wrap.innerHTML = '<div class="nodata" style="height:200px"><span style="font-size:32px">📰</span><span>Noch keine News – GitHub Actions einmal manuell starten</span></div>';
+    document.getElementById('news-category-tabs').innerHTML = '';
+    document.getElementById('news-filters').innerHTML = '';
     return;
   }
-  const sources=[...new Set(news.articles.map(a=>a.source))];
-  document.getElementById('news-filters').innerHTML=
-    `<button class="nf-btn ${newsSource==='alle'?'active':''}" onclick="filterNews('alle',this)">Alle (${news.articles.length})</button>`
-    +sources.map(s=>{const cnt=news.articles.filter(a=>a.source===s).length;return`<button class="nf-btn ${newsSource===s?'active':''}" onclick="filterNews('${s}',this)">${s} (${cnt})</button>`;}).join('');
+
+  // Build category list with counts
+  const catCounts = {};
+  news.articles.forEach(a => {
+    const c = a.category || 'Ohne Kategorie';
+    catCounts[c] = (catCounts[c] || 0) + 1;
+  });
+  const cats = Object.entries(catCounts).sort((a, b) => b[1] - a[1]);
+
+  document.getElementById('news-category-tabs').innerHTML =
+    `<button class="fuel-tab ${newsCategory==='alle'?'active':''}" data-newscat="alle" onclick="setNewsCategory('alle')">Alle (${news.articles.length})</button>`
+    + cats.map(([c, n]) =>
+        `<button class="fuel-tab ${newsCategory===c?'active':''}" data-newscat="${c}" onclick="setNewsCategory('${c.replace(/'/g,"\\'")}')">${c} (${n})</button>`
+      ).join('');
+
+  // Source filter for the currently selected category
+  const articlesInCat = newsCategory === 'alle'
+    ? news.articles
+    : news.articles.filter(a => a.category === newsCategory);
+  const sourceCounts = {};
+  articlesInCat.forEach(a => { sourceCounts[a.source] = (sourceCounts[a.source]||0) + 1; });
+  const sources = Object.entries(sourceCounts).sort((a, b) => b[1] - a[1]);
+
+  document.getElementById('news-filters').innerHTML =
+    `<button class="nf-btn ${newsSource==='alle'?'active':''}" data-src="alle" onclick="filterNews('alle')">Alle Quellen (${articlesInCat.length})</button>`
+    + sources.map(([s, n]) =>
+        `<button class="nf-btn ${newsSource===s?'active':''}" data-src="${s}" onclick="filterNews('${s.replace(/'/g,"\\'")}')">${s} (${n})</button>`
+      ).join('');
+
+  // Meta-Block: when fetched, how many sources OK
+  const sourcesArr = news.sources || [];
+  const sourcesOk = sourcesArr.filter(s => s.status === 'ok').length;
+  const sourcesTotal = sourcesArr.length;
+  const lastUpdate = news.__meta?.updated || news.__meta?.last_success;
+  document.getElementById('news-meta').innerHTML =
+    `${news.articles.length} Artikel · ${sourcesOk}/${sourcesTotal} Quellen erreichbar`
+    + (lastUpdate ? ` · zuletzt aktualisiert ${new Date(lastUpdate).toLocaleString('de-DE')}` : '');
+
   renderNewsGrid();
 }
 
