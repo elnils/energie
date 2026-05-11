@@ -6,7 +6,7 @@ RESTful/JSON-Schnittstelle mit Python", May 2025.
 
 Key facts from the docs:
   - GET requests were turned off on 30 June 2025. POST-only now.
-  - Auth: HTTP headers `username` (= API token) and `password` (empty).
+  - Auth: HTTP headers `username` and `password`.
     Content-Type must be 'application/x-www-form-urlencoded'.
   - Test endpoint: POST helloworld/logincheck → returns
     {"Status":"Sie wurden erfolgreich an- und abgemeldet!..."}
@@ -16,15 +16,21 @@ Key facts from the docs:
   - With compress=true the response is a ZIP archive containing one CSV.
   - Tables exceeding 40k rows must be split or batch-queued.
 
+Credentials — two options, set EITHER:
+  - DESTATIS_USERNAME + DESTATIS_PASSWORD  (full access, includes job=true)
+  - DESTATIS_API_TOKEN                     (read-only, no jobs)
+
+Register at https://www-genesis.destatis.de → Mein Konto → Webservice/API.
+Token is the recommended secret because it can be regenerated without
+changing your account password.
+
 Table codes used:
   61111-0004  Verbraucherpreisindex — Sondergliederung COICOP-5-Steller
               (monthly, includes energy categories: Strom, Gas, Heizöl, Kraftstoffe...)
   61111-0001  Verbraucherpreisindex Deutschland insgesamt (headline)
 
-Update frequency: monthly, around the 10th-15th, so we run once per day
-and the data refreshes when Destatis publishes the new month.
-
-Token: register at https://www-genesis.destatis.de → Mein Konto → API.
+Update frequency: monthly, around the 10th-15th. We run once per day and
+the data refreshes when Destatis publishes the new month.
 """
 import io
 import os
@@ -62,22 +68,66 @@ def _to_float(s) -> Optional[float]:
         return None
 
 
-def _post(endpoint: str, token: str, **params) -> 'requests.Response':
+class _Credentials:
     """
-    POST to a Genesis endpoint with header-auth.
+    Two supported credential schemes per the Destatis spec:
 
-    Per the May-2025 spec, credentials go in HTTP headers `username` and
-    `password`. With an API token, username = token and password = "".
+      1. Username + password (full access — including job=true for big tables)
+         Use environment vars DESTATIS_USERNAME + DESTATIS_PASSWORD.
 
-    Some HTTP libraries strip empty headers, which the Destatis server
-    misinterprets as "no password sent". To work around this we send a
-    single space rather than empty string for the password header.
+      2. API token (read-only, no jobs)
+         Use environment var DESTATIS_API_TOKEN. The token goes in the
+         'username' header field, password header is empty.
+
+    `mode` is 'userpass' or 'token'. Header-auth is preferred; body-auth
+    is a fallback for both schemes (some clients require it).
+    """
+    def __init__(self, username: str, password: str, mode: str):
+        self.username = username.strip()
+        self.password = password
+        self.mode = mode
+
+    @classmethod
+    def from_env(cls) -> '_Credentials':
+        user = os.environ.get('DESTATIS_USERNAME', '').strip()
+        pwd  = os.environ.get('DESTATIS_PASSWORD', '')  # don't strip whitespace from password
+        if user and pwd:
+            return cls(user, pwd, mode='userpass')
+        token = os.environ.get('DESTATIS_API_TOKEN', '').strip()
+        if token:
+            return cls(token, '', mode='token')
+        raise RuntimeError(
+            'Destatis credentials missing. Set EITHER '
+            'DESTATIS_USERNAME + DESTATIS_PASSWORD (full access), '
+            'OR DESTATIS_API_TOKEN (read-only). '
+            'Register at https://www-genesis.destatis.de'
+        )
+
+    def sanity_check(self) -> None:
+        if self.mode == 'token':
+            if len(self.username) < 10:
+                raise RuntimeError(f'Destatis token too short ({len(self.username)} chars). '
+                                   'Get from Mein Konto → Webservice/API.')
+            if ' ' in self.username or '\n' in self.username:
+                raise RuntimeError('Destatis token contains whitespace. '
+                                   'Re-paste the secret cleanly.')
+        else:  # userpass
+            if len(self.username) < 2:
+                raise RuntimeError('Destatis username too short.')
+            if len(self.password) < 4:
+                raise RuntimeError('Destatis password too short.')
+
+
+def _post(endpoint: str, creds: _Credentials, **params) -> 'requests.Response':
+    """
+    POST with credentials in HTTP headers (the spec-compliant path).
+    Works for both userpass and token modes.
     """
     s = http.get_session()
     headers = {
         'Content-Type': 'application/x-www-form-urlencoded',
-        'username': token.strip(),  # strip any whitespace from secret
-        'password': ' ',             # single space, not '' — survives header normalization
+        'username': creds.username,
+        'password': creds.password,
     }
     body = {'language': 'de', **params}
     timeout = 30 if 'helloworld' in endpoint else 90
@@ -86,19 +136,16 @@ def _post(endpoint: str, token: str, **params) -> 'requests.Response':
     return r
 
 
-def _post_body_auth(endpoint: str, token: str, **params) -> 'requests.Response':
+def _post_body_auth(endpoint: str, creds: _Credentials, **params) -> 'requests.Response':
     """
-    Alternative auth: token in the request body, not headers.
-    Some older Destatis examples (and the bundesAPI client) put auth into
-    the body. We use this as a fallback if header-auth fails.
+    Fallback: credentials in the request body, not headers.
+    Some older Destatis clients (and the bundesAPI Python wrapper) use this.
     """
     s = http.get_session()
-    headers = {
-        'Content-Type': 'application/x-www-form-urlencoded',
-    }
+    headers = {'Content-Type': 'application/x-www-form-urlencoded'}
     body = {
-        'username': token.strip(),
-        'password': '',
+        'username': creds.username,
+        'password': creds.password,
         'language': 'de',
         **params,
     }
@@ -108,50 +155,38 @@ def _post_body_auth(endpoint: str, token: str, **params) -> 'requests.Response':
     return r
 
 
-def _check_login(token: str) -> str:
+def _check_login(creds: _Credentials) -> str:
     """
-    Auth probe via POST helloworld/logincheck.
-
-    Two attempts:
-      1. Header-auth (as per the official May-2025 spec)
-      2. Body-auth (used by older clients and some unofficial docs)
-    Returns the auth mode that worked ('header' or 'body'),
-    raises descriptive RuntimeError if both fail.
+    Auth probe via POST helloworld/logincheck. Tries header-auth first,
+    falls back to body-auth. Returns the working auth-mode ('header' or 'body').
     """
-    token = (token or '').strip()
-    if len(token) < 10:
-        raise RuntimeError(f'Destatis token too short ({len(token)} chars). '
-                           'Get token from Mein Konto → Webservice/API.')
-    if ' ' in token or '\n' in token:
-        raise RuntimeError('Destatis token contains whitespace/newline. '
-                           'Re-paste the secret without trailing whitespace.')
-
+    creds.sanity_check()
     last_error = None
 
     # Attempt 1: header-auth (spec-compliant)
     try:
-        r = _post('helloworld/logincheck', token)
+        r = _post('helloworld/logincheck', creds)
         if r.ok:
             payload = r.json()
             status = payload.get('Status', '')
             if 'erfolgreich' in status.lower():
-                print(f'    destatis auth: header-mode ok')
+                print(f'    destatis auth ({creds.mode}): header-mode ok')
                 return 'header'
             last_error = f'header-auth status: {status[:200]}'
         else:
-            last_error = f'header-auth HTTP {r.status_code}'
+            last_error = f'header-auth HTTP {r.status_code}: {r.text[:120]}'
     except Exception as e:
         last_error = f'header-auth exception: {e}'
     print(f'    destatis header-auth failed ({last_error[:120]}), trying body-auth...')
 
     # Attempt 2: body-auth fallback
     try:
-        r = _post_body_auth('helloworld/logincheck', token)
+        r = _post_body_auth('helloworld/logincheck', creds)
         if r.ok:
             payload = r.json()
             status = payload.get('Status', '')
             if 'erfolgreich' in status.lower():
-                print(f'    destatis auth: body-mode ok')
+                print(f'    destatis auth ({creds.mode}): body-mode ok')
                 return 'body'
             raise RuntimeError(
                 f'Destatis auth: BOTH modes failed. '
@@ -167,14 +202,14 @@ def _check_login(token: str) -> str:
         )
 
 
-def _post_auto(endpoint: str, token: str, mode: str, **params) -> 'requests.Response':
-    """Dispatch to header-auth or body-auth based on detected mode."""
+def _post_auto(endpoint: str, creds: _Credentials, mode: str, **params) -> 'requests.Response':
+    """Dispatch to header-auth or body-auth based on what worked at login."""
     if mode == 'body':
-        return _post_body_auth(endpoint, token, **params)
-    return _post(endpoint, token, **params)
+        return _post_body_auth(endpoint, creds, **params)
+    return _post(endpoint, creds, **params)
 
 
-def _fetch_tablefile_split(token: str, table_name: str,
+def _fetch_tablefile_split(creds: _Credentials, table_name: str,
                            startyear: int,
                            classifyingvariable1: Optional[str],
                            classifyingkey1: Optional[str],
@@ -193,7 +228,7 @@ def _fetch_tablefile_split(token: str, table_name: str,
         chunk_end = min(chunk_start + 1, current_year)
         try:
             chunk = _fetch_tablefile(
-                token, table_name,
+                creds, table_name,
                 startyear=chunk_start, endyear=chunk_end,
                 classifyingvariable1=classifyingvariable1,
                 classifyingkey1=classifyingkey1,
@@ -208,7 +243,7 @@ def _fetch_tablefile_split(token: str, table_name: str,
     return all_rows
 
 
-def _fetch_tablefile(token: str, table_name: str,
+def _fetch_tablefile(creds: _Credentials, table_name: str,
                      startyear: int = 2020,
                      endyear: Optional[int] = None,
                      classifyingvariable1: Optional[str] = None,
@@ -217,8 +252,6 @@ def _fetch_tablefile(token: str, table_name: str,
     """
     Download a table via POST data/tablefile in ffcsv format, ZIP-compressed.
     Decompress and parse to a list of dicts.
-
-    `mode` selects between header-auth ('header') and body-auth ('body').
     """
     params: Dict[str, object] = {
         'name': table_name,
@@ -233,7 +266,7 @@ def _fetch_tablefile(token: str, table_name: str,
     if classifyingkey1:
         params['classifyingkey1'] = classifyingkey1
 
-    r = _post_auto('data/tablefile', token, mode, **params)
+    r = _post_auto('data/tablefile', creds, mode, **params)
     if not r.ok:
         body = r.text[:300] if r.text else ''
         raise RuntimeError(f'Destatis tablefile {table_name} HTTP {r.status_code}: {body}')
@@ -258,7 +291,7 @@ def _fetch_tablefile(token: str, table_name: str,
                 if code == 98 and endyear is None:
                     print(f'    destatis {table_name}: too big, splitting by year')
                     return _fetch_tablefile_split(
-                        token, table_name, startyear,
+                        creds, table_name, startyear,
                         classifyingvariable1, classifyingkey1, mode=mode,
                     )
                 raise RuntimeError(
@@ -375,28 +408,28 @@ def _build_series(rows: List[dict]) -> Dict[str, List[dict]]:
 
 
 def fetch() -> dict:
-    token = os.environ.get('DESTATIS_API_TOKEN', '').strip()
-    if len(token) < 10:
-        raise RuntimeError('DESTATIS_API_TOKEN missing — register at www-genesis.destatis.de')
+    creds = _Credentials.from_env()
+    print(f'    destatis credentials: mode={creds.mode}, '
+          f'identity={creds.username[:6]}...{creds.username[-3:] if len(creds.username)>9 else ""}')
 
     # Auth probe — returns the working auth mode ('header' or 'body')
-    auth_mode = _check_login(token)
+    auth_mode = _check_login(creds)
 
     # Headline VPI (Deutschland insgesamt)
     headline_series: Dict[str, List[dict]] = {}
     try:
-        head_rows = _fetch_tablefile(token, TABLE_VPI_HEADLINE, startyear=2020, mode=auth_mode)
+        head_rows = _fetch_tablefile(creds, TABLE_VPI_HEADLINE, startyear=2020, mode=auth_mode)
         headline_series = _build_series(head_rows)
         print(f'    destatis headline {TABLE_VPI_HEADLINE}: {len(head_rows)} rows, '
               f'{len(headline_series)} series')
     except Exception as e:
         print(f'  ! destatis headline {TABLE_VPI_HEADLINE}: {e}')
 
-    # Detail with energy breakdown.
+    # Detail with energy breakdown
     detail_rows: List[dict] = []
     try:
         detail_rows = _fetch_tablefile(
-            token, TABLE_VPI_DETAIL,
+            creds, TABLE_VPI_DETAIL,
             startyear=2020,
             classifyingvariable1='CC13A5',
             mode=auth_mode,
