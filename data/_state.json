@@ -1,78 +1,78 @@
 {
   "commodities": {
-    "last_attempt_epoch": 1778485466,
-    "last_attempt_iso": "2026-05-11T07:44:26Z",
-    "last_success_epoch": 1778485474,
-    "last_success_iso": "2026-05-11T07:44:34Z"
+    "last_attempt_epoch": 1778489254,
+    "last_attempt_iso": "2026-05-11T08:47:34Z",
+    "last_success_epoch": 1778489263,
+    "last_success_iso": "2026-05-11T08:47:43Z"
   },
   "destatis_vpi": {
-    "last_attempt_epoch": 1778485532,
-    "last_attempt_iso": "2026-05-11T07:45:32Z",
+    "last_attempt_epoch": 1778489317,
+    "last_attempt_iso": "2026-05-11T08:48:37Z",
     "last_error_epoch": 1778475805,
     "last_error_message": "RuntimeError: Destatis logincheck unexpected status: Ein Fehler ist aufgetreten. (Bitte geben Sie Ihr Passwort ein.)",
-    "last_success_epoch": 1778485549,
-    "last_success_iso": "2026-05-11T07:45:49Z"
+    "last_success_epoch": 1778489335,
+    "last_success_iso": "2026-05-11T08:48:55Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1778485308,
-    "last_attempt_iso": "2026-05-11T07:41:48Z",
-    "last_success_epoch": 1778485445,
-    "last_success_iso": "2026-05-11T07:44:05Z"
+    "last_attempt_epoch": 1778488969,
+    "last_attempt_iso": "2026-05-11T08:42:49Z",
+    "last_success_epoch": 1778489230,
+    "last_success_iso": "2026-05-11T08:47:10Z"
   },
   "entsoe": {
-    "last_attempt_epoch": 1778485549,
-    "last_attempt_iso": "2026-05-11T07:45:49Z",
-    "last_error_epoch": 1778485551,
+    "last_attempt_epoch": 1778489335,
+    "last_attempt_iso": "2026-05-11T08:48:55Z",
+    "last_error_epoch": 1778489337,
     "last_error_message": "ValueError: fetcher 'entsoe' returned foreign keys {'points'} — this looks like another source's data. Refusing to write.",
     "last_success_epoch": 1778300938,
     "last_success_iso": "2026-05-09T04:28:58Z"
   },
   "entsog": {
-    "last_attempt_epoch": 1778485463,
-    "last_attempt_iso": "2026-05-11T07:44:23Z",
-    "last_success_epoch": 1778485464,
-    "last_success_iso": "2026-05-11T07:44:24Z"
+    "last_attempt_epoch": 1778489250,
+    "last_attempt_iso": "2026-05-11T08:47:30Z",
+    "last_success_epoch": 1778489252,
+    "last_success_iso": "2026-05-11T08:47:32Z"
   },
   "fuel": {
-    "last_attempt_epoch": 1778485475,
-    "last_attempt_iso": "2026-05-11T07:44:35Z",
-    "last_success_epoch": 1778485531,
-    "last_success_iso": "2026-05-11T07:45:31Z"
+    "last_attempt_epoch": 1778489264,
+    "last_attempt_iso": "2026-05-11T08:47:44Z",
+    "last_success_epoch": 1778489316,
+    "last_success_iso": "2026-05-11T08:48:36Z"
   },
   "fx": {
-    "last_attempt_epoch": 1778485474,
-    "last_attempt_iso": "2026-05-11T07:44:34Z",
-    "last_success_epoch": 1778485475,
-    "last_success_iso": "2026-05-11T07:44:35Z"
+    "last_attempt_epoch": 1778489263,
+    "last_attempt_iso": "2026-05-11T08:47:43Z",
+    "last_success_epoch": 1778489264,
+    "last_success_iso": "2026-05-11T08:47:44Z"
   },
   "gas_storage": {
-    "last_attempt_epoch": 1778485445,
-    "last_attempt_iso": "2026-05-11T07:44:05Z",
-    "last_success_epoch": 1778485463,
-    "last_success_iso": "2026-05-11T07:44:23Z"
+    "last_attempt_epoch": 1778489230,
+    "last_attempt_iso": "2026-05-11T08:47:10Z",
+    "last_success_epoch": 1778489250,
+    "last_success_iso": "2026-05-11T08:47:30Z"
   },
   "heating_oil": {
-    "last_attempt_epoch": 1778485531,
-    "last_attempt_iso": "2026-05-11T07:45:31Z",
-    "last_success_epoch": 1778485532,
-    "last_success_iso": "2026-05-11T07:45:32Z"
+    "last_attempt_epoch": 1778489316,
+    "last_attempt_iso": "2026-05-11T08:48:36Z",
+    "last_success_epoch": 1778489317,
+    "last_success_iso": "2026-05-11T08:48:37Z"
   },
   "news": {
-    "last_attempt_epoch": 1778485551,
-    "last_attempt_iso": "2026-05-11T07:45:51Z",
-    "last_success_epoch": 1778485573,
-    "last_success_iso": "2026-05-11T07:46:13Z"
+    "last_attempt_epoch": 1778489337,
+    "last_attempt_iso": "2026-05-11T08:48:57Z",
+    "last_success_epoch": 1778489360,
+    "last_success_iso": "2026-05-11T08:49:20Z"
   },
   "smard": {
-    "last_attempt_epoch": 1778485303,
-    "last_attempt_iso": "2026-05-11T07:41:43Z",
-    "last_success_epoch": 1778485308,
-    "last_success_iso": "2026-05-11T07:41:48Z"
+    "last_attempt_epoch": 1778488963,
+    "last_attempt_iso": "2026-05-11T08:42:43Z",
+    "last_success_epoch": 1778488969,
+    "last_success_iso": "2026-05-11T08:42:49Z"
   },
   "weather": {
-    "last_attempt_epoch": 1778485464,
-    "last_attempt_iso": "2026-05-11T07:44:24Z",
-    "last_success_epoch": 1778485466,
-    "last_success_iso": "2026-05-11T07:44:26Z"
+    "last_attempt_epoch": 1778489252,
+    "last_attempt_iso": "2026-05-11T08:47:32Z",
+    "last_success_epoch": 1778489254,
+    "last_success_iso": "2026-05-11T08:47:34Z"
   }
 }
