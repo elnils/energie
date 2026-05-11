@@ -88,19 +88,33 @@ def fetch() -> dict:
     except Exception as e:
         print(f'  ! ec/public_power: {e}')
 
-    # Renewable share 30d
-    try:
-        d = _get('ren_share_in_public_power', {'country': 'de',
-                                               'start': start_30d, 'end': end_str})
-        out['ren_share_de'] = {
-            'unix_seconds': d.get('unix_seconds', []),
-            'ren_share': _first_list(d, 'share_of_generation_capacity', 'ren_share',
-                                     'renewable_share', 'ren_share_in_public_power'),
-        }
-        time.sleep(0.15)
-    except Exception as e:
-        print(f'  ! ec/ren_share: {e}')
-        out['ren_share_de'] = {'unix_seconds': [], 'ren_share': []}
+    # Renewable share — endpoint name has been unstable across API revisions.
+    # Try several candidates with descending preference, stop on first success.
+    REN_CANDIDATES = [
+        ('ren_share', {'country': 'de', 'start': start_30d, 'end': end_str}),
+        ('ren_share_in_public_power', {'country': 'de', 'start': start_30d, 'end': end_str}),
+        ('ren_share_forecast', {'country': 'de', 'start': start_30d, 'end': end_str}),
+    ]
+    out['ren_share_de'] = {'unix_seconds': [], 'ren_share': []}
+    for endpoint, params in REN_CANDIDATES:
+        try:
+            d = _get(endpoint, params)
+            shares = _first_list(d, 'share_of_generation_capacity', 'ren_share',
+                                 'renewable_share', 'ren_share_in_public_power',
+                                 'share', 'value', 'data')
+            if d.get('unix_seconds') and shares:
+                out['ren_share_de'] = {
+                    'unix_seconds': d['unix_seconds'],
+                    'ren_share': shares,
+                }
+                print(f'    ec/ren_share via {endpoint}: {len(shares)} pts')
+                break
+        except Exception as e:
+            print(f'    ec/ren_share/{endpoint}: {str(e)[:80]}')
+            continue
+    else:
+        print('  ! ec/ren_share: no working endpoint')
+    time.sleep(0.15)
 
     # Installed power yearly
     try:
@@ -109,31 +123,51 @@ def fetch() -> dict:
     except Exception as e:
         print(f'  ! ec/installed: {e}')
 
-    # TTF gas (730 days back)
-    try:
-        d = _get('gas_price', {'start': start_730d, 'end': end_str})
-        out['gas_price'] = {
-            'unix_seconds': _first_list(d, 'unix_seconds', 'timestamp', 'time'),
-            'price': _first_list(d, 'Gas Price', 'price', 'gas_price', 'value', 'data'),
-            'unit': 'EUR/MWh',
-        }
-        time.sleep(0.15)
-    except Exception as e:
-        print(f'  ! ec/gas_price: {e}')
-        out['gas_price'] = {'unix_seconds': [], 'price': []}
+    # TTF gas — try multiple endpoint names
+    GAS_CANDIDATES = [
+        ('price', {'bzn': 'TTF', 'start': start_730d, 'end': end_str}),
+        ('gas_price', {'start': start_730d, 'end': end_str}),
+        ('gas_price', {'country': 'de', 'start': start_730d, 'end': end_str}),
+    ]
+    out['gas_price'] = {'unix_seconds': [], 'price': []}
+    for endpoint, params in GAS_CANDIDATES:
+        try:
+            d = _get(endpoint, params)
+            secs = _first_list(d, 'unix_seconds', 'timestamp', 'time')
+            prices = _first_list(d, 'price', 'Gas Price', 'gas_price', 'value', 'data')
+            if secs and prices:
+                out['gas_price'] = {'unix_seconds': secs, 'price': prices, 'unit': 'EUR/MWh'}
+                print(f'    ec/gas_price via {endpoint}: {len(prices)} pts')
+                break
+        except Exception as e:
+            print(f'    ec/gas_price/{endpoint}: {str(e)[:80]}')
+            continue
+    else:
+        print('  ! ec/gas_price: no working endpoint')
+    time.sleep(0.15)
 
-    # CO2 (730 days back)
-    try:
-        d = _get('co2_price', {'start': start_730d, 'end': end_str})
-        out['co2_price'] = {
-            'unix_seconds': _first_list(d, 'unix_seconds', 'timestamp', 'time'),
-            'price': _first_list(d, 'CO2 Price', 'co2_price', 'price', 'value', 'data'),
-            'unit': 'EUR/tCO2',
-        }
-        time.sleep(0.15)
-    except Exception as e:
-        print(f'  ! ec/co2_price: {e}')
-        out['co2_price'] = {'unix_seconds': [], 'price': []}
+    # CO2 — try multiple endpoint names
+    CO2_CANDIDATES = [
+        ('co2_price', {'start': start_730d, 'end': end_str}),
+        ('eua_price', {'start': start_730d, 'end': end_str}),
+        ('emission_price', {'start': start_730d, 'end': end_str}),
+    ]
+    out['co2_price'] = {'unix_seconds': [], 'price': []}
+    for endpoint, params in CO2_CANDIDATES:
+        try:
+            d = _get(endpoint, params)
+            secs = _first_list(d, 'unix_seconds', 'timestamp', 'time')
+            prices = _first_list(d, 'price', 'CO2 Price', 'co2_price', 'eua_price', 'value', 'data')
+            if secs and prices:
+                out['co2_price'] = {'unix_seconds': secs, 'price': prices, 'unit': 'EUR/tCO2'}
+                print(f'    ec/co2_price via {endpoint}: {len(prices)} pts')
+                break
+        except Exception as e:
+            print(f'    ec/co2_price/{endpoint}: {str(e)[:80]}')
+            continue
+    else:
+        print('  ! ec/co2_price: no working endpoint')
+    time.sleep(0.15)
 
     return {
         'data': out,
