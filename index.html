@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Energie Dashboard DE/EU</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -731,6 +732,7 @@ const TAB_RANGES = {
   heizoel:     ['30d','90d','1y','2y','max'],
   treibstoff:  ['90d','1y','2y','5y','max'],
   erneuerbare: ['30d','90d','1y','2y','5y','max'],
+  treibstoff:  ['90d','1y','2y','5y','max'],
   gas:         ['30d','90d','1y','2y','max'],
   wetter:      ['24h','7d'],
   fx:          ['30d','90d'],
@@ -2731,7 +2733,8 @@ function renderFuturesCurve(type) {
 
   const steoKey  = type === 'gas' ? 'eu_gas' : 'brent';
   const steo     = ft.eia_steo?.[steoKey] || [];
-  const prevSteo = (ft.previous_week?.[`eia_${steoKey === 'eu_gas' ? 'eu_gas' : 'brent'}`]) || [];
+  const prevKey = type === 'gas' ? 'eia_eu_gas' : 'eia_brent';
+  const prevSteo = (ft.previous_week?.[prevKey]) || [];
   const yahoo    = type === 'gas' ? [] : (ft.yahoo_futures?.brent || []);
   const wb       = type === 'gas' ? ft.worldbank?.eu_gas : ft.worldbank?.crude_oil;
   const imf      = type === 'gas' ? ft.imf?.eu_gas : ft.imf?.crude_oil;
@@ -2820,8 +2823,35 @@ function renderFuturesSpread() {
 
   const brent = ft?.eia_steo?.brent || [];
   const wti   = ft?.eia_steo?.wti   || [];
-  if (!brent.length || !wti.length) {
-    wrap.innerHTML = '<div class="nodata">Spread-Daten nicht verfügbar</div>';
+
+  // If WTI missing, fall back to showing Brent vs Commodity WTI from D.commodities
+  if (!brent.length) {
+    wrap.innerHTML = '<div class="nodata">Brent-Daten nicht verfügbar (EIA STEO lädt)</div>';
+    return;
+  }
+  if (!wti.length) {
+    // Show Brent curve alone with note
+    const fcst = brent.filter(p=>p.type==='forecast');
+    const actual = brent.filter(p=>p.type==='actual').slice(-18);
+    if (CH['chart-futures-spread']) CH['chart-futures-spread'].destroy();
+    const el = document.getElementById('chart-futures-spread');
+    if (!el) return;
+    const datasets = [
+      { label:'Brent historisch', data:actual.map(p=>({x:p.period+'-01',y:p.v})),
+        borderColor:'#8c98a8', backgroundColor:'transparent', borderWidth:1.8, pointRadius:0 },
+      { label:'Brent Prognose', data:fcst.map(p=>({x:p.period+'-01',y:p.v})),
+        borderColor:'#dc6803', backgroundColor:'rgba(220,104,3,0.10)', fill:true, borderWidth:2.2, tension:0.2 },
+    ];
+    CH['chart-futures-spread'] = new Chart(el, {
+      type:'line', data:{datasets},
+      options:{responsive:true,maintainAspectRatio:false,
+        scales:{x:{type:'time',time:{unit:'month',displayFormats:{month:'MM/yy'}},
+                   ticks:{maxTicksLimit:12,color:'#8c98a8',font:{size:10}},grid:{color:'#eef2f6'}},
+                y:{grid:{color:'#eef2f6'},ticks:{color:'#8c98a8',font:{size:10},
+                   callback:v=>fmtN(v,1)+' $/bbl'},
+                   title:{display:true,text:'USD/bbl',color:'#8c98a8',font:{size:10}}}},
+        plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}}}
+    });
     return;
   }
 
