@@ -1,9 +1,9 @@
 {
   "commodities": {
-    "last_attempt_epoch": 1778534722,
-    "last_attempt_iso": "2026-05-11T21:25:22Z",
-    "last_success_epoch": 1778534733,
-    "last_success_iso": "2026-05-11T21:25:33Z"
+    "last_attempt_epoch": 1778557957,
+    "last_attempt_iso": "2026-05-12T03:52:37Z",
+    "last_success_epoch": 1778557966,
+    "last_success_iso": "2026-05-12T03:52:46Z"
   },
   "destatis_vpi": {
     "last_attempt_epoch": 1778523477,
@@ -20,24 +20,24 @@
     "last_success_iso": "2026-05-11T18:18:15Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1778540469,
-    "last_attempt_iso": "2026-05-11T23:01:09Z",
-    "last_success_epoch": 1778540491,
-    "last_success_iso": "2026-05-11T23:01:31Z"
+    "last_attempt_epoch": 1778557833,
+    "last_attempt_iso": "2026-05-12T03:50:33Z",
+    "last_success_epoch": 1778557913,
+    "last_success_iso": "2026-05-12T03:51:53Z"
   },
   "entsoe": {
-    "last_attempt_epoch": 1778540491,
-    "last_attempt_iso": "2026-05-11T23:01:31Z",
-    "last_error_epoch": 1778540493,
+    "last_attempt_epoch": 1778557966,
+    "last_attempt_iso": "2026-05-12T03:52:46Z",
+    "last_error_epoch": 1778557967,
     "last_error_message": "ValueError: fetcher 'entsoe' returned foreign keys {'points'} — this looks like another source's data. Refusing to write.",
     "last_success_epoch": 1778300938,
     "last_success_iso": "2026-05-09T04:28:58Z"
   },
   "entsog": {
-    "last_attempt_epoch": 1778523409,
-    "last_attempt_iso": "2026-05-11T18:16:49Z",
-    "last_success_epoch": 1778523411,
-    "last_success_iso": "2026-05-11T18:16:51Z"
+    "last_attempt_epoch": 1778557953,
+    "last_attempt_iso": "2026-05-12T03:52:33Z",
+    "last_success_epoch": 1778557956,
+    "last_success_iso": "2026-05-12T03:52:36Z"
   },
   "eurostat_oil": {
     "last_attempt_epoch": 1778526110,
@@ -66,10 +66,10 @@
     "last_success_iso": "2026-05-11T18:17:04Z"
   },
   "gas_storage": {
-    "last_attempt_epoch": 1778523391,
-    "last_attempt_iso": "2026-05-11T18:16:31Z",
-    "last_success_epoch": 1778523409,
-    "last_success_iso": "2026-05-11T18:16:49Z"
+    "last_attempt_epoch": 1778557913,
+    "last_attempt_iso": "2026-05-12T03:51:53Z",
+    "last_success_epoch": 1778557953,
+    "last_success_iso": "2026-05-12T03:52:33Z"
   },
   "heating_oil": {
     "last_attempt_epoch": 1778523475,
@@ -78,21 +78,21 @@
     "last_success_iso": "2026-05-11T18:17:57Z"
   },
   "news": {
-    "last_attempt_epoch": 1778534735,
-    "last_attempt_iso": "2026-05-11T21:25:35Z",
-    "last_success_epoch": 1778534760,
-    "last_success_iso": "2026-05-11T21:26:00Z"
+    "last_attempt_epoch": 1778557967,
+    "last_attempt_iso": "2026-05-12T03:52:47Z",
+    "last_success_epoch": 1778557989,
+    "last_success_iso": "2026-05-12T03:53:09Z"
   },
   "smard": {
-    "last_attempt_epoch": 1778540464,
-    "last_attempt_iso": "2026-05-11T23:01:04Z",
-    "last_success_epoch": 1778540469,
-    "last_success_iso": "2026-05-11T23:01:09Z"
+    "last_attempt_epoch": 1778557827,
+    "last_attempt_iso": "2026-05-12T03:50:27Z",
+    "last_success_epoch": 1778557833,
+    "last_success_iso": "2026-05-12T03:50:33Z"
   },
   "weather": {
-    "last_attempt_epoch": 1778534720,
-    "last_attempt_iso": "2026-05-11T21:25:20Z",
-    "last_success_epoch": 1778534722,
-    "last_success_iso": "2026-05-11T21:25:22Z"
+    "last_attempt_epoch": 1778557956,
+    "last_attempt_iso": "2026-05-12T03:52:36Z",
+    "last_success_epoch": 1778557957,
+    "last_success_iso": "2026-05-12T03:52:37Z"
   }
 }
