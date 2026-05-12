@@ -433,7 +433,11 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
       <div class="card-hdr"><div><div class="card-title">Aktuelle Veränderung</div><div class="card-sub">vs Vortag · Woche · Monat · Jahr</div></div></div>
       <div class="chart-wrap" style="height:230px"><canvas id="chart-heatoil-change"></canvas></div>
     </div>
-    <div class="card g12">
+    <div class="card g6">
+      <div class="card-hdr"><div><div class="card-title">Langfrist-Trend · Jahresdurchschnitt</div><div class="card-sub">TECSON · EUR/100L · ab 2010</div></div></div>
+      <div class="chart-wrap" style="height:200px"><canvas id="chart-heatoil-annual"></canvas></div>
+    </div>
+    <div class="card g6">
       <div class="card-hdr"><div><div class="card-title">Ölnotierungen heute</div><div class="card-sub">TECSON-Erhebung · Tagesnotierungen</div></div></div>
       <div id="heatoil-notations"><div class="loading"><span class="spin"></span></div></div>
     </div>
@@ -748,6 +752,8 @@ const C = {
   wind_on:'#0e6cb6',wind_off:'#1e3a8a',solar:'#d97706',
   biomass:'#1f9d55',hydro:'#0891b2',nuclear:'#7e57c2',
   lignite:'#7c5e2a',hard_coal:'#4a5568',natural_gas:'#dc6803',
+  // new SMARD filters
+  pumped_storage:'#0891b2',other_renewables:'#22c55e',other_conventional:'#94a3b8',
   de:'#0e6cb6',fr:'#c0392b',at:'#1f9d55',pl:'#7e57c2',ch:'#0891b2',
   brent:'#dc6803',wti:'#d97706',
 };
@@ -755,6 +761,7 @@ const LN = {
   wind_onshore:'Wind Onshore',wind_offshore:'Wind Offshore',solar:'Solar',
   biomass:'Biomasse',hydro:'Wasser',nuclear:'Kernkraft',
   lignite:'Braunkohle',hard_coal:'Steinkohle',natural_gas:'Erdgas',
+  pumped_storage:'Pumpspeicher',other_renewables:'Sonst. EE',other_conventional:'Sonst. Konv.',
 };
 
 // ══════════════════════════════════════════════
@@ -922,20 +929,22 @@ function renderStrom() {
     if(lv!=null&&pv!=null){const d=lv-pv;daDelta=(d>=0?'▲ +':'▼ ')+fmtN(d,1)+' €';}
   }
 
-  let windGW='—',solarGW='—',loadGW='—',renPct='—',co2i='—';
+  let windGW='—',solarGW='—',loadGW='—',renPct='—',co2i='—',pumpGW='—';
   if(sm?.series) {
     const s=sm.series;
     const lv=k=>{const a=s[k]||[];for(let i=a.length-1;i>=0;i--){const v=a[i].v;if(v!=null)return v/1000;}return 0;};
     const wOn=lv('wind_onshore'),wOff=lv('wind_offshore'),sol=lv('solar');
     const bio=lv('biomass'),hyd=lv('hydro'),nuc=lv('nuclear');
     const lig=lv('lignite'),coal=lv('hard_coal'),gas=lv('natural_gas');
+    const pump=lv('pumped_storage'),otherRen=lv('other_renewables'),otherConv=lv('other_conventional');
     const load=lv('load');
-    const total=wOn+wOff+sol+bio+hyd+nuc+lig+coal+gas;
-    const ren=wOn+wOff+sol+bio+hyd;
+    const total=wOn+wOff+sol+bio+hyd+nuc+lig+coal+gas+otherRen+otherConv;
+    const ren=wOn+wOff+sol+bio+hyd+otherRen;
     windGW=fmtN(wOn+wOff,1);solarGW=fmtN(sol,1);loadGW=fmtN(load,1);
+    pumpGW=fmtN(Math.abs(pump),1)+(pump<0?' ↓':pump>0?' ↑':'');
     renPct=total>0?Math.round(ren/total*100)+'%':'—';
     co2i=total>0?Math.round((lig*900+coal*800+gas*400+nuc*5+ren*18)/total):'—';
-    renderMixDonut({wOn,wOff,sol,bio,hyd,nuc,lig,coal,gas});
+    renderMixDonut({wOn,wOff,sol,bio,hyd,nuc,lig,coal,gas,otherRen,otherConv});
     renderGenChart(s);
   } else {
     document.getElementById('mix-donut').innerHTML='<div class="nodata">SMARD-Daten fehlen</div>';
@@ -948,20 +957,28 @@ function renderStrom() {
     {label:'Solar',val:solarGW,unit:'GW',color:'#d97706'},
     {label:'Last',val:loadGW,unit:'GW',color:'#56657a'},
     {label:'CO₂-Intensität',val:co2i,unit:'g/kWh (est.)',color:'#dc6803'},
+    {label:'Pumpspeicher',val:pumpGW,unit:'GW (↓=lädt ↑=entlädt)',color:'#0891b2'},
   ]);
   renderPriceChart();
 }
 
 function renderGenChart(s) {
   const co = rangeCutoffMs('strom');
-  const keys=['wind_onshore','wind_offshore','solar','biomass','hydro','nuclear','lignite','hard_coal','natural_gas'];
-  const baseTs=(s.wind_onshore||[]).filter(p=>p.ts>=co).map(p=>p.ts);
+  // All generation keys including the 3 new SMARD filters
+  const keys=['wind_onshore','wind_offshore','solar','biomass','hydro','nuclear',
+              'lignite','hard_coal','natural_gas','pumped_storage',
+              'other_renewables','other_conventional'];
+  // Use whichever key has the most data points as the timeline anchor
+  const anchorKey = keys.find(k => (s[k]||[]).filter(p=>p.ts>=co).length > 0) || 'wind_onshore';
+  const baseTs=(s[anchorKey]||[]).filter(p=>p.ts>=co).map(p=>p.ts);
   if(!baseTs.length){document.getElementById('chart-gen').parentElement.innerHTML='<div class="nodata">Keine SMARD-Daten für Zeitraum</div>';return;}
   const step=Math.max(1,Math.floor(baseTs.length/150));
   const sampled=baseTs.filter((_,i)=>i%step===0);
   const lookup={};
   keys.forEach(k=>{(s[k]||[]).forEach(p=>{if(!lookup[p.ts])lookup[p.ts]={};lookup[p.ts][k]=p.v;});});
-  const datasets=keys.map(k=>({
+  // Only show keys that actually have data in this range
+  const activeKeys = keys.filter(k => sampled.some(ts => lookup[ts]?.[k] != null && lookup[ts][k] !== 0));
+  const datasets=activeKeys.map(k=>({
     label:LN[k]||k,
     data:sampled.map(ts=>lookup[ts]?.[k]!=null?lookup[ts][k]/1000:null),
     borderColor:C[k]||'#0e6cb6',backgroundColor:(C[k]||'#0e6cb6')+'25',
@@ -1012,15 +1029,19 @@ function renderPriceChart() {
   }
 }
 
-function renderMixDonut({wOn,wOff,sol,bio,hyd,nuc,lig,coal,gas}) {
+function renderMixDonut({wOn,wOff,sol,bio,hyd,nuc,lig,coal,gas,otherRen=0,otherConv=0}) {
   const items=[
     {k:'Wind',v:wOn+wOff,c:C.wind_on},{k:'Solar',v:sol,c:C.solar},
     {k:'Biomasse',v:bio,c:C.biomass},{k:'Wasser',v:hyd,c:C.hydro},
+    {k:'Sonst. EE',v:otherRen,c:C.other_renewables},
     {k:'Kernkraft',v:nuc,c:C.nuclear},{k:'Braunkohle',v:lig,c:C.lignite},
     {k:'Steinkohle',v:coal,c:C.hard_coal},{k:'Erdgas',v:gas,c:C.natural_gas},
+    {k:'Sonst. Konv.',v:otherConv,c:C.other_conventional},
   ].filter(i=>i.v>0);
   const tot=items.reduce((a,b)=>a+b.v,0);
-  const ren=(items.find(i=>i.k==='Wind')?.v||0)+(items.find(i=>i.k==='Solar')?.v||0)+(items.find(i=>i.k==='Biomasse')?.v||0)+(items.find(i=>i.k==='Wasser')?.v||0);
+  const ren=(items.find(i=>i.k==='Wind')?.v||0)+(items.find(i=>i.k==='Solar')?.v||0)
+           +(items.find(i=>i.k==='Biomasse')?.v||0)+(items.find(i=>i.k==='Wasser')?.v||0)
+           +(items.find(i=>i.k==='Sonst. EE')?.v||0);
   const pct=tot>0?Math.round(ren/tot*100):0;
   document.getElementById('mix-donut').innerHTML=`
     <div class="donut-wrap">
@@ -1114,33 +1135,60 @@ function renderCrossBorder() {
     wrap.innerHTML='<div class="nodata">ENTSO-E Token wird angefragt — Daten kommen sobald aktiv</div>';
     return;
   }
-  // Aggregate net flow per neighbour: imports - exports, last 48h
-  const neighbours=Object.keys(eb.flows_in||{});
-  if(!neighbours.length) {
+
+  // Schema: crossborder_flows keys like "DE_LU->FR" and "FR->DE_LU"
+  // Net per neighbour = avg(imports from N) - avg(exports to N), positive = DE net importer
+  const flows = eb.crossborder_flows || {};
+  const allKeys = Object.keys(flows);
+  if (!allKeys.length) {
     wrap.innerHTML='<div class="nodata">Keine ENTSO-E-Flows verfügbar</div>';
     return;
   }
-  const netByNeighbour={};
-  neighbours.forEach(n=>{
-    const ins=(eb.flows_in[n]||[]);
-    const outs=(eb.flows_out[n]||[]);
-    // Build map ts -> {in, out}
-    const m={};
-    ins.forEach(p=>{m[p.ts]=m[p.ts]||{};m[p.ts].in=p.v;});
-    outs.forEach(p=>{m[p.ts]=m[p.ts]||{};m[p.ts].out=p.v;});
-    const sorted=Object.keys(m).map(Number).sort((a,b)=>a-b).slice(-48);
-    const sum=sorted.reduce((s,t)=>s+(m[t].in||0)-(m[t].out||0),0);
-    netByNeighbour[n]=sum/Math.max(1,sorted.length); // avg MW
+
+  // Collect neighbour countries from keys shaped "DE_LU->XX" or "XX->DE_LU"
+  const neighbours = new Set();
+  allKeys.forEach(k => {
+    const [from, to] = k.split('->');
+    if (from === 'DE_LU') neighbours.add(to);
+    else if (to === 'DE_LU') neighbours.add(from);
   });
-  const labels=Object.keys(netByNeighbour);
-  const vals=labels.map(n=>netByNeighbour[n]);
+
+  const avgSeries = arr => {
+    if (!arr || !arr.length) return 0;
+    const vals = arr.map(p=>p.v).filter(v=>v!=null);
+    return vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : 0;
+  };
+
+  const netByNeighbour = {};
+  neighbours.forEach(n => {
+    // DE_LU→N = exports from DE (positive = DE sends power)
+    // N→DE_LU = imports into DE (positive = DE receives power)
+    const imports = avgSeries(flows[`${n}->DE_LU`]);
+    const exports = avgSeries(flows[`DE_LU->${n}`]);
+    // Net from DE perspective: imports - exports; positive = DE is net importer
+    netByNeighbour[n] = imports - exports;
+  });
+
+  // Sort by absolute value descending for readability
+  const sorted = Object.entries(netByNeighbour)
+    .sort((a,b) => Math.abs(b[1]) - Math.abs(a[1]));
+  const labels = sorted.map(([n]) => n.replace('_1',''));
+  const vals   = sorted.map(([,v]) => Math.round(v));
+
   mkChart('chart-cross','bar',labels,[{
     label:'Ø MW (Import − Export, 48h)',
     data:vals,
     backgroundColor:vals.map(v=>v>=0?'rgba(63,185,80,0.55)':'rgba(248,81,73,0.55)'),
     borderColor:vals.map(v=>v>=0?'#3fb950':'#f85149'),
     borderWidth:1,borderRadius:3,
-  }],{indexAxis:'y',scales:{x:{grid:{color:'#21262d'},ticks:{color:'#484f58'}},y:{grid:{display:false},ticks:{color:'#8b949e'}}},plugins:{legend:{display:false}}});
+  }],{
+    indexAxis:'y',
+    scales:{
+      x:{ticks:{callback:v=>Math.abs(v)>999?Math.round(v/1000)+'GW':v+'MW'}},
+      y:{grid:{display:false}}
+    },
+    plugins:{legend:{display:false}}
+  });
 }
 
 // ══════════════════════════════════════════════
@@ -1853,6 +1901,26 @@ function renderHeizoel() {
       borderColor:entries.map(e=>e.kind==='year'?'#f0883e':'#bc8cff'),
       borderWidth:1,borderRadius:3,
     }]);
+  }
+
+  // Annual trend (long-term, from new _extract_annual_trend)
+  const annualWrap = document.getElementById('chart-heatoil-annual')?.parentElement;
+  if (annualWrap) {
+    const at = ho.annual_trend || [];
+    if (at.length >= 2) {
+      mkChart('chart-heatoil-annual', 'line',
+        at.map(r => String(r.year)),
+        [{
+          label:'Jahres-Ø EUR/100L',
+          data: at.map(r => r.eur_100l),
+          borderColor:'#f0883e', backgroundColor:'rgba(240,136,62,0.10)',
+          fill:true, borderWidth:2,
+        }],
+        {scales:{y:{ticks:{callback:v=>v+' €'}}}}
+      );
+    } else {
+      annualWrap.innerHTML='<div class="nodata">Jahresdurchschnitt: Daten kommen mit nächstem Run</div>';
+    }
   }
 
   // Change-table as horizontal bars
