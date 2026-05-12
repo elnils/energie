@@ -543,24 +543,6 @@ def write_meta():
         'version': '4.4',
     })
 
-if __name__ == '__main__':
-    print(f'=== Energy Dashboard Fetch v4.4 – {now_utc().isoformat()} ===\n')
-    for label, fn in [
-        ('SMARD',            fetch_smard),
-        ('Energy-Charts',    fetch_energy_charts),
-        ('AGSI+ Gas',        fetch_gas),
-        ('Tankerkoenig',     fetch_fuel),
-        ('Wetter',           fetch_weather),
-        ('Rohstoffe',        fetch_commodities),
-        ('Energy Futures',   fetch_energy_futures),
-        ('News',             fetch_news),
-        ('Meta',             write_meta),
-    ]:
-        print(f'[{label}]')
-        try: fn()
-        except Exception as e: print(f'  !! FEHLER: {e}')
-        print()
-    print(f'=== Fertig: {now_utc().isoformat()} ===')
 
 # ════════════════════════════════
 # 8. ENERGY FUTURES & FORECASTS
@@ -817,3 +799,22 @@ def fetch_energy_futures():
         },
         'previous_week':    previous_week,
     })
+
+if __name__ == '__main__':
+    print(f'=== Energy Dashboard Fetch v4.4 – {now_utc().isoformat()} ===\n')
+    for label, fn in [
+        ('SMARD',            fetch_smard),
+        ('Energy-Charts',    fetch_energy_charts),
+        ('AGSI+ Gas',        fetch_gas),
+        ('Tankerkoenig',     fetch_fuel),
+        ('Wetter',           fetch_weather),
+        ('Rohstoffe',        fetch_commodities),
+        ('Energy Futures',   fetch_energy_futures),
+        ('News',             fetch_news),
+        ('Meta',             write_meta),
+    ]:
+        print(f'[{label}]')
+        try: fn()
+        except Exception as e: print(f'  !! FEHLER: {e}')
+        print()
+    print(f'=== Fertig: {now_utc().isoformat()} ===')
