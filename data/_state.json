@@ -1,98 +1,98 @@
 {
   "commodities": {
-    "last_attempt_epoch": 1778563318,
-    "last_attempt_iso": "2026-05-12T05:21:58Z",
-    "last_success_epoch": 1778563327,
-    "last_success_iso": "2026-05-12T05:22:07Z"
+    "last_attempt_epoch": 1778564213,
+    "last_attempt_iso": "2026-05-12T05:36:53Z",
+    "last_success_epoch": 1778564221,
+    "last_success_iso": "2026-05-12T05:37:01Z"
   },
   "destatis_vpi": {
-    "last_attempt_epoch": 1778563378,
-    "last_attempt_iso": "2026-05-12T05:22:58Z",
+    "last_attempt_epoch": 1778564274,
+    "last_attempt_iso": "2026-05-12T05:37:54Z",
     "last_error_epoch": 1778475805,
     "last_error_message": "RuntimeError: Destatis logincheck unexpected status: Ein Fehler ist aufgetreten. (Bitte geben Sie Ihr Passwort ein.)",
-    "last_success_epoch": 1778563383,
-    "last_success_iso": "2026-05-12T05:23:03Z"
+    "last_success_epoch": 1778564279,
+    "last_success_iso": "2026-05-12T05:37:59Z"
   },
   "eia_petroleum": {
-    "last_attempt_epoch": 1778563389,
-    "last_attempt_iso": "2026-05-12T05:23:09Z",
-    "last_success_epoch": 1778563395,
-    "last_success_iso": "2026-05-12T05:23:15Z"
+    "last_attempt_epoch": 1778564304,
+    "last_attempt_iso": "2026-05-12T05:38:24Z",
+    "last_success_epoch": 1778564310,
+    "last_success_iso": "2026-05-12T05:38:30Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1778563192,
-    "last_attempt_iso": "2026-05-12T05:19:52Z",
-    "last_success_epoch": 1778563274,
-    "last_success_iso": "2026-05-12T05:21:14Z"
+    "last_attempt_epoch": 1778564106,
+    "last_attempt_iso": "2026-05-12T05:35:06Z",
+    "last_success_epoch": 1778564187,
+    "last_success_iso": "2026-05-12T05:36:27Z"
   },
   "entsoe": {
-    "last_attempt_epoch": 1778563383,
-    "last_attempt_iso": "2026-05-12T05:23:03Z",
-    "last_error_epoch": 1778563384,
+    "last_attempt_epoch": 1778564279,
+    "last_attempt_iso": "2026-05-12T05:37:59Z",
+    "last_error_epoch": 1778564300,
     "last_error_message": "ValueError: fetcher entsoe did not return dict with \"data\" key",
     "last_success_epoch": 1778300938,
     "last_success_iso": "2026-05-09T04:28:58Z"
   },
   "entsog": {
-    "last_attempt_epoch": 1778563306,
-    "last_attempt_iso": "2026-05-12T05:21:46Z",
-    "last_success_epoch": 1778563316,
-    "last_success_iso": "2026-05-12T05:21:56Z"
+    "last_attempt_epoch": 1778564202,
+    "last_attempt_iso": "2026-05-12T05:36:42Z",
+    "last_success_epoch": 1778564211,
+    "last_success_iso": "2026-05-12T05:36:51Z"
   },
   "eurostat_oil": {
-    "last_attempt_epoch": 1778563395,
-    "last_attempt_iso": "2026-05-12T05:23:15Z",
-    "last_error_epoch": 1778563428,
+    "last_attempt_epoch": 1778564310,
+    "last_attempt_iso": "2026-05-12T05:38:30Z",
+    "last_error_epoch": 1778564341,
     "last_error_message": "RuntimeError: Eurostat: all series failed — API may be temporarily unavailable. Previous data preserved by store.py.",
     "last_success_epoch": 1778526193,
     "last_success_iso": "2026-05-11T19:03:13Z"
   },
   "fred_energy": {
-    "last_attempt_epoch": 1778563384,
-    "last_attempt_iso": "2026-05-12T05:23:04Z",
-    "last_success_epoch": 1778563389,
-    "last_success_iso": "2026-05-12T05:23:09Z"
+    "last_attempt_epoch": 1778564300,
+    "last_attempt_iso": "2026-05-12T05:38:20Z",
+    "last_success_epoch": 1778564304,
+    "last_success_iso": "2026-05-12T05:38:24Z"
   },
   "fuel": {
-    "last_attempt_epoch": 1778563328,
-    "last_attempt_iso": "2026-05-12T05:22:08Z",
-    "last_success_epoch": 1778563377,
-    "last_success_iso": "2026-05-12T05:22:57Z"
+    "last_attempt_epoch": 1778564221,
+    "last_attempt_iso": "2026-05-12T05:37:01Z",
+    "last_success_epoch": 1778564274,
+    "last_success_iso": "2026-05-12T05:37:54Z"
   },
   "fx": {
-    "last_attempt_epoch": 1778563327,
-    "last_attempt_iso": "2026-05-12T05:22:07Z",
-    "last_success_epoch": 1778563328,
-    "last_success_iso": "2026-05-12T05:22:08Z"
+    "last_attempt_epoch": 1778564221,
+    "last_attempt_iso": "2026-05-12T05:37:01Z",
+    "last_success_epoch": 1778564221,
+    "last_success_iso": "2026-05-12T05:37:01Z"
   },
   "gas_storage": {
-    "last_attempt_epoch": 1778563274,
-    "last_attempt_iso": "2026-05-12T05:21:14Z",
-    "last_success_epoch": 1778563306,
-    "last_success_iso": "2026-05-12T05:21:46Z"
+    "last_attempt_epoch": 1778564187,
+    "last_attempt_iso": "2026-05-12T05:36:27Z",
+    "last_success_epoch": 1778564202,
+    "last_success_iso": "2026-05-12T05:36:42Z"
   },
   "heating_oil": {
-    "last_attempt_epoch": 1778563377,
-    "last_attempt_iso": "2026-05-12T05:22:57Z",
-    "last_success_epoch": 1778563378,
-    "last_success_iso": "2026-05-12T05:22:58Z"
+    "last_attempt_epoch": 1778564274,
+    "last_attempt_iso": "2026-05-12T05:37:54Z",
+    "last_success_epoch": 1778564274,
+    "last_success_iso": "2026-05-12T05:37:54Z"
   },
   "news": {
-    "last_attempt_epoch": 1778563428,
-    "last_attempt_iso": "2026-05-12T05:23:48Z",
-    "last_success_epoch": 1778563450,
-    "last_success_iso": "2026-05-12T05:24:10Z"
+    "last_attempt_epoch": 1778564341,
+    "last_attempt_iso": "2026-05-12T05:39:01Z",
+    "last_success_epoch": 1778564363,
+    "last_success_iso": "2026-05-12T05:39:23Z"
   },
   "smard": {
-    "last_attempt_epoch": 1778563186,
-    "last_attempt_iso": "2026-05-12T05:19:46Z",
-    "last_success_epoch": 1778563192,
-    "last_success_iso": "2026-05-12T05:19:52Z"
+    "last_attempt_epoch": 1778564100,
+    "last_attempt_iso": "2026-05-12T05:35:00Z",
+    "last_success_epoch": 1778564106,
+    "last_success_iso": "2026-05-12T05:35:06Z"
   },
   "weather": {
-    "last_attempt_epoch": 1778563316,
-    "last_attempt_iso": "2026-05-12T05:21:56Z",
-    "last_success_epoch": 1778563318,
-    "last_success_iso": "2026-05-12T05:21:58Z"
+    "last_attempt_epoch": 1778564211,
+    "last_attempt_iso": "2026-05-12T05:36:51Z",
+    "last_success_epoch": 1778564213,
+    "last_success_iso": "2026-05-12T05:36:53Z"
   }
 }
