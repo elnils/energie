@@ -12,13 +12,9 @@ Daily averages and quarterly aggregates are extracted into stable fields.
 On selector miss, we raise — the wrapper preserves last good values.
 
 Updated: every weekday morning before 10 CET.
-
-Changelog:
-  - Fixed duplicate `return out` in _extract_quarterly() (was dead code, now removed)
-  - Added _extract_annual_trend(): year-on-year EUR/L annual averages
 """
 import re
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 
 from core import http, validators, history
 
@@ -93,6 +89,8 @@ def _extract_change_table(html: str) -> Dict[str, Optional[float]]:
         ('year',      r'als\s+vor\s+1?\s*Jahr'),
     ]
     for key, anchor in targets:
+        # pattern: <pct>% (günstiger|teurer) als <anchor> ... <price> €/l
+        # Allow up to 250 chars between anchor and price (table cells have padding)
         pat = (r'([0-9]+[,.][0-9]+)\s*%\s*(g[üu]nstiger|teurer)\s+'
                + anchor
                + r'.{0,250}?([0-9]+[,.][0-9]+)\s*€\s*/\s*l')
@@ -123,21 +121,29 @@ def _extract_oil_notations(html: str) -> Dict[str, Optional[float]]:
         'gasoil_eur_t': None,  'gasoil_change': None,
     }
     pairs = [
-        ('brent', r'Brent\s*Roh[öo]l',           r'\$\s*/\s*bbl', 'usd_bbl'),
-        ('wti',   r'WTI\s*Crude\s*Oil',          r'\$\s*/\s*bbl', 'usd_bbl'),
-        ('opec',  r'Opec[\s\-]*Basket',          r'\$\s*/\s*bbl', 'usd_bbl'),
-        ('gasoil', r'Gas[öo]l',                   r'€\s*/\s*Tonne', 'eur_t'),
+        ('brent', [r'Brent\s*Roh[öo]l', r'Roh[öo]l\s*Brent', r'Brent\s*Crude', r'\bBrent\b'],
+                   r'\$\s*/\s*bbl', 'usd_bbl'),
+        ('wti',   [r'WTI\s*Crude\s*Oil', r'WTI\s*Crude', r'\bWTI\b', r'West\s*Texas'],
+                   r'\$\s*/\s*bbl', 'usd_bbl'),
+        ('opec',  [r'Opec[\s\-]*Basket', r'OPEC[\s\-]*Basket', r'\bOpec\b'],
+                   r'\$\s*/\s*bbl', 'usd_bbl'),
+        ('gasoil',[r'Gas[öo]l', r'Gasöl', r'Gasoil'],
+                   r'€\s*/\s*Tonne', 'eur_t'),
     ]
-    for key, name_pat, unit_pat, unit_suffix in pairs:
-        pat = (name_pat + r'[^0-9$€]{0,200}?([0-9]+(?:[,.][0-9]+)?)\s*' + unit_pat
-               + r'(?:\s*\(([+\-−][0-9,.\s]+)\))?')
-        m = re.search(pat, html, re.DOTALL)
-        if m:
-            out[f'{key}_{unit_suffix}'] = _parse_de_decimal(m.group(1))
-            change_raw = m.group(2)
-            if change_raw:
-                change_clean = change_raw.replace('−', '-').replace(' ', '')
-                out[f'{key}_change'] = _parse_de_decimal(change_clean)
+    for key, name_pats, unit_pat, unit_suffix in pairs:
+        for name_pat in name_pats:
+            pat = (name_pat + r'[^0-9$€]{0,300}?([0-9]+(?:[,.][0-9]+)?)\s*' + unit_pat
+                   + r'(?:\s*\(([+\-−][0-9,.\s]+)\))?')
+            m = re.search(pat, html, re.DOTALL | re.IGNORECASE)
+            if m:
+                val = _parse_de_decimal(m.group(1))
+                if val and val > 0:
+                    out[f'{key}_{unit_suffix}'] = val
+                    change_raw = m.group(2)
+                    if change_raw:
+                        change_clean = change_raw.replace('−', '-').replace(' ', '')
+                        out[f'{key}_change'] = _parse_de_decimal(change_clean)
+                    break
     return out
 
 
@@ -145,9 +151,14 @@ def _extract_quarterly(html: str) -> Dict[str, Optional[float]]:
     """
     Grab quarterly/yearly averages from the 'Heizöl-Durchschnittspreise' table.
     Format: '| II. Quartal '26 | Ø 144,4 EUR |' (per 100 L)
+    But in markdown-converted text it's just whitespace-separated:
+        II. Quartal '26   Ø 144,1 EUR
+    Match either form.
     """
     out: Dict[str, Optional[float]] = {}
     APOS = r"['\u2018\u2019\u201A\u201B`]"
+    # Quarterly: roman numeral + year. Allow any whitespace/punctuation between
+    # the year and the Ø symbol (markdown loses the table pipes).
     for m in re.finditer(
             rf"(I{{1,3}}V?|IV)\.\s*Quartal\s*{APOS}?(\d{{2}})\s*[\s\|<>/td]*\s*Ø\s*([0-9]+[,.][0-9]+)\s*EUR",
             html):
@@ -156,36 +167,14 @@ def _extract_quarterly(html: str) -> Dict[str, Optional[float]]:
         q = roman_to_q.get(roman)
         if q:
             out[f'q{q}_20{yy}_eur_100l'] = _parse_de_decimal(val)
+    # Yearly: 'gesamt 2025 [whitespace/markup] Ø 96,1 EUR'
     for m in re.finditer(
             r"gesamt\s+(\d{4})\s*[\s\|<>/td]*\s*Ø\s*([0-9]+[,.][0-9]+)\s*EUR",
             html):
         year, val = m.group(1), m.group(2)
         out[f'y{year}_eur_100l'] = _parse_de_decimal(val)
-    return out   # ← single return (duplicate removed)
-
-
-def _extract_annual_trend(html: str) -> List[Dict]:
-    """
-    Extract the multi-year annual average table if present.
-    Looks for patterns like: 2020  Ø 50,1 EUR  (per 100L)
-    Returns list of {year: int, eur_100l: float} sorted ascending.
-    This complements the quarterly data with a longer historical view.
-    """
-    results = []
-    seen_years = set()
-    for m in re.finditer(
-            r'\b(20\d{2})\b[^0-9€]*Ø\s*([0-9]+[,.][0-9]+)\s*EUR',
-            html):
-        year_str, val_str = m.group(1), m.group(2)
-        year = int(year_str)
-        if year in seen_years or year < 2010 or year > 2030:
-            continue
-        val = _parse_de_decimal(val_str)
-        if val and 20.0 < val < 500.0:   # sanity: EUR/100L range
-            results.append({'year': year, 'eur_100l': val})
-            seen_years.add(year)
-    results.sort(key=lambda x: x['year'])
-    return results
+    return out
+    return out
 
 
 def fetch() -> dict:
@@ -206,11 +195,9 @@ def fetch() -> dict:
     changes = _extract_change_table(html)
     notations = _extract_oil_notations(html)
     quarterly = _extract_quarterly(html)
-    annual_trend = _extract_annual_trend(html)
 
     print(f'    tecson: ref={ref_price} EUR/L, brent={notations.get("brent_usd_bbl")}, '
-          f'wti={notations.get("wti_usd_bbl")}, gasoil={notations.get("gasoil_eur_t")}, '
-          f'quarterly={len(quarterly)} entries, annual={len(annual_trend)} years')
+          f'wti={notations.get("wti_usd_bbl")}, gasoil={notations.get("gasoil_eur_t")}')
 
     # History: append daily snapshot for long-term trend chart
     history.record_history('heating_oil', {
@@ -226,12 +213,11 @@ def fetch() -> dict:
             'changes': changes,
             'oil_notations': notations,
             'quarterly_avg_eur_100l': quarterly,
-            'annual_trend': annual_trend,
         },
         'meta': {
             'source': 'TECSON Erhebung (https://www.tecson.de)',
             'license': 'attribution required, no automated commercial use',
-            'units': 'EUR per liter for heating oil; per 100L for quarterly/annual averages',
+            'units': 'EUR per liter for heating oil; per 100L for quarterly averages',
             'price_basis': '3000 L delivery, sulphur-poor, incl. 19% VAT',
         },
     }
