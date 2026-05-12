@@ -25,6 +25,12 @@
     "last_success_epoch": 1778609215,
     "last_success_iso": "2026-05-12T18:06:55Z"
   },
+  "energy_futures": {
+    "last_attempt_epoch": 1778616923,
+    "last_attempt_iso": "2026-05-12T20:15:23Z",
+    "last_success_epoch": 1778616934,
+    "last_success_iso": "2026-05-12T20:15:34Z"
+  },
   "entsoe": {
     "last_attempt_epoch": 1778600208,
     "last_attempt_iso": "2026-05-12T15:36:48Z",
