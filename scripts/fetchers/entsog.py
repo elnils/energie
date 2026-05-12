@@ -80,6 +80,10 @@ def _discover_points() -> List[dict]:
     """
     Discover active German border points via /operatorpointdirections.
     Returns up to 15 points, imports (entry) first.
+
+    Robust field-name handling: ENTSOG API has changed field names across versions.
+    We try all known variants and match 'de' (case-insensitive) in any country field.
+    hasData filter is intentionally relaxed — we check actual data in _fetch_point.
     """
     s = http.get_session()
     r = s.get(
@@ -92,31 +96,60 @@ def _discover_points() -> List[dict]:
     items = payload.get('operatorpointdirections') or payload.get('data') or []
     print(f'    entsog discovery: {len(items)} total operator-point-directions')
 
+    # Debug: log field names from first item
+    if items and isinstance(items[0], dict):
+        sample_keys = list(items[0].keys())
+        print(f'    entsog discovery sample fields: {sample_keys[:12]}')
+
     de_points = []
     seen = set()
     for it in items:
         if not isinstance(it, dict):
             continue
-        op_country = (it.get('operatorCountryKey') or it.get('tSOCountryISO2') or '').lower()
-        pt_country = (it.get('pointCountryKey') or it.get('adjacentCountryKey') or '').lower()
-        if 'de' not in (op_country, pt_country):
+
+        # Collect ALL string values in this item and check for 'de' or 'DEU'
+        # Country can be in many fields depending on API version
+        country_fields = [
+            it.get('operatorCountryKey', ''),
+            it.get('tSOCountryISO2', ''),
+            it.get('pointCountryKey', ''),
+            it.get('adjacentCountryKey', ''),
+            it.get('tsoCountryCode', ''),
+            it.get('countryKey', ''),
+        ]
+        country_vals = [str(f).strip().lower() for f in country_fields if f]
+        is_de = any(v in ('de', 'deu', 'germany') or v.startswith('de-') for v in country_vals)
+
+        # Also check if operator key starts with 'de-'
+        op_key_raw = str(it.get('operatorKey') or it.get('tsoKey') or '').lower()
+        if not is_de and op_key_raw.startswith('de-'):
+            is_de = True
+
+        if not is_de:
             continue
+
+        # hasData: accept True, 'true', 1, 'yes', or missing (let fetch decide)
         has_data = it.get('hasData')
-        if has_data not in (True, 'true', 1, '1'):
-            continue
-        op_key  = it.get('operatorKey', '').lower()
-        pt_key  = it.get('pointKey', '').lower()
-        direction = (it.get('directionKey') or '').lower()
+        if has_data in (False, 'false', 0, 'no'):
+            continue  # only skip if explicitly marked as no-data
+
+        op_key    = op_key_raw or it.get('operatorKey', '').lower()
+        pt_key    = str(it.get('pointKey') or it.get('tpPointKey') or '').lower()
+        direction = str(it.get('directionKey') or it.get('flowDirection') or '').lower()
+
         if not (op_key and pt_key and direction):
             continue
+
         pd_id = f'{op_key}{pt_key}{direction}'
         if pd_id in seen:
             continue
         seen.add(pd_id)
-        label = (it.get('pointLabel') or it.get('pointName') or pt_key.upper())[:60]
+
+        label = str(it.get('pointLabel') or it.get('pointName') or pt_key.upper())[:60]
         label = f'{label} ({"Import" if direction == "entry" else "Export"})'
         de_points.append({'id': pd_id, 'label': label, 'operator': op_key})
 
+    print(f'    entsog discovery: {len(de_points)} DE points found')
     # Imports first (gas coming in = most relevant for crisis monitoring)
     de_points.sort(key=lambda x: (0 if 'Import' in x['label'] else 1, x['label']))
     return de_points[:15]
