@@ -1,98 +1,98 @@
 {
   "commodities": {
-    "last_attempt_epoch": 1778564213,
-    "last_attempt_iso": "2026-05-12T05:36:53Z",
-    "last_success_epoch": 1778564221,
-    "last_success_iso": "2026-05-12T05:37:01Z"
+    "last_attempt_epoch": 1778567586,
+    "last_attempt_iso": "2026-05-12T06:33:06Z",
+    "last_success_epoch": 1778567594,
+    "last_success_iso": "2026-05-12T06:33:14Z"
   },
   "destatis_vpi": {
-    "last_attempt_epoch": 1778564274,
-    "last_attempt_iso": "2026-05-12T05:37:54Z",
-    "last_error_epoch": 1778475805,
-    "last_error_message": "RuntimeError: Destatis logincheck unexpected status: Ein Fehler ist aufgetreten. (Bitte geben Sie Ihr Passwort ein.)",
+    "last_attempt_epoch": 1778567646,
+    "last_attempt_iso": "2026-05-12T06:34:06Z",
+    "last_error_epoch": 1778567902,
+    "last_error_message": "RuntimeError: Destatis auth: BOTH modes failed. header: header-auth exception: HTTPSConnectionPool(host='www-genesis.destatis.de', port=443): Max retries exceeded with url: /ge; body: HTTPSConnectionPool(host='www-genesis.destatis.de', port=443): Max retries exceeded with url: /genesisWS/rest/2020/helloworld/logincheck (Caused by ReadTimeoutError(\"HTTPSConnectionPool(host='www-genesis.destatis.de', port=443): Read timed out. (read timeout=30)\"))",
     "last_success_epoch": 1778564279,
     "last_success_iso": "2026-05-12T05:37:59Z"
   },
   "eia_petroleum": {
-    "last_attempt_epoch": 1778564304,
-    "last_attempt_iso": "2026-05-12T05:38:24Z",
-    "last_success_epoch": 1778564310,
-    "last_success_iso": "2026-05-12T05:38:30Z"
+    "last_attempt_epoch": 1778567925,
+    "last_attempt_iso": "2026-05-12T06:38:45Z",
+    "last_success_epoch": 1778567931,
+    "last_success_iso": "2026-05-12T06:38:51Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1778564106,
-    "last_attempt_iso": "2026-05-12T05:35:06Z",
-    "last_success_epoch": 1778564187,
-    "last_success_iso": "2026-05-12T05:36:27Z"
+    "last_attempt_epoch": 1778567470,
+    "last_attempt_iso": "2026-05-12T06:31:10Z",
+    "last_success_epoch": 1778567554,
+    "last_success_iso": "2026-05-12T06:32:34Z"
   },
   "entsoe": {
-    "last_attempt_epoch": 1778567131,
-    "last_attempt_iso": "2026-05-12T06:25:31Z",
-    "last_error_epoch": 1778567152,
+    "last_attempt_epoch": 1778567902,
+    "last_attempt_iso": "2026-05-12T06:38:22Z",
+    "last_error_epoch": 1778567921,
     "last_error_message": "ValueError: fetcher entsoe did not return dict with \"data\" key",
     "last_success_epoch": 1778300938,
     "last_success_iso": "2026-05-09T04:28:58Z"
   },
   "entsog": {
-    "last_attempt_epoch": 1778564202,
-    "last_attempt_iso": "2026-05-12T05:36:42Z",
-    "last_success_epoch": 1778564211,
-    "last_success_iso": "2026-05-12T05:36:51Z"
+    "last_attempt_epoch": 1778567573,
+    "last_attempt_iso": "2026-05-12T06:32:53Z",
+    "last_success_epoch": 1778567584,
+    "last_success_iso": "2026-05-12T06:33:04Z"
   },
   "eurostat_oil": {
-    "last_attempt_epoch": 1778564310,
-    "last_attempt_iso": "2026-05-12T05:38:30Z",
-    "last_error_epoch": 1778564341,
-    "last_error_message": "RuntimeError: Eurostat: all series failed — API may be temporarily unavailable. Previous data preserved by store.py.",
+    "last_attempt_epoch": 1778567931,
+    "last_attempt_iso": "2026-05-12T06:38:51Z",
+    "last_error_epoch": 1778567967,
+    "last_error_message": "RuntimeError: Eurostat: alle Serien fehlgeschlagen — API nicht erreichbar oder alle Produkt-/Flow-Kombinationen leer. Letzter Datensatz wird als stale beibehalten.",
     "last_success_epoch": 1778526193,
     "last_success_iso": "2026-05-11T19:03:13Z"
   },
   "fred_energy": {
-    "last_attempt_epoch": 1778564300,
-    "last_attempt_iso": "2026-05-12T05:38:20Z",
-    "last_success_epoch": 1778564304,
-    "last_success_iso": "2026-05-12T05:38:24Z"
+    "last_attempt_epoch": 1778567921,
+    "last_attempt_iso": "2026-05-12T06:38:41Z",
+    "last_success_epoch": 1778567925,
+    "last_success_iso": "2026-05-12T06:38:45Z"
   },
   "fuel": {
-    "last_attempt_epoch": 1778564221,
-    "last_attempt_iso": "2026-05-12T05:37:01Z",
-    "last_success_epoch": 1778564274,
-    "last_success_iso": "2026-05-12T05:37:54Z"
+    "last_attempt_epoch": 1778567595,
+    "last_attempt_iso": "2026-05-12T06:33:15Z",
+    "last_success_epoch": 1778567645,
+    "last_success_iso": "2026-05-12T06:34:05Z"
   },
   "fx": {
-    "last_attempt_epoch": 1778564221,
-    "last_attempt_iso": "2026-05-12T05:37:01Z",
-    "last_success_epoch": 1778564221,
-    "last_success_iso": "2026-05-12T05:37:01Z"
+    "last_attempt_epoch": 1778567594,
+    "last_attempt_iso": "2026-05-12T06:33:14Z",
+    "last_success_epoch": 1778567595,
+    "last_success_iso": "2026-05-12T06:33:15Z"
   },
   "gas_storage": {
-    "last_attempt_epoch": 1778564187,
-    "last_attempt_iso": "2026-05-12T05:36:27Z",
-    "last_success_epoch": 1778564202,
-    "last_success_iso": "2026-05-12T05:36:42Z"
+    "last_attempt_epoch": 1778567554,
+    "last_attempt_iso": "2026-05-12T06:32:34Z",
+    "last_success_epoch": 1778567573,
+    "last_success_iso": "2026-05-12T06:32:53Z"
   },
   "heating_oil": {
-    "last_attempt_epoch": 1778564274,
-    "last_attempt_iso": "2026-05-12T05:37:54Z",
-    "last_success_epoch": 1778564274,
-    "last_success_iso": "2026-05-12T05:37:54Z"
+    "last_attempt_epoch": 1778567645,
+    "last_attempt_iso": "2026-05-12T06:34:05Z",
+    "last_success_epoch": 1778567646,
+    "last_success_iso": "2026-05-12T06:34:06Z"
   },
   "news": {
-    "last_attempt_epoch": 1778564341,
-    "last_attempt_iso": "2026-05-12T05:39:01Z",
-    "last_success_epoch": 1778564363,
-    "last_success_iso": "2026-05-12T05:39:23Z"
+    "last_attempt_epoch": 1778567967,
+    "last_attempt_iso": "2026-05-12T06:39:27Z",
+    "last_success_epoch": 1778567989,
+    "last_success_iso": "2026-05-12T06:39:49Z"
   },
   "smard": {
-    "last_attempt_epoch": 1778564100,
-    "last_attempt_iso": "2026-05-12T05:35:00Z",
-    "last_success_epoch": 1778564106,
-    "last_success_iso": "2026-05-12T05:35:06Z"
+    "last_attempt_epoch": 1778567464,
+    "last_attempt_iso": "2026-05-12T06:31:04Z",
+    "last_success_epoch": 1778567470,
+    "last_success_iso": "2026-05-12T06:31:10Z"
   },
   "weather": {
-    "last_attempt_epoch": 1778564211,
-    "last_attempt_iso": "2026-05-12T05:36:51Z",
-    "last_success_epoch": 1778564213,
-    "last_success_iso": "2026-05-12T05:36:53Z"
+    "last_attempt_epoch": 1778567584,
+    "last_attempt_iso": "2026-05-12T06:33:04Z",
+    "last_success_epoch": 1778567586,
+    "last_success_iso": "2026-05-12T06:33:06Z"
   }
 }
