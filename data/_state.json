@@ -26,9 +26,9 @@
     "last_success_iso": "2026-05-12T05:36:27Z"
   },
   "entsoe": {
-    "last_attempt_epoch": 1778566214,
-    "last_attempt_iso": "2026-05-12T06:10:14Z",
-    "last_error_epoch": 1778566260,
+    "last_attempt_epoch": 1778567131,
+    "last_attempt_iso": "2026-05-12T06:25:31Z",
+    "last_error_epoch": 1778567152,
     "last_error_message": "ValueError: fetcher entsoe did not return dict with \"data\" key",
     "last_success_epoch": 1778300938,
     "last_success_iso": "2026-05-09T04:28:58Z"
