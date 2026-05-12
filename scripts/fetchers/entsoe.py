@@ -166,8 +166,7 @@ def fetch() -> dict:
     Fetch all ENTSO-E data. Each query is wrapped in its own try/except.
     Failures write empty lists/dicts — they never abort the other queries.
 
-    Returns a dict compatible with core/store.py v5 schema (no outer wrapper
-    needed — store.write_with_fallback adds that).
+    Returns {'data': {...}, 'meta': {...}} — v5 schema required by store.write_with_fallback.
     """
     token = os.environ.get('ENTSOE_SECURITY_TOKEN', '').strip()
     if not token:
@@ -175,18 +174,21 @@ def fetch() -> dict:
         print('    → Email transparency@entsoe.eu to request API access')
         # Return minimal schema so frontend renders a clear "waiting" state
         return {
-            'awaiting_key': True,
-            'note': (
-                'Set ENTSOE_SECURITY_TOKEN as a GitHub Secret to enable ENTSO-E data. '
-                'Request access by emailing transparency@entsoe.eu.'
-            ),
-            'day_ahead_prices': {},
-            'generation': {},
-            'load': [],
-            'wind_solar_forecast': {},
-            'crossborder_flows': {},
-            'net_position': [],
-            'installed_capacity': {},
+            'data': {
+                'awaiting_key': True,
+                'note': (
+                    'Set ENTSOE_SECURITY_TOKEN as a GitHub Secret to enable ENTSO-E data. '
+                    'Request access by emailing transparency@entsoe.eu.'
+                ),
+                'day_ahead_prices': {},
+                'generation': {},
+                'load': [],
+                'wind_solar_forecast': {},
+                'crossborder_flows': {},
+                'net_position': [],
+                'installed_capacity': {},
+            },
+            'meta': {'source': 'ENTSO-E Transparency Platform', 'note': 'awaiting token'},
         }
 
     try:
@@ -197,15 +199,18 @@ def fetch() -> dict:
         print(f'  ! ENTSO-E: missing dependency ({e})')
         print('    → Run: pip install entsoe-py pandas')
         return {
-            'awaiting_key': False,
-            'error': f'import: {e}',
-            'day_ahead_prices': {},
-            'generation': {},
-            'load': [],
-            'wind_solar_forecast': {},
-            'crossborder_flows': {},
-            'net_position': [],
-            'installed_capacity': {},
+            'data': {
+                'awaiting_key': False,
+                'error': f'import: {e}',
+                'day_ahead_prices': {},
+                'generation': {},
+                'load': [],
+                'wind_solar_forecast': {},
+                'crossborder_flows': {},
+                'net_position': [],
+                'installed_capacity': {},
+            },
+            'meta': {'source': 'ENTSO-E Transparency Platform', 'note': f'import error: {e}'},
         }
 
     client = EntsoePandasClient(api_key=token)
@@ -358,4 +363,13 @@ def fetch() -> dict:
     except Exception as e:
         print(f'  ! entsoe/installed_capacity: {e}')
 
-    return out
+    return {
+        'data': out,
+        'meta': {
+            'source': 'ENTSO-E Transparency Platform',
+            'url': 'https://transparency.entsoe.eu',
+            'license': 'free with registration (token required)',
+            'areas': ['DE_LU', 'AT', 'FR', 'PL', 'CH'],
+            'cross_border_pairs': 6,
+        },
+    }
