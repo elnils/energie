@@ -230,14 +230,6 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
       </div>
       <div class="chart-wrap" style="height:180px"><canvas id="chart-price"></canvas></div>
     </div>
-    <div class="card g8">
-      <div class="card-hdr"><div><div class="card-title">Wind &amp; Solar Prognose 48h</div><div class="card-sub">ENTSO-E · Tag-Voraus-Prognose · MW</div></div></div>
-      <div class="chart-wrap" style="height:200px"><canvas id="chart-forecast"></canvas></div>
-    </div>
-    <div class="card g4">
-      <div class="card-hdr"><div><div class="card-title">Netto-Position DE</div><div class="card-sub">ENTSO-E · MW · positiv = Exporteur</div></div></div>
-      <div class="chart-wrap" style="height:200px"><canvas id="chart-netpos"></canvas></div>
-    </div>
   </div>
 </div>
 
@@ -259,12 +251,8 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
       <div class="chart-wrap" style="height:200px"><canvas id="chart-co2"></canvas></div>
     </div>
     <div class="card g6">
-      <div class="card-hdr"><div><div class="card-title">Grenzüberschreitende Stromflüsse DE</div><div class="card-sub">ENTSO-E · MW · grün=Import, rot=Export · Ø 48h</div></div></div>
+      <div class="card-hdr"><div><div class="card-title">Grenzüberschreitende Stromflüsse DE</div><div class="card-sub">ENTSO-E · MW · Import positiv, Export negativ</div></div></div>
       <div class="chart-wrap" style="height:200px"><canvas id="chart-cross"></canvas></div>
-    </div>
-    <div class="card g6">
-      <div class="card-hdr"><div><div class="card-title">Netto-Position DE — 7 Tage</div><div class="card-sub">ENTSO-E · MW · positiv = Netto-Exporteur</div></div></div>
-      <div class="chart-wrap" style="height:200px"><canvas id="chart-netpos-markt"></canvas></div>
     </div>
   </div>
 </div>
@@ -384,17 +372,6 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
       <div class="card-hdr"><div><div class="card-title">Einspeisung vs. Entnahme</div><div class="card-sub">GIE AGSI+ · täglich</div></div></div>
       <div class="chart-wrap" style="height:170px"><canvas id="chart-gas-flow"></canvas></div>
     </div>
-    <div class="card g12">
-      <div class="card-hdr">
-        <div><div class="card-title">ENTSOG Aggregierte Gasbilanz DE</div><div class="card-sub">ENTSOG · Physical Flow / Nomination · GWh/d · 60 Tage</div></div>
-        <select id="entsog-balance-indicator" onchange="renderEntsogBalance()">
-          <option value="physical_flow">Physical Flow (IST)</option>
-          <option value="nomination">Nomination (Geplant)</option>
-          <option value="firm_technical">Firm Technical (Kapazität)</option>
-        </select>
-      </div>
-      <div class="chart-wrap" style="height:180px"><canvas id="chart-entsog-balance"></canvas></div>
-    </div>
   </div>
 </div>
 
@@ -456,11 +433,7 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
       <div class="card-hdr"><div><div class="card-title">Aktuelle Veränderung</div><div class="card-sub">vs Vortag · Woche · Monat · Jahr</div></div></div>
       <div class="chart-wrap" style="height:230px"><canvas id="chart-heatoil-change"></canvas></div>
     </div>
-    <div class="card g6">
-      <div class="card-hdr"><div><div class="card-title">Langfrist-Trend · Jahresdurchschnitt</div><div class="card-sub">TECSON · EUR/100L · ab 2010</div></div></div>
-      <div class="chart-wrap" style="height:200px"><canvas id="chart-heatoil-annual"></canvas></div>
-    </div>
-    <div class="card g6">
+    <div class="card g12">
       <div class="card-hdr"><div><div class="card-title">Ölnotierungen heute</div><div class="card-sub">TECSON-Erhebung · Tagesnotierungen</div></div></div>
       <div id="heatoil-notations"><div class="loading"><span class="spin"></span></div></div>
     </div>
@@ -548,6 +521,8 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
       <div id="treibstoff-macro-table"><div class="loading"><span class="spin"></span></div></div>
     </div>
   </div>
+</div><!-- /panel-treibstoff -->
+
 <div class="panel" id="panel-fx">
   <div class="range-bar" data-tab="fx"></div>
   <div class="kpis" id="kpi-fx"></div>
@@ -766,7 +741,7 @@ const TAB_FILES = {
   gas:         ['gas_storage','entsog'],
   wetter:      ['weather'],
   fx:          ['fx'],
-  lage:        ['energy_charts','gas_storage','heating_oil','commodities','destatis_vpi'],
+  lage:        ['energy_charts','gas_storage','heating_oil','commodities','destatis_vpi','entsoe'],
   historisch:  ['energy_charts','commodities'],
   news:        ['news'],
 };
@@ -775,7 +750,7 @@ const C = {
   wind_on:'#0e6cb6',wind_off:'#1e3a8a',solar:'#d97706',
   biomass:'#1f9d55',hydro:'#0891b2',nuclear:'#7e57c2',
   lignite:'#7c5e2a',hard_coal:'#4a5568',natural_gas:'#dc6803',
-  pumped_storage:'#0891b2',other_renewables:'#22c55e',other_conventional:'#94a3b8',
+  pumped_storage:'#06b6d4',other_renewables:'#22c55e',other_conventional:'#94a3b8',
   de:'#0e6cb6',fr:'#c0392b',at:'#1f9d55',pl:'#7e57c2',ch:'#0891b2',
   brent:'#dc6803',wti:'#d97706',
 };
@@ -963,7 +938,7 @@ function renderStrom() {
     const total=wOn+wOff+sol+bio+hyd+nuc+lig+coal+gas+otherRen+otherConv;
     const ren=wOn+wOff+sol+bio+hyd+otherRen;
     windGW=fmtN(wOn+wOff,1);solarGW=fmtN(sol,1);loadGW=fmtN(load,1);
-    pumpGW=fmtN(Math.abs(pump),1)+(pump<0?' ↓':pump>0?' ↑':'');
+    pumpGW=fmtN(Math.abs(pump),1)+(pump<0?' ↓ lädt':pump>0?' ↑ entlädt':'');
     renPct=total>0?Math.round(ren/total*100)+'%':'—';
     co2i=total>0?Math.round((lig*900+coal*800+gas*400+nuc*5+ren*18)/total):'—';
     renderMixDonut({wOn,wOff,sol,bio,hyd,nuc,lig,coal,gas,otherRen,otherConv});
@@ -979,11 +954,9 @@ function renderStrom() {
     {label:'Solar',val:solarGW,unit:'GW',color:'#d97706'},
     {label:'Last',val:loadGW,unit:'GW',color:'#56657a'},
     {label:'CO₂-Intensität',val:co2i,unit:'g/kWh (est.)',color:'#dc6803'},
-    {label:'Pumpspeicher',val:pumpGW,unit:'GW (↓=lädt ↑=entlädt)',color:'#0891b2'},
+    {label:'Pumpspeicher',val:pumpGW,unit:'GW',color:'#06b6d4'},
   ]);
   renderPriceChart();
-  renderForecastChart();
-  renderNetPositionChart('chart-netpos');
 }
 
 function renderGenChart(s) {
@@ -991,13 +964,15 @@ function renderGenChart(s) {
   const keys=['wind_onshore','wind_offshore','solar','biomass','hydro','nuclear',
               'lignite','hard_coal','natural_gas','pumped_storage',
               'other_renewables','other_conventional'];
-  const anchorKey = keys.find(k => (s[k]||[]).filter(p=>p.ts>=co).length > 0) || 'wind_onshore';
+  // Use first key with data as time-axis anchor (robust against missing keys)
+  const anchorKey = keys.find(k=>(s[k]||[]).filter(p=>p.ts>=co).length>0) || 'wind_onshore';
   const baseTs=(s[anchorKey]||[]).filter(p=>p.ts>=co).map(p=>p.ts);
   if(!baseTs.length){document.getElementById('chart-gen').parentElement.innerHTML='<div class="nodata">Keine SMARD-Daten für Zeitraum</div>';return;}
   const step=Math.max(1,Math.floor(baseTs.length/150));
   const sampled=baseTs.filter((_,i)=>i%step===0);
   const lookup={};
   keys.forEach(k=>{(s[k]||[]).forEach(p=>{if(!lookup[p.ts])lookup[p.ts]={};lookup[p.ts][k]=p.v;});});
+  // Only include keys that actually have non-zero data in this period
   const activeKeys=keys.filter(k=>sampled.some(ts=>lookup[ts]?.[k]!=null&&lookup[ts][k]!==0));
   const datasets=activeKeys.map(k=>({
     label:LN[k]||k,
@@ -1007,68 +982,6 @@ function renderGenChart(s) {
   }));
   mkChart('chart-gen','line',sampled.map(fmtTs),datasets,{
     plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10},padding:8}}}
-  });
-}
-
-function renderForecastChart() {
-  const eb = D.entsoe;
-  const wrap = document.getElementById('chart-forecast')?.parentElement;
-  if (!wrap) return;
-  if (!eb || eb.awaiting_key || !eb.wind_solar_forecast) {
-    wrap.innerHTML = '<div class="nodata">ENTSO-E Prognose: Token ausstehend oder keine Daten</div>';
-    return;
-  }
-  const fcst = eb.wind_solar_forecast;
-  const now = Date.now() / 1000;
-  const cutoff = now - 48 * 3600;
-  const allTs = new Set();
-  Object.values(fcst).forEach(arr => (arr || []).forEach(p => allTs.add(p.ts)));
-  const ts = Array.from(allTs).sort((a,b) => a-b).filter(t => t >= cutoff);
-  if (!ts.length) { wrap.innerHTML = '<div class="nodata">Keine Prognosedaten verfügbar</div>'; return; }
-  const fcstMap = key => { const m={}; (fcst[key]||[]).forEach(p=>{m[p.ts]=p.v;}); return m; };
-  const nowIdx = ts.findIndex(t => t >= now);
-  const labels = ts.map(t => {
-    const d = new Date(t*1000);
-    return d.toLocaleString('de-DE',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
-  });
-  const windOn=fcstMap('wind_onshore'), windOff=fcstMap('wind_offshore'), solar=fcstMap('solar');
-  const datasets=[];
-  if (Object.keys(windOn).length||Object.keys(windOff).length) {
-    datasets.push({label:'Wind ges. (MW)',data:ts.map(t=>((windOn[t]||0)+(windOff[t]||0))||null),
-      borderColor:C.wind_on,backgroundColor:C.wind_on+'20',fill:true,borderWidth:2});
-  }
-  if (Object.keys(solar).length) {
-    datasets.push({label:'Solar (MW)',data:ts.map(t=>solar[t]??null),
-      borderColor:C.solar,backgroundColor:C.solar+'20',fill:true,borderWidth:2});
-  }
-  if (!datasets.length) { wrap.innerHTML='<div class="nodata">Prognosedaten leer</div>'; return; }
-  mkChart('chart-forecast','line',labels,datasets,{
-    plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}},
-    scales:{y:{title:{display:true,text:'MW',color:'#8c98a8',font:{size:10}}}},
-  });
-}
-
-function renderNetPositionChart(canvasId) {
-  const eb = D.entsoe;
-  const wrap = document.getElementById(canvasId)?.parentElement;
-  if (!wrap) return;
-  if (!eb || eb.awaiting_key || !eb.net_position?.length) {
-    wrap.innerHTML = '<div class="nodata">ENTSO-E Netto-Position: Token ausstehend oder keine Daten</div>';
-    return;
-  }
-  const co = rangeCutoffSec('strom');
-  const data = eb.net_position.filter(p => p.ts >= co);
-  if (!data.length) { wrap.innerHTML='<div class="nodata">Keine Daten im Zeitraum</div>'; return; }
-  const vals = data.map(p => p.v);
-  mkChart(canvasId,'bar',data.map(p=>fmtTs(p.ts*1000)),[{
-    label:'Netto-Position (MW)',data:vals,
-    backgroundColor:vals.map(v=>v>=0?'rgba(31,157,85,0.55)':'rgba(192,57,43,0.55)'),
-    borderColor:vals.map(v=>v>=0?'#1f9d55':'#c0392b'),
-    borderWidth:1,borderRadius:2,
-  }],{
-    plugins:{legend:{display:false}},
-    scales:{x:{ticks:{maxTicksLimit:6}},
-            y:{ticks:{callback:v=>Math.abs(v)>=1000?(v/1000).toFixed(1)+' GW':v+' MW'}}},
   });
 }
 
@@ -1165,18 +1078,25 @@ function renderMarkt() {
   });
   if(datasets.length) mkChart('chart-da-multi','line',labels,datasets,{plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}}});
 
-  // TTF Gas
-  const gp=ec.gas_price;
-  if(gp?.unix_seconds?.length&&gp?.price?.length) {
-    const f=gp.unix_seconds.map((t,i)=>({t,p:gp.price[i]})).filter(x=>x.p!=null);
-    if(f.length){
-      kpiItems.push({label:'TTF Erdgas',val:fmtN(f.at(-1)?.p,1),unit:'EUR/MWh',color:'#f0883e'});
-      mkChart('chart-ttf','line',f.map(x=>fmtDate(x.t*1000)),[{
-        label:'TTF EUR/MWh',data:f.map(x=>x.p),borderColor:'#f0883e',backgroundColor:'rgba(240,136,62,0.07)',fill:true
-      }]);
-    }
+  // TTF Gas — primary: energy_charts.gas_price, fallback: commodities.ttf_eu_proxy (Yahoo TTF=F)
+  const gp = ec?.gas_price;
+  const ttfComm = D.commodities?.ttf_eu_proxy;
+  let ttfSeries = null;
+  if (gp?.unix_seconds?.length && gp?.price?.length) {
+    ttfSeries = gp.unix_seconds.map((t,i)=>({t, p:gp.price[i]})).filter(x=>x.p!=null);
+  } else if (ttfComm?.series?.length) {
+    // Yahoo Finance TTF=F (EUR/MMBtu → approximate convert to EUR/MWh ×3.41)
+    const co = rangeCutoffSec('markt');
+    ttfSeries = ttfComm.series.filter(p=>p.ts>=co).map(p=>({t:p.ts, p:+(p.v*3.41).toFixed(2)}));
+  }
+  if (ttfSeries?.length) {
+    const ttfLast = ttfSeries.at(-1)?.p;
+    kpiItems.push({label:'TTF Erdgas',val:fmtN(ttfLast,1),unit:gp?'EUR/MWh · Energy-Charts':'EUR/MWh (via Yahoo)',color:'#f0883e'});
+    mkChart('chart-ttf','line',ttfSeries.map(x=>fmtDate(x.t*1000)),[{
+      label:'TTF EUR/MWh',data:ttfSeries.map(x=>x.p),borderColor:'#f0883e',backgroundColor:'rgba(240,136,62,0.07)',fill:true
+    }]);
   } else {
-    document.getElementById('chart-ttf').parentElement.innerHTML='<div class="nodata">TTF-Daten werden beim nächsten Run geladen<br><small style="color:var(--text3)">Key-Diagnose läuft im Actions-Log</small></div>';
+    document.getElementById('chart-ttf').parentElement.innerHTML='<div class="nodata">TTF: Energy-Charts key fehlt — wird beim nächsten Run geladen</div>';
   }
 
   // CO2
@@ -1204,10 +1124,8 @@ function renderMarkt() {
     kpiItems.push({label:'EUR / USD',val:fmtN(usd,4),unit:'EZB-Referenzkurs',delta,color:'#39d353'});
   }
 
-  // Cross-border flows from ENTSO-E
+  // Cross-border flows from ENTSO-E (replaces broken energy-charts cross_border)
   renderCrossBorder();
-  // Net position time series
-  renderNetPositionChart('chart-netpos-markt');
 
   document.getElementById('kpi-markt').innerHTML=kpis(kpiItems);
 }
@@ -1220,27 +1138,45 @@ function renderCrossBorder() {
     wrap.innerHTML='<div class="nodata">ENTSO-E Token wird angefragt — Daten kommen sobald aktiv</div>';
     return;
   }
-  const flows=eb.crossborder_flows||{};
-  const allKeys=Object.keys(flows);
-  if(!allKeys.length){wrap.innerHTML='<div class="nodata">Keine ENTSO-E-Flows verfügbar</div>';return;}
-  const neighbours=new Set();
-  allKeys.forEach(k=>{const[from,to]=k.split('->');if(from==='DE_LU')neighbours.add(to);else if(to==='DE_LU')neighbours.add(from);});
-  const avgSeries=arr=>{ if(!arr||!arr.length)return 0; const v=arr.map(p=>p.v).filter(x=>x!=null); return v.length?v.reduce((a,b)=>a+b,0)/v.length:0; };
+  // New schema: eb.crossborder_flows = {'DE_LU->FR': [{ts,v}], 'FR->DE_LU': [{ts,v}], ...}
+  const flows = eb.crossborder_flows || {};
+  if (!Object.keys(flows).length) {
+    wrap.innerHTML='<div class="nodata">Keine ENTSO-E-Flows verfügbar</div>';
+    return;
+  }
+  // Derive neighbour list from keys shaped "DE_LU->XX" or "XX->DE_LU"
+  const neighbours = new Set();
+  Object.keys(flows).forEach(k=>{
+    const [from,to] = k.split('->');
+    if(from==='DE_LU') neighbours.add(to);
+    else if(to==='DE_LU') neighbours.add(from);
+  });
+  const avg = arr => {
+    if(!arr||!arr.length) return 0;
+    const vals = arr.map(p=>p.v).filter(x=>x!=null);
+    return vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : 0;
+  };
   const netByNeighbour={};
   neighbours.forEach(n=>{
-    const imports=avgSeries(flows[n+'->DE_LU']);
-    const exports=avgSeries(flows['DE_LU->'+n]);
-    netByNeighbour[n]=imports-exports;
+    // imports into DE = positive, exports from DE = negative
+    const imp = avg(flows[n+'->DE_LU']);
+    const exp = avg(flows['DE_LU->'+n]);
+    netByNeighbour[n] = imp - exp; // positive = DE net importer
   });
-  const sorted=Object.entries(netByNeighbour).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]));
-  const labels=sorted.map(([n])=>n.replace('_1',''));
-  const vals=sorted.map(([,v])=>Math.round(v));
+  const sorted = Object.entries(netByNeighbour).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]));
+  const labels = sorted.map(([n])=>n.replace('_1','').replace('_2',''));
+  const vals   = sorted.map(([,v])=>Math.round(v));
   mkChart('chart-cross','bar',labels,[{
-    label:'Ø MW (Import − Export, 48h)',data:vals,
+    label:'Ø MW (Import − Export, 48h)',
+    data:vals,
     backgroundColor:vals.map(v=>v>=0?'rgba(63,185,80,0.55)':'rgba(248,81,73,0.55)'),
     borderColor:vals.map(v=>v>=0?'#3fb950':'#f85149'),
     borderWidth:1,borderRadius:3,
-  }],{indexAxis:'y',scales:{x:{ticks:{callback:v=>Math.abs(v)>=1000?(v/1000).toFixed(1)+' GW':v+' MW'}},y:{grid:{display:false}}},plugins:{legend:{display:false}}});
+  }],{
+    indexAxis:'y',
+    scales:{x:{ticks:{callback:v=>Math.abs(v)>=1000?(v/1000).toFixed(1)+' GW':v+' MW'}},y:{grid:{display:false}}},
+    plugins:{legend:{display:false}}
+  });
 }
 
 // ══════════════════════════════════════════════
@@ -1743,39 +1679,6 @@ function renderGas() {
       return`<tr><td>${d?.name||k.toUpperCase()}</td><td class="num" style="color:${col}">${l?.fill_pct!=null?fmtN(l.fill_pct,1)+'%':'—'}</td><td style="color:var(--text3)">${l?.date||'—'}</td></tr>`;
     }).join('')}</tbody></table>`;
   renderGasChart();
-  renderEntsogBalance();
-}
-
-function renderEntsogBalance() {
-  const og = D.entsog;
-  const wrap = document.getElementById('chart-entsog-balance')?.parentElement;
-  if (!wrap) return;
-  const indicator = document.getElementById('entsog-balance-indicator')?.value || 'physical_flow';
-  const deBal = og?.balance?.de?.[indicator] || [];
-  if (!deBal.length) {
-    wrap.innerHTML='<div class="nodata">ENTSOG-Bilanz: wird beim nächsten Run verfügbar</div>';
-    return;
-  }
-  const entries=deBal.filter(p=>p.direction==='entry');
-  const exits=deBal.filter(p=>p.direction==='exit');
-  if(!entries.length&&!exits.length) {
-    const dates=deBal.map(p=>p.date), vals=deBal.map(p=>+(p.v/1e9).toFixed(1));
-    mkChart('chart-entsog-balance','line',dates,[{label:`${indicator} (GWh/d)`,data:vals,
-      borderColor:'#0891b2',backgroundColor:'rgba(8,145,178,0.10)',fill:true,borderWidth:2}],
-      {scales:{y:{title:{display:true,text:'GWh/d',color:'#8c98a8',font:{size:10}}}}});
-    return;
-  }
-  const allDates=Array.from(new Set([...entries.map(p=>p.date),...exits.map(p=>p.date)])).sort();
-  const entMap={},exMap={};
-  entries.forEach(p=>{entMap[p.date]=(entMap[p.date]||0)+p.v;});
-  exits.forEach(p=>{exMap[p.date]=(exMap[p.date]||0)+p.v;});
-  mkChart('chart-entsog-balance','bar',allDates,[
-    {label:'Import (GWh/d)',data:allDates.map(d=>entMap[d]?+(entMap[d]/1e9).toFixed(1):null),
-      backgroundColor:'rgba(31,157,85,0.55)',borderColor:'#1f9d55',borderWidth:1,borderRadius:2},
-    {label:'Export (GWh/d)',data:allDates.map(d=>exMap[d]?-(exMap[d]/1e9).toFixed(1):null),
-      backgroundColor:'rgba(192,57,43,0.50)',borderColor:'#c0392b',borderWidth:1,borderRadius:2},
-  ],{plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}},
-     scales:{x:{ticks:{maxTicksLimit:10}},y:{title:{display:true,text:'GWh/d',color:'#8c98a8',font:{size:10}}}}});
 }
 
 // ══════════════════════════════════════════════
@@ -2005,20 +1908,6 @@ function renderHeizoel() {
   } else {
     const w=document.getElementById('chart-heatoil-change')?.parentElement;
     if(w) w.innerHTML='<div class="nodata">Veränderungs-Daten werden beim nächsten Lauf geladen</div>';
-  }
-
-  // Annual trend chart (new _extract_annual_trend data)
-  const annualWrap = document.getElementById('chart-heatoil-annual')?.parentElement;
-  if (annualWrap) {
-    const at = ho.annual_trend || [];
-    if (at.length >= 2) {
-      mkChart('chart-heatoil-annual','line',at.map(r=>String(r.year)),[{
-        label:'Jahres-Ø EUR/100L',data:at.map(r=>r.eur_100l),
-        borderColor:'#f0883e',backgroundColor:'rgba(240,136,62,0.10)',fill:true,borderWidth:2,
-      }],{scales:{y:{ticks:{callback:v=>v+' €'}}}});
-    } else {
-      annualWrap.innerHTML='<div class="nodata">Jahresdurchschnitt: Daten kommen mit nächstem Run</div>';
-    }
   }
 
   // Notations table
@@ -2368,7 +2257,12 @@ function renderLage() {
   const com = D.commodities;
 
   // Pull headline indicators
-  const ttfPrice  = ec?.gas_price?.price?.filter(v=>v!=null).at(-1);
+  // TTF: try energy_charts first, fall back to commodities TTF proxy
+  let ttfPrice = ec?.gas_price?.price?.filter(v=>v!=null).at(-1);
+  if (ttfPrice == null && D.commodities?.ttf_eu_proxy?.series?.length) {
+    const ttfLast = D.commodities.ttf_eu_proxy.series.at(-1);
+    if (ttfLast?.v) ttfPrice = +(ttfLast.v * 3.41).toFixed(1); // EUR/MMBtu → EUR/MWh
+  }
   const daPrice   = ec?.price_de?.price?.filter(v=>v!=null).at(-1);
   const euNode    = gs ? gasNode(gs,'eu') : null;
   const euLast    = euNode?.data?.filter(x=>x.fill_pct!=null).at(-1);
@@ -2422,11 +2316,27 @@ function renderLage() {
     kp.push({label:'Brent Rohöl', val:fmtN(brent,1), unit:'USD/Barrel', delta, color});
   }
 
-  if (heatoil != null && ho?.changes?.year_pct != null) {
-    const yoy = ho.changes.year_pct;
-    const delta = (yoy>=0?'▲ +':'▼ ')+fmtN(yoy,1)+'% YoY';
-    const color = yoy > 20 ? '#c0392b' : yoy > 5 ? '#d97706' : '#1f9d55';
+  if (heatoil != null) {
+    const yoy = ho?.changes?.year_pct;
+    const delta = yoy!=null ? (yoy>=0?'▲ +':'▼ ')+fmtN(yoy,1)+'% YoY' : '';
+    const color = yoy!=null ? (yoy > 20 ? '#c0392b' : yoy > 5 ? '#d97706' : '#1f9d55') : '#f0883e';
     kp.push({label:'Heizöl DE', val:fmtN(heatoil,3), unit:'EUR/Liter · TECSON', delta, color});
+  }
+
+  // ENTSO-E net position — DE as exporter vs importer
+  const eb = D.entsoe;
+  if (eb && !eb.awaiting_key && eb.net_position?.length) {
+    const netLast = eb.net_position.at(-1)?.v;
+    if (netLast != null) {
+      const isExp = netLast > 0;
+      kp.push({
+        label:'DE Stromhandel',
+        val: fmtN(Math.abs(netLast/1000),1),
+        unit: 'GW · ' + (isExp ? 'Netto-Exporteur' : 'Netto-Importeur'),
+        delta: isExp ? '▲ Export überschuss' : '▼ Import überschuss',
+        color: isExp ? '#1f9d55' : '#d97706',
+      });
+    }
   }
 
   document.getElementById('kpi-lage').innerHTML = kpis(kp);
