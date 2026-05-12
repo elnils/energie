@@ -191,7 +191,8 @@ def fetch() -> dict:
 
     try:
         import pandas as pd
-        from entsoe import EntsoePandasClient, NoMatchingDataError
+        from entsoe import EntsoePandasClient
+        from entsoe.exceptions import NoMatchingDataError
     except ImportError as e:
         print(f'  ! ENTSO-E: missing dependency ({e})')
         print('    → Run: pip install entsoe-py pandas')
