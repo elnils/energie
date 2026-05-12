@@ -230,6 +230,14 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
       </div>
       <div class="chart-wrap" style="height:180px"><canvas id="chart-price"></canvas></div>
     </div>
+    <div class="card g8">
+      <div class="card-hdr"><div><div class="card-title">Wind &amp; Solar Prognose 48h</div><div class="card-sub">ENTSO-E · Tag-Voraus-Prognose · MW</div></div></div>
+      <div class="chart-wrap" style="height:200px"><canvas id="chart-forecast"></canvas></div>
+    </div>
+    <div class="card g4">
+      <div class="card-hdr"><div><div class="card-title">Netto-Position DE</div><div class="card-sub">ENTSO-E · MW · positiv = Exporteur</div></div></div>
+      <div class="chart-wrap" style="height:200px"><canvas id="chart-netpos"></canvas></div>
+    </div>
   </div>
 </div>
 
@@ -251,8 +259,12 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
       <div class="chart-wrap" style="height:200px"><canvas id="chart-co2"></canvas></div>
     </div>
     <div class="card g6">
-      <div class="card-hdr"><div><div class="card-title">Grenzüberschreitende Stromflüsse DE</div><div class="card-sub">ENTSO-E · MW · Import positiv, Export negativ</div></div></div>
+      <div class="card-hdr"><div><div class="card-title">Grenzüberschreitende Stromflüsse DE</div><div class="card-sub">ENTSO-E · MW · grün=Import, rot=Export · Ø 48h</div></div></div>
       <div class="chart-wrap" style="height:200px"><canvas id="chart-cross"></canvas></div>
+    </div>
+    <div class="card g6">
+      <div class="card-hdr"><div><div class="card-title">Netto-Position DE — 7 Tage</div><div class="card-sub">ENTSO-E · MW · positiv = Netto-Exporteur</div></div></div>
+      <div class="chart-wrap" style="height:200px"><canvas id="chart-netpos-markt"></canvas></div>
     </div>
   </div>
 </div>
@@ -371,6 +383,17 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
     <div class="card g12">
       <div class="card-hdr"><div><div class="card-title">Einspeisung vs. Entnahme</div><div class="card-sub">GIE AGSI+ · täglich</div></div></div>
       <div class="chart-wrap" style="height:170px"><canvas id="chart-gas-flow"></canvas></div>
+    </div>
+    <div class="card g12">
+      <div class="card-hdr">
+        <div><div class="card-title">ENTSOG Aggregierte Gasbilanz DE</div><div class="card-sub">ENTSOG · Physical Flow / Nomination · kWh/d · 60 Tage</div></div>
+        <select id="entsog-balance-indicator" onchange="renderGas()">
+          <option value="physical_flow">Physical Flow (IST)</option>
+          <option value="nomination">Nomination (Geplant)</option>
+          <option value="firm_technical">Firm Technical (Kapazität)</option>
+        </select>
+      </div>
+      <div class="chart-wrap" style="height:180px"><canvas id="chart-entsog-balance"></canvas></div>
     </div>
   </div>
 </div>
@@ -734,7 +757,7 @@ function renderRangeBar(tab) {
 
 const TAB_FILES = {
   strom:       ['smard','energy_charts','entsoe'],
-  markt:       ['energy_charts','commodities','fx'],
+  markt:       ['energy_charts','commodities','fx','entsoe'],
   rohstoffe:   ['commodities','fx'],
   kraftstoff:  ['fuel'],
   heizoel:     ['heating_oil','commodities'],
@@ -960,9 +983,132 @@ function renderStrom() {
     {label:'Pumpspeicher',val:pumpGW,unit:'GW (↓=lädt ↑=entlädt)',color:'#0891b2'},
   ]);
   renderPriceChart();
+  renderForecastChart();
+  renderNetPositionChart('chart-netpos');
 }
 
-function renderGenChart(s) {
+function renderForecastChart() {
+  const eb = D.entsoe;
+  const wrap = document.getElementById('chart-forecast')?.parentElement;
+  if (!wrap) return;
+  if (!eb || eb.awaiting_key || !eb.wind_solar_forecast) {
+    wrap.innerHTML = '<div class="nodata">ENTSO-E Prognose: Token ausstehend oder keine Daten</div>';
+    return;
+  }
+  const fcst = eb.wind_solar_forecast;
+  const now = Date.now() / 1000;
+  const cutoff = now - 48 * 3600;
+
+  // Build common timestamp axis from all available keys
+  const allTs = new Set();
+  Object.values(fcst).forEach(arr => (arr || []).forEach(p => allTs.add(p.ts)));
+  const ts = Array.from(allTs).sort((a, b) => a - b).filter(t => t >= cutoff);
+  if (!ts.length) {
+    wrap.innerHTML = '<div class="nodata">Keine Prognosedaten im Zeitraum</div>';
+    return;
+  }
+
+  const fcstMap = (key) => {
+    const m = {};
+    (fcst[key] || []).forEach(p => { m[p.ts] = p.v; });
+    return m;
+  };
+
+  // Vertical line at "now" via annotation — we'll fake it with a dataset point
+  const nowIdx = ts.findIndex(t => t >= now);
+  const labels = ts.map(t => {
+    const d = new Date(t * 1000);
+    return d.toLocaleString('de-DE', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+  });
+
+  const windOn  = fcstMap('wind_onshore');
+  const windOff = fcstMap('wind_offshore');
+  const solar   = fcstMap('solar');
+
+  const datasets = [];
+  if (Object.keys(windOn).length || Object.keys(windOff).length) {
+    datasets.push({
+      label: 'Wind ges. (MW)',
+      data: ts.map(t => ((windOn[t] || 0) + (windOff[t] || 0)) || null),
+      borderColor: C.wind_on, backgroundColor: C.wind_on + '20',
+      fill: true, borderWidth: 2,
+    });
+  }
+  if (Object.keys(solar).length) {
+    datasets.push({
+      label: 'Solar (MW)',
+      data: ts.map(t => solar[t] ?? null),
+      borderColor: C.solar, backgroundColor: C.solar + '20',
+      fill: true, borderWidth: 2,
+    });
+  }
+
+  if (!datasets.length) {
+    wrap.innerHTML = '<div class="nodata">Prognosedaten leer</div>';
+    return;
+  }
+
+  mkChart('chart-forecast', 'line', labels, datasets, {
+    plugins: { legend: { display: true, labels: { color: '#56657a', boxWidth: 8, font: { size: 10 } } } },
+    scales: { y: { title: { display: true, text: 'MW', color: '#8c98a8', font: { size: 10 } } } },
+  });
+
+  // Annotate "jetzt" with a vertical rule by drawing on canvas after render
+  if (nowIdx >= 0 && CH['chart-forecast']) {
+    const chart = CH['chart-forecast'];
+    const origDraw = chart.draw.bind(chart);
+    chart.draw = function() {
+      origDraw();
+      try {
+        const ctx = chart.ctx;
+        const x = chart.scales.x.getPixelForIndex(nowIdx);
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(x, chart.chartArea.top);
+        ctx.lineTo(x, chart.chartArea.bottom);
+        ctx.strokeStyle = 'rgba(220,53,69,0.6)';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([4, 3]);
+        ctx.stroke();
+        ctx.fillStyle = '#c0392b';
+        ctx.font = '9px Inter,sans-serif';
+        ctx.fillText('Jetzt', x + 3, chart.chartArea.top + 12);
+        ctx.restore();
+      } catch (e) {}
+    };
+    chart.draw();
+  }
+}
+
+function renderNetPositionChart(canvasId) {
+  const eb = D.entsoe;
+  const wrap = document.getElementById(canvasId)?.parentElement;
+  if (!wrap) return;
+  if (!eb || eb.awaiting_key || !eb.net_position?.length) {
+    wrap.innerHTML = '<div class="nodata">ENTSO-E Netto-Position: Token ausstehend oder keine Daten</div>';
+    return;
+  }
+  const co = rangeCutoffSec('strom');
+  const data = eb.net_position.filter(p => p.ts >= co);
+  if (!data.length) {
+    wrap.innerHTML = '<div class="nodata">Keine Netto-Positionsdaten im Zeitraum</div>';
+    return;
+  }
+  const vals = data.map(p => p.v);
+  mkChart(canvasId, 'bar', data.map(p => fmtTs(p.ts * 1000)), [{
+    label: 'Netto-Position (MW)',
+    data: vals,
+    backgroundColor: vals.map(v => v >= 0 ? 'rgba(31,157,85,0.55)' : 'rgba(192,57,43,0.55)'),
+    borderColor: vals.map(v => v >= 0 ? '#1f9d55' : '#c0392b'),
+    borderWidth: 1, borderRadius: 2,
+  }], {
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { ticks: { maxTicksLimit: 6 } },
+      y: { ticks: { callback: v => (Math.abs(v) >= 1000 ? (v / 1000).toFixed(1) + ' GW' : v + ' MW') } },
+    },
+  });
+}
   const co = rangeCutoffMs('strom');
   // All generation keys including the 3 new SMARD filters
   const keys=['wind_onshore','wind_offshore','solar','biomass','hydro','nuclear',
@@ -1121,8 +1267,10 @@ function renderMarkt() {
     kpiItems.push({label:'EUR / USD',val:fmtN(usd,4),unit:'EZB-Referenzkurs',delta,color:'#39d353'});
   }
 
-  // Cross-border flows from ENTSO-E (replaces broken energy-charts cross_border)
+  // Cross-border flows from ENTSO-E
   renderCrossBorder();
+  // Net position time series
+  renderNetPositionChart('chart-netpos-markt');
 
   document.getElementById('kpi-markt').innerHTML=kpis(kpiItems);
 }
@@ -1691,7 +1839,63 @@ function renderGas() {
       return`<tr><td>${d?.name||k.toUpperCase()}</td><td class="num" style="color:${col}">${l?.fill_pct!=null?fmtN(l.fill_pct,1)+'%':'—'}</td><td style="color:var(--text3)">${l?.date||'—'}</td></tr>`;
     }).join('')}</tbody></table>`;
   renderGasChart();
+  renderEntsogBalance();
 }
+
+function renderEntsogBalance() {
+  const og = D.entsog;
+  const wrap = document.getElementById('chart-entsog-balance')?.parentElement;
+  if (!wrap) return;
+
+  const indicator = document.getElementById('entsog-balance-indicator')?.value || 'physical_flow';
+  const deBal = og?.balance?.de?.[indicator] || [];
+
+  if (!deBal.length) {
+    wrap.innerHTML = '<div class="nodata">ENTSOG-Bilanz: wird beim nächsten Run verfügbar (auto-discovery läuft)</div>';
+    return;
+  }
+
+  // Split by direction: entry (import into DE) vs exit (export from DE)
+  const entries = deBal.filter(p => p.direction === 'entry');
+  const exits   = deBal.filter(p => p.direction === 'exit');
+
+  // If no direction split, show all as single series
+  if (!entries.length && !exits.length) {
+    const dates = deBal.map(p => p.date);
+    const vals  = deBal.map(p => p.v / 1e9); // kWh/d → GWh/d
+    mkChart('chart-entsog-balance', 'line', dates, [{
+      label: `${indicator} (GWh/d)`,
+      data: vals,
+      borderColor: '#0891b2', backgroundColor: 'rgba(8,145,178,0.10)', fill: true, borderWidth: 2,
+    }], {
+      scales: { y: { title: { display: true, text: 'GWh/d', color: '#8c98a8', font: { size: 10 } } } },
+    });
+    return;
+  }
+
+  // Build common date axis
+  const allDates = Array.from(new Set([...entries.map(p => p.date), ...exits.map(p => p.date)])).sort();
+  const entMap = {}; entries.forEach(p => { entMap[p.date] = (entMap[p.date] || 0) + p.v; });
+  const exMap  = {}; exits.forEach(p => { exMap[p.date]  = (exMap[p.date]  || 0) + p.v; });
+
+  mkChart('chart-entsog-balance', 'bar', allDates, [
+    {
+      label: 'Import (entry) GWh/d',
+      data: allDates.map(d => entMap[d] ? +(entMap[d] / 1e9).toFixed(1) : null),
+      backgroundColor: 'rgba(31,157,85,0.55)', borderColor: '#1f9d55', borderWidth: 1, borderRadius: 2,
+    },
+    {
+      label: 'Export (exit) GWh/d',
+      data: allDates.map(d => exMap[d] ? -(exMap[d] / 1e9).toFixed(1) : null),
+      backgroundColor: 'rgba(192,57,43,0.50)', borderColor: '#c0392b', borderWidth: 1, borderRadius: 2,
+    },
+  ], {
+    plugins: { legend: { display: true, labels: { color: '#56657a', boxWidth: 8, font: { size: 10 } } } },
+    scales: {
+      x: { ticks: { maxTicksLimit: 10 } },
+      y: { title: { display: true, text: 'GWh/d', color: '#8c98a8', font: { size: 10 } } },
+    },
+  });
 
 // ══════════════════════════════════════════════
 // WETTER
