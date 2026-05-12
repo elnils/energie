@@ -1,18 +1,14 @@
 """
 ENTSOG Transparency Platform — physical gas flows (no auth).
 
-Strategy: instead of hardcoding point-direction IDs (which 404 over time
-as routes get discontinued, see Nord Stream 1+2), we auto-discover the
-currently active German border points via the /operatorpointdirections
-endpoint, then fetch flows for the top ones with the most data.
+Strategy: auto-discover active German border points via /operatorpointdirections,
+fetch flows for each, cache the point list for 7 days to avoid hammering discovery.
 
-Additionally fetches aggregated supply/demand balance data per country
-via the /aggregatedData endpoint — gives total import, export, LNG send-out,
-and domestic production volumes as daily series.
+Additionally fetches aggregated supply/demand balance via /aggregatedData.
 
-Cached point-list lives in data/_entsog_points.json so we don't hammer
-the discovery endpoint every hour. We re-discover weekly or if all
-fetches fail.
+Cache invalidation: if ALL point fetches return empty/404, the cache file is
+deleted so the next run re-discovers fresh. Individual 404s are skipped silently
+— the point no longer exists (e.g. NS-1, NS-2, discontinued routes).
 
 Docs: https://transparency.entsog.eu/api/archiveDirectories/8/api-manual/
 """
@@ -28,25 +24,15 @@ from core import http, paths
 CACHE_FILE = os.path.join(paths.DATA_DIR, '_entsog_points.json')
 DISCOVERY_REFRESH_DAYS = 7
 
-# Fallback list if discovery fails — known active border points
+# Fallback list used ONLY when discovery itself fails (network error, 5xx).
+# These are verified-active points as of May 2026.
+# Note: do NOT put discontinued points here — they cause 404s every run.
 FALLBACK_POINTS = [
-    {'id': 'de-tso-0001itp-00096exit', 'label': 'Mallnow / DE→PL (GASCADE)'},
+    {'id': 'de-tso-0001itp-00096exit', 'label': 'Mallnow / DE→PL (GASCADE Yamal)'},
     {'id': 'cz-tso-0001itp-00010entry', 'label': 'Waidhaus / CZ→DE (NET4GAS)'},
-    {'id': 'de-tso-0001itp-00064exit', 'label': 'Brandov / DE→CZ (GASCADE)'},
-    {'id': 'at-tso-0001itp-00059exit', 'label': 'Oberkappel / DE→AT (GCA)'},
-    {'id': 'de-tso-0003itp-00131entry', 'label': 'Bocholtz / NL→DE (GTS)'},
-    {'id': 'de-tso-0007itp-00179entry', 'label': 'Mediesu Aurit / RO→DE (FGSZ)'},
 ]
 
-# Aggregated balance: indicator codes to fetch per country
-# These are the ENTSOG supply/demand balance indicators
-AGGREGATE_INDICATORS = [
-    'Physical Flow',
-    'Firm Technical',
-    'Nomination',
-]
-
-# Countries for aggregated balance data
+AGGREGATE_INDICATORS = ['Physical Flow', 'Nomination', 'Firm Technical']
 AGGREGATE_COUNTRIES = ['DE', 'EU']
 
 
@@ -81,16 +67,26 @@ def _save_cached_points(points: List[dict]) -> None:
         print(f'  ! entsog cache write: {e}')
 
 
+def _invalidate_cache() -> None:
+    try:
+        if os.path.exists(CACHE_FILE):
+            os.remove(CACHE_FILE)
+            print('    entsog: cache invalidated — will re-discover next run')
+    except OSError:
+        pass
+
+
 def _discover_points() -> List[dict]:
     """
     Discover active German border points via /operatorpointdirections.
-    Filter: country=DE, hasData=1, isPipelineInGroup=true, return the
-    top ~15 by recent activity.
+    Returns up to 15 points, imports (entry) first.
     """
     s = http.get_session()
-    url = 'https://transparency.entsog.eu/api/v1/operatorpointdirections.json'
-    params = {'limit': '-1'}
-    r = s.get(url, params=params, timeout=60)
+    r = s.get(
+        'https://transparency.entsog.eu/api/v1/operatorpointdirections.json',
+        params={'limit': '-1'},
+        timeout=60,
+    )
     r.raise_for_status()
     payload = r.json()
     items = payload.get('operatorpointdirections') or payload.get('data') or []
@@ -101,17 +97,15 @@ def _discover_points() -> List[dict]:
     for it in items:
         if not isinstance(it, dict):
             continue
-        op_country = (it.get('operatorCountryKey') or
-                      it.get('tSOCountryISO2') or '').lower()
-        pt_country = (it.get('pointCountryKey') or
-                      it.get('adjacentCountryKey') or '').lower()
+        op_country = (it.get('operatorCountryKey') or it.get('tSOCountryISO2') or '').lower()
+        pt_country = (it.get('pointCountryKey') or it.get('adjacentCountryKey') or '').lower()
         if 'de' not in (op_country, pt_country):
             continue
         has_data = it.get('hasData')
         if has_data not in (True, 'true', 1, '1'):
             continue
-        op_key = it.get('operatorKey', '').lower()
-        pt_key = it.get('pointKey', '').lower()
+        op_key  = it.get('operatorKey', '').lower()
+        pt_key  = it.get('pointKey', '').lower()
         direction = (it.get('directionKey') or '').lower()
         if not (op_key and pt_key and direction):
             continue
@@ -119,86 +113,81 @@ def _discover_points() -> List[dict]:
         if pd_id in seen:
             continue
         seen.add(pd_id)
-        label = (it.get('pointLabel') or it.get('pointName')
-                 or pt_key.upper())[:60]
-        if direction == 'exit':
-            label = f'{label} (Export)'
-        elif direction == 'entry':
-            label = f'{label} (Import)'
-        de_points.append({
-            'id': pd_id,
-            'label': label,
-            'operator': op_key,
-        })
+        label = (it.get('pointLabel') or it.get('pointName') or pt_key.upper())[:60]
+        label = f'{label} ({"Import" if direction == "entry" else "Export"})'
+        de_points.append({'id': pd_id, 'label': label, 'operator': op_key})
 
-    # Sort: entries first (imports = gas coming in for crisis monitoring)
+    # Imports first (gas coming in = most relevant for crisis monitoring)
     de_points.sort(key=lambda x: (0 if 'Import' in x['label'] else 1, x['label']))
     return de_points[:15]
 
 
-def _fetch_point(point_id: str, days: int = 30) -> List[dict]:
-    """Fetch Physical Flow time series for a single point-direction."""
-    end = datetime.now(timezone.utc)
+def _fetch_point(point_id: str, days: int = 30) -> Optional[List[dict]]:
+    """
+    Fetch Physical Flow for one point-direction.
+    Returns None on 404 (point discontinued) so caller can skip cleanly.
+    Raises on other errors so caller logs them.
+    """
+    end   = datetime.now(timezone.utc)
     start = end - timedelta(days=days)
     s = http.get_session()
-    params = {
-        'pointDirection': point_id,
-        'from': _iso_day(start),
-        'to': _iso_day(end),
-        'indicator': 'Physical Flow',
-        'periodType': 'day',
-        'timezone': 'CET',
-        'limit': '-1',
-    }
-    r = s.get('https://transparency.entsog.eu/api/v1/operationalData.json',
-              params=params, timeout=70)
+    r = s.get(
+        'https://transparency.entsog.eu/api/v1/operationalData.json',
+        params={
+            'pointDirection': point_id,
+            'from': _iso_day(start),
+            'to': _iso_day(end),
+            'indicator': 'Physical Flow',
+            'periodType': 'day',
+            'timezone': 'CET',
+            'limit': '-1',
+        },
+        timeout=70,
+    )
+    # 404 = point no longer published — skip without noise
+    if r.status_code == 404:
+        return None
     r.raise_for_status()
-    payload = r.json()
-    rows = payload.get('operationalData') or payload.get('data') or []
+    rows = r.json().get('operationalData') or r.json().get('data') or []
     out = []
     for row in rows:
         if not isinstance(row, dict):
             continue
         try:
-            value = row.get('value')
-            if value is None:
-                continue
-            value = float(value)
-        except (TypeError, ValueError):
+            value = float(row['value'])
+        except (KeyError, TypeError, ValueError):
             continue
         period = (row.get('periodFrom') or row.get('periodTo') or '')[:10]
         if not period:
             continue
-        unit = row.get('unit', 'kWh/d')
-        out.append({'date': period, 'v': value, 'unit': unit})
+        out.append({'date': period, 'v': value, 'unit': row.get('unit', 'kWh/d')})
     out.sort(key=lambda x: x['date'])
     return out
 
 
 def _fetch_aggregated_balance(country: str, days: int = 60) -> dict:
-    """
-    Fetch aggregated supply/demand balance for a country.
-    Returns dict of indicator → [{date, v, unit}].
-    Covers: Physical Flow aggregates (total import, total export),
-    Nomination, and Firm Technical capacity.
-    """
-    end = datetime.now(timezone.utc)
+    """Aggregated supply/demand balance per country (Physical Flow, Nomination, Firm Technical)."""
+    end   = datetime.now(timezone.utc)
     start = end - timedelta(days=days)
     s = http.get_session()
     result = {}
     for indicator in AGGREGATE_INDICATORS:
         try:
-            params = {
-                'country': country,
-                'indicator': indicator,
-                'from': _iso_day(start),
-                'to': _iso_day(end),
-                'periodType': 'day',
-                'timezone': 'CET',
-                'limit': '-1',
-            }
-            r = s.get('https://transparency.entsog.eu/api/v1/aggregatedData.json',
-                      params=params, timeout=60)
+            r = s.get(
+                'https://transparency.entsog.eu/api/v1/aggregatedData.json',
+                params={
+                    'country': country,
+                    'indicator': indicator,
+                    'from': _iso_day(start),
+                    'to': _iso_day(end),
+                    'periodType': 'day',
+                    'timezone': 'CET',
+                    'limit': '-1',
+                },
+                timeout=60,
+            )
+            if r.status_code == 404:
+                continue
             if not r.ok:
                 continue
             rows = r.json().get('aggregatedData') or r.json().get('data') or []
@@ -207,18 +196,16 @@ def _fetch_aggregated_balance(country: str, days: int = 60) -> dict:
                 if not isinstance(row, dict):
                     continue
                 try:
-                    val = float(row.get('value', 0) or 0)
+                    val = float(row.get('value') or 0)
                 except (TypeError, ValueError):
                     continue
                 period = (row.get('periodFrom') or row.get('periodTo') or '')[:10]
                 if not period:
                     continue
-                # Split by direction if present
-                direction = (row.get('directionKey') or '').lower()
                 series.append({
                     'date': period,
                     'v': round(val, 0),
-                    'direction': direction,
+                    'direction': (row.get('directionKey') or '').lower(),
                     'unit': row.get('unit', 'kWh/d'),
                 })
             series.sort(key=lambda x: x['date'])
@@ -232,12 +219,13 @@ def _fetch_aggregated_balance(country: str, days: int = 60) -> dict:
 
 
 def fetch() -> dict:
-    # 1) Get the point list (cached or discover fresh)
+    # ── 1. Get point list (cache or discover) ──────────────────────────────
+    used_fallback = False
     cached = _load_cached_points()
     if cached and cached.get('points'):
         points_to_fetch = cached['points']
         print(f'    entsog: using {len(points_to_fetch)} cached points '
-              f'(re-discover in <={DISCOVERY_REFRESH_DAYS}d)')
+              f'(age <{DISCOVERY_REFRESH_DAYS}d)')
     else:
         try:
             points_to_fetch = _discover_points()
@@ -245,30 +233,51 @@ def fetch() -> dict:
                 _save_cached_points(points_to_fetch)
                 print(f'    entsog: discovered {len(points_to_fetch)} active DE points')
             else:
-                print('  ! entsog discovery returned empty, falling back')
+                print('  ! entsog discovery returned empty — using fallback')
                 points_to_fetch = FALLBACK_POINTS
+                used_fallback = True
         except Exception as e:
-            print(f'  ! entsog discovery failed: {e}, using fallback')
+            print(f'  ! entsog discovery failed: {e} — using fallback')
             points_to_fetch = FALLBACK_POINTS
+            used_fallback = True
 
-    # 2) Fetch flow data for each point
+    # ── 2. Fetch flow data for each point ──────────────────────────────────
     points: Dict[str, dict] = {}
     errors: List[str] = []
+    got_404_count = 0
+
     for p in points_to_fetch:
         try:
             series = _fetch_point(p['id'])
+            if series is None:
+                # 404 — point discontinued; skip cleanly, don't count as error
+                got_404_count += 1
+                print(f'    entsog/{p["id"][:35]}: 404 (discontinued, skipping)')
+                continue
             points[p['id']] = {'label': p['label'], 'series': series}
             last = series[-1] if series else None
-            print(f'    entsog/{p["id"][:30]}: {len(series)} pts'
-                  + (f', last={last["date"]}={last["v"]:.0f}' if last else ''))
+            print(f'    entsog/{p["id"][:35]}: {len(series)} pts'
+                  + (f', last={last["date"]}={last["v"]:.0f}' if last else ' (empty)'))
             time.sleep(0.4)
         except Exception as e:
             short_err = str(e)[:80]
-            print(f'  ! entsog/{p["id"][:30]}: {short_err}')
+            print(f'  ! entsog/{p["id"][:35]}: {short_err}')
             errors.append(f'{p["id"]}: {short_err}')
-            points[p['id']] = {'label': p['label'], 'series': []}
 
-    # 3) Fetch aggregated balance for DE and EU
+    # If every cached point was 404 → stale cache; invalidate and fallback gracefully
+    if got_404_count == len(points_to_fetch) and cached and not used_fallback:
+        _invalidate_cache()
+        print('  ! entsog: all cached points 404 — cache invalidated, re-discover next run')
+
+    # If we have NO data at all (not even partial) and nothing in errors, raise
+    # so the store preserves the previous good file.
+    if not points and not errors:
+        raise RuntimeError(
+            f'ENTSOG: no data returned (all {len(points_to_fetch)} points skipped/404). '
+            'Cache invalidated — discovery runs next cycle.'
+        )
+
+    # ── 3. Aggregated balance for DE + EU ──────────────────────────────────
     balance: Dict[str, dict] = {}
     for country in AGGREGATE_COUNTRIES:
         try:
@@ -278,31 +287,18 @@ def fetch() -> dict:
         except Exception as e:
             print(f'  ! entsog/balance {country}: {e}')
 
-    # If all point fetches empty AND we used cached, invalidate cache
-    if all(not pt['series'] for pt in points.values()) and cached:
-        try:
-            os.remove(CACHE_FILE)
-            print('    entsog: cache invalidated (all fetches empty)')
-        except OSError:
-            pass
-
     return {
         'data': {
-            'points': points,
+            'points':  points,
             'balance': balance,
-            'errors': errors,
+            'errors':  errors,
         },
         'meta': {
-            'source': 'ENTSOG Transparency Platform',
-            'license': 'free, attribution requested',
-            'url': 'https://transparency.entsog.eu',
+            'source':    'ENTSOG Transparency Platform',
+            'license':   'free, attribution requested',
+            'url':       'https://transparency.entsog.eu',
             'indicator': 'Physical Flow, daily',
-            'units': 'kWh/d',
+            'units':     'kWh/d',
             'discovery': 'auto via /operatorpointdirections',
-            'balance_note': (
-                'balance[de/eu].physical_flow: aggregated cross-border flows. '
-                'balance[de/eu].nomination: scheduled gas transport. '
-                'balance[de/eu].firm_technical: contracted firm capacity.'
-            ),
         },
     }
