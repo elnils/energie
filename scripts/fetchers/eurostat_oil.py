@@ -74,6 +74,11 @@ def _parse_jsonstat(data: dict,
         strides[i] = strides[i + 1] * sizes[i + 1]
 
     dim_pos   = {d: i for i, d in enumerate(dims)}
+    # Eurostat uses 'TIME_PERIOD' in newer API, 'time' in older — try both
+    for _td in (time_dim, 'TIME_PERIOD', 'time'):
+        if _td in dimension:
+            time_dim = _td
+            break
     geo_cats  = dimension.get(geo_dim, {}).get('category', {}).get('index', {})
     time_cats = dimension.get(time_dim, {}).get('category', {}).get('index', {})
 
@@ -376,6 +381,12 @@ def _fetch_one(output_key: str, dataset: str, filters: dict,
                     return output_key, per_country
                 else:
                     print(f'    eurostat/{output_key}: REST ok but 0 values parsed')
+                _dims = data.get('id', [])
+                _sizes = data.get('size', [])
+                _dim_cats = {k: list(v.get('category',{}).get('index',{}).keys())[:2]
+                              for k,v in data.get('dimension',{}).items()}
+                print(f'      id={_dims} size={_sizes}')
+                print(f'      cats={_dim_cats}')
             else:
                 print(f'    eurostat/{output_key}: REST non-JSON ({ct[:30]}, '
                       f'body={body[:40]}), trying bulk...')
