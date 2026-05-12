@@ -348,17 +348,65 @@ def _parse_ffcsv(csv_text: str) -> List[dict]:
     return rows
 
 
+def _col(row: dict, *candidates: str) -> str:
+    """
+    Try multiple column name candidates in order, return first non-empty value.
+    Handles both German ffcsv names (Zeit, Auspraegung) and English aliases.
+    """
+    for c in candidates:
+        v = row.get(c)
+        if v is not None and str(v).strip() not in ('', '.', '-', '...'):
+            return str(v).strip()
+    return ''
+
+
+def _find_value_col(row: dict) -> Optional[float]:
+    """
+    Destatis ffcsv value columns have long generated names like:
+      PREIS1__Verbraucherpreisindex__2020=100__Originaldaten__...
+    They are NOT one of the structural columns. Find the first column
+    that looks like a numeric value.
+
+    Structural column prefixes to skip:
+      Zeit, Statistik, 1_Auspraegung, 2_Auspraegung, 3_Auspraegung,
+      time, value (fallback for English layouts)
+    """
+    STRUCTURAL = ('zeit', 'statistik', 'auspraegung', 'variable_attribute',
+                  'merkmal', 'wert_label')
+    for col, raw in row.items():
+        col_lower = col.lower()
+        # Skip structural columns
+        if any(col_lower.startswith(s) for s in STRUCTURAL):
+            continue
+        # Try to parse as a number
+        v = _to_float(raw)
+        if v is not None:
+            return v
+    # Final fallback: explicit 'value' or 'Wert' column
+    return _to_float(row.get('value') or row.get('Wert'))
+
+
+def _debug_columns(rows: List[dict]) -> None:
+    """Print actual CSV column names on the first row for diagnostics."""
+    if not rows:
+        print('    destatis debug: no rows to inspect')
+        return
+    cols = list(rows[0].keys())
+    print(f'    destatis debug: {len(cols)} columns: {cols[:8]}'
+          + (f' ... +{len(cols)-8} more' if len(cols) > 8 else ''))
+
+
 def _filter_energy(rows: List[dict]) -> List[dict]:
-    """Keep only rows whose variable_attribute_label mentions energy categories."""
+    """Keep only rows whose classifying label mentions energy categories."""
     out = []
     for r in rows:
-        # The label can live in different columns depending on the table layout.
-        # Check the most likely fields.
-        lbl = (
-            r.get('1_variable_attribute_label')
-            or r.get('2_variable_attribute_label')
-            or r.get('3_variable_attribute_label')
-            or ''
+        # Destatis ffcsv uses 1_Auspraegung_Label (German) or
+        # 1_variable_attribute_label (older English layout)
+        lbl = _col(
+            r,
+            '1_Auspraegung_Label', '2_Auspraegung_Label', '3_Auspraegung_Label',
+            '1_variable_attribute_label', '2_variable_attribute_label',
+            '3_variable_attribute_label',
         ).lower()
         if any(kw in lbl for kw in ENERGY_KEYWORDS):
             out.append(r)
@@ -370,8 +418,10 @@ def _build_series(rows: List[dict]) -> Dict[str, List[dict]]:
     Group rows into time series by category label.
     Returns: { '<category>': [{period: 'YYYY-MM', v: float}, ...], ... }
 
-    The ffcsv format uses 'time' and 'time_label' columns. For monthly data
-    'time' is the year and 'time_label' is the month name (e.g. 'Januar').
+    Handles both German column naming (Zeit/Zeit_Label/Auspraegung_Label)
+    and English column naming (time/time_label/variable_attribute_label).
+    The value column name is discovered dynamically because Destatis generates
+    long names like 'PREIS1__Verbraucherpreisindex__2020=100__...'.
     """
     DE_MONTHS = {
         'januar': 1, 'februar': 2, 'märz': 3, 'maerz': 3, 'april': 4,
@@ -380,25 +430,44 @@ def _build_series(rows: List[dict]) -> Dict[str, List[dict]]:
     }
     series: Dict[str, List[dict]] = {}
     for r in rows:
-        label = (
-            r.get('1_variable_attribute_label')
-            or r.get('2_variable_attribute_label')
-            or r.get('3_variable_attribute_label')
+        # Category label — German names first, English fallback
+        label = _col(
+            r,
+            '1_Auspraegung_Label', '2_Auspraegung_Label', '3_Auspraegung_Label',
+            '1_variable_attribute_label', '2_variable_attribute_label',
+            '3_variable_attribute_label',
         )
         if not label:
+            # If no classifying label, use the statistic name itself
+            label = _col(r, 'Statistik_Label', 'statistic_label', 'Deutschland')
+        if not label:
             continue
-        # Period: e.g. time=2024 + time_label=Januar -> "2024-01"
-        year = (r.get('time') or '').strip()
-        month_lbl = (r.get('time_label') or '').strip().lower()
+
+        # Year: 'Zeit' (German) or 'time' (English)
+        year = _col(r, 'Zeit', 'time', 'Zeitraum', 'Jahr')
         if not year:
             continue
+
+        # Month label: 'Zeit_Label' (German) might be "Januar 2024" or "Januar"
+        # Strip the year from the label if present
+        month_raw = _col(r, 'Zeit_Label', 'time_label', 'Zeitraum_Label', 'Monat').lower()
+        # Remove year digits so "januar 2024" → "januar"
+        import re as _re
+        month_lbl = _re.sub(r'\b\d{4}\b', '', month_raw).strip()
+
         if month_lbl in DE_MONTHS:
             period = f'{year}-{DE_MONTHS[month_lbl]:02d}'
+        elif month_lbl:
+            # Maybe it's already YYYY-MM or the label is a quarter
+            period = f'{year}-{month_lbl}'
         else:
             period = year
-        v = _to_float(r.get('value'))
+
+        # Value: dynamic discovery
+        v = _find_value_col(r)
         if v is None:
             continue
+
         series.setdefault(label, []).append({'period': period, 'v': v})
 
     # Sort each series chronologically
@@ -419,6 +488,7 @@ def fetch() -> dict:
     headline_series: Dict[str, List[dict]] = {}
     try:
         head_rows = _fetch_tablefile(creds, TABLE_VPI_HEADLINE, startyear=2020, mode=auth_mode)
+        _debug_columns(head_rows)
         headline_series = _build_series(head_rows)
         print(f'    destatis headline {TABLE_VPI_HEADLINE}: {len(head_rows)} rows, '
               f'{len(headline_series)} series')
@@ -434,6 +504,7 @@ def fetch() -> dict:
             classifyingvariable1='CC13A5',
             mode=auth_mode,
         )
+        _debug_columns(detail_rows)
     except Exception as e:
         print(f'  ! destatis detail {TABLE_VPI_DETAIL}: {e}')
 
