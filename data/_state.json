@@ -14,16 +14,16 @@
     "last_success_iso": "2026-05-13T05:53:00Z"
   },
   "eia_petroleum": {
-    "last_attempt_epoch": 1778618746,
-    "last_attempt_iso": "2026-05-12T20:45:46Z",
-    "last_success_epoch": 1778618751,
-    "last_success_iso": "2026-05-12T20:45:51Z"
+    "last_attempt_epoch": 1778668715,
+    "last_attempt_iso": "2026-05-13T10:38:35Z",
+    "last_success_epoch": 1778668722,
+    "last_success_iso": "2026-05-13T10:38:42Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1778658876,
-    "last_attempt_iso": "2026-05-13T07:54:36Z",
-    "last_success_epoch": 1778658964,
-    "last_success_iso": "2026-05-13T07:56:04Z"
+    "last_attempt_epoch": 1778668578,
+    "last_attempt_iso": "2026-05-13T10:36:18Z",
+    "last_success_epoch": 1778668659,
+    "last_success_iso": "2026-05-13T10:37:39Z"
   },
   "energy_futures": {
     "last_attempt_epoch": 1778648063,
@@ -54,22 +54,22 @@
     "last_success_iso": "2026-05-13T06:26:48Z"
   },
   "fred_energy": {
-    "last_attempt_epoch": 1778618741,
-    "last_attempt_iso": "2026-05-12T20:45:41Z",
-    "last_success_epoch": 1778618746,
-    "last_success_iso": "2026-05-12T20:45:46Z"
+    "last_attempt_epoch": 1778668711,
+    "last_attempt_iso": "2026-05-13T10:38:31Z",
+    "last_success_epoch": 1778668715,
+    "last_success_iso": "2026-05-13T10:38:35Z"
   },
   "fuel": {
-    "last_attempt_epoch": 1778618683,
-    "last_attempt_iso": "2026-05-12T20:44:43Z",
-    "last_success_epoch": 1778618739,
-    "last_success_iso": "2026-05-12T20:45:39Z"
+    "last_attempt_epoch": 1778668659,
+    "last_attempt_iso": "2026-05-13T10:37:39Z",
+    "last_success_epoch": 1778668710,
+    "last_success_iso": "2026-05-13T10:38:30Z"
   },
   "fx": {
-    "last_attempt_epoch": 1778618681,
-    "last_attempt_iso": "2026-05-12T20:44:41Z",
-    "last_success_epoch": 1778618683,
-    "last_success_iso": "2026-05-12T20:44:43Z"
+    "last_attempt_epoch": 1778668659,
+    "last_attempt_iso": "2026-05-13T10:37:39Z",
+    "last_success_epoch": 1778668659,
+    "last_success_iso": "2026-05-13T10:37:39Z"
   },
   "gas_storage": {
     "last_attempt_epoch": 1778647989,
@@ -78,24 +78,24 @@
     "last_success_iso": "2026-05-13T04:53:34Z"
   },
   "heating_oil": {
-    "last_attempt_epoch": 1778618739,
-    "last_attempt_iso": "2026-05-12T20:45:39Z",
+    "last_attempt_epoch": 1778668710,
+    "last_attempt_iso": "2026-05-13T10:38:30Z",
     "last_error_epoch": 1778569110,
     "last_error_message": "RuntimeError: Tecson: could not extract reference price (selector broken?)",
-    "last_success_epoch": 1778618741,
-    "last_success_iso": "2026-05-12T20:45:41Z"
+    "last_success_epoch": 1778668711,
+    "last_success_iso": "2026-05-13T10:38:31Z"
   },
   "news": {
-    "last_attempt_epoch": 1778658976,
-    "last_attempt_iso": "2026-05-13T07:56:16Z",
-    "last_success_epoch": 1778659000,
-    "last_success_iso": "2026-05-13T07:56:40Z"
+    "last_attempt_epoch": 1778668722,
+    "last_attempt_iso": "2026-05-13T10:38:42Z",
+    "last_success_epoch": 1778668744,
+    "last_success_iso": "2026-05-13T10:39:04Z"
   },
   "smard": {
-    "last_attempt_epoch": 1778658868,
-    "last_attempt_iso": "2026-05-13T07:54:28Z",
-    "last_success_epoch": 1778658876,
-    "last_success_iso": "2026-05-13T07:54:36Z"
+    "last_attempt_epoch": 1778668571,
+    "last_attempt_iso": "2026-05-13T10:36:11Z",
+    "last_success_epoch": 1778668578,
+    "last_success_iso": "2026-05-13T10:36:18Z"
   },
   "weather": {
     "last_attempt_epoch": 1778658964,
