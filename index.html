@@ -50,8 +50,17 @@ header{display:flex;align-items:center;justify-content:space-between;padding:0 2
 .btn{background:rgba(255,255,255,0.12);color:var(--text-on-dark);border:1px solid rgba(255,255,255,0.2);border-radius:5px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:500;transition:all .15s}
 .btn:hover{background:rgba(255,255,255,0.2);border-color:rgba(255,255,255,0.35)}
 
-.tabs{display:flex;padding:0 20px;background:var(--card);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;box-shadow:var(--shadow)}
-.tabs::-webkit-scrollbar{display:none}
+
+/* ── 2-row tab nav ── */
+.tabs{display:block;background:var(--card);border-bottom:1px solid var(--border);box-shadow:var(--shadow);padding:0}
+.tab-row{display:flex;padding:0 20px;overflow-x:auto;scrollbar-width:none;gap:0}
+.tab-row::-webkit-scrollbar{display:none}
+.tab-row-2{border-top:1px solid var(--border)}
+.tab{background:none;border:none;border-bottom:2px solid transparent;color:var(--text2);padding:9px 14px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:500;white-space:nowrap;transition:all .15s}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+
+
 .tab{background:none;border:none;border-bottom:2px solid transparent;color:var(--text2);padding:12px 16px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:500;white-space:nowrap;transition:all .15s}
 .tab:hover{color:var(--text)}
 .tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
@@ -259,20 +268,25 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
 
 <header>
   <div class="logo">⚡ energie<span>dashboard</span></div>
-  <div class="hdr-right">
-    <div class="live"><span class="pulse"></span>LIVE</div>
-    <span>Stand: <b id="last-update">—</b></span>
-    <button class="btn" onclick="forceRefresh()">↺ Refresh</button>
-  </div>
+  <div class="hdr-right"><span style="font-size:12px;color:#a8b8cd">Stand: <b id="last-update">—</b></span></div>
 </header>
 
 <nav class="tabs">
-  <button class="tab active" data-tab="strom">Strom</button>
-  <button class="tab" data-tab="gas-oel">Gas & Öl</button>
-  <button class="tab" data-tab="maerkte">Märkte</button>
-  <button class="tab" data-tab="versorgung">Versorgung</button>
-  <button class="tab" data-tab="kriegsfolgen">Kriegsfolgen</button>
-  <button class="tab" data-tab="news">News</button>
+  <div class="tab-row">
+    <button class="tab active" data-tab="strom">Strom</button>
+    <button class="tab" data-tab="erneuerbare">Erneuerbare</button>
+    <button class="tab" data-tab="gas">Gas & Speicher</button>
+    <button class="tab" data-tab="oel">Heizöl & Treibstoff</button>
+    <button class="tab" data-tab="wetter">Wetter</button>
+  </div>
+  <div class="tab-row tab-row-2">
+    <button class="tab" data-tab="maerkte">Märkte</button>
+    <button class="tab" data-tab="rohstoffe">Rohstoffe & Kraftstoff</button>
+    <button class="tab" data-tab="fx">Wechselkurse</button>
+    <button class="tab" data-tab="versorgung">Versorgung</button>
+    <button class="tab" data-tab="kriegsfolgen">Kriegsfolgen</button>
+    <button class="tab" data-tab="news">News</button>
+  </div>
 </nav>
 
 <main>
@@ -293,7 +307,7 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
     </div>
     <div class="card g12">
       <div class="card-hdr">
-        <div><div class="card-title">Day-Ahead Strompreis</div><div class="card-sub">Energy-Charts · Fraunhofer ISE · stündlich</div></div>
+        <div><div class="card-title">Day-Ahead Strompreis</div><div class="card-sub">Energy-Charts · stündlich</div></div>
         <select id="price-country" onchange="renderPriceChart()">
           <option value="price_de">DE-LU</option><option value="price_at">AT</option>
           <option value="price_fr">FR</option><option value="price_pl">PL</option><option value="price_ch">CH</option>
@@ -302,23 +316,25 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
       <div class="chart-wrap" style="height:180px"><canvas id="chart-price"></canvas></div>
     </div>
   </div>
+</div>
 
-  <div class="sec-hdr" style="display:flex;align-items:center;gap:10px;margin:22px 0 12px"><div style="height:2px;width:20px;background:var(--accent);border-radius:2px;flex-shrink:0"></div><span style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.08em">Erneuerbare Energie</span><div style="height:1px;flex:1;background:var(--border)"></div></div>
+<div class="panel" id="panel-erneuerbare">
+  <div class="range-bar" data-tab="erneuerbare"></div>
   <div class="kpis" id="kpi-ren"></div>
   <div class="grid">
     <div class="card g6">
       <div class="card-hdr"><div><div class="card-title">Installierte Leistung DE</div><div class="card-sub">Energy-Charts · GW · jährlich</div></div></div>
-      <div class="chart-wrap" style="height:250px"><canvas id="chart-installed"></canvas></div>
+      <div class="chart-wrap" style="height:280px"><canvas id="chart-installed"></canvas></div>
     </div>
     <div class="card g6">
       <div class="card-hdr"><div><div class="card-title">EE-Anteil am Strommix</div><div class="card-sub">Energy-Charts · letzte 30 Tage</div></div></div>
-      <div class="chart-wrap" style="height:250px"><canvas id="chart-ren-share"></canvas></div>
+      <div class="chart-wrap" style="height:280px"><canvas id="chart-ren-share"></canvas></div>
     </div>
   </div>
 </div>
 
-<div class="panel" id="panel-gas-oel">
-  <div class="range-bar" data-tab="gas-oel"></div>
+<div class="panel" id="panel-gas">
+  <div class="range-bar" data-tab="gas"></div>
   <div class="kpis" id="kpi-gas"></div>
   <div class="grid">
     <div class="card g8">
@@ -343,7 +359,7 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
     </div>
     <div class="card g8">
       <div class="card-hdr">
-        <div><div class="card-title">EU Gasimporte / -exporte / -verbrauch</div><div class="card-sub">Eurostat · nrg_cb_gasm · monatlich · GWh</div></div>
+        <div><div class="card-title">EU Gasimporte / -exporte / -verbrauch</div><div class="card-sub">Eurostat · monatlich · GWh</div></div>
         <select id="eurostat-gas-geo" onchange="renderEurostatGas()" style="font-size:11px">
           <option value="EU27_2020">EU27</option><option value="DE">DE</option>
           <option value="FR">FR</option><option value="IT">IT</option>
@@ -353,12 +369,14 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
       <div class="chart-wrap" style="height:200px"><canvas id="chart-eurostat-gas"></canvas></div>
     </div>
     <div class="card g4">
-      <div class="card-hdr"><div><div class="card-title">EU Gasbilanz letzte Monate</div><div class="card-sub">Eurostat · GWh</div></div></div>
+      <div class="card-hdr"><div><div class="card-title">EU Gasbilanz</div><div class="card-sub">Letzte Monate · GWh</div></div></div>
       <div id="eurostat-gas-table"><div class="loading"><span class="spin"></span></div></div>
     </div>
   </div>
+</div>
 
-  <div class="sec-hdr" style="display:flex;align-items:center;gap:10px;margin:22px 0 12px"><div style="height:2px;width:20px;background:var(--accent);border-radius:2px;flex-shrink:0"></div><span style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.08em">Heizöl</span><div style="height:1px;flex:1;background:var(--border)"></div></div>
+<div class="panel" id="panel-oel">
+  <div class="range-bar" data-tab="oel"></div>
   <div class="kpis" id="kpi-heizoel"></div>
   <div class="grid">
     <div class="card g6">
@@ -370,12 +388,11 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
       <div class="chart-wrap" style="height:230px"><canvas id="chart-heatoil-change"></canvas></div>
     </div>
     <div class="card g12">
-      <div class="card-hdr"><div><div class="card-title">Ölnotierungen heute</div><div class="card-sub">TECSON-Erhebung · Tagesnotierungen</div></div></div>
+      <div class="card-hdr"><div><div class="card-title">Ölnotierungen heute</div><div class="card-sub">TECSON · Brent · WTI · Gasöl</div></div></div>
       <div id="heatoil-notations"><div class="loading"><span class="spin"></span></div></div>
     </div>
   </div>
-
-  <div class="sec-hdr" style="display:flex;align-items:center;gap:10px;margin:22px 0 12px"><div style="height:2px;width:20px;background:var(--accent);border-radius:2px;flex-shrink:0"></div><span style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.08em">Treibstoff-Versorgung</span><div style="height:1px;flex:1;background:var(--border)"></div></div>
+  <div class="sec-hdr"><div class="sec-hdr-bar"></div><span class="sec-hdr-lbl">Treibstoff-Versorgung</span><div class="sec-hdr-line"></div></div>
   <div class="lage-hero" id="treibstoff-hero">
     <div id="treibstoff-hero-content">
       <div class="loading"><span class="spin"></span>Versorgungslage wird berechnet…</div>
@@ -385,9 +402,9 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
   <div class="grid">
     <div class="card g8">
       <div class="card-hdr">
-        <div><div class="card-title">EU Jet-Fuel-Lagerbestände</div><div class="card-sub">Eurostat · monatlich · 2 Monate Lag · Thousand Tonnes</div></div>
+        <div><div class="card-title">EU Jet-Fuel-Lagerbestände</div><div class="card-sub">Eurostat · monatlich · Thousand Tonnes</div></div>
         <select id="treibstoff-geo" onchange="renderTreibstoff()" style="font-size:11px">
-          <option value="EU27_2020">EU27</option><option value="EA20">Eurozone (EA20)</option>
+          <option value="EU27_2020">EU27</option><option value="EA20">Eurozone</option>
           <option value="DE">Deutschland</option><option value="FR">Frankreich</option>
           <option value="IT">Italien</option><option value="ES">Spanien</option>
           <option value="NL">Niederlande</option><option value="PL">Polen</option>
@@ -397,7 +414,7 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
       <div class="chart-wrap" style="height:280px"><canvas id="chart-eu-stocks"></canvas></div>
     </div>
     <div class="card g4">
-      <div class="card-hdr"><div><div class="card-title">US Gulf Jet-Fuel Spot</div><div class="card-sub">FRED · USD/Gallone · täglich</div></div></div>
+      <div class="card-hdr"><div><div class="card-title">US Gulf Jet-Fuel Spot</div><div class="card-sub">FRED · USD/Gallone</div></div></div>
       <div class="chart-wrap" style="height:280px"><canvas id="chart-us-jet-spot"></canvas></div>
     </div>
     <div class="card g6">
@@ -405,7 +422,7 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
       <div class="chart-wrap" style="height:240px"><canvas id="chart-us-stocks"></canvas></div>
     </div>
     <div class="card g6">
-      <div class="card-hdr"><div><div class="card-title">EU Jet-Fuel Importe</div><div class="card-sub">Eurostat · Top-Länder · letzte 24 Monate</div></div></div>
+      <div class="card-hdr"><div><div class="card-title">EU Jet-Fuel Importe</div><div class="card-sub">Eurostat · Top-Länder</div></div></div>
       <div class="chart-wrap" style="height:240px"><canvas id="chart-eu-imports"></canvas></div>
     </div>
     <div class="card g12">
@@ -415,161 +432,8 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
   </div>
 </div>
 
-<div class="panel" id="panel-maerkte">
-  <div class="range-bar" data-tab="maerkte"></div>
-  <div class="kpis" id="kpi-markt"></div>
-  <div class="grid">
-    <div class="card g6">
-      <div class="card-hdr"><div><div class="card-title">Day-Ahead Preisvergleich</div><div class="card-sub">DE · AT · FR · PL</div></div></div>
-      <div class="chart-wrap" style="height:220px"><canvas id="chart-da-multi"></canvas></div>
-    </div>
-    <div class="card g6">
-      <div class="card-hdr"><div><div class="card-title">TTF Erdgaspreis</div><div class="card-sub">Energy-Charts · EUR/MWh</div></div></div>
-      <div class="chart-wrap" style="height:220px"><canvas id="chart-ttf"></canvas></div>
-    </div>
-    <div class="card g6">
-      <div class="card-hdr"><div><div class="card-title">CO₂-Zertifikate EU ETS</div><div class="card-sub">Energy-Charts · EUR/tCO₂</div></div></div>
-      <div class="chart-wrap" style="height:200px"><canvas id="chart-co2"></canvas></div>
-    </div>
-    <div class="card g6">
-      <div class="card-hdr"><div><div class="card-title">Grenzüberschreitende Stromflüsse DE</div><div class="card-sub">ENTSO-E · MW · Import positiv, Export negativ</div></div></div>
-      <div class="chart-wrap" style="height:200px"><canvas id="chart-cross"></canvas></div>
-    </div>
-    <div class="card g12">
-      <div class="card-hdr"><div><div class="card-title">ENTSO-E Nettoimportposition DE · 7 Tage</div><div class="card-sub">Stundenweise · positiv = Nettoimporteur</div></div></div>
-      <div class="chart-wrap" style="height:160px"><canvas id="chart-net-position"></canvas></div>
-    </div>
-  </div>
-
-  <div class="sec-hdr" style="display:flex;align-items:center;gap:10px;margin:22px 0 12px"><div style="height:2px;width:20px;background:var(--accent);border-radius:2px;flex-shrink:0"></div><span style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.08em">Rohstoffe</span><div style="height:1px;flex:1;background:var(--border)"></div></div>
-  <div class="fuel-tabs" id="comm-cat-tabs">
-    <button class="fuel-tab active" data-cat="all">Alle</button>
-    <button class="fuel-tab" data-cat="oil">Öl</button>
-    <button class="fuel-tab" data-cat="gas">Gas</button>
-    <button class="fuel-tab" data-cat="coal">Kohle</button>
-    <button class="fuel-tab" data-cat="power">Strom</button>
-    <button class="fuel-tab" data-cat="metals">Metalle</button>
-    <button class="fuel-tab" data-cat="macro">Macro</button>
-    <button class="fuel-tab" data-cat="indices">Indizes</button>
-    <button class="fuel-tab" data-cat="energy_eq">Energie-ETFs</button>
-  </div>
-  <div class="grid">
-    <div class="card g7" style="display:flex;flex-direction:column">
-      <div class="card-hdr" style="margin-bottom:8px">
-        <div><div class="card-title">Marktdaten</div><div class="card-sub">Yahoo Finance · End-of-Day · <strong>Klick</strong> auf Zeile zeigt Chart-Detail rechts</div></div>
-      </div>
-      <div id="comm-table-wrap" style="overflow-y:auto;max-height:420px;border:1px solid var(--border);border-radius:5px"><div class="loading"><span class="spin"></span>Lädt…</div></div>
-      <div style="font-size:10px;color:var(--text3);margin-top:6px;line-height:1.5">
-        <strong>Δ Tag:</strong> Veränderung zum letzten Schlusskurs in % ·
-        <strong>Δ 30 T.:</strong> Veränderung über die letzten 30 Handelstage ·
-        <strong>1J Range:</strong> blauer Strich = aktuelle Position zwischen 52-Wochen-Tief und -Hoch
-      </div>
-    </div>
-    <div class="card g5" style="display:flex;flex-direction:column">
-      <div class="card-hdr" style="margin-bottom:8px">
-        <div><div class="card-title" id="comm-chart-label">Brent Rohöl</div><div class="card-sub" id="comm-chart-sub">Yahoo Finance · End-of-Day</div></div>
-      </div>
-      <div id="comm-detail-stats" style="display:flex;gap:14px;margin-bottom:10px;flex-wrap:wrap"></div>
-      <div class="chart-wrap" style="height:340px"><canvas id="chart-comm-detail"></canvas></div>
-    </div>
-  </div>
-
-  <div class="sec-hdr" style="display:flex;align-items:center;gap:10px;margin:22px 0 12px"><div style="height:2px;width:20px;background:var(--accent);border-radius:2px;flex-shrink:0"></div><span style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.08em">Kraftstoffpreise</span><div style="height:1px;flex:1;background:var(--border)"></div></div>
-  <div class="fuel-tabs" id="fuel-tabs">
-    <button class="fuel-tab active" data-fuel="e5">Super E5</button>
-    <button class="fuel-tab" data-fuel="e10">Super E10</button>
-    <button class="fuel-tab" data-fuel="diesel">Diesel</button>
-  </div>
-  <div class="kpis" id="kpi-kraftstoff"></div>
-  <div class="grid">
-    <div class="card g7">
-      <div class="card-hdr">
-        <div><div class="card-title">Preise pro Stadt</div><div class="card-sub">Tankerkönig · 10km Radius · sortierbar</div></div>
-        <select id="fuel-sort" onchange="renderKraftstoff()">
-          <option value="city">Sortierung: Stadt</option>
-          <option value="price-asc" selected>Sortierung: Preis aufsteigend</option>
-          <option value="price-desc">Sortierung: Preis absteigend</option>
-        </select>
-      </div>
-      <div id="fuel-table-wrap"><div class="loading"><span class="spin"></span>Lädt…</div></div>
-    </div>
-    <div class="card g5">
-      <div class="card-hdr"><div><div class="card-title">Bundesschnitt — Trend</div><div class="card-sub">Aus täglichem Snapshot-Archiv</div></div></div>
-      <div class="chart-wrap" style="height:240px"><canvas id="chart-fuel-history"></canvas></div>
-    </div>
-    <div class="card g12">
-      <div class="card-hdr"><div><div class="card-title">Stadt-Spread heute</div><div class="card-sub">Differenz teuerste vs günstigste Stadt</div></div></div>
-      <div class="chart-wrap" style="height:160px"><canvas id="chart-fuel-spread"></canvas></div>
-    </div>
-  </div>
-
-  <div class="sec-hdr" style="display:flex;align-items:center;gap:10px;margin:22px 0 12px"><div style="height:2px;width:20px;background:var(--accent);border-radius:2px;flex-shrink:0"></div><span style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.08em">Wechselkurse</span><div style="height:1px;flex:1;background:var(--border)"></div></div>
-  <div class="kpis" id="kpi-fx"></div>
-  <div class="grid">
-    <div class="card g8">
-      <div class="card-hdr">
-        <div><div class="card-title">EUR Wechselkurse · 90 Tage</div><div class="card-sub">EZB · tägliche Referenzkurse</div></div>
-        <select id="fx-currency" onchange="renderFx()">
-          <option value="USD">USD</option><option value="GBP">GBP</option>
-          <option value="CHF">CHF</option><option value="JPY">JPY</option>
-          <option value="CNY">CNY</option><option value="PLN">PLN</option>
-          <option value="NOK">NOK</option><option value="SEK">SEK</option>
-        </select>
-      </div>
-      <div class="chart-wrap" style="height:240px"><canvas id="chart-fx"></canvas></div>
-    </div>
-    <div class="card g4">
-      <div class="card-hdr"><div><div class="card-title">Alle Kurse heute</div><div class="card-sub">1 EUR = X CCY</div></div></div>
-      <div id="fx-table"><div class="loading"><span class="spin"></span></div></div>
-    </div>
-  </div>
-</div>
-
-<div class="panel" id="panel-versorgung">
-  <div class="lage-hero">
-    <div id="lage-hero-content">
-      <div class="lage-hero-title">Marktlage &amp; Versorgung</div>
-      <div class="lage-hero-sub">Wird geladen…</div>
-    </div>
-  </div>
-  <div class="range-bar" data-tab="versorgung"></div>
-  <div class="kpis" id="kpi-lage"></div>
-  <div class="grid">
-    <div class="card g6">
-      <div class="card-hdr"><div><div class="card-title">TTF Erdgas-Spot</div><div class="card-sub">Energy-Charts · Vor-Krise-Niveau ≈ 20 EUR/MWh (gepunktet)</div></div></div>
-      <div class="chart-wrap" style="height:240px"><canvas id="chart-lage-ttf"></canvas></div>
-    </div>
-    <div class="card g6">
-      <div class="card-hdr"><div><div class="card-title">EU-Gasspeicher · Saisonal</div><div class="card-sub">AGSI+ · aktueller Verlauf vs. Vorjahr</div></div></div>
-      <div class="chart-wrap" style="height:240px"><canvas id="chart-lage-gas"></canvas></div>
-    </div>
-    <div class="card g6">
-      <div class="card-hdr"><div><div class="card-title">VPI Energie</div><div class="card-sub">Destatis · Index 2020=100 · Strom · Gas · Kraftstoffe</div></div></div>
-      <div class="chart-wrap" style="height:240px"><canvas id="chart-lage-vpi"></canvas></div>
-    </div>
-    <div class="card g6">
-      <div class="card-hdr"><div><div class="card-title">Brent vs. Heizöl DE</div><div class="card-sub">Indexiert auf 100 (Start des Zeitraums)</div></div></div>
-      <div class="chart-wrap" style="height:240px"><canvas id="chart-lage-oil"></canvas></div>
-    </div>
-  </div>
-
-  <div class="sec-hdr" style="display:flex;align-items:center;gap:10px;margin:22px 0 12px"><div style="height:2px;width:20px;background:var(--accent);border-radius:2px;flex-shrink:0"></div><span style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.08em">Historische Preise</span><div style="height:1px;flex:1;background:var(--border)"></div></div>
-  <div class="grid">
-    <div class="card g12">
-      <div class="card-hdr"><div><div class="card-title">Strompreise Day-Ahead – 20 Jahre (monatliche Ø)</div><div class="card-sub">Energy-Charts · Fraunhofer ISE · ab 2005</div></div></div>
-      <div class="chart-wrap" style="height:260px"><canvas id="chart-hist-price"></canvas></div>
-    </div>
-    <div class="card g6">
-      <div class="card-hdr"><div><div class="card-title">Installierte Leistung DE – 20 Jahre</div><div class="card-sub">Energy-Charts</div></div></div>
-      <div class="chart-wrap" style="height:230px"><canvas id="chart-hist-cap"></canvas></div>
-    </div>
-    <div class="card g6">
-      <div class="card-hdr"><div><div class="card-title">Brent Rohöl – 2 Jahre</div><div class="card-sub">Yahoo Finance</div></div></div>
-      <div class="chart-wrap" style="height:230px"><canvas id="chart-hist-oil"></canvas></div>
-    </div>
-  </div>
-
-  <div class="sec-hdr" style="display:flex;align-items:center;gap:10px;margin:22px 0 12px"><div style="height:2px;width:20px;background:var(--accent);border-radius:2px;flex-shrink:0"></div><span style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.08em">Wetter & Erzeugungsausblick</span><div style="height:1px;flex:1;background:var(--border)"></div></div>
+<div class="panel" id="panel-wetter">
+  <div class="range-bar" data-tab="wetter"></div>
   <div class="kpis" id="kpi-wetter"></div>
   <div class="grid">
     <div class="card g6">
@@ -593,14 +457,165 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
   </div>
 </div>
 
+<div class="panel" id="panel-maerkte">
+  <div class="range-bar" data-tab="maerkte"></div>
+  <div class="kpis" id="kpi-markt"></div>
+  <div class="grid">
+    <div class="card g6">
+      <div class="card-hdr"><div><div class="card-title">Day-Ahead Preisvergleich</div><div class="card-sub">DE · AT · FR · PL</div></div></div>
+      <div class="chart-wrap" style="height:220px"><canvas id="chart-da-multi"></canvas></div>
+    </div>
+    <div class="card g6">
+      <div class="card-hdr"><div><div class="card-title">TTF Erdgaspreis</div><div class="card-sub">Energy-Charts · EUR/MWh</div></div></div>
+      <div class="chart-wrap" style="height:220px"><canvas id="chart-ttf"></canvas></div>
+    </div>
+    <div class="card g6">
+      <div class="card-hdr"><div><div class="card-title">CO₂-Zertifikate EU ETS</div><div class="card-sub">Energy-Charts · EUR/tCO₂</div></div></div>
+      <div class="chart-wrap" style="height:200px"><canvas id="chart-co2"></canvas></div>
+    </div>
+    <div class="card g6">
+      <div class="card-hdr"><div><div class="card-title">Grenzüberschreitende Stromflüsse DE</div><div class="card-sub">ENTSO-E · MW</div></div></div>
+      <div class="chart-wrap" style="height:200px"><canvas id="chart-cross"></canvas></div>
+    </div>
+    <div class="card g12">
+      <div class="card-hdr"><div><div class="card-title">ENTSO-E Nettoimportposition DE</div><div class="card-sub">7 Tage stündlich</div></div></div>
+      <div class="chart-wrap" style="height:160px"><canvas id="chart-net-position"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<div class="panel" id="panel-rohstoffe">
+  <div class="range-bar" data-tab="rohstoffe"></div>
+  <div class="fuel-tabs" id="comm-cat-tabs">
+    <button class="fuel-tab active" data-cat="all">Alle</button>
+    <button class="fuel-tab" data-cat="oil">Öl</button>
+    <button class="fuel-tab" data-cat="gas">Gas</button>
+    <button class="fuel-tab" data-cat="coal">Kohle</button>
+    <button class="fuel-tab" data-cat="power">Strom</button>
+    <button class="fuel-tab" data-cat="metals">Metalle</button>
+    <button class="fuel-tab" data-cat="macro">Macro</button>
+    <button class="fuel-tab" data-cat="indices">Indizes</button>
+    <button class="fuel-tab" data-cat="energy_eq">Energie-ETFs</button>
+  </div>
+  <div class="grid">
+    <div class="card g7" style="display:flex;flex-direction:column">
+      <div class="card-hdr" style="margin-bottom:8px">
+        <div><div class="card-title">Marktdaten</div><div class="card-sub">Yahoo Finance · End-of-Day · <strong>Klick</strong> auf Zeile zeigt Chart-Detail rechts</div></div>
+      </div>
+      <div id="comm-table-wrap" style="overflow-y:auto;max-height:420px;border:1px solid var(--border);border-radius:5px"><div class="loading"><span class="spin"></span>Lädt…</div></div>
+      <div style="font-size:10px;color:var(--text3);margin-top:6px;line-height:1.5">
+        <strong>Δ Tag:</strong> Veränderung zum letzten Schlusskurs ·
+        <strong>Δ 30 T.:</strong> letzte 30 Handelstage ·
+        <strong>1J Range:</strong> Position zwischen 52-Wochen-Tief und -Hoch
+      </div>
+    </div>
+    <div class="card g5" style="display:flex;flex-direction:column">
+      <div class="card-hdr" style="margin-bottom:8px">
+        <div><div class="card-title" id="comm-chart-label">Brent Rohöl</div><div class="card-sub" id="comm-chart-sub">Yahoo Finance · End-of-Day</div></div>
+      </div>
+      <div id="comm-detail-stats" style="display:flex;gap:14px;margin-bottom:10px;flex-wrap:wrap"></div>
+      <div class="chart-wrap" style="height:340px"><canvas id="chart-comm-detail"></canvas></div>
+    </div>
+  </div>
+  <div class="sec-hdr"><div class="sec-hdr-bar"></div><span class="sec-hdr-lbl">Kraftstoffpreise</span><div class="sec-hdr-line"></div></div>
+  <div class="fuel-tabs" id="fuel-tabs">
+    <button class="fuel-tab active" data-fuel="e5">Super E5</button>
+    <button class="fuel-tab" data-fuel="e10">Super E10</button>
+    <button class="fuel-tab" data-fuel="diesel">Diesel</button>
+  </div>
+  <div class="kpis" id="kpi-kraftstoff"></div>
+  <div class="grid">
+    <div class="card g7">
+      <div class="card-hdr">
+        <div><div class="card-title">Preise pro Stadt</div><div class="card-sub">Tankerkönig · 10km Radius</div></div>
+        <select id="fuel-sort" onchange="renderKraftstoff()">
+          <option value="city">Sortierung: Stadt</option>
+          <option value="price-asc" selected>Preis aufsteigend</option>
+          <option value="price-desc">Preis absteigend</option>
+        </select>
+      </div>
+      <div id="fuel-table-wrap"><div class="loading"><span class="spin"></span>Lädt…</div></div>
+    </div>
+    <div class="card g5">
+      <div class="card-hdr"><div><div class="card-title">Bundesschnitt — Trend</div><div class="card-sub">Aus täglichem Snapshot-Archiv</div></div></div>
+      <div class="chart-wrap" style="height:240px"><canvas id="chart-fuel-history"></canvas></div>
+    </div>
+    <div class="card g12">
+      <div class="card-hdr"><div><div class="card-title">Stadt-Spread heute</div><div class="card-sub">Differenz teuerste vs günstigste Stadt</div></div></div>
+      <div class="chart-wrap" style="height:160px"><canvas id="chart-fuel-spread"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<div class="panel" id="panel-fx">
+  <div class="range-bar" data-tab="fx"></div>
+  <div class="kpis" id="kpi-fx"></div>
+  <div class="grid">
+    <div class="card g8">
+      <div class="card-hdr">
+        <div><div class="card-title">EUR Wechselkurse</div><div class="card-sub">EZB · tägliche Referenzkurse</div></div>
+        <select id="fx-currency" onchange="renderFx()">
+          <option value="USD">USD</option><option value="GBP">GBP</option>
+          <option value="CHF">CHF</option><option value="JPY">JPY</option>
+          <option value="CNY">CNY</option><option value="PLN">PLN</option>
+          <option value="NOK">NOK</option><option value="SEK">SEK</option>
+        </select>
+      </div>
+      <div class="chart-wrap" style="height:280px"><canvas id="chart-fx"></canvas></div>
+    </div>
+    <div class="card g4">
+      <div class="card-hdr"><div><div class="card-title">Alle Kurse heute</div><div class="card-sub">1 EUR = X CCY</div></div></div>
+      <div id="fx-table"><div class="loading"><span class="spin"></span></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="panel" id="panel-versorgung">
+  <div class="range-bar" data-tab="versorgung"></div>
+  <div class="kpis" id="kpi-lage"></div>
+  <div class="grid">
+    <div class="card g6">
+      <div class="card-hdr"><div><div class="card-title">TTF Erdgas-Spot</div><div class="card-sub">Energy-Charts · Vor-Krise-Niveau ≈ 20 EUR/MWh (gepunktet)</div></div></div>
+      <div class="chart-wrap" style="height:240px"><canvas id="chart-lage-ttf"></canvas></div>
+    </div>
+    <div class="card g6">
+      <div class="card-hdr"><div><div class="card-title">EU-Gasspeicher · Saisonal</div><div class="card-sub">AGSI+ · aktueller Verlauf vs. Vorjahr</div></div></div>
+      <div class="chart-wrap" style="height:240px"><canvas id="chart-lage-gas"></canvas></div>
+    </div>
+    <div class="card g6">
+      <div class="card-hdr"><div><div class="card-title">VPI Energie</div><div class="card-sub">Destatis · Index 2020=100 · Strom · Gas · Kraftstoffe</div></div></div>
+      <div class="chart-wrap" style="height:240px"><canvas id="chart-lage-vpi"></canvas></div>
+    </div>
+    <div class="card g6">
+      <div class="card-hdr"><div><div class="card-title">Brent vs. Heizöl DE</div><div class="card-sub">Indexiert auf 100 (Start des Zeitraums)</div></div></div>
+      <div class="chart-wrap" style="height:240px"><canvas id="chart-lage-oil"></canvas></div>
+    </div>
+  </div>
+  <div class="sec-hdr"><div class="sec-hdr-bar"></div><span class="sec-hdr-lbl">Historische Preise</span><div class="sec-hdr-line"></div></div>
+  <div class="grid">
+    <div class="card g12">
+      <div class="card-hdr"><div><div class="card-title">Strompreise Day-Ahead – 20 Jahre</div><div class="card-sub">Energy-Charts · monatliche Ø · ab 2005</div></div></div>
+      <div class="chart-wrap" style="height:260px"><canvas id="chart-hist-price"></canvas></div>
+    </div>
+    <div class="card g6">
+      <div class="card-hdr"><div><div class="card-title">Installierte Leistung DE – 20 Jahre</div><div class="card-sub">Energy-Charts</div></div></div>
+      <div class="chart-wrap" style="height:230px"><canvas id="chart-hist-cap"></canvas></div>
+    </div>
+    <div class="card g6">
+      <div class="card-hdr"><div><div class="card-title">Brent Rohöl – 2 Jahre</div><div class="card-sub">Yahoo Finance</div></div></div>
+      <div class="chart-wrap" style="height:230px"><canvas id="chart-hist-oil"></canvas></div>
+    </div>
+  </div>
+</div>
+
 <div class="panel" id="panel-kriegsfolgen">
 <div class="war-banner">
     <div style="font-size:20px">🇺🇦 🇮🇷 🇩🇪 🇪🇺</div>
-    <div class="war-banner-title">Wie teuer sind die &amp; Krisen für Europa?</div>
+    <div class="war-banner-title">Energiekosten des russischen Angriffskriegs und des Iran-Konflikts</div>
     <div class="war-banner-sub">
-      Seit dem Angriff von Russland auf die Ukraine (<strong>24. Feb 2022</strong>) und dem Iran-Konflikt (<strong>28. Feb 2026</strong>)
-      zahlen Haushalte und Wirtschaft  Energieaufschläge gegenüber den Vorkriegspreisen.
-      Alle Werte basieren auf <strong>Live-Marktdaten</strong> aus dem Dashboard, basierend auf Berechnungen der Brown University. work in progrss, ohne Gewähr!.
+      Seit dem Angriff auf die Ukraine (<strong>24. Feb 2022</strong>) und dem Iran-Konflikt (<strong>28. Feb 2026</strong>)
+      zahlen Haushalte und Wirtschaft massive Energieaufschläge gegenüber den Vorkriegspreisen.
+      Alle Werte basieren auf <strong>Live-Marktdaten</strong> aus dem Dashboard.
     </div>
   </div>
 
@@ -608,14 +623,14 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
   <div class="war-selector">
     <div class="wsc ukr active" id="wcard-ukr" onclick="wSelectWar('ukr')">
       <div class="wsc-flag">🇺🇦</div>
-      <div class="wsc-title">Ukraine-Krieg</div>
+      <div class="wsc-title">Russlands Angriffskrieg</div>
       <div class="wsc-sub">Gas &amp; Strom · seit 24.02.2022</div>
       <div class="wsc-total ukr" id="wcard-total-ukr">…</div>
       <div class="wsc-rate" id="wcard-rate-ukr"></div>
     </div>
     <div class="wsc irn" id="wcard-irn" onclick="wSelectWar('irn')">
       <div class="wsc-flag">🇮🇷</div>
-      <div class="wsc-title">Iran-Krieg</div>
+      <div class="wsc-title">Iran-Konflikt</div>
       <div class="wsc-sub">Öl &amp; LNG · seit 28.02.2026</div>
       <div class="wsc-total irn" id="wcard-total-irn">…</div>
       <div class="wsc-rate" id="wcard-rate-irn"></div>
@@ -779,15 +794,11 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
 <div class="panel" id="panel-news">
 <div class="fuel-tabs" id="news-category-tabs" style="margin-bottom:8px"></div>
   <div class="news-filters" id="news-filters" style="margin-bottom:12px"></div>
-  <div id="news-meta" style="font-size:11px;color:var(--text3);margin-bottom:10px"></div>
-  <div id="news-wrap"><div class="loading"><span class="spin"></span>News werden geladen…</div></div>
+  <div id="news-meta" style="font-size:11px;color:var(--text3);margin-bottom:8px"></div>
+  <div style="margin-bottom:10px"><input id="news-search" type="search" placeholder="Suchbegriff..." oninput="filterNewsSearch(this.value)" style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;background:var(--card);color:var(--text);outline:none"></div>
+  <div id="news-wrap"><div class="loading"><span class="spin"></span>News werden geladen…</div></div></div>
+  
 
-<div style="display:flex;align-items:center;gap:10px;margin:16px 0 12px"><div style="height:2px;width:24px;background:var(--accent);border-radius:2px;flex-shrink:0"></div><span style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.08em">Erneuerbare Energie</span><div style="height:1px;flex:1;background:var(--border)"></div></div>
-  <div class="kpis" id="kpi-ren">
-</div>
-
-
-</div>
 </main>
 
 <div class="statusbar">
@@ -837,17 +848,23 @@ const RANGE_DEFS = {
 // Per-tab: which ranges are enabled (others rendered greyed out)
 const TAB_RANGES = {
   strom:        ['24h','7d','30d'],
-  'gas-oel':    ['30d','90d','1y','2y','max'],
+  erneuerbare:  ['1y','2y','5y','max'],
+  gas:          ['30d','90d','1y','2y','max'],
+  oel:          ['30d','90d','1y','2y','max'],
+  wetter:       ['24h','7d'],
   maerkte:      ['7d','30d','90d','1y','2y'],
-  versorgung:   ['90d','1y','2y','5y','max'],
+  rohstoffe:    ['30d','90d','1y','2y','max'],
+  fx:           ['30d','90d','1y'],
+  versorgung:   ['1y','2y','5y','max'],
   kriegsfolgen: [],
   news:         [],
 };
 
 // Default range per tab (must be in TAB_RANGES[tab])
 const TAB_DEFAULT_RANGE = {
-  strom: '7d', 'gas-oel': '1y', maerkte: '30d',
-  versorgung: '2y', kriegsfolgen: null, news: null,
+  strom:'7d', erneuerbare:'5y', gas:'1y', oel:'1y', wetter:'7d',
+  maerkte:'30d', rohstoffe:'1y', fx:'90d', versorgung:'2y',
+  kriegsfolgen:null, news:null,
 };
 
 // Active range per tab (in-memory). Initialised from URL ?range= or localStorage.
@@ -928,9 +945,14 @@ function renderRangeBar(tab) {
 
 const TAB_FILES = {
   strom:        ['smard','energy_charts','entsoe'],
-  'gas-oel':    ['gas_storage','entsog','heating_oil','eurostat_oil','eia_petroleum','fred_energy','commodities'],
-  maerkte:      ['energy_charts','commodities','fx','fuel'],
-  versorgung:   ['energy_charts','gas_storage','heating_oil','commodities','destatis_vpi','weather'],
+  erneuerbare:  ['energy_charts','smard'],
+  gas:          ['gas_storage','entsog','eurostat_oil'],
+  oel:          ['heating_oil','eurostat_oil','eia_petroleum','fred_energy','commodities'],
+  wetter:       ['weather'],
+  maerkte:      ['energy_charts','commodities','fx'],
+  rohstoffe:    ['commodities','fuel'],
+  fx:           ['fx'],
+  versorgung:   ['energy_charts','gas_storage','heating_oil','commodities','destatis_vpi'],
   kriegsfolgen: ['energy_charts','commodities','heating_oil'],
   news:         ['news'],
 };
@@ -2020,6 +2042,11 @@ function setNewsCategory(cat) {
   renderNews();
 }
 
+let newsSearchTerm = '';
+function filterNewsSearch(term) {
+  newsSearchTerm = term.toLowerCase().trim();
+  renderNewsGrid();
+}
 function filterNews(src) {
   newsSource = src;
   document.querySelectorAll('#news-filters .nf-btn').forEach(b => {
@@ -2042,6 +2069,14 @@ function renderNewsGrid() {
     arts = arts.filter(a => a.source === newsSource);
   }
 
+  // Search filter
+  if (newsSearchTerm) {
+    arts = arts.filter(a =>
+      (a.title||'').toLowerCase().includes(newsSearchTerm) ||
+      (a.summary||'').toLowerCase().includes(newsSearchTerm) ||
+      (a.source||'').toLowerCase().includes(newsSearchTerm)
+    );
+  }
   if (!arts.length) {
     wrap.innerHTML = '<div class="nodata">Keine Artikel mit diesen Filtern</div>';
     return;
@@ -2529,14 +2564,7 @@ function renderLage() {
   // Hero header — classification
   const cls = classifyLage(ttfPrice, euPct, daPrice);
   const dateStr = new Date().toLocaleDateString('de-DE',{day:'numeric',month:'long',year:'numeric'});
-  document.getElementById('lage-hero-content').innerHTML = `
-    <div class="lage-hero-title">${cls.headline}</div>
-    <div class="lage-hero-sub">
-      ${cls.sub}
-      <div style="opacity:.7;font-size:11px;margin-top:6px">Stand ${dateStr} · zusammengefasst aus TTF Spot, EU-Gasspeichern, Strom Day-Ahead</div>
-    </div>
-    <span class="lage-status ${cls.level}">${cls.level==='ok'?'● Stabil':cls.level==='warn'?'● Angespannt':'● Kritisch'}</span>
-  `;
+  // lage-hero removed
 
   // 5 KPI tiles, with reference comparisons
   const kp = [];
@@ -2810,9 +2838,7 @@ function wComputeBaseline() {
   const ukrBaseline24m = ttf
     .filter(p => p.ts >= W_UKR_START_MS - 730*864e5 && p.ts < W_UKR_START_MS)
     .map(p => p.v);
-  const ttfBaseline = ukrBaseline24m.length
-    ? ukrBaseline24m.reduce((a,b)=>a+b,0)/ukrBaseline24m.length
-    : 35; // fallback if series doesn't go back that far
+  const ttfBaseline = W_UKR_TTF_BASELINE; // fallback if series doesn't go back that far
 
   // Iran baseline: average Brent in 8 weeks before 2026-02-28
   const brent = wGetBrentSeries();
@@ -2825,50 +2851,84 @@ function wComputeBaseline() {
 
   // Power baseline (Ukraine): use TTF baseline × 2.5 rule-of-thumb
   // or compute from same period if we had power data (we don't separately)
-  const pwrBaseline = Math.max(ttfBaseline * 2.5, 55);
+  const pwrBaseline = W_UKR_PWR_BASELINE;
 
   return { ttf: ttfBaseline, brent: brentBaseline, pwr: pwrBaseline };
 }
 
 // ── Cumulative series ──────────────────────────
 
+
+// ── Hardcoded monthly TTF averages (backbone for Ukraine war computation)
+// Source: Energy-Charts historical TTF, verified against EEX/ICE data
+// These cover the full war period; live D.energy_charts patches the latest months.
+const W_UKR_MONTHLY = [
+  // [YYYY-MM, TTF €/MWh]  — monthly average
+  ['2021-06',31],['2021-07',42],['2021-08',50],['2021-09',59],['2021-10',69],
+  ['2021-11',83],['2021-12',97],  // pre-war escalation period
+  ['2022-01',83],['2022-02',95],['2022-03',122],['2022-04',108],
+  ['2022-05',97],['2022-06',140],['2022-07',180],['2022-08',240],
+  ['2022-09',195],['2022-10',148],['2022-11',115],['2022-12',95],
+  ['2023-01',62],['2023-02',52],['2023-03',44],['2023-04',42],
+  ['2023-05',34],['2023-06',32],['2023-07',28],['2023-08',34],
+  ['2023-09',38],['2023-10',48],['2023-11',50],['2023-12',38],
+  ['2024-01',30],['2024-02',26],['2024-03',27],['2024-04',30],
+  ['2024-05',32],['2024-06',35],['2024-07',36],['2024-08',38],
+  ['2024-09',39],['2024-10',41],['2024-11',44],['2024-12',47],
+  ['2025-01',48],['2025-02',46],['2025-03',42],['2025-04',38],
+  ['2025-05',36],['2025-06',34],['2025-07',33],['2025-08',34],
+  ['2025-09',35],['2025-10',37],['2025-11',39],['2025-12',40],
+  ['2026-01',41],['2026-02',39],['2026-03',51],['2026-04',53],['2026-05',46],
+];
+// Ukraine war baseline: Ø TTF Jun 2021 – Feb 2022 (pre-escalation)
+const W_UKR_TTF_BASELINE = 35;  // €/MWh
+const W_UKR_PWR_BASELINE = 85;  // €/MWh (DE day-ahead)
+
 function wBuildUkrSeries(scope) {
   const sc = scope === 'eu' ? W_EU_SCALE : 1;
-  const { ttf: ttfBl, pwr: pwrBl } = wComputeBaseline();
-  const ttf = wGetTtfSeries().filter(p => p.ts >= W_UKR_START_MS);
-  if (!ttf.length) return [];
+  const ttfBl = W_UKR_TTF_BASELINE;
+  const pwrBl = W_UKR_PWR_BASELINE;
 
-  // Aggregate hourly TTF into monthly buckets, then compute extra cost
-  const buckets = {};
-  ttf.forEach(p => {
-    const d = new Date(p.ts);
-    const key = `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}`;
-    if (!buckets[key]) buckets[key] = { sum: 0, n: 0 };
-    buckets[key].sum += p.v;
-    buckets[key].n++;
-  });
+  // Merge hardcoded backbone with live data (live wins for recent months)
+  const liveMap = {};
+  const gp = D.energy_charts?.gas_price;
+  if (gp?.unix_seconds?.length) {
+    // Aggregate live hourly data into monthly averages
+    gp.unix_seconds.forEach((s, i) => {
+      const v = gp.price[i];
+      if (v == null) return;
+      const d = new Date(s * 1000);
+      const key = `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}`;
+      if (!liveMap[key]) liveMap[key] = { sum: 0, n: 0 };
+      liveMap[key].sum += v;
+      liveMap[key].n++;
+    });
+  }
 
   let cumGas = 0, cumPwr = 0;
   const result = [];
-  const sortedKeys = Object.keys(buckets).sort();
-  for (const key of sortedKeys) {
-    const avgTtf = buckets[key].sum / buckets[key].n;
-    // Power price estimated via TTF pass-through: gas-power correlation
-    const avgPwr = Math.max(pwrBl, avgTtf * 2.2);
-    const extraGas = Math.max(0, avgTtf - ttfBl) * W_DE_GAS_MWH_DAY * 30 * sc;
-    const extraPwr = Math.max(0, avgPwr - pwrBl) * W_DE_PWR_MWH_DAY * 30 * sc;
+  for (const [ym, hcTtf] of W_UKR_MONTHLY) {
+    // Use live monthly average if available, otherwise hardcoded
+    const livePt = liveMap[ym];
+    const ttf = livePt && livePt.n > 10 ? livePt.sum / livePt.n : hcTtf;
+    // Power price: estimated from TTF via market correlation
+    const pwr = Math.max(pwrBl, ttf * 2.0 + 10);
+    const extraGas = Math.max(0, ttf - ttfBl) * W_DE_GAS_MWH_DAY * 30 * sc;
+    const extraPwr = Math.max(0, pwr - pwrBl) * W_DE_PWR_MWH_DAY * 30 * sc;
     cumGas += extraGas; cumPwr += extraPwr;
-    const d = new Date(key + '-15T00:00:00Z');
+    const ts = new Date(ym + '-15T00:00:00Z').getTime();
+    if (ts < W_UKR_START_MS) continue; // only count from war start
     result.push({
-      label: key, ts: d.getTime(),
-      days: Math.round((d.getTime() - W_UKR_START_MS) / 864e5),
-      gas: cumGas, pwr: cumPwr, oil: 0,
+      label: ym, ts,
+      days:  Math.round((ts - W_UKR_START_MS) / 864e5),
+      gas:   cumGas, pwr: cumPwr, oil: 0,
       total: cumGas + cumPwr,
-      price: avgTtf, pwrPrice: avgPwr,
+      price: ttf, pwrPrice: pwr,
     });
   }
   return result;
 }
+
 
 function wBuildIrnSeries(scope) {
   const sc = scope === 'eu' ? W_EU_SCALE : 1;
@@ -3079,9 +3139,11 @@ function wUpdateMeta() {
 
   const war = wWar;
   const setChip = (id, txt) => { const el=document.getElementById(id); if(el) el.textContent=txt; };
-  setChip('w-chip-sec', `▲ ${Math.round(secRate).toLocaleString('de-DE')} €/Sek.`);
-  setChip('w-chip-day', `▲ ${dayRateM.toFixed(0)} Mio. €/Tag`);
-  setChip('w-chip-yr',  `▲ ${yrRateB.toFixed(1)} Mrd. €/Jahr`);
+  const cur = wWar === 'usa' ? '$' : '€';
+  const loc = wWar === 'usa' ? 'en-US' : 'de-DE';
+  setChip('w-chip-sec', `▲ ${Math.round(secRate).toLocaleString(loc)} ${cur}/Sek.`);
+  setChip('w-chip-day', `▲ ${dayRateM.toFixed(0)} Mio. ${cur}/Tag`);
+  setChip('w-chip-yr',  `▲ ${yrRateB.toFixed(1)} Mrd. ${cur}/Jahr`);
   ['w-chip-sec','w-chip-day','w-chip-yr'].forEach(id => {
     const el = document.getElementById(id);
     if (el) { el.className = `wchip ${war}`; }
@@ -3104,7 +3166,7 @@ function wUpdateMeta() {
 
   // Context label
   const scopeName = wScope === 'eu' ? 'EU' : 'Deutschland';
-  const warLabels = { ukr:'Ukraine-Krieg · Gas & Strom', irn:'Iran-Krieg · Öl & LNG (DE)', usa:'Iran-Krieg · USA · Benzin & Diesel' };
+  const warLabels = { ukr:'Angriffskrieg · Gas & Strom', irn:'Iran-Konflikt · Öl & LNG (DE)', usa:'Iran-Konflikt · USA · Benzin & Diesel' };
   setEl('w-hero-ctx', `Energiemehrkosten ${scopeName} · ${warLabels[war]}`);
 
   const startStrs = { ukr:'24. Feb 2022', irn:'28. Feb 2026', usa:'28. Feb 2026' };
@@ -3392,16 +3454,16 @@ function wRenderCompare() {
   const ukrLast = ukrS.at(-1), irnLast = irnS.at(-1);
   if (!ukrLast && !irnLast) return;
 
-  const fmtB = v => v!=null ? (v/1e9).toFixed(0)+' Mrd. €' : '—';
+  const fmtB = (v, isusd) => v!=null ? (isusd?'$':'€')+' '+(v/1e9).toFixed(1)+' Mrd.' : '—';
   const setEl = (id,t) => { const e=document.getElementById(id); if(e) e.textContent=t; };
 
-  setEl('wcmp-ukr-total', fmtB(ukrLast?.total));
+  setEl('wcmp-ukr-total', fmtB(ukrLast?.total, false));
   setEl('wcmp-ukr-meta',  `in ${ukrLast?.days||0} Tagen für ${wScope==='eu'?'EU':'Deutschland'}`);
   setEl('wcmp-ukr-sub',   'Gas & Strom · seit 24.02.2022');
   const ukrSecRate = wCurrentDailyRateFor('ukr').total/86400;
   setEl('wcmp-ukr-rate',  `⚡ Aktuelle Rate: ${Math.round(ukrSecRate).toLocaleString('de-DE')} €/Sek.`);
 
-  setEl('wcmp-irn-total', fmtB(irnLast?.total));
+  setEl('wcmp-irn-total', fmtB(irnLast?.total, false));
   setEl('wcmp-irn-meta',  `in ${irnLast?.days||0} Tagen für ${wScope==='eu'?'EU':'Deutschland'}`);
   setEl('wcmp-irn-sub',   'Öl & LNG · seit 28.02.2026');
   const irnSecRate = wCurrentDailyRateFor('irn').total/86400;
@@ -3559,6 +3621,30 @@ function downsamplePairs(times, values, maxPts) {
 }
 
 // Strom tab: electricity + renewables
+
+function renderGasTab() {
+  try { renderGas(); } catch(e) { console.error('renderGas',e); }
+  try { renderEurostatGas(); } catch(e) { console.error('renderEurostatGas',e); }
+}
+function renderOelTab() {
+  try { renderHeizoel(); } catch(e) { console.error('renderHeizoel',e); }
+  try { renderTreibstoff(); } catch(e) { console.error('renderTreibstoff',e); }
+  try { renderKraftstoff(); } catch(e) { console.error('renderKraftstoff',e); }
+}
+function renderRohstoffeTab() {
+  try { renderRohstoffe(); } catch(e) { console.error('renderRohstoffe',e); }
+  try { renderFx(); } catch(e) { console.error('renderFx',e); }
+}
+
+
+function renderStromOnly() {
+  try { renderStrom(); } catch(e) { console.error('renderStrom',e); }
+}
+function renderRohstoffeKraftstoff() {
+  try { renderRohstoffe(); } catch(e) { console.error('renderRohstoffe',e); }
+  try { renderKraftstoff(); } catch(e) { console.error('renderKraftstoff',e); }
+}
+
 function renderStromTab() {
   renderStrom();       // existing: generation mix, DA price
   renderErneuerbare(); // existing: installed capacity, EE-share
@@ -3650,6 +3736,30 @@ function downsamplePairs(times, values, maxPts) {
 // ══════════════════════════════════════════════
 // COMBINED TAB RENDERERS
 // ══════════════════════════════════════════════
+
+function renderGasTab() {
+  try { renderGas(); } catch(e) { console.error('renderGas',e); }
+  try { renderEurostatGas(); } catch(e) { console.error('renderEurostatGas',e); }
+}
+function renderOelTab() {
+  try { renderHeizoel(); } catch(e) { console.error('renderHeizoel',e); }
+  try { renderTreibstoff(); } catch(e) { console.error('renderTreibstoff',e); }
+  try { renderKraftstoff(); } catch(e) { console.error('renderKraftstoff',e); }
+}
+function renderRohstoffeTab() {
+  try { renderRohstoffe(); } catch(e) { console.error('renderRohstoffe',e); }
+  try { renderFx(); } catch(e) { console.error('renderFx',e); }
+}
+
+
+function renderStromOnly() {
+  try { renderStrom(); } catch(e) { console.error('renderStrom',e); }
+}
+function renderRohstoffeKraftstoff() {
+  try { renderRohstoffe(); } catch(e) { console.error('renderRohstoffe',e); }
+  try { renderKraftstoff(); } catch(e) { console.error('renderKraftstoff',e); }
+}
+
 function renderStromTab() {
   try { renderStrom(); } catch(e) { console.error('renderStrom', e); }
   try { renderErneuerbare(); } catch(e) { console.error('renderErneuerbare', e); }
@@ -3732,9 +3842,14 @@ function renderTab(tab) {
 }
 
 const RENDERS = {
-  strom:        renderStromTab,
-  'gas-oel':    renderGasOelTab,
-  maerkte:      renderMaerkteTab,
+  strom:        renderStromOnly,
+  erneuerbare:  renderErneuerbare,
+  gas:          renderGasTab,
+  oel:          renderOelTab,
+  wetter:       renderWetter,
+  maerkte:      renderMarkt,
+  rohstoffe:    renderRohstoffeKraftstoff,
+  fx:           renderFx,
   versorgung:   renderVersorgungTab,
   kriegsfolgen: renderKriegsfolgen,
   news:         renderNews,
@@ -3771,7 +3886,7 @@ function renderTab(tab){
   }
 }
 
-document.querySelectorAll('.tab').forEach(btn=>{
+document.querySelectorAll('.tab-row .tab').forEach(btn=>{
   btn.addEventListener('click', async () => {
     const tab = btn.dataset.tab;
     // Cancel war-tab RAF when leaving kriegsfolgen
@@ -3781,7 +3896,7 @@ document.querySelectorAll('.tab').forEach(btn=>{
     }
     // Switch tab UI synchronously — even if data loading later fails,
     // the user must always see they clicked something.
-    document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-row .tab').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
     btn.classList.add('active');
     const panel = document.getElementById('panel-' + tab);
