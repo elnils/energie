@@ -130,7 +130,7 @@ def _post(endpoint: str, creds: _Credentials, **params) -> 'requests.Response':
         'password': creds.password,
     }
     body = {'language': 'de', **params}
-    timeout = 30 if 'helloworld' in endpoint else 90
+    timeout = 45 if 'helloworld' in endpoint else 120
     r = s.post(f'{BASE_URL}/{endpoint}',
                data=body, headers=headers, timeout=timeout)
     return r
@@ -149,7 +149,7 @@ def _post_body_auth(endpoint: str, creds: _Credentials, **params) -> 'requests.R
         'language': 'de',
         **params,
     }
-    timeout = 30 if 'helloworld' in endpoint else 90
+    timeout = 45 if 'helloworld' in endpoint else 120
     r = s.post(f'{BASE_URL}/{endpoint}',
                data=body, headers=headers, timeout=timeout)
     return r
@@ -163,9 +163,17 @@ def _check_login(creds: _Credentials) -> str:
     creds.sanity_check()
     last_error = None
 
-    # Attempt 1: header-auth (spec-compliant)
+    # Attempt 1: header-auth with retry (Destatis has high-latency spikes)
+    for _retry in range(3):
+        try:
+            r = _post('helloworld/logincheck', creds)
+            break
+        except Exception as _e:
+            if _retry == 2:
+                raise
+            import time as _t; _t.sleep(5 * (_retry + 1))
     try:
-        r = _post('helloworld/logincheck', creds)
+        r = r  # ensure r is defined
         if r.ok:
             payload = r.json()
             status = payload.get('Status', '')
@@ -329,8 +337,6 @@ def _parse_ffcsv(csv_text: str) -> List[dict]:
     Decimal separator is comma, list separator is semicolon, na markers
     are '...', '.', '-', '/', 'x'.
     """
-    # Strip BOM that Destatis sometimes prepends to the first column name
-    csv_text = csv_text.lstrip('\ufeff')
     reader = csv_mod.reader(io.StringIO(csv_text), delimiter=';')
     rows: List[dict] = []
     header: Optional[List[str]] = None
@@ -338,8 +344,7 @@ def _parse_ffcsv(csv_text: str) -> List[dict]:
         if not row:
             continue
         if header is None:
-            # Strip BOM from first key just in case lstrip above missed it
-            header = [k.lstrip('\ufeff').strip() for k in row]
+            header = row
             continue
         # Skip footer / decoration lines
         if row[0].startswith('_') or row[0].startswith('Quelle'):
@@ -352,24 +357,18 @@ def _parse_ffcsv(csv_text: str) -> List[dict]:
 
 
 def _filter_energy(rows: List[dict]) -> List[dict]:
-    """
-    Keep only rows whose category label mentions energy categories.
-
-    Destatis ffcsv column names vary by table version:
-      - '1_variable_label'           (e.g. "Energie", "Strom")   ← primary
-      - '1_variable_attribute_label' (older tables)
-      - '2_variable_label', '3_variable_label' etc.
-
-    We check ALL label-type columns to be robust against layout changes.
-    """
+    """Keep only rows whose variable_attribute_label mentions energy categories."""
     out = []
     for r in rows:
-        # Collect all label-type values (any column ending in _label)
-        all_labels = ' '.join(
-            str(v) for k, v in r.items()
-            if k.endswith('_label') and v
+        # The label can live in different columns depending on the table layout.
+        # Check the most likely fields.
+        lbl = (
+            r.get('1_variable_attribute_label')
+            or r.get('2_variable_attribute_label')
+            or r.get('3_variable_attribute_label')
+            or ''
         ).lower()
-        if any(kw in all_labels for kw in ENERGY_KEYWORDS):
+        if any(kw in lbl for kw in ENERGY_KEYWORDS):
             out.append(r)
     return out
 
@@ -388,53 +387,24 @@ def _build_series(rows: List[dict]) -> Dict[str, List[dict]]:
         'oktober': 10, 'november': 11, 'dezember': 12,
     }
     series: Dict[str, List[dict]] = {}
-    # Identify the value column dynamically — Destatis generates long names like
-    # 'PREIS1__Verbraucherpreisindex__2020=100__...'
-    # It is any column that is NOT a structural column.
-    STRUCTURAL_PREFIXES = (
-        'statistics_', 'time', '1_variable', '2_variable', '3_variable',
-        '4_variable', '5_variable',
-    )
-
-    def _find_value(row: dict) -> Optional[float]:
-        """Return the first non-structural numeric column value."""
-        for col, raw in row.items():
-            if any(col.startswith(p) for p in STRUCTURAL_PREFIXES):
-                continue
-            v = _to_float(raw)
-            if v is not None:
-                return v
-        return None
-
     for r in rows:
-        # Label: prefer '1_variable_label' (e.g. "Strom"), fall back to _attribute_label
         label = (
-            r.get('1_variable_label')
-            or r.get('1_variable_attribute_label')
-            or r.get('2_variable_label')
+            r.get('1_variable_attribute_label')
             or r.get('2_variable_attribute_label')
-            or r.get('3_variable_label')
             or r.get('3_variable_attribute_label')
         )
         if not label:
             continue
-        label = str(label).strip()
-
-        # Period: time=year + time_label=month-name OR time_code like "2024M01"
-        year = (r.get('time') or r.get('time_code') or '').strip()
+        # Period: e.g. time=2024 + time_label=Januar -> "2024-01"
+        year = (r.get('time') or '').strip()
         month_lbl = (r.get('time_label') or '').strip().lower()
-
-        # Handle time_code format "2024M01"
-        if 'M' in year and len(year) == 7:
-            period = year.replace('M', '-')
-        elif month_lbl in DE_MONTHS:
-            period = f'{year}-{DE_MONTHS[month_lbl]:02d}'
-        elif year:
-            period = year
-        else:
+        if not year:
             continue
-
-        v = _find_value(r)
+        if month_lbl in DE_MONTHS:
+            period = f'{year}-{DE_MONTHS[month_lbl]:02d}'
+        else:
+            period = year
+        v = _to_float(r.get('value'))
         if v is None:
             continue
         series.setdefault(label, []).append({'period': period, 'v': v})
