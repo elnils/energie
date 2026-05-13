@@ -1,6 +1,7 @@
 """
 Tecson — German heating oil reference price + oil-market notations.
-Destatis — supplemental historical heating oil price index.
+Destatis — supplemental historical heating oil price index (tables from
+           communicated 2026-05-13).
 
 Scraping target: https://www.tecson.de/de/heizoelpreise.html
 The page is rendered server-side (Contao CMS), no JS dependency.
@@ -36,7 +37,7 @@ from core import http, validators, history
 
 URL = 'https://www.tecson.de/de/heizoelpreise.html'
 
-# Destatis tables
+# Destatis tables added 2026-05-13.
 # 43531-0005 = Verbraucherpreise Heizöl, monatlich (EUR/100L nominal)
 # 61241-0001 = Erzeugerpreisindex Mineralölerzeugnisse, monatlich (Index 2015=100)
 DESTATIS_TABLE_HEIZOIL_CONSUMER = '43531-0005'
@@ -242,7 +243,7 @@ def _fetch_destatis_supplement() -> Dict[str, List[dict]]:
     """
     Pull historical heating oil data from Destatis Genesis-Online.
 
-    Tables:
+    Tables added 2026-05-13:
       43531-0005  Verbraucherpreise Heizöl, monatlich, EUR/100L (nominal price)
       61241-0001  Erzeugerpreisindex Mineralölerzeugnisse (Index 2015=100)
 
@@ -406,7 +407,7 @@ def fetch() -> dict:
                 'Destatis Genesis-Online: '
                 f'{DESTATIS_TABLE_HEIZOIL_CONSUMER} (consumer EUR/100L), '
                 f'{DESTATIS_TABLE_HEIZOIL_INDEX} (producer index 2015=100) '
-                'Daten Ergänzt'
+                '— added 2026-05-13'
             ),
             'license':      'Tecson: attribution required, no automated commercial use. '
                             'Destatis: Datenlizenz Deutschland Namensnennung 2.0.',
