@@ -20,10 +20,10 @@
     "last_success_iso": "2026-05-12T20:45:51Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1778647965,
-    "last_attempt_iso": "2026-05-13T04:52:45Z",
-    "last_success_epoch": 1778647989,
-    "last_success_iso": "2026-05-13T04:53:09Z"
+    "last_attempt_epoch": 1778653554,
+    "last_attempt_iso": "2026-05-13T06:25:54Z",
+    "last_success_epoch": 1778653577,
+    "last_success_iso": "2026-05-13T06:26:17Z"
   },
   "energy_futures": {
     "last_attempt_epoch": 1778648063,
@@ -46,12 +46,12 @@
     "last_success_iso": "2026-05-13T04:53:49Z"
   },
   "eurostat_oil": {
-    "last_attempt_epoch": 1778651580,
-    "last_attempt_iso": "2026-05-13T05:53:00Z",
+    "last_attempt_epoch": 1778653577,
+    "last_attempt_iso": "2026-05-13T06:26:17Z",
     "last_error_epoch": 1778651614,
     "last_error_message": "RuntimeError: Eurostat: all series failed — API may be temporarily unavailable. Previous data preserved by store.py.",
-    "last_success_epoch": 1778526193,
-    "last_success_iso": "2026-05-11T19:03:13Z"
+    "last_success_epoch": 1778653608,
+    "last_success_iso": "2026-05-13T06:26:48Z"
   },
   "fred_energy": {
     "last_attempt_epoch": 1778618741,
@@ -92,10 +92,10 @@
     "last_success_iso": "2026-05-13T04:55:16Z"
   },
   "smard": {
-    "last_attempt_epoch": 1778647958,
-    "last_attempt_iso": "2026-05-13T04:52:38Z",
-    "last_success_epoch": 1778647965,
-    "last_success_iso": "2026-05-13T04:52:45Z"
+    "last_attempt_epoch": 1778653545,
+    "last_attempt_iso": "2026-05-13T06:25:45Z",
+    "last_success_epoch": 1778653554,
+    "last_success_iso": "2026-05-13T06:25:54Z"
   },
   "weather": {
     "last_attempt_epoch": 1778648029,
