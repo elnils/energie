@@ -2615,7 +2615,9 @@ function _buildCurveDatasets(steoSeries, prevWeekSeries, yahooPoints, wbSeries, 
 
   // Historical + forecast EIA STEO (current)
   if (steoSeries.length) {
-    const actual   = steoSeries.filter(p => p.type === 'actual');
+    // Limit historical to last 3 years — prevents 1992-era data from distorting Y-axis
+    const cutoff3y = (() => { const d = new Date(); d.setFullYear(d.getFullYear()-3); return d.toISOString().substring(0,7); })();
+    const actual   = steoSeries.filter(p => p.type === 'actual' && p.period >= cutoff3y);
     const forecast = steoSeries.filter(p => p.type === 'forecast');
 
     if (actual.length) {
@@ -2740,7 +2742,11 @@ function renderFuturesCurve(type) {
   const imf      = type === 'gas' ? ft.imf?.eu_gas : ft.imf?.crude_oil;
 
   if (!steo.length && !yahoo.length) {
-    wrap.innerHTML = `<div class="nodata">Keine ${type === 'gas' ? 'TTF' : 'Brent'} Kurvendaten (EIA STEO lädt)</div>`;
+    const src = type === 'gas' ? 'TTF/EU Gas (NGEUPUUS)' : 'Brent (BREPUUS)';
+    const hint = ft?.eia_steo
+      ? `EIA STEO hat ${Object.keys(ft.eia_steo).filter(k=>k!=='forecast_from').join(', ')} — ${src} leer`
+      : 'energy_futures.json noch nicht geladen';
+    wrap.innerHTML = `<div class="nodata">Keine Kurvendaten · ${hint}</div>`;
     return;
   }
 
