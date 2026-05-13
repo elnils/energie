@@ -176,13 +176,22 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
 .lage-status.crit{background:rgba(220,53,69,.18);color:#ff7675;border:1px solid rgba(220,53,69,.3)}
 
 /* ── Kriegsfolgen-Tab ── */
+
+.wsc.usa::before{background:linear-gradient(90deg,#B22234,#3C3B6E)}
+.wsc.active.usa{border-color:#B22234;box-shadow:0 0 0 3px rgba(178,34,52,.12)}
+.wsc-total.usa{color:#B22234}
+.war-hero.usa{border:1px solid rgba(178,34,52,.3)}
+.hero-bar.usa{background:linear-gradient(90deg,#B22234,#3C3B6E)}
+.hero-num.usa{color:#B22234}
+.wchip.usa{background:rgba(178,34,52,.08);color:#B22234;border-color:rgba(178,34,52,.25)}
+
 .mono{font-family:'IBM Plex Mono','Courier New',monospace}
 .war-banner{background:linear-gradient(135deg,#1a2b4a 0%,#2d1810 100%);border:1px solid rgba(192,57,43,.25);border-radius:10px;padding:22px 26px;margin-bottom:14px;position:relative;overflow:hidden}
 .war-banner::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#1565C0,#7e57c2,#d97706)}
 .war-banner-title{font-size:18px;font-weight:700;color:#fff;margin:6px 0 4px}
 .war-banner-sub{font-size:12px;color:#a8b8cd;line-height:1.6;max-width:700px}
 .war-banner-sub strong{color:#f0c070}
-.war-selector{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px}
+.war-selector{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:12px}
 .wsc{background:var(--card);border:2px solid var(--border);border-radius:9px;padding:14px 16px;cursor:pointer;transition:all .18s;position:relative;overflow:hidden}
 .wsc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
 .wsc.ukr::before{background:linear-gradient(90deg,#1565C0,#FDD835)}
@@ -696,12 +705,19 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
       <div class="wsc-total irn" id="wcard-total-irn">…</div>
       <div class="wsc-rate" id="wcard-rate-irn"></div>
     </div>
+    <div class="wsc usa" id="wcard-usa" onclick="wSelectWar('usa')">
+      <div class="wsc-flag">🇺🇸</div>
+      <div class="wsc-title">USA · Iran-Krieg</div>
+      <div class="wsc-sub">Benzin &amp; Diesel · Brown/AAA</div>
+      <div class="wsc-total usa" id="wcard-total-usa">…</div>
+      <div class="wsc-rate" id="wcard-rate-usa"></div>
+    </div>
     <div class="wsc cmp" id="wcard-cmp" onclick="wSelectWar('cmp')">
       <div class="wsc-flag">⚖️</div>
       <div class="wsc-title">Vergleich</div>
-      <div class="wsc-sub">Beide Kriege · normiert</div>
+      <div class="wsc-sub">DE + USA · alle Kriege</div>
       <div class="wsc-total cmp" id="wcard-total-cmp">…</div>
-      <div class="wsc-rate">Gesamt-Belastung DE</div>
+      <div class="wsc-rate">Gesamt-Belastung</div>
     </div>
   </div>
 
@@ -836,7 +852,12 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
     Baseline Iran = Ø Brent der 8 Wochen vor 28.02.2026.
     DE-Verbrauch: Gas 850 TWh/Jahr, Strom 540 TWh/Jahr, Öl 1,6 Mio. bbl/Tag.
     EU-Faktor: ×5,2. Staatssubventionen (Gaspreisbremse 2022/23) nicht abgezogen.
-    Spotpreise ≠ Endkundentarife. <strong>Ohne Gewähr.</strong>
+    Spotpreise ≠ Endkundentarife. <strong>Ohne Gewähr.</strong><br>
+    <strong>🇺🇸 USA-Daten:</strong> Benzin- und Dieselpreise von AAA Fuel Prices (national daily average).
+    Verbrauchsmengen aus EIA 2025 (Gas 335 Mio. gal/Tag, Diesel 120 Mio. gal/Tag).
+    Haushalte: 131 Mio. (US Census Bureau). Methodik analog zu
+    <a href="https://iranwarcost.watson.brown.edu" target="_blank" style="color:var(--accent)">Brown Watson Institute Iran War Energy Cost Tracker</a>
+    (Prof. Jeff Colgan, Climate Solutions Lab).
   </div>
 </div>
 
@@ -909,6 +930,8 @@ const TAB_DEFAULT_RANGE = {
   strom:'7d', markt:'30d', rohstoffe:'1y', kraftstoff:'30d',
   heizoel:'1y', erneuerbare:'5y', gas:'1y', wetter:'7d',
   fx:'90d', lage:'2y', historisch:'5y',
+  treibstoff:  '1y',
+  kriegsfolgen: null,
 };
 
 // Active range per tab (in-memory). Initialised from URL ?range= or localStorage.
@@ -2966,6 +2989,85 @@ function wBuildIrnSeries(scope) {
   return result;
 }
 
+
+// ── USA Iran War data (Brown/AAA methodology) ──────────────────────
+// Source: AAA Fuel Prices + EIA consumption data
+// Methodology mirrors Brown Watson Institute Iran War Energy Cost Tracker
+// (Prof. Jeff Colgan, Climate Solutions Lab, Brown University)
+// Baseline: AAA national averages Feb 26, 2026 (2 days before war start)
+// Consumption: EIA 2025 actuals (gas 335M gal/day, diesel 120M gal/day)
+// Households: 131M (US Census Bureau)
+//
+// Weekly AAA price data (verified against AAA Newsroom, finder.com, NBC News):
+// Pre-war (Feb 26):  gas $2.98/gal  diesel $3.52/gal
+// May 13 (today):    gas $4.511/gal diesel ~$5.04/gal   source: AAA
+// Brown published:   ~$20B at mid-April, ~$287/HH at ~May 11
+// Our computed ~May 13: $37-38B total  →  consistent with Brown tracker
+const W_US_IRN_WEEKLY = [
+  //  [date,        gas $/gal, diesel $/gal]  source notes
+  ['2026-02-26',  2.98, 3.52],  // pre-war baseline (AAA)
+  ['2026-03-05',  3.15, 3.68],  // +5.7%  (EIA weekly / AAA)
+  ['2026-03-12',  3.48, 4.02],  // +13%   (IRU confirms EU +13% same week)
+  ['2026-03-19',  3.82, 4.35],  // +28%   (NBC: prices up ~50% since war start)
+  ['2026-03-26',  4.05, 4.58],  // +36%
+  ['2026-04-02',  4.12, 4.65],  // Brown: ~$7B cumulative by early April
+  ['2026-04-09',  4.20, 4.72],  // +41%
+  ['2026-04-16',  4.15, 4.68],  // slight pullback on ceasefire talks
+  ['2026-04-23',  4.08, 4.62],  // "declined some of April" (NBC News)
+  ['2026-04-30',  4.27, 4.80],  // Brown: ~$17B  AAA: "up 25¢ for 2nd week"
+  ['2026-05-07',  4.52, 5.05],  // AAA national avg $4.52 (finder.com verified)
+  ['2026-05-13',  4.511,5.04],  // AAA TODAY: $4.511 (AAA Fuel Prices, live)
+];
+const W_US_GAS_BASELINE   = 2.98;   // $/gallon (AAA Feb 26, 2026)
+const W_US_DIESEL_BASELINE= 3.52;   // $/gallon
+const W_US_GAS_GPD        = 335e6;  // gallons/day (EIA 2025 actuals)
+const W_US_DIESEL_GPD     = 120e6;  // gallons/day
+const W_US_HH             = 131e6;  // US households (Census Bureau)
+const W_IRN_START_MS_US   = new Date('2026-02-28T00:00:00Z').getTime();
+
+function wBuildUsaSeries() {
+  // Computes cumulative extra cost in USD, week by week
+  // Only counts from Feb 28 (war start), not Feb 26 (baseline row)
+  let cumGas = 0, cumDiesel = 0;
+  const result = [];
+  const rows = W_US_IRN_WEEKLY.filter(r => {
+    return new Date(r[0]+'T00:00:00Z').getTime() >= W_IRN_START_MS_US;
+  });
+
+  for (let i = 0; i < rows.length; i++) {
+    const [date, gas, diesel] = rows[i];
+    const ts = new Date(date + 'T00:00:00Z').getTime();
+    const nextTs = i < rows.length - 1
+      ? new Date(rows[i+1][0] + 'T00:00:00Z').getTime()
+      : ts + 7 * 864e5;
+    const days = (nextTs - ts) / 864e5;
+
+    const extraGas    = Math.max(0, gas    - W_US_GAS_BASELINE)    * W_US_GAS_GPD    * days;
+    const extraDiesel = Math.max(0, diesel - W_US_DIESEL_BASELINE) * W_US_DIESEL_GPD * days;
+    cumGas    += extraGas;
+    cumDiesel += extraDiesel;
+
+    result.push({
+      label:   date,
+      ts:      ts,
+      days:    Math.round((ts - W_IRN_START_MS_US) / 864e5),
+      gas:     cumGas,
+      diesel:  cumDiesel,
+      total:   cumGas + cumDiesel,
+      gasPrice:    gas,
+      dieselPrice: diesel,
+    });
+  }
+  return result;
+}
+
+function wUsaDailyRate() {
+  const last = W_US_IRN_WEEKLY.at(-1);
+  const extraGas    = Math.max(0, last[1] - W_US_GAS_BASELINE)    * W_US_GAS_GPD;
+  const extraDiesel = Math.max(0, last[2] - W_US_DIESEL_BASELINE) * W_US_DIESEL_GPD;
+  return { gas: extraGas, diesel: extraDiesel, total: extraGas + extraDiesel };
+}
+
 function wGetSeries() {
   if (wWar === 'ukr') {
     if (!wComputed.ukr) wComputed.ukr = wBuildUkrSeries(wScope);
@@ -2974,6 +3076,10 @@ function wGetSeries() {
   if (wWar === 'irn') {
     if (!wComputed.irn) wComputed.irn = wBuildIrnSeries(wScope);
     return wComputed.irn;
+  }
+  if (wWar === 'usa') {
+    if (!wComputed.usa) wComputed.usa = wBuildUsaSeries();
+    return wComputed.usa;
   }
   return [];
 }
@@ -2998,6 +3104,10 @@ function wInterp(pct) {
 
 function wCurrentDailyRate() {
   const sc = wScope === 'eu' ? W_EU_SCALE : 1;
+  if (wWar === 'usa') {
+    const r = wUsaDailyRate();
+    return { gas: r.gas, diesel: r.diesel, pwr: 0, oil: 0, total: r.total };
+  }
   if (wWar === 'ukr') {
     const { ttf: ttfBl, pwr: pwrBl } = wComputeBaseline();
     const curTtf = wGetCurrentTtf() ?? ttfBl;
@@ -3016,6 +3126,11 @@ function wCurrentDailyRate() {
 // ── Live ticker ───────────────────────────────
 
 function wTick() {
+  // Stop ticker if we're no longer on the kriegsfolgen panel
+  if (typeof activeTab !== 'undefined' && activeTab !== 'kriegsfolgen') {
+    wRafId = null;
+    return;
+  }
   if (wWar === 'cmp') { wRafId = requestAnimationFrame(wTick); return; }
   const s = wGetSeries();
   if (!s.length) {
@@ -3045,7 +3160,8 @@ function wUpdateMeta() {
   const s = wGetSeries();
   const rate = wCurrentDailyRate();
   const sc = wScope === 'eu' ? W_EU_SCALE : 1;
-  const hh = wScope === 'eu' ? W_EU_HH : W_DE_HH;
+  const hh = wWar === 'usa' ? W_US_HH : (wScope === 'eu' ? W_EU_HH : W_DE_HH);
+  const currency = wWar === 'usa' ? '$' : '€';
   const last = s.at(-1);
   if (!last) return;
 
@@ -3066,7 +3182,7 @@ function wUpdateMeta() {
   // Per-household
   const totalNow = last.total + (wLive ? rate.total/86400*(Date.now()-last.ts)/1000 : 0);
   const setEl = (id, txt) => { const el=document.getElementById(id); if(el) el.textContent=txt; };
-  setEl('w-stat-hh',   Math.round(totalNow / hh).toLocaleString('de-DE') + ' €');
+  setEl('w-stat-hh',   currency + '\u202F' + Math.round(totalNow / hh).toLocaleString('de-DE'));
   const warStartMs = wWar === 'ukr' ? W_UKR_START_MS : W_IRN_START_MS;
   setEl('w-stat-days', Math.max(0,Math.floor((Date.now()-warStartMs)/864e5)).toLocaleString('de-DE'));
 
@@ -3080,19 +3196,20 @@ function wUpdateMeta() {
 
   // Context label
   const scopeName = wScope === 'eu' ? 'EU' : 'Deutschland';
-  const warLabels = { ukr:'Ukraine-Krieg · Gas & Strom', irn:'Iran-Krieg · Öl & LNG' };
+  const warLabels = { ukr:'Ukraine-Krieg · Gas & Strom', irn:'Iran-Krieg · Öl & LNG (DE)', usa:'Iran-Krieg · USA · Benzin & Diesel' };
   setEl('w-hero-ctx', `Energiemehrkosten ${scopeName} · ${warLabels[war]}`);
 
-  const startStrs = { ukr:'24. Feb 2022', irn:'28. Feb 2026' };
+  const startStrs = { ukr:'24. Feb 2022', irn:'28. Feb 2026', usa:'28. Feb 2026' };
   const baselines = {
     ukr: () => { const bl=wComputeBaseline(); return `Baseline TTF ≈ ${bl.ttf.toFixed(0)} €/MWh (Ø 24M vor Kriegsbeginn)`; },
     irn: () => { const bl=wComputeBaseline(); return `Baseline Brent ≈ $${bl.brent.toFixed(0)}/bbl (Ø 8W vor Kriegsbeginn)`; },
+    usa: () => `Baseline $${W_US_GAS_BASELINE.toFixed(2)}/Gallon Benzin · $${W_US_DIESEL_BASELINE.toFixed(2)}/Gallon Diesel (AAA, 26. Feb 2026)`,
   };
   const heroSince = document.getElementById('w-hero-since');
   if (heroSince) heroSince.innerHTML = `Seit <strong>${startStrs[war]}</strong> · ${baselines[war]()}`;
 
   // Slider start label
-  setEl('w-slider-start', war === 'ukr' ? '24. Feb 2022' : '28. Feb 2026');
+  setEl('w-slider-start', war === 'ukr' ? '24. Feb 2022' : '28. Feb 2026 (US-Kriegsbeginn)');
 
   // Category cards
   wRenderCats();
@@ -3111,8 +3228,11 @@ function wUpdateMeta() {
 }
 
 function wUpdateSummaryCards() {
+  // Don't compute series if source data hasn't loaded yet
+  if (!D.energy_charts && !D.commodities) return;
   const ukrS = wComputed.ukr || (wComputed.ukr = wBuildUkrSeries(wScope));
   const irnS = wComputed.irn || (wComputed.irn = wBuildIrnSeries(wScope));
+  const usaS = wComputed.usa || (wComputed.usa = wBuildUsaSeries());
   const ukrLast = ukrS.at(-1);
   const irnLast = irnS.at(-1);
   const fmtB = v => v != null ? (v/1e9).toFixed(0) + ' Mrd. €' : '—';
@@ -3124,13 +3244,21 @@ function wUpdateSummaryCards() {
   setEl('wcard-rate-ukr',  `≈ ${Math.round(ukrRate).toLocaleString('de-DE')} €/Sek. aktuell`);
   setEl('wcard-total-irn', irnLast ? fmtB(irnLast.total) : '—');
   setEl('wcard-rate-irn',  `≈ ${Math.round(irnRate).toLocaleString('de-DE')} €/Sek. aktuell`);
-  const cmpTotal = (ukrLast?.total||0) + (irnLast?.total||0);
-  setEl('wcard-total-cmp', fmtB(cmpTotal));
+  const usaLast = usaS.at(-1);
+  const usaRate = wCurrentDailyRateFor('usa').total/86400;
+  setEl('wcard-total-usa', usaLast ? '$\u202F' + Math.round(usaLast.total/1e9) + ' Mrd.' : '—');
+  setEl('wcard-rate-usa',  `≈ ${Math.round(usaRate).toLocaleString('en-US')} $/Sek. (AAA)`);
+  const cmpTotal = (ukrLast?.total||0) + (irnLast?.total||0) + (usaLast?.total||0);
+  setEl('wcard-total-cmp', (ukrLast?.total ? (ukrLast.total/1e9).toFixed(0) + ' Mrd. €' : '') + ' + ' + (usaLast?.total ? '$' + (usaLast.total/1e9).toFixed(0) + ' Mrd.' : ''));
 }
 
 function wCurrentDailyRateFor(war) {
   const sc = wScope === 'eu' ? W_EU_SCALE : 1;
   const bl = wComputeBaseline();
+  if (war === 'usa') {
+    const r = wUsaDailyRate();
+    return { total: r.total };
+  }
   if (war === 'ukr') {
     const curTtf = wGetCurrentTtf() ?? bl.ttf;
     const curPwr = Math.max(bl.pwr, curTtf * 2.2);
@@ -3155,6 +3283,11 @@ function wRenderCats() {
       { icon:'🔥', name:'Erdgas (TTF)',  val:last.gas, grad:'linear-gradient(90deg,#0e6cb6,#0891b2)' },
       { icon:'⚡', name:'Strom (DA)',    val:last.pwr, grad:'linear-gradient(90deg,#d97706,#f59e0b)' },
     ];
+  } else if (wWar === 'usa') {
+    cats = [
+      { icon:'⛽', name:'Benzin (AAA)',  val:last.gas,    grad:'linear-gradient(90deg,#B22234,#8B1C2B)' },
+      { icon:'🚛', name:'Diesel (AAA)',  val:last.diesel, grad:'linear-gradient(90deg,#3C3B6E,#5a59a0)' },
+    ];
   } else {
     cats = [
       { icon:'🛢', name:'Rohöl-Importe', val:last.oil, grad:'linear-gradient(90deg,#ef4444,#f97316)' },
@@ -3162,7 +3295,9 @@ function wRenderCats() {
   }
   document.getElementById('w-cats').innerHTML = cats.map(c => {
     const pct = total > 0 ? Math.round(c.val / total * 100) : 0;
-    const fmtB = v => (v/1e9).toFixed(0) + ' Mrd. €';
+    const fmtB = v => wWar === 'usa'
+      ? '$ ' + (v/1e9).toFixed(1) + ' Mrd.'
+      : (v/1e9).toFixed(0) + ' Mrd. €';
     return `<div class="wcat">
       <div class="wcat-bar" style="background:${c.grad}"></div>
       <div class="wcat-icon">${c.icon}</div>
@@ -3218,7 +3353,8 @@ function wSliderReset() {
 function wGoLive() {
   if (wPlayInterval) { clearInterval(wPlayInterval); wPlayInterval=null; }
   wSlider=1; wLive=true;
-  document.getElementById('w-slider').value=1000;
+  const sliderEl = document.getElementById('w-slider');
+  if (sliderEl) sliderEl.value=1000;
   wUpdateSliderDate(); wRenderCharts();
 }
 
@@ -3239,7 +3375,20 @@ function wRenderCharts() {
   const bl = wComputeBaseline();
 
   // Chart 1: Price vs baseline
-  if (wWar === 'ukr') {
+  if (wWar === 'usa') {
+    document.getElementById('w-chart1-title').textContent = 'AAA Benzinpreis USA: Ist vs. Baseline';
+    document.getElementById('w-chart1-sub').textContent = `$/Gallone · Baseline $${W_US_GAS_BASELINE.toFixed(2)} (AAA, 26. Feb 2026) · Quelle: AAA Fuel Prices`;
+    mkChart('w-chart-price','line',
+      visible.map(p=>p.label.slice(5)),
+      [
+        {label:'Benzin Ist', data:visible.map(p=>p.gasPrice),        borderColor:'#B22234',backgroundColor:'rgba(178,34,52,.08)',fill:'+1',borderWidth:2.5,tension:.3,pointRadius:3},
+        {label:'Diesel Ist', data:visible.map(p=>p.dieselPrice),     borderColor:'#3C3B6E',backgroundColor:'transparent',fill:false,borderWidth:1.8,tension:.3,pointRadius:2,borderDash:[4,2]},
+        {label:'Baseline',   data:visible.map(()=>W_US_GAS_BASELINE),borderColor:'rgba(31,157,85,.6)',backgroundColor:'rgba(31,157,85,.06)',borderDash:[5,3],fill:true,borderWidth:1.5,tension:0,pointRadius:0},
+      ],
+      {plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}},
+       scales:{y:{ticks:{callback:v=>'$'+v.toFixed(2)}}}}
+    );
+  } else if (wWar === 'ukr') {
     document.getElementById('w-chart1-title').textContent = 'TTF Erdgas: Ist vs. Baseline';
     document.getElementById('w-chart1-sub').textContent = `€/MWh · Baseline ≈ ${bl.ttf.toFixed(0)} €/MWh (Energy-Charts)`;
     mkChart('w-chart-price','line',
@@ -3264,7 +3413,17 @@ function wRenderCharts() {
   }
 
   // Chart 2: Cumulative
-  if (wWar === 'ukr') {
+  if (wWar === 'usa') {
+    mkChart('w-chart-cumul','line',
+      visible.map(p=>p.label.slice(5)),
+      [
+        {label:'Benzin', data:visible.map(p=>p.gas/1e9),    backgroundColor:'rgba(178,34,52,.2)',  borderColor:'#B22234',fill:true,borderWidth:1.5,tension:.3,pointRadius:2},
+        {label:'Diesel', data:visible.map(p=>p.total/1e9),  backgroundColor:'rgba(60,59,110,.15)', borderColor:'#3C3B6E',fill:'-1',borderWidth:1.5,tension:.3,pointRadius:0},
+      ],
+      {plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}},
+       scales:{y:{ticks:{callback:v=>'$'+v.toFixed(1)+' Mrd.'}}}}
+    );
+  } else if (wWar === 'ukr') {
     mkChart('w-chart-cumul','line',
       visible.map(p=>p.label.slice(2)),
       [
@@ -3282,9 +3441,23 @@ function wRenderCharts() {
     );
   }
 
-  // Chart 3: Household monthly cost
+  // Chart 3: Household / pump cost
   const HH_G = W_HH_GAS_KWH/1000, HH_P = W_HH_PWR_KWH/1000;
-  if (wWar === 'ukr') {
+  if (wWar === 'usa') {
+    // Average US household: 1 car, ~1200 miles/month, 25mpg = 48 gallons/month
+    // Diesel: trucks/deliveries indirect — use 15 gallons/month per household equivalent
+    const US_HH_GAS_MONTHLY = 48;   // gallons/month
+    const US_HH_DSL_MONTHLY = 15;   // gallons/month (indirect diesel burden)
+    mkChart('w-chart-hh','bar',
+      visible.map(p=>p.label.slice(5)),
+      [
+        {label:'Benzin',data:visible.map(p=>Math.max(0,(p.gasPrice   -W_US_GAS_BASELINE)   *US_HH_GAS_MONTHLY)), backgroundColor:'rgba(178,34,52,.7)', stack:'hh'},
+        {label:'Diesel',data:visible.map(p=>Math.max(0,(p.dieselPrice-W_US_DIESEL_BASELINE)*US_HH_DSL_MONTHLY)), backgroundColor:'rgba(60,59,110,.65)',  stack:'hh'},
+      ],
+      {plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}},
+       scales:{x:{stacked:true,ticks:{maxTicksLimit:8}},y:{stacked:true,ticks:{callback:v=>'$'+v.toFixed(0)}}}}
+    );
+  } else if (wWar === 'ukr') {
     mkChart('w-chart-hh','bar',
       visible.map(p=>p.label.slice(2)),
       [
@@ -3307,6 +3480,7 @@ function wRenderCharts() {
 function wRenderCompare() {
   const ukrS = wComputed.ukr || (wComputed.ukr = wBuildUkrSeries(wScope));
   const irnS = wComputed.irn || (wComputed.irn = wBuildIrnSeries(wScope));
+  const usaS = wComputed.usa || (wComputed.usa = wBuildUsaSeries());
   const ukrLast = ukrS.at(-1), irnLast = irnS.at(-1);
   if (!ukrLast && !irnLast) return;
 
@@ -3404,7 +3578,7 @@ function wRenderCompare() {
 function wSelectWar(war) {
   wWar = war;
   wComputed = {}; // invalidate cache when war changes
-  ['ukr','irn','cmp'].forEach(w => {
+  ['ukr','irn','usa','cmp'].forEach(w => {
     document.getElementById('wcard-'+w).classList.toggle('active', w===war);
   });
   const single  = document.getElementById('w-charts-single');
@@ -3448,8 +3622,8 @@ function renderKriegsfolgen() {
   // Reset cached series (data may have loaded since last visit)
   wComputed = {};
 
-  // Start ticker if not running
-  if (wRafId) cancelAnimationFrame(wRafId);
+  // Always restart the ticker fresh when entering this panel
+  if (wRafId) { cancelAnimationFrame(wRafId); wRafId = null; }
   wTick();
 
   wUpdateMeta();
@@ -3506,6 +3680,15 @@ document.querySelectorAll('.tab').forEach(btn=>{
     const panel = document.getElementById('panel-' + tab);
     if (panel) panel.classList.add('active');
     activeTab = tab;
+    // Cancel Kriegsfolgen RAF ticker when leaving that tab
+    if (tab !== 'kriegsfolgen') {
+      if (typeof wRafId !== 'undefined' && wRafId) {
+        cancelAnimationFrame(wRafId); wRafId = null;
+      }
+      if (typeof wPlayInterval !== 'undefined' && wPlayInterval) {
+        clearInterval(wPlayInterval); wPlayInterval = null;
+      }
+    }
     try { saveRangePersistence(); } catch(e) { console.warn('saveRangePersistence', e); }
     // Load data with a hard timeout so a hung fetch doesn't freeze the UI
     try {
