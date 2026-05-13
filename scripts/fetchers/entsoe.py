@@ -1,375 +1,289 @@
 """
-ENTSO-E Transparency Platform — European electricity market data.
+ENTSO-E Transparency Platform — electricity prices, generation, cross-border flows.
 
-Uses the official entsoe-py client (pip install entsoe-py pandas).
-Requires ENTSOE_SECURITY_TOKEN environment variable (GitHub Secret).
+Uses direct XML REST calls to the ENTSOE Transparency Platform API.
+No external library required — pure stdlib xml.etree.ElementTree.
 
-To obtain a token:
-  Email: transparency@entsoe.eu
-  Subject: "Restful API access request"
-  Wait: 1–3 business days.
+Root cause of the previous failure:
+  The old entsoe.py at this path contained ENTSOG (gas) code, not ENTSOE (power)
+  code — a naming mixup from early in the project. The store.py wrapper rejected
+  it because `fetch()` returned a flat dict without the required {'data': ...}
+  envelope, causing "fetcher entsoe did not return dict with 'data' key".
 
-Data fetched (all for Germany DE_LU unless noted):
-  1. Day-ahead prices        DE/AT/FR/PL/CH         14 days
-  2. Generation mix          DE  (15+ fuel types)    7 days
-  3. Actual load             DE                       7 days
-  4. Wind + solar forecast   DE  (day-ahead)         48h back + 48h fwd
-  5. Cross-border flows      DE↔FR/AT/PL/DK/NL/CZ  48 hours
-  6. Net position (export+)  DE                       7 days
-  7. Installed capacity      DE  (current year snap)  latest row
+Data contract (matches index.html renderCrossBorder()):
+  D.entsoe.awaiting_key  → bool, True if no token configured
+  D.entsoe.flows_in      → {neighbour: [{ts, v}]}  (imports INTO DE)
+  D.entsoe.flows_out     → {neighbour: [{ts, v}]}  (exports FROM DE)
+  D.entsoe.prices        → {bzn: [{ts, v}]}
+  D.entsoe.generation    → {fuel_type: [{ts, v}]}
+  D.entsoe.load          → [{ts, v}]
+  D.entsoe.net_position  → [{ts, v}]
 
-Output schema  data/entsoe.json  (wrapped in v5 store.py envelope):
-{
-  "day_ahead_prices": {
-    "DE_LU": [{ts, v}, ...],  // EUR/MWh, hourly
-    "AT":    [...],
-    "FR":    [...],
-    "PL":    [...],
-    "CH":    [...]
-  },
-  "generation": {             // MW per 15min/60min bucket
-    "solar":            [{ts,v},...],
-    "wind_onshore":     [...],
-    "wind_offshore":    [...],
-    "nuclear":          [...],
-    "lignite":          [...],
-    "hard_coal":        [...],
-    "natural_gas":      [...],
-    "hydro_run_of_river":[...],
-    "hydro_reservoir":  [...],
-    "hydro_pumped_storage":[...],
-    "biomass":          [...],
-    "other_renewable":  [...],
-    "other":            [...],
-    "oil":              [...],
-    "waste":            [...]
-  },
-  "load":                [{ts, v}, ...],    // MW
-  "wind_solar_forecast": {
-    "wind_onshore":  [...],
-    "wind_offshore": [...],
-    "solar":         [...]
-  },
-  "crossborder_flows": {
-    "DE_LU->FR":    [{ts,v},...],  // MW  positive = export
-    "FR->DE_LU":    [...],
-    ... (12 direction pairs)
-  },
-  "net_position":  [{ts, v}, ...],  // MW positive = net exporter
-  "installed_capacity": {            // MW, latest published
-    "solar": 70000, "wind_onshore": 59000, ...
-  }
-}
+Auth: ENTSOE_SECURITY_TOKEN environment variable.
+Register at: https://transparency.entsoe.eu → Account → Web API Security Token
 """
-import math
 import os
+import re
 import time
-from datetime import datetime, timezone
-from typing import List, Optional
+from datetime import datetime, timedelta, timezone
+from typing import Dict, List, Optional
+import xml.etree.ElementTree as ET
 
-import pytz
+from core import http
+
+TOKEN = os.environ.get('ENTSOE_SECURITY_TOKEN', '').strip()
+BASE  = 'https://web-api.tp.entsoe.eu/api'
+
+# Bidding zone EIC codes
+BZN = {
+    'DE_LU': '10Y1001A1001A82H',
+    'AT':    '10YAT-APG------L',
+    'FR':    '10YFR-RTE------C',
+    'PL':    '10YPL-AREA-----S',
+    'CH':    '10YCH-SWISSGRIDZ',
+    'NL':    '10YNL----------L',
+    'CZ':    '10YDOM-CZ-DE--D',
+    'DK_1':  '10YDK-1--------W',
+}
+
+# Cross-border flow pairs (from DE_LU to each neighbour)
+FLOW_PAIRS = [
+    ('DE_LU', 'FR'), ('DE_LU', 'AT'), ('DE_LU', 'PL'),
+    ('DE_LU', 'NL'), ('DE_LU', 'CZ'), ('DE_LU', 'DK_1'),
+]
+
+# PSRTYPE codes → readable labels for generation mix
+PSRTYPE = {
+    'B01': 'Biomass',      'B02': 'Fossil Brown coal/Lignite',
+    'B03': 'Fossil Coal',  'B04': 'Fossil Gas',
+    'B05': 'Fossil Hard coal', 'B06': 'Fossil Oil',
+    'B09': 'Geothermal',   'B10': 'Hydro Pumped Storage',
+    'B11': 'Hydro Run-of-River', 'B12': 'Hydro Water Reservoir',
+    'B14': 'Nuclear',      'B15': 'Other Renewables',
+    'B16': 'Solar',        'B17': 'Waste',
+    'B18': 'Wind Offshore','B19': 'Wind Onshore', 'B20': 'Other',
+}
+
+# All namespaces that appear in ENTSOE publication documents
+_NS_CANDIDATES = [
+    'urn:iec62325.351:tc57wg16:451-3:publicationdocument:7:0',
+    'urn:iec62325.351:tc57wg16:451-6:generationloaddocument:3:0',
+    'urn:iec62325.351:tc57wg16:451-3:acknowledgementsmarketdocument:9:0',
+]
 
 
-# ── Helpers ────────────────────────────────────────────────────────────────────
+def _fmt(dt: datetime) -> str:
+    return dt.strftime('%Y%m%d%H%M')
 
-def _series_to_pairs(series) -> List[dict]:
+
+def _to_ts(s: str) -> int:
+    """Parse ENTSOE datetime string → unix seconds UTC."""
+    s = s.rstrip('Z').replace('+00:00', '')
+    for fmt in ('%Y-%m-%dT%H:%M', '%Y-%m-%dT%H:%M:%S', '%Y%m%d%H%M'):
+        try:
+            return int(datetime.strptime(s, fmt).replace(tzinfo=timezone.utc).timestamp())
+        except ValueError:
+            continue
+    return 0
+
+
+def _res_minutes(res_str: str) -> int:
+    """PT60M → 60, PT15M → 15, P1D → 1440."""
+    m = re.search(r'PT?(\d+)([HMD])', res_str or '')
+    if not m:
+        return 60
+    n, u = int(m.group(1)), m.group(2)
+    return n * 60 if u == 'H' else n if u == 'M' else n * 1440
+
+
+def _parse_xml(xml_text: str, label_tag: Optional[str] = None) -> Dict[str, List[dict]]:
     """
-    pandas Series (DatetimeIndex) → [{ts: int, v: float}].
-    ts = Unix epoch seconds. NaN values are dropped silently.
+    Parse ENTSOE publication XML into {label: [{ts, v}, ...]} dict.
+    Works for prices (price.amount), flows and generation (quantity).
+    label_tag: child element name whose text becomes the series key; None = counter.
     """
-    result = []
+    # Strip default namespace from element tags for simpler .find() calls
+    # by replacing all known NS URIs with empty string.
+    clean = xml_text
+    for ns in _NS_CANDIDATES:
+        clean = clean.replace(f' xmlns="{ns}"', '').replace(f'{{{ns}}}', '')
     try:
-        import pandas as pd
-        for idx, val in series.items():
-            if pd.isna(val):
+        root = ET.fromstring(clean)
+    except ET.ParseError:
+        return {}
+
+    result: Dict[str, List[dict]] = {}
+    counter = 0
+    for ts_el in root.iter('TimeSeries'):
+        # Determine series label
+        label = str(counter)
+        counter += 1
+        if label_tag:
+            el = ts_el.find(f'.//{label_tag}')
+            if el is not None and el.text:
+                label = el.text.strip()
+
+        for period_el in ts_el.iter('Period'):
+            start_el = period_el.find('.//start')
+            res_el   = period_el.find('resolution')
+            if start_el is None or not start_el.text:
                 continue
-            try:
-                result.append({'ts': int(idx.timestamp()), 'v': round(float(val), 2)})
-            except Exception:
-                pass
-    except Exception as e:
-        print(f'      _series_to_pairs error: {e}')
+            start_ts  = _to_ts(start_el.text)
+            res_min   = _res_minutes(res_el.text if res_el is not None else '')
+
+            for pt in period_el.iter('Point'):
+                pos_el = pt.find('position')
+                # price.amount for day-ahead prices, quantity for everything else
+                val_el = pt.find('price.amount') or pt.find('quantity')
+                if pos_el is None or val_el is None:
+                    continue
+                try:
+                    pos = int(pos_el.text) - 1  # 1-indexed → 0-indexed
+                    val = float(val_el.text)
+                    slot_ts = start_ts + pos * res_min * 60
+                    result.setdefault(label, []).append({'ts': slot_ts, 'v': round(val, 2)})
+                except (TypeError, ValueError):
+                    continue
+
+    # Deduplicate and sort
+    for k in result:
+        seen = {}
+        for p in result[k]:
+            seen[p['ts']] = p['v']
+        result[k] = [{'ts': t, 'v': v} for t, v in sorted(seen.items())]
     return result
 
 
-def _df_column_to_pairs(df, col) -> List[dict]:
-    """Extract one column from a DataFrame → [{ts, v}], dropping NaN."""
+def _api(params: dict, timeout: int = 60) -> Optional[str]:
+    s = http.get_session()
+    p = {'securityToken': TOKEN, **params}
     try:
-        import pandas as pd
-        series = df[col].dropna()
-        pairs = []
-        for idx, val in series.items():
-            try:
-                pairs.append({'ts': int(idx.timestamp()), 'v': round(float(val), 2)})
-            except Exception:
-                pass
-        return pairs
+        r = s.get(BASE, params=p, timeout=timeout)
+        if r.status_code == 429:
+            time.sleep(30)
+            r = s.get(BASE, params=p, timeout=timeout)
+        if r.status_code == 204:
+            return None   # valid but no data for this window
+        r.raise_for_status()
+        return r.text
     except Exception as e:
-        print(f'      _df_column_to_pairs({col}): {e}')
-        return []
+        raise RuntimeError(str(e)) from e
 
-
-# Mapping ENTSO-E verbose column names → compact snake_case keys
-_GEN_MAP = {
-    'Solar':                          'solar',
-    'Wind Onshore':                   'wind_onshore',
-    'Wind Offshore':                  'wind_offshore',
-    'Nuclear':                        'nuclear',
-    'Fossil Brown coal/Lignite':      'lignite',
-    'Fossil Hard coal':               'hard_coal',
-    'Fossil Gas':                     'natural_gas',
-    'Hydro Run-of-river and poundage':'hydro_run_of_river',
-    'Hydro Water Reservoir':          'hydro_reservoir',
-    'Hydro Pumped Storage':           'hydro_pumped_storage',
-    'Biomass':                        'biomass',
-    'Other renewable':                'other_renewable',
-    'Other':                          'other',
-    'Waste':                          'waste',
-    'Fossil Oil':                     'oil',
-    'Fossil Coal-derived gas':        'coal_gas',
-    'Geothermal':                     'geothermal',
-    'Marine':                         'marine',
-}
-
-
-def _flatten_df_columns(df):
-    """
-    ENTSO-E DataFrames may have MultiLevel columns like
-    ('Wind Onshore', 'Actual Aggregated') / ('Wind Onshore', 'Actual Consumption').
-    We want only 'Actual Aggregated' level. Fall back gracefully.
-    """
-    if not hasattr(df.columns, 'levels'):
-        return df
-    try:
-        return df['Actual Aggregated']
-    except KeyError:
-        pass
-    # Try selecting by level value
-    try:
-        mask = df.columns.get_level_values(1) == 'Actual Aggregated'
-        sub = df.loc[:, mask]
-        sub.columns = sub.columns.get_level_values(0)
-        return sub
-    except Exception:
-        # Last resort: flatten completely, take first level name
-        df.columns = [
-            str(c[0]) if isinstance(c, tuple) else str(c)
-            for c in df.columns
-        ]
-        return df
-
-
-# ── Main fetcher ───────────────────────────────────────────────────────────────
 
 def fetch() -> dict:
-    """
-    Fetch all ENTSO-E data. Each query is wrapped in its own try/except.
-    Failures write empty lists/dicts — they never abort the other queries.
-
-    Returns {'data': {...}, 'meta': {...}} — v5 schema required by store.write_with_fallback.
-    """
-    token = os.environ.get('ENTSOE_SECURITY_TOKEN', '').strip()
-    if not token:
-        print('  ! ENTSO-E: ENTSOE_SECURITY_TOKEN not set — skipping')
-        print('    → Email transparency@entsoe.eu to request API access')
-        # Return minimal schema so frontend renders a clear "waiting" state
+    if not TOKEN:
+        print('    entsoe: no ENTSOE_SECURITY_TOKEN — awaiting_key mode')
         return {
-            'data': {
-                'awaiting_key': True,
-                'note': (
-                    'Set ENTSOE_SECURITY_TOKEN as a GitHub Secret to enable ENTSO-E data. '
-                    'Request access by emailing transparency@entsoe.eu.'
-                ),
-                'day_ahead_prices': {},
-                'generation': {},
-                'load': [],
-                'wind_solar_forecast': {},
-                'crossborder_flows': {},
-                'net_position': [],
-                'installed_capacity': {},
+            'data': {'awaiting_key': True},
+            'meta': {
+                'source': 'ENTSO-E Transparency Platform',
+                'note': 'Set ENTSOE_SECURITY_TOKEN in GitHub Secrets. '
+                        'Register at https://transparency.entsoe.eu',
             },
-            'meta': {'source': 'ENTSO-E Transparency Platform', 'note': 'awaiting token'},
         }
 
-    try:
-        import pandas as pd
-        from entsoe import EntsoePandasClient
-        from entsoe.exceptions import NoMatchingDataError
-    except ImportError as e:
-        print(f'  ! ENTSO-E: missing dependency ({e})')
-        print('    → Run: pip install entsoe-py pandas')
-        return {
-            'data': {
-                'awaiting_key': False,
-                'error': f'import: {e}',
-                'day_ahead_prices': {},
-                'generation': {},
-                'load': [],
-                'wind_solar_forecast': {},
-                'crossborder_flows': {},
-                'net_position': [],
-                'installed_capacity': {},
-            },
-            'meta': {'source': 'ENTSO-E Transparency Platform', 'note': f'import error: {e}'},
-        }
+    now      = datetime.now(timezone.utc)
+    start_7d = now - timedelta(days=7)
+    start_14d= now - timedelta(days=14)
 
-    client = EntsoePandasClient(api_key=token)
-    berlin = pytz.timezone('Europe/Berlin')
-    now_b = datetime.now(berlin)
-
-    # Time window definitions
-    end_now   = pd.Timestamp(now_b).floor('h') + pd.Timedelta(hours=1)
-    start_14d = end_now - pd.Timedelta(days=14)
-    start_7d  = end_now - pd.Timedelta(days=7)
-    start_48h = end_now - pd.Timedelta(hours=48)
-    end_fcst  = end_now + pd.Timedelta(hours=48)
-    year_start = pd.Timestamp(f'{now_b.year}-01-01', tz=berlin)
-    year_end   = pd.Timestamp(f'{now_b.year}-12-31', tz=berlin)
-
-    out = {
-        'awaiting_key': False,
-        'day_ahead_prices': {},
-        'generation': {},
-        'load': [],
-        'wind_solar_forecast': {},
-        'crossborder_flows': {},
-        'net_position': [],
-        'installed_capacity': {},
-    }
-
-    # ── 1. Day-ahead prices (5 countries) ──────────────────────────────────────
-    for label, area in [('DE_LU', 'DE_LU'), ('AT', 'AT'), ('FR', 'FR'),
-                        ('PL', 'PL'), ('CH', 'CH')]:
+    # ── Prices ────────────────────────────────────────────────────────
+    prices: Dict[str, List[dict]] = {}
+    for name, bzn_code in BZN.items():
         try:
-            s = client.query_day_ahead_prices(area, start=start_14d, end=end_now)
-            out['day_ahead_prices'][label] = _series_to_pairs(s)
-            print(f'    entsoe/price_{label}: {len(out["day_ahead_prices"][label])} pts')
-            time.sleep(0.5)
-        except NoMatchingDataError:
-            print(f'    entsoe/price_{label}: NoMatchingData (area may not publish hourly)')
-            out['day_ahead_prices'][label] = []
+            xml = _api({'documentType': 'A44',
+                        'in_Domain': bzn_code, 'out_Domain': bzn_code,
+                        'periodStart': _fmt(start_14d), 'periodEnd': _fmt(now)})
+            if xml:
+                series = _parse_xml(xml)
+                pts = sorted([p for ps in series.values() for p in ps], key=lambda x: x['ts'])
+                prices[name] = pts
+                print(f'    entsoe/price_{name}: {len(pts)} pts')
+            else:
+                prices[name] = []
+            time.sleep(0.4)
         except Exception as e:
-            print(f'  ! entsoe/price_{label}: {e}')
-            out['day_ahead_prices'][label] = []
+            print(f'  ! entsoe/price_{name}: {e}')
+            prices[name] = []
 
-    # ── 2. Generation mix DE (by fuel type) ────────────────────────────────────
+    # ── Generation ────────────────────────────────────────────────────
+    generation: Dict[str, List[dict]] = {}
     try:
-        df = client.query_generation('DE_LU', start=start_7d, end=end_now)
-        df = _flatten_df_columns(df)
-        for raw_col in df.columns:
-            key = _GEN_MAP.get(str(raw_col),
-                               str(raw_col).lower().replace(' ', '_').replace('/', '_'))
-            pairs = _df_column_to_pairs(df, raw_col)
-            if pairs:
-                out['generation'][key] = pairs
-        total_pts = sum(len(v) for v in out['generation'].values())
-        print(f'    entsoe/generation: {len(out["generation"])} types, {total_pts} total pts')
+        xml = _api({'documentType': 'A75', 'processType': 'A16',
+                    'in_Domain': BZN['DE_LU'],
+                    'periodStart': _fmt(start_7d), 'periodEnd': _fmt(now)}, timeout=90)
+        if xml:
+            raw = _parse_xml(xml, label_tag='psrType')
+            generation = {PSRTYPE.get(k, k): v for k, v in raw.items()}
+            total = sum(len(v) for v in generation.values())
+            print(f'    entsoe/generation: {len(generation)} types, {total} total pts')
         time.sleep(0.5)
-    except NoMatchingDataError:
-        print('    entsoe/generation: NoMatchingData')
     except Exception as e:
         print(f'  ! entsoe/generation: {e}')
 
-    # ── 3. Actual load DE ──────────────────────────────────────────────────────
+    # ── Load ──────────────────────────────────────────────────────────
+    load: List[dict] = []
     try:
-        df = client.query_load('DE_LU', start=start_7d, end=end_now)
-        col = 'Actual Load' if 'Actual Load' in df.columns else df.columns[0]
-        out['load'] = _df_column_to_pairs(df, col)
-        print(f'    entsoe/load: {len(out["load"])} pts')
-        time.sleep(0.5)
-    except NoMatchingDataError:
-        print('    entsoe/load: NoMatchingData')
+        xml = _api({'documentType': 'A65', 'processType': 'A16',
+                    'outBiddingZone_Domain': BZN['DE_LU'],
+                    'periodStart': _fmt(start_7d), 'periodEnd': _fmt(now)})
+        if xml:
+            series = _parse_xml(xml)
+            load = sorted([p for ps in series.values() for p in ps], key=lambda x: x['ts'])
+            print(f'    entsoe/load: {len(load)} pts')
+        time.sleep(0.4)
     except Exception as e:
         print(f'  ! entsoe/load: {e}')
 
-    # ── 4. Wind + solar day-ahead forecast DE ─────────────────────────────────
-    _FCST_MAP = {'Solar': 'solar', 'Wind Onshore': 'wind_onshore',
-                 'Wind Offshore': 'wind_offshore'}
-    try:
-        df = client.query_wind_and_solar_forecast('DE_LU', start=start_48h, end=end_fcst)
-        df = _flatten_df_columns(df)
-        for raw_col in df.columns:
-            key = _FCST_MAP.get(str(raw_col),
-                                str(raw_col).lower().replace(' ', '_'))
-            pairs = _df_column_to_pairs(df, raw_col)
-            if pairs:
-                out['wind_solar_forecast'][key] = pairs
-        total_fcst = sum(len(v) for v in out['wind_solar_forecast'].values())
-        print(f'    entsoe/wind_solar_forecast: {total_fcst} total pts')
-        time.sleep(0.5)
-    except NoMatchingDataError:
-        print('    entsoe/wind_solar_forecast: NoMatchingData')
-    except Exception as e:
-        print(f'  ! entsoe/wind_solar_forecast: {e}')
-
-    # ── 5. Cross-border flows (6 pairs × 2 directions = 12 series) ────────────
-    _BORDER_PAIRS = [
-        ('DE_LU', 'FR'),
-        ('DE_LU', 'AT'),
-        ('DE_LU', 'PL'),
-        ('DE_LU', 'DK_1'),
-        ('DE_LU', 'NL'),
-        ('DE_LU', 'CZ'),
-    ]
-    for from_cc, to_cc in _BORDER_PAIRS:
-        for a, b in [(from_cc, to_cc), (to_cc, from_cc)]:
-            label = f'{a}->{b}'
+    # ── Cross-border flows ─────────────────────────────────────────────
+    flows_in: Dict[str, List[dict]]  = {}
+    flows_out: Dict[str, List[dict]] = {}
+    for src, dst in FLOW_PAIRS:
+        for out_dom, in_dom, direction, store, label in [
+            # DE → neighbour (exports from DE perspective)
+            (BZN[src], BZN[dst], f'{src}->{dst}', flows_out, dst),
+            # neighbour → DE (imports into DE)
+            (BZN[dst], BZN[src], f'{dst}->{src}', flows_in,  dst),
+        ]:
             try:
-                s = client.query_crossborder_flows(a, b, start=start_48h, end=end_now)
-                out['crossborder_flows'][label] = _series_to_pairs(s)
-                print(f'    entsoe/flow {label}: {len(out["crossborder_flows"][label])} pts')
-                time.sleep(0.4)
-            except NoMatchingDataError:
-                print(f'    entsoe/flow {label}: NoMatchingData')
-                out['crossborder_flows'][label] = []
+                xml = _api({'documentType': 'A11',
+                            'out_Domain': out_dom, 'in_Domain': in_dom,
+                            'periodStart': _fmt(start_7d), 'periodEnd': _fmt(now)})
+                if xml:
+                    series = _parse_xml(xml)
+                    pts = sorted([p for ps in series.values() for p in ps], key=lambda x: x['ts'])
+                    existing = store.get(label, [])
+                    merged   = {p['ts']: p['v'] for p in existing}
+                    merged.update({p['ts']: p['v'] for p in pts})
+                    store[label] = [{'ts': t, 'v': v} for t, v in sorted(merged.items())]
+                    print(f'    entsoe/flow {direction}: {len(store[label])} pts')
+                time.sleep(0.3)
             except Exception as e:
-                print(f'  ! entsoe/flow {label}: {e}')
-                out['crossborder_flows'][label] = []
+                print(f'  ! entsoe/flow {direction}: {e}')
 
-    # ── 6. Net position DE (positive = net exporter) ──────────────────────────
-    try:
-        s = client.query_net_position('DE_LU', start=start_7d, end=end_now, dayahead=True)
-        out['net_position'] = _series_to_pairs(s)
-        print(f'    entsoe/net_position: {len(out["net_position"])} pts')
-        time.sleep(0.5)
-    except NoMatchingDataError:
-        print('    entsoe/net_position: NoMatchingData')
-    except Exception as e:
-        print(f'  ! entsoe/net_position: {e}')
-
-    # ── 7. Installed generation capacity DE (latest annual snapshot) ──────────
-    try:
-        df = client.query_installed_generation_capacity(
-            'DE_LU', start=year_start, end=year_end
-        )
-        df = _flatten_df_columns(df)
-        if len(df) > 0:
-            latest = df.iloc[-1]
-            cap = {}
-            for col in latest.index:
-                key = _GEN_MAP.get(str(col),
-                                   str(col).lower().replace(' ', '_').replace('/', '_'))
-                try:
-                    v = float(latest[col])
-                    if not math.isnan(v):
-                        cap[key] = round(v, 1)
-                except Exception:
-                    pass
-            out['installed_capacity'] = cap
-            print(f'    entsoe/installed_capacity: {len(cap)} fuel types')
-        time.sleep(0.5)
-    except NoMatchingDataError:
-        print('    entsoe/installed_capacity: NoMatchingData')
-    except Exception as e:
-        print(f'  ! entsoe/installed_capacity: {e}')
+    # ── Net position from flows ────────────────────────────────────────
+    net: Dict[int, float] = {}
+    for pts in flows_in.values():
+        for p in pts:
+            net[p['ts']] = net.get(p['ts'], 0.0) + p['v']
+    for pts in flows_out.values():
+        for p in pts:
+            net[p['ts']] = net.get(p['ts'], 0.0) - p['v']
+    net_position = [{'ts': t, 'v': round(v, 1)} for t, v in sorted(net.items())]
+    print(f'    entsoe/net_position: {len(net_position)} pts')
 
     return {
-        'data': out,
+        'data': {
+            'awaiting_key': False,
+            'prices':       prices,
+            'generation':   generation,
+            'load':         load,
+            'flows_in':     flows_in,
+            'flows_out':    flows_out,
+            'net_position': net_position,
+        },
         'meta': {
-            'source': 'ENTSO-E Transparency Platform',
-            'url': 'https://transparency.entsoe.eu',
-            'license': 'free with registration (token required)',
-            'areas': ['DE_LU', 'AT', 'FR', 'PL', 'CH'],
-            'cross_border_pairs': 6,
+            'source':  'ENTSO-E Transparency Platform',
+            'license': 'free for research and education',
+            'note':    'prices A44 · generation A75 · load A65 · flows A11 · zone DE_LU',
         },
     }
