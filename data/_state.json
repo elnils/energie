@@ -6,12 +6,12 @@
     "last_success_iso": "2026-05-13T04:54:02Z"
   },
   "destatis_vpi": {
-    "last_attempt_epoch": 1778569110,
-    "last_attempt_iso": "2026-05-12T06:58:30Z",
+    "last_attempt_epoch": 1778651563,
+    "last_attempt_iso": "2026-05-13T05:52:43Z",
     "last_error_epoch": 1778569366,
     "last_error_message": "RuntimeError: Destatis auth: BOTH modes failed. header: header-auth exception: HTTPSConnectionPool(host='www-genesis.destatis.de', port=443): Max retries exceeded with url: /ge; body: HTTPSConnectionPool(host='www-genesis.destatis.de', port=443): Max retries exceeded with url: /genesisWS/rest/2020/helloworld/logincheck (Caused by ReadTimeoutError(\"HTTPSConnectionPool(host='www-genesis.destatis.de', port=443): Read timed out. (read timeout=30)\"))",
-    "last_success_epoch": 1778564279,
-    "last_success_iso": "2026-05-12T05:37:59Z"
+    "last_success_epoch": 1778651580,
+    "last_success_iso": "2026-05-13T05:53:00Z"
   },
   "eia_petroleum": {
     "last_attempt_epoch": 1778618746,
@@ -46,10 +46,10 @@
     "last_success_iso": "2026-05-13T04:53:49Z"
   },
   "eurostat_oil": {
-    "last_attempt_epoch": 1778648071,
-    "last_attempt_iso": "2026-05-13T04:54:31Z",
-    "last_error_epoch": 1778648093,
-    "last_error_message": "RuntimeError: Eurostat: alle Serien fehlgeschlagen — API nicht erreichbar oder alle Produkt-/Flow-Kombinationen leer. Letzter Datensatz wird als stale beibehalten.",
+    "last_attempt_epoch": 1778651580,
+    "last_attempt_iso": "2026-05-13T05:53:00Z",
+    "last_error_epoch": 1778651614,
+    "last_error_message": "RuntimeError: Eurostat: all series failed — API may be temporarily unavailable. Previous data preserved by store.py.",
     "last_success_epoch": 1778526193,
     "last_success_iso": "2026-05-11T19:03:13Z"
   },
