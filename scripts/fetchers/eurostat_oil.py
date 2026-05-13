@@ -94,23 +94,18 @@ def _fetch_series(dataset: str, product: str, flow: str,
                 # Temporary outage or HTML — skip silently
                 continue
 
-            # Eurostat JSON-stat: value + dimension
-            # Time dimension key varies: 'TIME_PERIOD' (new API) or 'time' (legacy)
+            # Eurostat JSON-stat format: data.value + data.dimension
             value_map: dict = data.get('value', {})
             dim = data.get('dimension', {})
-            # Try both key names
             time_dim = dim.get('TIME_PERIOD') or dim.get('time') or {}
             time_cats = list(time_dim.get('category', {}).get('index', {}).keys())
 
             if not value_map or not time_cats:
-                # Debug: log what dimensions are actually present
                 if value_map and not time_cats:
-                    print(f'      eurostat dim keys: {list(dim.keys())} — time_cats empty!')
+                    avail_dims = list(dim.keys())
+                    print(f'      eurostat warn: value_map has data but time dim empty. dims={avail_dims}')
                 continue
 
-            # value_map idx is a linearised position across all dimensions.
-            # Since we request single geo+product+flow, only time varies → idx == time_idx.
-            # Filter out explicit 0 values for stocks (0 = no data published, not actual zero).
             is_stock = flow == 'INTSTOCK'
             series = []
             for idx_str, val in value_map.items():
@@ -120,7 +115,7 @@ def _fetch_series(dataset: str, product: str, flow: str,
                     if val is None:
                         continue
                     fval = round(float(val), 2)
-                    # Stocks of 0 are almost certainly missing data, not real zero
+                    # Stock values of 0 mean "not published", not actual zero
                     if is_stock and fval == 0.0:
                         continue
                     series.append({'period': period, 'v': fval})
@@ -162,10 +157,9 @@ def fetch() -> dict:
             results[local_key] = {'series_per_country': {}, 'description': desc}
 
     if not any_success:
-        raise RuntimeError(
-            'Eurostat: all series failed — API may be temporarily unavailable. '
-            'Previous data preserved by store.py.'
-        )
+        # Don't raise — return empty structure so store.py keeps previous data
+        # but doesn't mark as error. This prevents log noise on temporary API outages.
+        print('  ! Eurostat: all series empty (API may be temporarily unavailable) — previous data kept')
 
     return {
         'data': results,
