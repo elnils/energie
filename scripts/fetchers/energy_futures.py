@@ -23,10 +23,10 @@ from core import http, paths, history
 HIST_FILE = os.path.join(paths.DATA_DIR, 'history', 'futures.jsonl')
 
 EIA_STEO_SERIES = {
-    'brent':  'BREPUUS',    # Brent crude  USD/bbl
-    'wti':    'WTIPUUS',    # WTI crude    USD/bbl
-    'eu_gas': 'NGTEIUUS',   # EU nat. gas  USD/MMBtu
-    'hh_gas': 'NGHNGUS',    # Henry Hub    USD/MMBtu
+    'brent':  'BREPUUS',    # Brent crude oil spot price    USD/bbl
+    'wti':    'WTIPUUS',    # WTI crude oil spot price      USD/bbl
+    'eu_gas': 'NGEUPUUS',   # European natural gas (TTF)   USD/MMBtu
+    'hh_gas': 'NGHHUUS',    # Henry Hub natural gas         USD/MMBtu
 }
 
 SPOT_TICKERS = [
@@ -60,9 +60,9 @@ def _fetch_eia_steo(api_key: str) -> dict:
                     ('data[0]', 'value'),
                     ('facets[seriesId][]', series_id),
                     ('sort[0][column]', 'period'),
-                    ('sort[0][direction]', 'asc'),
+                    ('sort[0][direction]', 'desc'),   # desc = newest first → includes future months
                     ('offset', '0'),
-                    ('length', '48'),
+                    ('length', '36'),                 # 36 months: ~12 actual + ~24 forecast
                 ],
                 timeout=30,
             )
@@ -161,9 +161,16 @@ def _fetch_worldbank() -> dict:
                 result[key] = []
                 continue
             payload = r.json()
-            rows = payload[1] if isinstance(payload, list) and len(payload) > 1 else []
+            # World Bank returns [{pages_meta}, [data_rows]] or a single dict on error
+            rows = []
+            if isinstance(payload, list) and len(payload) > 1:
+                rows = payload[1] or []
+            elif isinstance(payload, dict):
+                rows = payload.get('value', payload.get('data', []))
             series = []
-            for row in (rows or []):
+            for row in rows:
+                if not isinstance(row, dict):
+                    continue
                 try:
                     yr  = int(row.get('date', '0'))
                     val = row.get('value')
@@ -173,7 +180,7 @@ def _fetch_worldbank() -> dict:
                     pass
             series.sort(key=lambda x: x['year'])
             result[key] = series
-            print(f'    worldbank/{key}: {len(series)} years')
+            print(f'    worldbank/{key}: {len(series)} years ({[x["year"] for x in series]})')
             time.sleep(0.3)
         except Exception as e:
             print(f'  ! worldbank/{key}: {e}')
@@ -200,18 +207,19 @@ def _fetch_imf() -> dict:
                 continue
             payload  = r.json()
             ind_data = payload.get('values', {}).get(ind, {})
-            # Find the global aggregate key
+            # Find the global aggregate key — IMF uses various codes
             vals = {}
-            for candidate in ('WORLD', 'WLD', '001'):
-                if candidate in ind_data:
+            for candidate in ('WORLD', 'WLD', '001', 'W00', ''):
+                if candidate in ind_data and ind_data[candidate]:
                     vals = ind_data[candidate]
                     break
             if not vals:
-                # Fall back to first non-empty entry
+                # Fall back: take entry with most data points
+                best_len = 0
                 for v in ind_data.values():
-                    if isinstance(v, dict) and v:
+                    if isinstance(v, dict) and len(v) > best_len:
+                        best_len = len(v)
                         vals = v
-                        break
             series = []
             for yr_str, val in vals.items():
                 try:
