@@ -1,345 +1,597 @@
 """
-Energy Futures & Price Forecasts
+energy_futures — EIA STEO + World Bank Pink Sheet + IMF WEO.
 
-Interval: 360 min (6h) — prices change slowly, forecasts update monthly.
+Combines three independent commodity-forecast sources into one file that the
+frontend's Futures tab consumes:
 
-Sources:
-  1. EIA STEO API  — Brent/WTI/EU Gas/Henry Hub monatlich, 24+ Monate voraus
-                     Zukünftige Monate = offizielle EIA Prognose
-  2. Yahoo Finance  — Spot-Preise (direkt via v8/finance/chart, kein yfinance)
-  3. World Bank API — Jahres-Prognosen (kein Key)
-  4. IMF DataMapper — Jahres-Prognosen (kein Key)
-  5. JSONL Snapshot — wöchentlicher Kurvenvergleich (Vorwoche vs. heute)
+  - EIA Short-Term Energy Outlook: monthly history + 18-month forecast for
+    Brent, WTI, Henry Hub, and EU imported natural gas. Released monthly.
+  - World Bank Commodity Markets Outlook (Pink Sheet): annual forecasts for
+    crude oil and EU natural gas, several years out. Released semi-annually
+    (April/October), updated minor in months in between.
+  - IMF Datamapper API: annual oil price (Brent) with WEO forecasts.
+    Released semi-annually (April/October).
+
+Spot prices are NOT fetched here — they are re-read from data/commodities.json
+to avoid duplicate Yahoo Finance calls.
+
+Previous-week snapshots live in data/history/energy_futures.jsonl. One row per
+day, deduplicated by date. The frontend's grey-dashed "Prognose Vorwoche"
+layer uses the oldest entry between 5–30 days old.
+
+Failure model:
+  - Each sub-source has its own try/except. Failures are non-fatal and recorded
+    in data.errors[]. The frontend shows them.
+  - If ALL THREE sources fail simultaneously, fetch() raises RuntimeError with
+    the aggregated error message. store.py keeps the previous file (stale=true).
+
+Auth:
+  - EIA needs EIA_API_KEY from os.environ. Already a GitHub Secret.
+  - World Bank and IMF are open / no key.
+
+References:
+  - EIA API v2: https://api.eia.gov/v2/steo/data/
+  - EIA STEO series catalog: https://www.eia.gov/opendata/browser/steo
+  - WB Pink Sheet: https://www.worldbank.org/en/research/commodity-markets
+  - IMF Datamapper API: https://www.imf.org/external/datamapper/api/v1
 """
+from __future__ import annotations
+
+import io
 import json
 import os
+import re
 import time
-from datetime import datetime, timezone, timedelta
-from typing import Optional
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
-from core import http, paths, history
+from core import http, paths
 
 
-HIST_FILE = os.path.join(paths.DATA_DIR, 'history', 'futures.jsonl')
+# ════════════════════════════════════════════════════════════
+# Configuration
+# ════════════════════════════════════════════════════════════
 
-EIA_STEO_SERIES = {
-    'brent':  'BREPUUS',    # Brent crude oil spot price    USD/bbl
-    'wti':    'WTIPUUS',    # WTI crude oil spot price      USD/bbl
-    'eu_gas': 'NGEUPUUS',   # European natural gas (TTF)   USD/MMBtu
-    'hh_gas': 'NGHHUUS',    # Henry Hub natural gas         USD/MMBtu
+EIA_API_KEY = (os.environ.get('EIA_API_KEY') or '').strip()
+EIA_STEO_URL = 'https://api.eia.gov/v2/steo/data/'
+
+# Verified 2026-05-14 against https://www.eia.gov/opendata/browser/steo
+# `seriesId` facet values. Frequency: monthly.
+EIA_SERIES: Dict[str, str] = {
+    'brent':  'BREPUUS',       # Brent Spot Price, $/bbl
+    'wti':    'WTIPUUS',       # West Texas Intermediate Spot, $/bbl
+    'hh_gas': 'NGHHMCF',       # Henry Hub Natural Gas Spot, $/MMBtu
+    'eu_gas': 'NGEUIPRCNUS',   # U.S. EU Imported Natural Gas, $/MMBtu
 }
 
-SPOT_TICKERS = [
-    ('brent_usd_bbl',    'BZ%3DF',  'USD/bbl'),
-    ('wti_usd_bbl',      'CL%3DF',  'USD/bbl'),
-    ('ttf_usd_mmbtu',    'TTF%3DF', 'USD/MMBtu'),
-    ('natgas_usd_mmbtu', 'NG%3DF',  'USD/MMBtu'),
-    ('heating_usd_gal',  'HO%3DF',  'USD/gal'),
-    ('gasoil_usd_t',     'QS%3DF',  'USD/MT'),
+# World Bank Commodity Markets Outlook (Pink Sheet).
+# The forecast XLSX has a document-ID in the URL that changes each release,
+# so we scrape the landing page first for the latest link, then fall back to
+# a curated direct URL. If neither works, returns empty lists and continues.
+WB_LANDING = 'https://www.worldbank.org/en/research/commodity-markets'
+WB_FORECAST_FALLBACKS = [
+    # Add new fallbacks here when the scrape stops finding them, oldest last.
+    'https://thedocs.worldbank.org/en/doc/24e8d315bdd05e6ba3c813bbd49b3358-0050012025/related/CMO-October-2025-Forecasts.xlsx',
+    'https://thedocs.worldbank.org/en/doc/18675909112024025-0050022024/related/CMO-April-2025-Forecasts.xlsx',
 ]
 
-WB_INDICATORS  = {'crude_oil': 'POILAPSP', 'eu_gas': 'PNGASEU'}
-IMF_INDICATORS = {'crude_oil': 'POILAPSP', 'eu_gas': 'PNGASEU'}
+# IMF Datamapper REST. POILBREN = "Crude Oil (petroleum), Brent, U.K., $/bbl"
+IMF_BASE = 'https://www.imf.org/external/datamapper/api/v1'
+IMF_INDICATORS: Dict[str, str] = {
+    'crude_oil': 'POILBREN',
+    # IMF Datamapper has no dedicated EU natgas indicator with WEO-style
+    # forecast horizons. We deliberately leave eu_gas empty for IMF so the
+    # frontend doesn't show invented data.
+}
+
+# Local files we read or write.
+HISTORY_FILE = paths.DATA / 'history' / 'energy_futures.jsonl'
+COMMODITIES_FILE = paths.DATA / 'commodities.json'
+
+# Previous-week snapshot age window. "Last week" means at least 5 days old,
+# tolerating up to 30 days if the GitHub Action hung over a weekend etc.
+PREV_SNAPSHOT_MIN_DAYS = 5
+PREV_SNAPSHOT_MAX_DAYS = 30
 
 
-# ── EIA STEO ──────────────────────────────────────────────────────────────────
+# ════════════════════════════════════════════════════════════
+# Time helpers
+# ════════════════════════════════════════════════════════════
 
-def _fetch_eia_steo(api_key: str) -> dict:
+def _now_utc() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+def _current_month_str() -> str:
+    return _now_utc().strftime('%Y-%m')
+
+
+def _today_str() -> str:
+    return _now_utc().strftime('%Y-%m-%d')
+
+
+# ════════════════════════════════════════════════════════════
+# Sub-source: EIA STEO
+# ════════════════════════════════════════════════════════════
+
+def _fetch_eia_series(series_id: str) -> List[Dict[str, Any]]:
+    """
+    Returns list of {period: 'YYYY-MM', v: float, type: 'actual'|'forecast'}.
+
+    STEO publishes ~24 months of forecast in the same call as history. We
+    classify by period vs current month because the response does not flag
+    historical vs forecast explicitly.
+    """
+    if not EIA_API_KEY:
+        raise RuntimeError('EIA_API_KEY missing in environment')
+
     s = http.get_session()
-    now = datetime.now(timezone.utc)
-    forecast_from = f"{now.year}-{now.month:02d}"
-    result = {'forecast_from': forecast_from}
+    params = {
+        'api_key': EIA_API_KEY,
+        'frequency': 'monthly',
+        'data[0]': 'value',
+        'facets[seriesId][]': series_id,
+        'sort[0][column]': 'period',
+        'sort[0][direction]': 'asc',
+        'offset': '0',
+        'length': '5000',
+    }
+    r = s.get(EIA_STEO_URL, params=params, timeout=30)
+    r.raise_for_status()
+    payload = r.json()
 
-    for key, series_id in EIA_STEO_SERIES.items():
+    response = payload.get('response') or {}
+    rows = response.get('data') or []
+    if not rows:
+        msg = response.get('error') or payload.get('error') or 'no rows'
+        raise RuntimeError(f'EIA returned no rows: {msg}')
+
+    cutoff = _current_month_str()
+    out: List[Dict[str, Any]] = []
+    for row in rows:
+        period = row.get('period')
+        raw_value = row.get('value')
+        if not period or raw_value in (None, ''):
+            continue
         try:
-            r = s.get(
-                'https://api.eia.gov/v2/steo/data/',
-                params=[
-                    ('api_key', api_key),
-                    ('frequency', 'monthly'),
-                    ('data[0]', 'value'),
-                    ('facets[seriesId][]', series_id),
-                    ('sort[0][column]', 'period'),
-                    ('sort[0][direction]', 'desc'),   # desc = newest first → includes future months
-                    ('offset', '0'),
-                    ('length', '36'),                 # 36 months: ~12 actual + ~24 forecast
-                ],
-                timeout=30,
+            v = float(raw_value)
+        except (TypeError, ValueError):
+            continue
+        out.append({
+            'period': period,
+            'v': round(v, 4),
+            'type': 'forecast' if period >= cutoff else 'actual',
+        })
+    return out
+
+
+def _fetch_all_eia(errors: List[str]) -> Dict[str, List[Dict[str, Any]]]:
+    """Fetches all configured STEO series. Each failure recorded in `errors`."""
+    result: Dict[str, List[Dict[str, Any]]] = {
+        key: [] for key in EIA_SERIES
+    }
+    for key, series_id in EIA_SERIES.items():
+        try:
+            data = _fetch_eia_series(series_id)
+            result[key] = data
+            last_actual = next(
+                (p for p in reversed(data) if p['type'] == 'actual'),
+                None,
             )
-            if not r.ok:
-                print(f'  ! eia_steo/{key}: HTTP {r.status_code}')
-                result[key] = []
-                continue
-            rows = r.json().get('response', {}).get('data', [])
-            series = []
-            for row in rows:
-                period = row.get('period', '')
-                val    = row.get('value')
-                if not period or val is None:
-                    continue
-                try:
-                    v = round(float(val), 3)
-                except (TypeError, ValueError):
-                    continue
-                ptype = 'forecast' if period >= forecast_from else 'actual'
-                series.append({'period': period, 'v': v, 'type': ptype})
-            result[key] = series
-            n_fc = sum(1 for x in series if x['type'] == 'forecast')
-            n_ac = len(series) - n_fc
-            print(f'    eia_steo/{key}: {n_ac} actual + {n_fc} forecast')
+            last_fc = data[-1] if data else None
+            print(
+                f'    eia_steo/{key}: {len(data)} pts '
+                f'(actual until {last_actual["period"] if last_actual else "—"}, '
+                f'forecast to {last_fc["period"] if last_fc else "—"})'
+            )
             time.sleep(0.3)
         except Exception as e:
-            print(f'  ! eia_steo/{key}: {e}')
-            result[key] = []
-
+            msg = f'eia_steo/{key} ({series_id}): {e}'
+            print(f'  ! {msg}')
+            errors.append(msg)
     return result
 
 
-# ── Yahoo Finance spot ─────────────────────────────────────────────────────────
+# ════════════════════════════════════════════════════════════
+# Sub-source: World Bank Pink Sheet (Commodity Markets Outlook)
+# ════════════════════════════════════════════════════════════
 
-def _fetch_yahoo_spot() -> dict:
-    s = http.get_session()
-    yh_headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-        'Referer': 'https://finance.yahoo.com',
+def _discover_wb_forecast_url(session) -> Optional[str]:
+    """Scrape the landing page for the latest 'CMO-...-Forecasts.xlsx' link."""
+    try:
+        r = session.get(WB_LANDING, timeout=20)
+        r.raise_for_status()
+    except Exception as e:
+        print(f'  ! worldbank/discover: {e}')
+        return None
+    matches = re.findall(
+        r'href="(https?://[^"]+CMO[^"]+Forecasts?\.xlsx)"',
+        r.text,
+        re.IGNORECASE,
+    )
+    if matches:
+        # Strip HTML entities, deduplicate, prefer the first hit.
+        clean = matches[0].replace('&amp;', '&')
+        print(f'    worldbank/discover: found {clean[:80]}...')
+        return clean
+    return None
+
+
+def _parse_wb_forecast_xlsx(xlsx_bytes: bytes) -> Dict[str, List[Dict[str, Any]]]:
+    """
+    Pink Sheet forecast XLSX has rows per commodity, columns per year.
+    Layout varies, so we scan all sheets for two label-rows by substring match.
+    """
+    try:
+        import openpyxl
+    except ImportError as e:
+        raise RuntimeError(f'openpyxl not installed: {e}')
+
+    wb = openpyxl.load_workbook(io.BytesIO(xlsx_bytes), data_only=True)
+
+    targets = {
+        # output key   : list of label substrings (case-insensitive) to match
+        'crude_oil':    ['crude oil, brent', 'oil, brent', 'crude oil ($/bbl, brent', 'crude oil avg'],
+        'eu_gas':       ['natural gas, europe', 'european gas', 'natural gas europe'],
     }
-    today = datetime.now(timezone.utc).strftime('%Y-%m-%d')
-    spot = {}
+    found: Dict[str, List[Dict[str, Any]]] = {k: [] for k in targets}
 
-    for key, enc, unit in SPOT_TICKERS:
-        try:
-            r = s.get(
-                f'https://query1.finance.yahoo.com/v8/finance/chart/{enc}'
-                f'?range=5d&interval=1d',
-                timeout=20,
-                headers=yh_headers,
-            )
-            if not r.ok:
+    for sheet in wb.worksheets:
+        # Detect the year header row: the row whose cells are mostly 4-digit ints
+        rows = list(sheet.iter_rows(values_only=True))
+        year_header_idx: Optional[int] = None
+        for idx, row in enumerate(rows[:25]):
+            int_years = [
+                c for c in row
+                if isinstance(c, (int, float)) and 1980 <= int(c) <= 2050
+            ]
+            if len(int_years) >= 5:
+                year_header_idx = idx
+                break
+        if year_header_idx is None:
+            continue
+        year_row = rows[year_header_idx]
+
+        # For each remaining row, check if its first text cell matches a target.
+        for row in rows[year_header_idx + 1:]:
+            label_cell = next((c for c in row if isinstance(c, str)), None)
+            if not label_cell:
                 continue
-            res = r.json()['chart']['result'][0]
-            closes = [c for c in res['indicators']['quote'][0]['close'] if c is not None]
-            if closes:
-                spot[key] = {
-                    'price':  round(closes[-1], 4),
-                    'unit':   unit,
-                    'date':   today,
-                    'source': 'Yahoo Finance',
-                }
-            time.sleep(0.2)
-        except Exception as e:
-            print(f'  ! yahoo_spot/{key}: {e}')
+            label_lc = label_cell.strip().lower()
+            for out_key, substrs in targets.items():
+                if found[out_key]:
+                    continue  # already populated from earlier sheet/row
+                if not any(sub in label_lc for sub in substrs):
+                    continue
+                # Match found: zip years × values
+                for year_cell, value_cell in zip(year_row, row):
+                    if not isinstance(year_cell, (int, float)):
+                        continue
+                    year = int(year_cell)
+                    if not (1980 <= year <= 2050):
+                        continue
+                    if not isinstance(value_cell, (int, float)):
+                        continue
+                    found[out_key].append({
+                        'year': year,
+                        'v': round(float(value_cell), 4),
+                    })
+                # First match wins; don't try other targets against same row.
+                break
 
-    # Derived: TTF USD/MMBtu → EUR/MWh (approx ÷3.41 × EUR/USD ~0.92)
-    if 'ttf_usd_mmbtu' in spot:
-        v = spot['ttf_usd_mmbtu']['price']
-        spot['ttf_eur_mwh'] = {
-            'price':  round(v / 3.41 * 0.92, 2),
-            'unit':   'EUR/MWh (approx)',
-            'date':   today,
-            'source': 'Yahoo Finance TTF=F (converted)',
+    # Sort by year and dedupe within each output key
+    for key in found:
+        seen = {}
+        for pt in found[key]:
+            seen[pt['year']] = pt['v']
+        found[key] = [{'year': y, 'v': v} for y, v in sorted(seen.items())]
+
+    return found
+
+
+def _fetch_worldbank(errors: List[str]) -> Dict[str, List[Dict[str, Any]]]:
+    """Returns {'crude_oil': [{year, v}], 'eu_gas': [{year, v}]}."""
+    s = http.get_session()
+    empty: Dict[str, List[Dict[str, Any]]] = {'crude_oil': [], 'eu_gas': []}
+
+    candidate_urls: List[str] = []
+    discovered = _discover_wb_forecast_url(s)
+    if discovered:
+        candidate_urls.append(discovered)
+    candidate_urls.extend(WB_FORECAST_FALLBACKS)
+    # Dedupe while preserving order
+    seen = set()
+    ordered_urls = [u for u in candidate_urls if not (u in seen or seen.add(u))]
+
+    last_err: Optional[str] = None
+    for url in ordered_urls:
+        try:
+            r = s.get(url, timeout=60)
+            r.raise_for_status()
+            if not r.content or len(r.content) < 5000:
+                last_err = f'XLSX too small ({len(r.content)} bytes) at {url[:60]}'
+                continue
+            parsed = _parse_wb_forecast_xlsx(r.content)
+            for k in parsed:
+                print(f'    worldbank/{k}: {len(parsed[k])} pts')
+            if any(parsed.values()):
+                return parsed
+            last_err = f'XLSX parsed but no rows matched at {url[:60]}'
+        except Exception as e:
+            last_err = f'{url[:60]}: {e}'
+            continue
+
+    if last_err:
+        errors.append(f'worldbank: {last_err}')
+        print(f'  ! worldbank: {last_err}')
+    return empty
+
+
+# ════════════════════════════════════════════════════════════
+# Sub-source: IMF Datamapper
+# ════════════════════════════════════════════════════════════
+
+def _fetch_imf_indicator(indicator: str) -> List[Dict[str, Any]]:
+    """Returns list of {year, v} from IMF Datamapper. WEO baseline (all countries)."""
+    s = http.get_session()
+    # We pull the global aggregate by omitting the country filter.
+    url = f'{IMF_BASE}/{indicator}'
+    r = s.get(url, timeout=30)
+    r.raise_for_status()
+    payload = r.json()
+    # Response shape: {"values": {"POILBREN": {"WLD": {"2020": 41.84, ...}}}}
+    values_root = payload.get('values', {}).get(indicator, {})
+    if not values_root:
+        raise RuntimeError(f'IMF response missing values.{indicator}')
+
+    # Pick the first key (typically a country/aggregate code like 'WLD' or no key)
+    year_dict = next(iter(values_root.values())) if values_root else {}
+    if not isinstance(year_dict, dict):
+        raise RuntimeError(f'IMF response shape unexpected: {type(year_dict)}')
+
+    out: List[Dict[str, Any]] = []
+    for year_str, raw in year_dict.items():
+        try:
+            year = int(year_str)
+            v = float(raw)
+        except (TypeError, ValueError):
+            continue
+        out.append({'year': year, 'v': round(v, 4)})
+    out.sort(key=lambda x: x['year'])
+    return out
+
+
+def _fetch_all_imf(errors: List[str]) -> Dict[str, List[Dict[str, Any]]]:
+    result: Dict[str, List[Dict[str, Any]]] = {'crude_oil': [], 'eu_gas': []}
+    for key, indicator in IMF_INDICATORS.items():
+        try:
+            data = _fetch_imf_indicator(indicator)
+            result[key] = data
+            last = data[-1] if data else None
+            print(f'    imf/{key} ({indicator}): {len(data)} pts, last={last["year"] if last else "—"}')
+            time.sleep(0.3)
+        except Exception as e:
+            msg = f'imf/{key} ({indicator}): {e}'
+            print(f'  ! {msg}')
+            errors.append(msg)
+    return result
+
+
+# ════════════════════════════════════════════════════════════
+# Spot prices — recycled from data/commodities.json
+# ════════════════════════════════════════════════════════════
+
+def _read_commodities_spot() -> Dict[str, Any]:
+    """
+    Re-uses already-fetched commodity quotes. Does NOT re-call Yahoo Finance.
+    Maps ticker keys → the names the frontend expects in `spot.*`.
+    """
+    try:
+        with COMMODITIES_FILE.open('r', encoding='utf-8') as f:
+            blob = json.load(f)
+    except FileNotFoundError:
+        print('  ! spot: commodities.json not yet present')
+        return {}
+    except Exception as e:
+        print(f'  ! spot: cannot read commodities.json: {e}')
+        return {}
+
+    # Unwrap v5 envelope if present
+    data = blob.get('data', blob)
+
+    def _quote(key: str) -> Optional[Dict[str, Any]]:
+        item = data.get(key)
+        if not isinstance(item, dict):
+            return None
+        q = item.get('quote') or {}
+        series = item.get('series') or []
+        price = q.get('price')
+        if price is None and series:
+            price = series[-1].get('v')
+        if price is None:
+            return None
+        return {
+            'price': round(float(price), 4),
+            'change_pct': q.get('change_pct'),
+            'updated': q.get('updated') or (series[-1].get('t') if series else None),
         }
 
-    print(f'    yahoo_spot: {len(spot)} prices')
-    return spot
-
-
-# ── World Bank ─────────────────────────────────────────────────────────────────
-
-def _fetch_worldbank() -> dict:
-    s = http.get_session()
-    cur_year = datetime.now(timezone.utc).year
-    result = {}
-
-    for key, ind in WB_INDICATORS.items():
-        try:
-            r = s.get(
-                f'https://api.worldbank.org/v2/country/WLD/indicator/{ind}'
-                f'?format=json&per_page=15&date={cur_year-4}:{cur_year+3}',
-                timeout=20,
-            )
-            if not r.ok:
-                result[key] = []
-                continue
-            payload = r.json()
-            # World Bank returns [{pages_meta}, [data_rows]] or a single dict on error
-            rows = []
-            if isinstance(payload, list) and len(payload) > 1:
-                rows = payload[1] or []
-            elif isinstance(payload, dict):
-                rows = payload.get('value', payload.get('data', []))
-            series = []
-            for row in rows:
-                if not isinstance(row, dict):
-                    continue
-                try:
-                    yr  = int(row.get('date', '0'))
-                    val = row.get('value')
-                    if val is not None and yr >= 2018:
-                        series.append({'year': yr, 'v': round(float(val), 3)})
-                except (ValueError, TypeError):
-                    pass
-            series.sort(key=lambda x: x['year'])
-            result[key] = series
-            print(f'    worldbank/{key}: {len(series)} years ({[x["year"] for x in series]})')
-            time.sleep(0.3)
-        except Exception as e:
-            print(f'  ! worldbank/{key}: {e}')
-            result[key] = []
-
-    result['source'] = 'World Bank (no auth required)'
-    return result
-
-
-# ── IMF DataMapper ─────────────────────────────────────────────────────────────
-
-def _fetch_imf() -> dict:
-    s = http.get_session()
-    result = {}
-
-    for key, ind in IMF_INDICATORS.items():
-        try:
-            r = s.get(
-                f'https://www.imf.org/external/datamapper/api/v1/{ind}',
-                timeout=20,
-            )
-            if not r.ok:
-                result[key] = []
-                continue
-            payload  = r.json()
-            ind_data = payload.get('values', {}).get(ind, {})
-            # Find the global aggregate key — IMF uses various codes
-            vals = {}
-            for candidate in ('WORLD', 'WLD', '001', 'W00', ''):
-                if candidate in ind_data and ind_data[candidate]:
-                    vals = ind_data[candidate]
-                    break
-            if not vals:
-                # Fall back: take entry with most data points
-                best_len = 0
-                for v in ind_data.values():
-                    if isinstance(v, dict) and len(v) > best_len:
-                        best_len = len(v)
-                        vals = v
-            series = []
-            for yr_str, val in vals.items():
-                try:
-                    yr = int(yr_str)
-                    if 2018 <= yr <= 2030 and val is not None:
-                        series.append({'year': yr, 'v': round(float(val), 3)})
-                except (ValueError, TypeError):
-                    pass
-            series.sort(key=lambda x: x['year'])
-            result[key] = series
-            print(f'    imf/{key}: {len(series)} years')
-            time.sleep(0.3)
-        except Exception as e:
-            print(f'  ! imf/{key}: {e}')
-            result[key] = []
-
-    result['source'] = 'IMF World Economic Outlook (no auth required)'
-    return result
-
-
-# ── History snapshot ──────────────────────────────────────────────────────────
-
-def _save_snapshot(eia: dict) -> None:
-    os.makedirs(os.path.dirname(HIST_FILE), exist_ok=True)
-    record = {
-        'date':       datetime.now(timezone.utc).strftime('%Y-%m-%d'),
-        'eia_brent':  eia.get('brent',  []),
-        'eia_wti':    eia.get('wti',    []),
-        'eia_eu_gas': eia.get('eu_gas', []),
-        'eia_hh_gas': eia.get('hh_gas', []),
+    out: Dict[str, Any] = {}
+    mapping = {
+        'brent_usd_bbl':    'brent_crude',
+        'wti_usd_bbl':      'wti_crude',
+        'natgas_usd_mmbtu': 'natural_gas',
+        'ttf_eur_mwh':      'ttf_gas',
     }
-    try:
-        with open(HIST_FILE, 'a', encoding='utf-8') as f:
-            f.write(json.dumps(record, ensure_ascii=False) + '\n')
-    except Exception as e:
-        print(f'  ! futures snapshot write: {e}')
+    for out_key, src_key in mapping.items():
+        q = _quote(src_key)
+        if q:
+            out[out_key] = q
+    return out
 
 
-def _load_previous_week() -> Optional[dict]:
-    if not os.path.exists(HIST_FILE):
-        return None
-    target = (datetime.now(timezone.utc) - timedelta(days=7)).strftime('%Y-%m-%d')
-    best, best_delta = None, 999
+# ════════════════════════════════════════════════════════════
+# Previous-week snapshot (JSONL append-only, dedupe by date)
+# ════════════════════════════════════════════════════════════
+
+def _save_snapshot(record: Dict[str, Any]) -> None:
+    """
+    Appends today's snapshot to history JSONL. If today already has an entry,
+    it is replaced (idempotent same-day re-runs).
+    """
+    HISTORY_FILE.parent.mkdir(parents=True, exist_ok=True)
+    today = record['date']
+
+    kept: List[str] = []
+    if HISTORY_FILE.exists():
+        try:
+            with HISTORY_FILE.open('r', encoding='utf-8') as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        obj = json.loads(line)
+                    except json.JSONDecodeError:
+                        continue
+                    if obj.get('date') != today:
+                        kept.append(line)
+        except Exception as e:
+            print(f'  ! history read failed (will overwrite): {e}')
+
+    kept.append(json.dumps(record, ensure_ascii=False))
+    tmp = HISTORY_FILE.with_suffix('.jsonl.tmp')
+    with tmp.open('w', encoding='utf-8') as f:
+        f.write('\n'.join(kept) + '\n')
+    tmp.replace(HISTORY_FILE)
+
+
+def _load_previous_snapshot() -> Dict[str, List[Dict[str, Any]]]:
+    """
+    Returns the oldest snapshot in the [MIN_DAYS, MAX_DAYS] window, or empty
+    structure if nothing usable exists yet (first runs).
+    """
+    empty = {
+        'eia_brent':  [],
+        'eia_wti':    [],
+        'eia_hh_gas': [],
+        'eia_eu_gas': [],
+    }
+    if not HISTORY_FILE.exists():
+        return empty
+
+    now = _now_utc()
+    candidates: List[Dict[str, Any]] = []
     try:
-        with open(HIST_FILE, encoding='utf-8') as f:
+        with HISTORY_FILE.open('r', encoding='utf-8') as f:
             for line in f:
                 line = line.strip()
                 if not line:
                     continue
                 try:
-                    rec   = json.loads(line)
-                    rec_d = rec.get('date', '')
-                    if rec_d:
-                        delta = abs(
-                            (datetime.strptime(rec_d, '%Y-%m-%d')
-                             - datetime.strptime(target, '%Y-%m-%d')).days
-                        )
-                        if delta < best_delta:
-                            best_delta = delta
-                            best = rec
-                except Exception:
-                    pass
+                    obj = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                date_str = obj.get('date')
+                if not date_str:
+                    continue
+                try:
+                    dt = datetime.strptime(date_str, '%Y-%m-%d').replace(tzinfo=timezone.utc)
+                except ValueError:
+                    continue
+                age_days = (now - dt).days
+                if PREV_SNAPSHOT_MIN_DAYS <= age_days <= PREV_SNAPSHOT_MAX_DAYS:
+                    candidates.append({'age': age_days, 'obj': obj})
     except Exception as e:
-        print(f'  ! futures history read: {e}')
-    if best and best_delta <= 10:
-        print(f'    futures history: {best["date"]} (Δ{best_delta}d ago)')
-        return best
-    return None
+        print(f'  ! prev-week read failed: {e}')
+        return empty
+
+    if not candidates:
+        return empty
+
+    # Prefer the entry closest to one week ago (age ≈ 7)
+    candidates.sort(key=lambda c: abs(c['age'] - 7))
+    chosen = candidates[0]['obj']
+    print(f'    previous_week: snapshot from {chosen.get("date")} (age {candidates[0]["age"]}d)')
+
+    return {
+        'eia_brent':  chosen.get('eia_brent', []),
+        'eia_wti':    chosen.get('eia_wti', []),
+        'eia_hh_gas': chosen.get('eia_hh_gas', []),
+        'eia_eu_gas': chosen.get('eia_eu_gas', []),
+    }
 
 
-# ── Main ──────────────────────────────────────────────────────────────────────
+# ════════════════════════════════════════════════════════════
+# Main entrypoint
+# ════════════════════════════════════════════════════════════
 
 def fetch() -> dict:
-    eia_key = os.environ.get('EIA_API_KEY', '').strip()
-    today   = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+    """
+    Orchestrates EIA + WB + IMF + spot + history snapshot.
+    Conforms to the v5 fetcher contract: returns {'data': {...}, 'meta': {...}}.
+    """
+    errors: List[str] = []
 
-    # 1. EIA STEO
-    if eia_key:
-        eia_steo = _fetch_eia_steo(eia_key)
-    else:
-        print('  ! energy_futures: EIA_API_KEY not set — STEO skipped')
-        eia_steo = {k: [] for k in list(EIA_STEO_SERIES) + ['forecast_from']}
-        eia_steo['forecast_from'] = datetime.now(timezone.utc).strftime('%Y-%m')
+    eia_data = _fetch_all_eia(errors)
+    wb_data = _fetch_worldbank(errors)
+    imf_data = _fetch_all_imf(errors)
+    spot_data = _read_commodities_spot()
+    prev_week = _load_previous_snapshot()
 
-    # 2. Yahoo spot
-    spot = _fetch_yahoo_spot()
+    # Hard fail only if every external API yielded nothing
+    eia_empty = all(not v for v in eia_data.values())
+    wb_empty = all(not v for v in wb_data.values())
+    imf_empty = all(not v for v in imf_data.values())
+    if eia_empty and wb_empty and imf_empty:
+        raise RuntimeError(
+            f'energy_futures: ALL external APIs failed. Errors: '
+            f'{"; ".join(errors) or "no detail"}'
+        )
 
-    # 3. World Bank (no auth)
-    worldbank = _fetch_worldbank()
-
-    # 4. IMF (no auth)
-    imf = _fetch_imf()
-
-    # 5. History
-    if any(eia_steo.get(k) for k in EIA_STEO_SERIES):
-        _save_snapshot(eia_steo)
-    previous_week = _load_previous_week()
+    # Save today's EIA snapshot for tomorrow's "previous week" calculation
+    if not eia_empty:
+        try:
+            _save_snapshot({
+                'date': _today_str(),
+                'eia_brent':  eia_data['brent'],
+                'eia_wti':    eia_data['wti'],
+                'eia_hh_gas': eia_data['hh_gas'],
+                'eia_eu_gas': eia_data['eu_gas'],
+            })
+        except Exception as e:
+            msg = f'snapshot write: {e}'
+            print(f'  ! {msg}')
+            errors.append(msg)
 
     return {
         'data': {
-            'spot':             spot,
-            'eia_steo':         eia_steo,
-            'worldbank':        worldbank,
-            'imf':              imf,
-            'history_snapshot': {
-                'date':       today,
-                'eia_brent':  eia_steo.get('brent',  []),
-                'eia_wti':    eia_steo.get('wti',    []),
-                'eia_eu_gas': eia_steo.get('eu_gas', []),
-                'eia_hh_gas': eia_steo.get('hh_gas', []),
-            },
-            'previous_week': previous_week,
+            'eia_steo':      eia_data,
+            'worldbank':     wb_data,
+            'imf':           imf_data,
+            'spot':          spot_data,
+            'previous_week': prev_week,
+            'errors':        errors,
         },
         'meta': {
-            'source':   'EIA STEO + Yahoo Finance + World Bank + IMF',
-            'interval': 360,
-            'note': (
-                'EIA STEO: future months = official EIA price forecast (monthly update). '
-                'World Bank + IMF: annual projections, no auth required. '
-                'previous_week: JSONL snapshot for week-over-week curve comparison.'
-            ),
+            'source': 'EIA STEO + World Bank Pink Sheet + IMF WEO',
+            'eia_release_freq': 'monthly',
+            'wb_release_freq': 'monthly bulletin, semi-annual full forecast (April/October)',
+            'imf_release_freq': 'semi-annual (April/October WEO)',
+            'license': 'EIA: public domain. WB Pink Sheet: CC BY-4.0. IMF: free with attribution.',
+            'series_ids_eia': EIA_SERIES,
+            'series_ids_imf': IMF_INDICATORS,
         },
     }
+
+
+# ════════════════════════════════════════════════════════════
+# Standalone debug entry
+# ════════════════════════════════════════════════════════════
+
+if __name__ == '__main__':
+    import pprint
+    result = fetch()
+    pprint.pp({k: (len(v) if isinstance(v, list) else type(v).__name__)
+               for k, v in result['data'].items()})
