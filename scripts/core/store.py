@@ -28,40 +28,43 @@ from . import paths
 # present at the top of the `data` dict. If any are missing OR if foreign
 # keys (from another source) appear, validation rejects.
 EXPECTED_KEYS: Dict[str, Set[str]] = {
-    'gas_storage':   {'gas'},                       # plus optional 'lng'
-    'entsog':        {'points'},                    # plus optional 'errors'
-    'entsoe':        {'flows_in', 'flows_out'},     # OR {'awaiting_key'}
-    'fuel':          {'cities'},
-    'fx':            {'current'},
-    'heating_oil':   {'reference_price_eur_l'},
-    'destatis_vpi':  {'energy_series'},
-    'smard':         {'series'},
-    'energy_charts': {'price_de'},
-    'commodities':   {'brent_crude'},
-    'weather':       {'cities'},
-    'news':          {'articles'},
-    # New 2026: jet-fuel monitoring stack
-    'eia_petroleum': {'jet_fuel_us_gulf_weekly'},
-    'fred_energy':   {'DJFUELUSGULF'},
-    'eurostat_oil':  {'jet_stocks'},
+    'gas_storage':    {'gas'},                       # plus optional 'lng'
+    'entsog':         {'points'},                    # plus optional 'errors'
+    'entsoe':         {'flows_in', 'flows_out'},     # OR {'awaiting_key'}
+    'fuel':           {'cities'},
+    'fx':             {'current'},
+    'heating_oil':    {'reference_price_eur_l'},
+    'destatis_vpi':   {'energy_series'},
+    'smard':          {'series'},
+    'energy_charts':  {'price_de'},
+    'commodities':    {'brent_crude'},
+    'weather':        {'cities'},
+    'news':           {'articles'},
+    # 2026 jet-fuel monitoring stack
+    'eia_petroleum':  {'jet_fuel_us_gulf_weekly'},
+    'fred_energy':    {'DJFUELUSGULF'},
+    'eurostat_oil':   {'jet_stocks'},
+    # 2026-05-14 commodity forecasts (EIA STEO + WB + IMF)
+    'energy_futures': {'eia_steo', 'worldbank', 'imf'},
 }
 
 FORBIDDEN_KEYS: Dict[str, Set[str]] = {
-    'gas_storage':   {'points', 'flows_in', 'articles', 'cities'},
-    'entsog':        {'gas', 'flows_in', 'articles'},
-    'entsoe':        {'points', 'gas', 'articles'},
-    'fuel':          {'gas', 'points', 'articles'},
-    'fx':            {'gas', 'points', 'articles', 'cities'},
-    'heating_oil':   {'gas', 'points', 'articles'},
-    'destatis_vpi':  {'gas', 'points', 'articles'},
-    'smard':         {'gas', 'points', 'articles'},
-    'energy_charts': {'gas', 'points', 'articles'},
-    'commodities':   {'gas', 'points', 'articles'},
-    'weather':       {'gas', 'points', 'articles'},
-    'news':          {'gas', 'points', 'cities'},
-    'eia_petroleum': {'gas', 'points', 'articles', 'cities'},
-    'fred_energy':   {'gas', 'points', 'articles', 'cities'},
-    'eurostat_oil':  {'gas', 'points', 'articles', 'cities'},
+    'gas_storage':    {'points', 'flows_in', 'articles', 'cities'},
+    'entsog':         {'gas', 'flows_in', 'articles'},
+    'entsoe':         {'points', 'gas', 'articles'},
+    'fuel':           {'gas', 'points', 'articles'},
+    'fx':             {'gas', 'points', 'articles', 'cities'},
+    'heating_oil':    {'gas', 'points', 'articles'},
+    'destatis_vpi':   {'gas', 'points', 'articles'},
+    'smard':          {'gas', 'points', 'articles'},
+    'energy_charts':  {'gas', 'points', 'articles'},
+    'commodities':    {'gas', 'points', 'articles'},
+    'weather':        {'gas', 'points', 'articles'},
+    'news':           {'gas', 'points', 'cities'},
+    'eia_petroleum':  {'gas', 'points', 'articles', 'cities'},
+    'fred_energy':    {'gas', 'points', 'articles', 'cities'},
+    'eurostat_oil':   {'gas', 'points', 'articles', 'cities'},
+    'energy_futures': {'gas', 'points', 'articles', 'cities', 'series', 'flows_in', 'flows_out'},
 }
 
 
