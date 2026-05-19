@@ -37,14 +37,16 @@ TOKEN = os.environ.get('ENTSOE_SECURITY_TOKEN', '').strip()
 BASE  = 'https://web-api.tp.entsoe.eu/api'
 
 # Bidding zone EIC codes
+# IMPORTANT: For day-ahead price queries, these must be the standalone
+# bidding-zone codes — NOT cross-border control area codes (e.g. CZ-DE).
 BZN = {
-    'DE_LU': '10Y1001A1001A82H',
+    'DE_LU': '10Y1001A1001A82H',   # DE/LU combined bidding zone
     'AT':    '10YAT-APG------L',
     'FR':    '10YFR-RTE------C',
     'PL':    '10YPL-AREA-----S',
     'CH':    '10YCH-SWISSGRIDZ',
     'NL':    '10YNL----------L',
-    'CZ':    '10YDOM-CZ-DE--D',
+    'CZ':    '10YCZ-CEPS-----N',   # FIX v5.3: was 10YDOM-CZ-DE--D (the DE-CZ border zone)
     'DK_1':  '10YDK-1--------W',
 }
 
@@ -171,8 +173,16 @@ def _api(params: dict, timeout: int = 60) -> Optional[str]:
             r = s.get(BASE, params=p, timeout=timeout)
         if r.status_code == 204:
             return None   # valid request, no data for this window
-        r.raise_for_status()
+        if r.status_code >= 400:
+            # ENTSO-E returns an Acknowledgement document on 4xx with the
+            # actual diagnostic. Without surfacing it, every error looks like
+            # a generic 404 — which hides quota issues, wrong domain pairs,
+            # token-scope problems, etc.
+            body = (r.text or '')[:300].replace('\n', ' ')
+            raise RuntimeError(f'HTTP {r.status_code}: {body}')
         return r.text
+    except RuntimeError:
+        raise
     except Exception as e:
         raise RuntimeError(str(e)) from e
 
@@ -191,15 +201,18 @@ def fetch() -> dict:
 
     now       = datetime.now(timezone.utc)
     start_7d  = now - timedelta(days=7)
-    start_14d = now - timedelta(days=14)
 
     # ── Prices (A44, day-ahead) ───────────────────────────────────────
+    # contract_MarketAgreement.Type=A01 is the explicit day-ahead indicator.
+    # Some bidding zones reject A44 queries without it (returns 404 Acknowledgement).
+    # 7-day window because some smaller zones don't keep 14 days of A44 publicly.
     prices: Dict[str, List[dict]] = {}
     for name, bzn_code in BZN.items():
         try:
             xml = _api({'documentType': 'A44',
+                        'contract_MarketAgreement.Type': 'A01',
                         'in_Domain': bzn_code, 'out_Domain': bzn_code,
-                        'periodStart': _fmt(start_14d), 'periodEnd': _fmt(now)})
+                        'periodStart': _fmt(start_7d), 'periodEnd': _fmt(now)})
             if xml:
                 series = _parse_xml(xml)
                 pts = sorted([p for ps in series.values() for p in ps], key=lambda x: x['ts'])
