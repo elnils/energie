@@ -56,22 +56,21 @@ COUNTRIES_LNG = {
     'lt': 'Litauen',
 }
 
-# Field candidates for the percentage-fill indicator. AGSI canonical is 'full';
-# ALSI uses different names depending on endpoint version. Listed in priority
-# order — first non-None numeric in 0..100 wins.
+# Field candidates for the percentage-fill indicator. AGSI canonical is 'full'.
+# ALSI has NO percentage field at all — must be computed from inventory / dtmi.
+# Listed in priority order — first non-None numeric in 0..100 wins.
 FILL_FIELDS = (
-    'full',                  # AGSI canonical, ALSI v2 sometimes
-    'fullness',              # older ALSI naming
-    'lngInventoryPercent',   # ALSI variant
-    'inventoryFull',         # ALSI variant
+    'full',                  # AGSI canonical
     'gasInStoragePercent',   # AGSI variant
     'percentFull',           # generic
+    'fullness',              # legacy
 )
 
-# Field candidates for the storage volume and capacity (ratio fallback).
-STORED_FIELDS = ('gasInStorage', 'lngInventory', 'gasInStorageTWh')
-CAPACITY_FIELDS = ('workingGasVolume', 'workingGasVolumeTWh',
-                   'lngInventoryCapacity', 'dtmiInventoryCapacity')
+# AGSI canonical: gasInStorage / workingGasVolume.
+# ALSI canonical: inventory / dtmi (Daily Total Maximum Inventory).
+STORED_FIELDS = ('gasInStorage', 'inventory', 'gasInStorageTWh')
+CAPACITY_FIELDS = ('workingGasVolume', 'dtmi', 'workingGasVolumeTWh',
+                   'lngInventoryCapacity')
 
 
 def _to_float(v) -> Optional[float]:
