@@ -1,9 +1,9 @@
 {
   "commodities": {
-    "last_attempt_epoch": 1779188328,
-    "last_attempt_iso": "2026-05-19T10:58:48Z",
-    "last_success_epoch": 1779188340,
-    "last_success_iso": "2026-05-19T10:59:00Z"
+    "last_attempt_epoch": 1779199732,
+    "last_attempt_iso": "2026-05-19T14:08:52Z",
+    "last_success_epoch": 1779199743,
+    "last_success_iso": "2026-05-19T14:09:03Z"
   },
   "destatis_vpi": {
     "last_attempt_epoch": 1779188393,
@@ -98,9 +98,9 @@
     "last_success_iso": "2026-05-19T13:20:31Z"
   },
   "weather": {
-    "last_attempt_epoch": 1779188326,
-    "last_attempt_iso": "2026-05-19T10:58:46Z",
-    "last_success_epoch": 1779188328,
-    "last_success_iso": "2026-05-19T10:58:48Z"
+    "last_attempt_epoch": 1779199730,
+    "last_attempt_iso": "2026-05-19T14:08:50Z",
+    "last_success_epoch": 1779199732,
+    "last_success_iso": "2026-05-19T14:08:52Z"
   }
 }
