@@ -78,9 +78,9 @@
     "last_success_iso": "2026-05-19T07:44:58Z"
   },
   "heating_oil": {
-    "last_attempt_epoch": 1779177551,
-    "last_attempt_iso": "2026-05-19T07:59:11Z",
-    "last_error_epoch": 1779177552,
+    "last_attempt_epoch": 1779179575,
+    "last_attempt_iso": "2026-05-19T08:32:55Z",
+    "last_error_epoch": 1779179576,
     "last_error_message": "TypeError: iter(v, w): v must be callable | at File \"/home/runner/work/energie/energie/scripts/fetchers/heating_oil.py\", line 371, in <listcomp>",
     "last_success_epoch": 1778668711,
     "last_success_iso": "2026-05-13T10:38:31Z"
