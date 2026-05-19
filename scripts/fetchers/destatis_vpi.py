@@ -130,7 +130,7 @@ def _post(endpoint: str, creds: _Credentials, **params) -> 'requests.Response':
         'password': creds.password,
     }
     body = {'language': 'de', **params}
-    timeout = 45 if 'helloworld' in endpoint else 120
+    timeout = 30 if 'helloworld' in endpoint else 90
     r = s.post(f'{BASE_URL}/{endpoint}',
                data=body, headers=headers, timeout=timeout)
     return r
@@ -149,7 +149,7 @@ def _post_body_auth(endpoint: str, creds: _Credentials, **params) -> 'requests.R
         'language': 'de',
         **params,
     }
-    timeout = 45 if 'helloworld' in endpoint else 120
+    timeout = 30 if 'helloworld' in endpoint else 90
     r = s.post(f'{BASE_URL}/{endpoint}',
                data=body, headers=headers, timeout=timeout)
     return r
@@ -163,17 +163,9 @@ def _check_login(creds: _Credentials) -> str:
     creds.sanity_check()
     last_error = None
 
-    # Attempt 1: header-auth with retry (Destatis has high-latency spikes)
-    for _retry in range(3):
-        try:
-            r = _post('helloworld/logincheck', creds)
-            break
-        except Exception as _e:
-            if _retry == 2:
-                raise
-            import time as _t; _t.sleep(5 * (_retry + 1))
+    # Attempt 1: header-auth (spec-compliant)
     try:
-        r = r  # ensure r is defined
+        r = _post('helloworld/logincheck', creds)
         if r.ok:
             payload = r.json()
             status = payload.get('Status', '')
@@ -357,18 +349,27 @@ def _parse_ffcsv(csv_text: str) -> List[dict]:
 
 
 def _filter_energy(rows: List[dict]) -> List[dict]:
-    """Keep only rows whose variable_attribute_label mentions energy categories."""
+    """
+    Keep only rows that mention an energy category in ANY of their text
+    fields. The previous version only checked '1_/2_/3_variable_attribute_label'
+    columns, but Destatis ffcsv exports use different column names depending
+    on the table (the column with the human-readable COICOP description can
+    be named e.g. 'auspraegung_label' or '1_auspraegung_label' or carry a
+    table-specific prefix).
+
+    This implementation is intentionally coarse: scan every string-valued
+    column of each row and substring-match against ENERGY_KEYWORDS. Coarse
+    but correct — a row about energy will have the keyword somewhere in its
+    descriptive columns; a row about furniture won't.
+    """
     out = []
     for r in rows:
-        # The label can live in different columns depending on the table layout.
-        # Check the most likely fields.
-        lbl = (
-            r.get('1_variable_attribute_label')
-            or r.get('2_variable_attribute_label')
-            or r.get('3_variable_attribute_label')
-            or ''
-        ).lower()
-        if any(kw in lbl for kw in ENERGY_KEYWORDS):
+        haystack_parts = []
+        for v in r.values():
+            if isinstance(v, str) and v:
+                haystack_parts.append(v)
+        haystack = ' '.join(haystack_parts).lower()
+        if any(kw in haystack for kw in ENERGY_KEYWORDS):
             out.append(r)
     return out
 
@@ -378,24 +379,48 @@ def _build_series(rows: List[dict]) -> Dict[str, List[dict]]:
     Group rows into time series by category label.
     Returns: { '<category>': [{period: 'YYYY-MM', v: float}, ...], ... }
 
-    The ffcsv format uses 'time' and 'time_label' columns. For monthly data
-    'time' is the year and 'time_label' is the month name (e.g. 'Januar').
+    Robust label extraction: tries the well-known *_attribute_label columns
+    first, then falls back to any other label-looking column (ends with
+    '_label' or contains 'label'/'auspraegung'), then to the first non-time
+    string value in the row.
     """
     DE_MONTHS = {
         'januar': 1, 'februar': 2, 'märz': 3, 'maerz': 3, 'april': 4,
         'mai': 5, 'juni': 6, 'juli': 7, 'august': 8, 'september': 9,
         'oktober': 10, 'november': 11, 'dezember': 12,
     }
+
+    # Reserved column names that should NOT be treated as the category label
+    NON_LABEL_COLS = {'time', 'time_label', 'value', 'value_variable_code',
+                      'value_variable_label', 'value_unit_code', 'value_unit_label'}
+
+    def _extract_label(r: dict) -> Optional[str]:
+        # Tier 1: specific known names
+        for k in ('1_variable_attribute_label', '2_variable_attribute_label',
+                  '3_variable_attribute_label'):
+            v = r.get(k)
+            if isinstance(v, str) and v.strip():
+                return v.strip()
+        # Tier 2: any column that smells like a category label
+        for k, v in r.items():
+            if k in NON_LABEL_COLS or not isinstance(v, str) or not v.strip():
+                continue
+            kl = k.lower()
+            if 'label' in kl or 'auspraegung' in kl:
+                return v.strip()
+        # Tier 3: first non-trivial string we find (excluding reserved cols)
+        for k, v in r.items():
+            if k in NON_LABEL_COLS:
+                continue
+            if isinstance(v, str) and len(v.strip()) >= 3 and not v.strip().isdigit():
+                return v.strip()
+        return None
+
     series: Dict[str, List[dict]] = {}
     for r in rows:
-        label = (
-            r.get('1_variable_attribute_label')
-            or r.get('2_variable_attribute_label')
-            or r.get('3_variable_attribute_label')
-        )
+        label = _extract_label(r)
         if not label:
             continue
-        # Period: e.g. time=2024 + time_label=Januar -> "2024-01"
         year = (r.get('time') or '').strip()
         month_lbl = (r.get('time_label') or '').strip().lower()
         if not year:
@@ -409,7 +434,6 @@ def _build_series(rows: List[dict]) -> Dict[str, List[dict]]:
             continue
         series.setdefault(label, []).append({'period': period, 'v': v})
 
-    # Sort each series chronologically
     for k in list(series.keys()):
         series[k].sort(key=lambda x: x['period'])
     return series
@@ -444,6 +468,14 @@ def fetch() -> dict:
         )
     except Exception as e:
         print(f'  ! destatis detail {TABLE_VPI_DETAIL}: {e}')
+
+    # Diagnostic: dump column names of the first row. Schema-drift in
+    # Destatis ffcsv exports (column names changing across table releases)
+    # is the leading cause of "0 energy-tagged" bugs. Logging this once
+    # per run makes future drift instantly visible.
+    if detail_rows:
+        cols = list(detail_rows[0].keys())
+        print(f'    destatis detail columns ({len(cols)}): {cols[:25]}')
 
     energy_rows = _filter_energy(detail_rows)
     print(f'    destatis detail: {len(detail_rows)} total rows, '
