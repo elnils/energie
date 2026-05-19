@@ -8,10 +8,15 @@ Used as global early-warning signal for jet-fuel supply:
 Endpoints:
   /petroleum/pri/spt/data   Spot prices (daily/weekly)
   /petroleum/stoc/wstk/data Weekly stocks (PADD district)
-  /petroleum/sum/sndw/data  Weekly Supply & Disposition
 
 Key: free at https://www.eia.gov/opendata/register.php
 Set env var: EIA_API_KEY
+
+v5.3 change:
+  - _data_rows() now logs EIA's `warnings` and `total` fields when rows is
+    empty. EIA returns 200 OK with an empty data array for invalid filter
+    combinations (wrong frequency, wrong duoarea code, etc.), making 0-pt
+    bugs invisible. The warnings field always names the offending filter.
 """
 import os
 import time
@@ -41,8 +46,19 @@ def _get(path: str, **params) -> dict:
     return r.json()
 
 
-def _data_rows(payload: dict) -> List[dict]:
-    return payload.get('response', {}).get('data', []) or []
+def _data_rows(payload: dict, diag_label: str = '') -> List[dict]:
+    """
+    Extract rows from EIA response. When empty, log EIA's diagnostic info
+    so we can see why the filter combination returned nothing.
+    """
+    resp = payload.get('response', {})
+    rows = resp.get('data', []) or []
+    if not rows:
+        warnings = resp.get('warnings') or []
+        total    = resp.get('total')
+        # EIA returns 'total' as a string sometimes
+        print(f'      EIA {diag_label}: 0 rows (total={total}, warnings={warnings})')
+    return rows
 
 
 def _series_from_rows(rows: List[dict], value_field: str = 'value',
@@ -67,15 +83,14 @@ def fetch() -> dict:
     out: Dict[str, dict] = {}
 
     # ── Jet Fuel Spot Prices (US Gulf Coast) ──
-    # product EPJK = Kerosene-type Jet Fuel
-    # duoarea Y35 = US Gulf Coast
+    # product EPJK = Kerosene-type Jet Fuel; duoarea Y35 = US Gulf Coast
     try:
         d = _get('petroleum/pri/spt/data',
                  frequency='weekly',
                  **{'facets[product][]': 'EPJK',
                     'facets[duoarea][]': 'Y35'})
         out['jet_fuel_us_gulf_weekly'] = {
-            'series': _series_from_rows(_data_rows(d)),
+            'series': _series_from_rows(_data_rows(d, 'jet_fuel_weekly')),
             'unit': 'USD/gal',
             'description': 'Kerosene-type Jet Fuel Spot, US Gulf Coast, weekly',
         }
@@ -85,7 +100,6 @@ def fetch() -> dict:
         print(f'  ! eia/jet_fuel_weekly: {str(e)[:120]}')
         out['jet_fuel_us_gulf_weekly'] = {'series': [], 'unit': 'USD/gal'}
 
-    # Daily version of the same
     try:
         d = _get('petroleum/pri/spt/data',
                  frequency='daily',
@@ -93,7 +107,7 @@ def fetch() -> dict:
                  **{'facets[product][]': 'EPJK',
                     'facets[duoarea][]': 'Y35'})
         out['jet_fuel_us_gulf_daily'] = {
-            'series': _series_from_rows(_data_rows(d)),
+            'series': _series_from_rows(_data_rows(d, 'jet_fuel_daily')),
             'unit': 'USD/gal',
             'description': 'Kerosene-type Jet Fuel Spot, US Gulf Coast, daily',
         }
@@ -104,7 +118,6 @@ def fetch() -> dict:
         out['jet_fuel_us_gulf_daily'] = {'series': [], 'unit': 'USD/gal'}
 
     # ── US weekly stocks: Jet Fuel ──
-    # product EPJK, duoarea NUS = US total
     try:
         d = _get('petroleum/stoc/wstk/data',
                  frequency='weekly',
@@ -112,7 +125,7 @@ def fetch() -> dict:
                  **{'facets[product][]': 'EPJK',
                     'facets[duoarea][]': 'NUS'})
         out['us_jet_fuel_stocks'] = {
-            'series': _series_from_rows(_data_rows(d)),
+            'series': _series_from_rows(_data_rows(d, 'us_jet_stocks')),
             'unit': 'thousand barrels',
             'description': 'US Total Jet Fuel Stocks, weekly',
         }
@@ -123,7 +136,6 @@ def fetch() -> dict:
         out['us_jet_fuel_stocks'] = {'series': [], 'unit': 'thousand barrels'}
 
     # ── US weekly stocks: Distillate Fuel Oil (heating oil + diesel proxy) ──
-    # product EPD2 = Distillate Fuel Oil 0-15 ppm sulfur
     try:
         d = _get('petroleum/stoc/wstk/data',
                  frequency='weekly',
@@ -131,7 +143,7 @@ def fetch() -> dict:
                  **{'facets[product][]': 'EPD0',
                     'facets[duoarea][]': 'NUS'})
         out['us_distillate_stocks'] = {
-            'series': _series_from_rows(_data_rows(d)),
+            'series': _series_from_rows(_data_rows(d, 'us_distillate_stocks')),
             'unit': 'thousand barrels',
             'description': 'US Distillate Fuel Oil Stocks, weekly',
         }
@@ -149,7 +161,7 @@ def fetch() -> dict:
                  **{'facets[product][]': 'EPC0',
                     'facets[duoarea][]': 'NUS'})
         out['us_crude_stocks'] = {
-            'series': _series_from_rows(_data_rows(d)),
+            'series': _series_from_rows(_data_rows(d, 'us_crude_stocks')),
             'unit': 'thousand barrels',
             'description': 'US Crude Oil Stocks (commercial), weekly',
         }
@@ -167,7 +179,7 @@ def fetch() -> dict:
                  **{'facets[product][]': 'EPM0',
                     'facets[duoarea][]': 'NUS'})
         out['us_gasoline_stocks'] = {
-            'series': _series_from_rows(_data_rows(d)),
+            'series': _series_from_rows(_data_rows(d, 'us_gasoline_stocks')),
             'unit': 'thousand barrels',
             'description': 'US Finished Motor Gasoline Stocks, weekly',
         }
@@ -177,7 +189,6 @@ def fetch() -> dict:
         print(f'  ! eia/us_gasoline_stocks: {str(e)[:120]}')
         out['us_gasoline_stocks'] = {'series': [], 'unit': 'thousand barrels'}
 
-    # Sanity: at least one series must have populated
     if not any(out[k]['series'] for k in out):
         raise RuntimeError('EIA: all series failed — check EIA_API_KEY')
 
