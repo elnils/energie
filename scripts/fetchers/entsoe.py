@@ -243,8 +243,12 @@ def fetch() -> dict:
         print(f'  ! entsoe/load: {e}')
 
     # ── Cross-border flows (A11) ──────────────────────────────────────
+    # We emit TWO views of the same data so the frontend has the schema
+    # it asks for (crossborder_flows with 'from->to' keys), while we also
+    # keep the neighbour-grouped flows_in/flows_out for analytic use.
     flows_in: Dict[str, List[dict]]  = {}
     flows_out: Dict[str, List[dict]] = {}
+    crossborder_flows: Dict[str, List[dict]] = {}
     for src, dst in FLOW_PAIRS:
         for out_dom, in_dom, direction, store, label in [
             # DE → neighbour (exports from DE perspective)
@@ -263,6 +267,8 @@ def fetch() -> dict:
                     merged   = {p['ts']: p['v'] for p in existing}
                     merged.update({p['ts']: p['v'] for p in pts})
                     store[label] = [{'ts': t, 'v': v} for t, v in sorted(merged.items())]
+                    # Mirror into crossborder_flows with the directed key the frontend wants
+                    crossborder_flows[direction] = list(store[label])
                     print(f'    entsoe/flow {direction}: {len(store[label])} pts')
                 time.sleep(0.3)
             except Exception as e:
@@ -287,6 +293,7 @@ def fetch() -> dict:
             'load':         load,
             'flows_in':     flows_in,
             'flows_out':    flows_out,
+            'crossborder_flows': crossborder_flows,  # frontend reads this
             'net_position': net_position,
         },
         'meta': {
