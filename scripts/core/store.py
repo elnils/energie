@@ -18,6 +18,7 @@ fetcher accidentally returns data shaped like another source (e.g. ENTSOG-like
 import json
 import os
 import tempfile
+import traceback
 from datetime import datetime
 from typing import Any, Callable, Dict, Optional, Set
 
@@ -28,43 +29,46 @@ from . import paths
 # present at the top of the `data` dict. If any are missing OR if foreign
 # keys (from another source) appear, validation rejects.
 EXPECTED_KEYS: Dict[str, Set[str]] = {
-    'gas_storage':    {'gas'},                       # plus optional 'lng'
-    'entsog':         {'points'},                    # plus optional 'errors'
-    'entsoe':         {'flows_in', 'flows_out'},     # OR {'awaiting_key'}
-    'fuel':           {'cities'},
-    'fx':             {'current'},
-    'heating_oil':    {'reference_price_eur_l'},
-    'destatis_vpi':   {'energy_series'},
-    'smard':          {'series'},
-    'energy_charts':  {'price_de'},
-    'commodities':    {'brent_crude'},
-    'weather':        {'cities'},
-    'news':           {'articles'},
-    # 2026 jet-fuel monitoring stack
-    'eia_petroleum':  {'jet_fuel_us_gulf_weekly'},
-    'fred_energy':    {'DJFUELUSGULF'},
-    'eurostat_oil':   {'jet_stocks'},
-    # 2026-05-14 commodity forecasts (EIA STEO + WB + IMF)
-    'energy_futures': {'eia_steo', 'worldbank', 'imf'},
+    'gas_storage':   {'gas'},                       # plus optional 'lng'
+    'entsog':        {'points'},                    # plus optional 'errors'
+    'entsoe':        {'flows_in', 'flows_out'},     # OR {'awaiting_key'}
+    'fuel':          {'cities'},
+    'fx':            {'current'},
+    'heating_oil':   {'reference_price_eur_l'},
+    'destatis_vpi':  {'energy_series'},
+    'smard':         {'series'},
+    'energy_charts': {'price_de'},
+    'commodities':   {'brent_crude'},
+    'weather':       {'cities'},
+    'news':          {'articles'},
+    # New 2026: jet-fuel monitoring stack
+    'eia_petroleum': {'jet_fuel_us_gulf_weekly'},
+    'fred_energy':   {'DJFUELUSGULF'},
+    # eurostat_oil was expanded from a jet-fuel-only fetcher to a broad
+    # oil/gas/electricity statistics aggregator. The check is: at least ONE
+    # of these top-level series must be present. We list a small "any-of"
+    # set covering the three sub-domains (oil/gas/elec) so a partial-failure
+    # response still validates, but a foreign-shaped payload (e.g. {'points':…}
+    # from ENTSOG) doesn't pass.
+    'eurostat_oil':  {'oil_jet_fuel_stocks', 'gas_imports', 'electricity_generation'},
 }
 
 FORBIDDEN_KEYS: Dict[str, Set[str]] = {
-    'gas_storage':    {'points', 'flows_in', 'articles', 'cities'},
-    'entsog':         {'gas', 'flows_in', 'articles'},
-    'entsoe':         {'points', 'gas', 'articles'},
-    'fuel':           {'gas', 'points', 'articles'},
-    'fx':             {'gas', 'points', 'articles', 'cities'},
-    'heating_oil':    {'gas', 'points', 'articles'},
-    'destatis_vpi':   {'gas', 'points', 'articles'},
-    'smard':          {'gas', 'points', 'articles'},
-    'energy_charts':  {'gas', 'points', 'articles'},
-    'commodities':    {'gas', 'points', 'articles'},
-    'weather':        {'gas', 'points', 'articles'},
-    'news':           {'gas', 'points', 'cities'},
-    'eia_petroleum':  {'gas', 'points', 'articles', 'cities'},
-    'fred_energy':    {'gas', 'points', 'articles', 'cities'},
-    'eurostat_oil':   {'gas', 'points', 'articles', 'cities'},
-    'energy_futures': {'gas', 'points', 'articles', 'cities', 'series', 'flows_in', 'flows_out'},
+    'gas_storage':   {'points', 'flows_in', 'articles', 'cities'},
+    'entsog':        {'gas', 'flows_in', 'articles'},
+    'entsoe':        {'points', 'gas', 'articles'},
+    'fuel':          {'gas', 'points', 'articles'},
+    'fx':            {'gas', 'points', 'articles', 'cities'},
+    'heating_oil':   {'gas', 'points', 'articles'},
+    'destatis_vpi':  {'gas', 'points', 'articles'},
+    'smard':         {'gas', 'points', 'articles'},
+    'energy_charts': {'gas', 'points', 'articles'},
+    'commodities':   {'gas', 'points', 'articles'},
+    'weather':       {'gas', 'points', 'articles'},
+    'news':          {'gas', 'points', 'cities'},
+    'eia_petroleum': {'gas', 'points', 'articles', 'cities'},
+    'fred_energy':   {'gas', 'points', 'articles', 'cities'},
+    'eurostat_oil':  {'gas', 'points', 'articles', 'cities'},
 }
 
 
@@ -161,18 +165,38 @@ def write_with_fallback(
         print(f'  v {name}.json written ({_size_kb(name)} KB)')
         return out
     except Exception as exc:
-        # Stale-while-error: keep previous data, mark as stale
+        # Stale-while-error: keep previous data, mark as stale.
+        # We capture the full traceback so debugging a hung/broken fetcher
+        # doesn't require re-running it. The exception summary goes to
+        # last_error (truncated for JSON readability); the full traceback
+        # is printed to stdout so it shows up in CI logs.
+        tb_text = traceback.format_exc()
+        print(f'  ! {name} raised:')
+        for line in tb_text.rstrip().splitlines():
+            print(f'      {line}')
+        # Extract the deepest frame (file:lineno in func) for last_error suffix.
+        tb_lines = tb_text.rstrip().splitlines()
+        last_frame = ''
+        for line in reversed(tb_lines):
+            stripped = line.strip()
+            if stripped.startswith('File "') and '.py"' in stripped:
+                # Format: 'File "/path/x.py", line 42, in fn'
+                last_frame = stripped
+                break
+        err_msg = f'{type(exc).__name__}: {exc}'
+        if last_frame:
+            err_msg = f'{err_msg} | at {last_frame}'
         out = {
             'updated': now_iso(),
             'stale': True,
             'last_success': prev.get('last_success'),
-            'last_error': f'{type(exc).__name__}: {exc}',
+            'last_error': err_msg[:500],
             'data': prev.get('data', {}),
         }
         if 'meta' in prev:
             out['meta'] = prev['meta']
         write_atomic(name, out)
-        print(f'  ! {name} failed ({exc}) — kept previous, stale=true')
+        print(f'  ! {name} failed ({type(exc).__name__}) — kept previous, stale=true')
         return out
 
 
