@@ -1,39 +1,17 @@
 """
 energy_futures — EIA STEO + World Bank Pink Sheet + IMF WEO.
 
-Combines three independent commodity-forecast sources into one file that the
-frontend's Futures tab consumes:
-
-  - EIA Short-Term Energy Outlook: monthly history + 18+ month forecast for
-    Brent, WTI, Henry Hub, and EU imported natural gas. Released monthly.
-  - World Bank Commodity Markets Outlook (Pink Sheet): annual forecasts for
-    crude oil and EU natural gas, several years out. Released semi-annually
-    (April/October), with monthly bulletin updates in between.
-  - IMF Datamapper API: annual oil price (Brent) with WEO forecasts.
-    Released semi-annually (April/October).
-
-Spot prices are NOT re-fetched here — they are read from data/commodities.json
-to avoid duplicate Yahoo Finance calls.
-
-Previous-week snapshots live in data/history/energy_futures.jsonl. One row per
-day, deduplicated by date. The frontend's grey-dashed "Prognose Vorwoche"
-layer uses the entry closest to 7 days old in the [5, 30]-day window.
-
-Failure model:
-  - Each sub-source has its own try/except. Failures are non-fatal and recorded
-    in data.errors[]. The frontend can show them.
-  - If ALL THREE sources fail simultaneously, fetch() raises RuntimeError with
-    the aggregated error message. store.py keeps the previous file (stale=true).
-
-Auth:
-  - EIA needs EIA_API_KEY from os.environ. Already a GitHub Secret.
-  - World Bank and IMF are open / no key required.
-
-References:
-  - EIA API v2: https://api.eia.gov/v2/steo/data/
-  - EIA STEO series catalog: https://www.eia.gov/opendata/browser/steo
-  - WB Pink Sheet: https://www.worldbank.org/en/research/commodity-markets
-  - IMF Datamapper API: https://www.imf.org/external/datamapper/api/v1
+v5.3 fixes:
+  - EIA _fetch_eia_series: logs the EIA `warnings` field when 0 rows come
+    back. EIA returns 200 OK with empty data for invalid filter combos and
+    explains in warnings; without surfacing it the error message hid the
+    real cause (wrong seriesId etc.).
+  - WorldBank: discovery extended to two landing pages + two URL patterns.
+    On 404 falls through cleanly to next candidate, doesn't abort. Discovery
+    is logged so it's visible when the fallback list saved the run.
+  - IMF: per output key now accepts a LIST of candidate indicator IDs, tries
+    them in order, picks the first that returns non-empty data. Robust
+    against IMF retiring/renaming indicators.
 """
 from __future__ import annotations
 
@@ -48,52 +26,38 @@ from typing import Any, Dict, List, Optional
 from core import http, paths
 
 
-# ════════════════════════════════════════════════════════════
-# Configuration
-# ════════════════════════════════════════════════════════════
-
 EIA_API_KEY = (os.environ.get('EIA_API_KEY') or '').strip()
 EIA_STEO_URL = 'https://api.eia.gov/v2/steo/data/'
 
-# Verified 2026-05-14 against https://www.eia.gov/opendata/browser/steo.
-# `seriesId` facet values. Frequency: monthly.
 EIA_SERIES: Dict[str, str] = {
-    'brent':  'BREPUUS',       # Brent Spot Price, $/bbl
-    'wti':    'WTIPUUS',       # West Texas Intermediate Spot, $/bbl
-    'hh_gas': 'NGHHMCF',       # Henry Hub Natural Gas Spot, $/MMBtu
-    'eu_gas': 'NGEUIPRCNUS',   # EU Imported Natural Gas, $/MMBtu
+    'brent':  'BREPUUS',
+    'wti':    'WTIPUUS',
+    'hh_gas': 'NGHHMCF',
+    'eu_gas': 'NGEUIPRCNUS',
 }
 
-# World Bank Commodity Markets Outlook (Pink Sheet).
-# The forecast XLSX has a document-ID in the URL that changes each release,
-# so we scrape the landing page first for the latest link, then fall back to
-# curated direct URLs. Most recent fallback first.
-WB_LANDING = 'https://www.worldbank.org/en/research/commodity-markets'
+WB_LANDING_PAGES = [
+    'https://www.worldbank.org/en/research/commodity-markets',
+    'https://www.worldbank.org/en/research/commodity-markets/publication/commodity-markets-outlook',
+]
 WB_FORECAST_FALLBACKS: List[str] = [
     'https://thedocs.worldbank.org/en/doc/24e8d315bdd05e6ba3c813bbd49b3358-0050012025/related/CMO-October-2025-Forecasts.xlsx',
     'https://thedocs.worldbank.org/en/doc/18675909112024025-0050022024/related/CMO-April-2025-Forecasts.xlsx',
 ]
 
-# IMF Datamapper REST. POILBREN = "Crude Oil (petroleum), Brent, U.K., $/bbl"
 IMF_BASE = 'https://www.imf.org/external/datamapper/api/v1'
-IMF_INDICATORS: Dict[str, str] = {
-    'crude_oil': 'POILBREN',
-    # IMF Datamapper has no dedicated EU natgas indicator with WEO-style
-    # forecasts. We deliberately leave eu_gas empty for IMF.
+# v5.3: per output key, list of candidate IMF indicator IDs in priority order.
+# IMF has historically renamed/retired indicators between WEO releases.
+IMF_INDICATORS: Dict[str, List[str]] = {
+    'crude_oil': ['POILBREN', 'POILAPSP', 'POILBRE'],
 }
 
-# Local files. paths.DATA_DIR is a plain string in v5.
 HISTORY_FILE = os.path.join(paths.DATA_DIR, 'history', 'energy_futures.jsonl')
 COMMODITIES_FILE = os.path.join(paths.DATA_DIR, 'commodities.json')
 
-# Previous-week window. ~7 days but tolerate up to 30 if cron skipped.
 PREV_SNAPSHOT_MIN_DAYS = 5
 PREV_SNAPSHOT_MAX_DAYS = 30
 
-
-# ════════════════════════════════════════════════════════════
-# Time helpers
-# ════════════════════════════════════════════════════════════
 
 def _now_utc() -> datetime:
     return datetime.now(paths.UTC)
@@ -107,18 +71,11 @@ def _today_str() -> str:
     return _now_utc().strftime('%Y-%m-%d')
 
 
-# ════════════════════════════════════════════════════════════
-# Sub-source: EIA STEO
-# ════════════════════════════════════════════════════════════
+# ──────────────────────────────────────────────────────────────────────
+# EIA STEO
+# ──────────────────────────────────────────────────────────────────────
 
 def _fetch_eia_series(series_id: str) -> List[Dict[str, Any]]:
-    """
-    Returns list of {period: 'YYYY-MM', v: float, type: 'actual'|'forecast'}.
-
-    STEO publishes ~24 months of forecast in the same call as history. We
-    classify by period vs current month because the response does not flag
-    historical vs forecast explicitly.
-    """
     if not EIA_API_KEY:
         raise RuntimeError('EIA_API_KEY missing in environment')
 
@@ -140,7 +97,12 @@ def _fetch_eia_series(series_id: str) -> List[Dict[str, Any]]:
     response = payload.get('response') or {}
     rows = response.get('data') or []
     if not rows:
-        msg = response.get('error') or payload.get('error') or 'no rows'
+        # FIX v5.3: surface EIA's diagnostic info instead of opaque "no rows"
+        warnings = response.get('warnings') or []
+        total    = response.get('total')
+        msg = (response.get('error')
+               or payload.get('error')
+               or f'no rows (total={total}, warnings={warnings})')
         raise RuntimeError(f'EIA returned no rows: {msg}')
 
     cutoff = _current_month_str()
@@ -163,16 +125,12 @@ def _fetch_eia_series(series_id: str) -> List[Dict[str, Any]]:
 
 
 def _fetch_all_eia(errors: List[str]) -> Dict[str, List[Dict[str, Any]]]:
-    """Run all configured STEO series fetches; collect errors non-fatally."""
     result: Dict[str, List[Dict[str, Any]]] = {key: [] for key in EIA_SERIES}
     for key, series_id in EIA_SERIES.items():
         try:
             data = _fetch_eia_series(series_id)
             result[key] = data
-            last_actual = next(
-                (p for p in reversed(data) if p['type'] == 'actual'),
-                None,
-            )
+            last_actual = next((p for p in reversed(data) if p['type'] == 'actual'), None)
             last_fc = data[-1] if data else None
             print(
                 f'    eia_steo/{key}: {len(data)} pts '
@@ -187,45 +145,44 @@ def _fetch_all_eia(errors: List[str]) -> Dict[str, List[Dict[str, Any]]]:
     return result
 
 
-# ════════════════════════════════════════════════════════════
-# Sub-source: World Bank Pink Sheet
-# ════════════════════════════════════════════════════════════
+# ──────────────────────────────────────────────────────────────────────
+# World Bank Pink Sheet
+# ──────────────────────────────────────────────────────────────────────
 
 def _discover_wb_forecast_url(session) -> Optional[str]:
-    """Scrape landing page for newest CMO-*-Forecasts.xlsx link."""
-    try:
-        r = session.get(WB_LANDING, timeout=20)
-        r.raise_for_status()
-    except Exception as e:
-        print(f'  ! worldbank/discover: {e}')
-        return None
-    matches = re.findall(
-        r'href="(https?://[^"]+CMO[^"]+Forecasts?\.xlsx)"',
-        r.text,
-        re.IGNORECASE,
-    )
-    if matches:
-        clean = matches[0].replace('&amp;', '&')
-        print(f'    worldbank/discover: found {clean[:80]}...')
-        return clean
+    """Scrape WB pages for the newest CMO-*-Forecasts.xlsx link."""
+    patterns = [
+        re.compile(r'href="(https?://[^"]+CMO[^"]+Forecasts?\.xlsx)"', re.IGNORECASE),
+        re.compile(r'(https?://thedocs\.worldbank\.org/[^"\s)]+CMO[^"\s)]+Forecasts?\.xlsx)',
+                   re.IGNORECASE),
+    ]
+    for landing in WB_LANDING_PAGES:
+        try:
+            r = session.get(landing, timeout=20)
+            r.raise_for_status()
+        except Exception as e:
+            print(f'  ! worldbank/discover {landing[:60]}: {e}')
+            continue
+        for pat in patterns:
+            matches = pat.findall(r.text)
+            if matches:
+                # Pick lexically-latest URL (works because URLs contain year/month)
+                clean = sorted(set(m.replace('&amp;', '&') for m in matches),
+                               reverse=True)[0]
+                print(f'    worldbank/discover: found {clean[:80]}...')
+                return clean
+    print('  ! worldbank/discover: no forecast URL on any landing page')
     return None
 
 
 def _is_nan(x: Any) -> bool:
-    """NaN-safe check that doesn't blow up on non-numeric."""
     try:
-        return x != x  # NaN is the only value unequal to itself
+        return x != x
     except Exception:
         return False
 
 
 def _parse_wb_forecast_xlsx(xlsx_bytes: bytes) -> Dict[str, List[Dict[str, Any]]]:
-    """
-    Pink Sheet forecast XLSX has rows per commodity, columns per year.
-    Scans all sheets without assuming header position: detects the year-header
-    row by counting cells that look like 4-digit years, then matches subsequent
-    rows by label substring against our targets.
-    """
     try:
         import pandas as pd
     except ImportError as e:
@@ -254,7 +211,6 @@ def _parse_wb_forecast_xlsx(xlsx_bytes: bytes) -> Dict[str, List[Dict[str, Any]]
         if df is None or df.empty:
             continue
 
-        # Detect year header row (within first 25 rows, has ≥5 year-like cells)
         year_row_idx: Optional[int] = None
         for idx in range(min(25, len(df))):
             row = df.iloc[idx].tolist()
@@ -270,7 +226,6 @@ def _parse_wb_forecast_xlsx(xlsx_bytes: bytes) -> Dict[str, List[Dict[str, Any]]
             continue
         year_row = df.iloc[year_row_idx].tolist()
 
-        # Match data rows below the year header
         for r in range(year_row_idx + 1, len(df)):
             row = df.iloc[r].tolist()
             label_cell = next(
@@ -282,7 +237,7 @@ def _parse_wb_forecast_xlsx(xlsx_bytes: bytes) -> Dict[str, List[Dict[str, Any]]
             label_lc = label_cell.strip().lower()
             for out_key, substrs in targets.items():
                 if found[out_key]:
-                    continue  # already populated
+                    continue
                 if not any(sub in label_lc for sub in substrs):
                     continue
                 for year_cell, value_cell in zip(year_row, row):
@@ -297,9 +252,8 @@ def _parse_wb_forecast_xlsx(xlsx_bytes: bytes) -> Dict[str, List[Dict[str, Any]]
                         'year': year,
                         'v': round(float(value_cell), 4),
                     })
-                break  # one target per row max
+                break
 
-    # Sort + dedupe each output
     for key in found:
         seen: Dict[int, float] = {}
         for pt in found[key]:
@@ -310,7 +264,6 @@ def _parse_wb_forecast_xlsx(xlsx_bytes: bytes) -> Dict[str, List[Dict[str, Any]]
 
 
 def _fetch_worldbank(errors: List[str]) -> Dict[str, List[Dict[str, Any]]]:
-    """Returns {'crude_oil': [{year, v}], 'eu_gas': [{year, v}]}."""
     s = http.get_session()
     empty: Dict[str, List[Dict[str, Any]]] = {'crude_oil': [], 'eu_gas': []}
 
@@ -326,6 +279,11 @@ def _fetch_worldbank(errors: List[str]) -> Dict[str, List[Dict[str, Any]]]:
     for url in ordered_urls:
         try:
             r = s.get(url, timeout=60)
+            # FIX v5.3: handle 404 explicitly instead of letting raise_for_status
+            # poison the error message with the URL bytes
+            if r.status_code == 404:
+                last_err = f'404 at {url[:80]}'
+                continue
             r.raise_for_status()
             if not r.content or len(r.content) < 5000:
                 last_err = f'XLSX too small ({len(r.content)} bytes) at {url[:60]}'
@@ -342,16 +300,15 @@ def _fetch_worldbank(errors: List[str]) -> Dict[str, List[Dict[str, Any]]]:
 
     if last_err:
         errors.append(f'worldbank: {last_err}')
-        print(f'  ! worldbank: {last_err}')
+        print(f'  ! worldbank: {last_err} (tried {len(ordered_urls)} URLs)')
     return empty
 
 
-# ════════════════════════════════════════════════════════════
-# Sub-source: IMF Datamapper
-# ════════════════════════════════════════════════════════════
+# ──────────────────────────────────────────────────────────────────────
+# IMF Datamapper
+# ──────────────────────────────────────────────────────────────────────
 
 def _fetch_imf_indicator(indicator: str) -> List[Dict[str, Any]]:
-    """Returns list of {year, v} from IMF Datamapper API."""
     s = http.get_session()
     url = f'{IMF_BASE}/{indicator}'
     r = s.get(url, timeout=30)
@@ -359,7 +316,13 @@ def _fetch_imf_indicator(indicator: str) -> List[Dict[str, Any]]:
     payload = r.json()
     values_root = payload.get('values', {}).get(indicator, {})
     if not values_root:
-        raise RuntimeError(f'IMF response missing values.{indicator}')
+        # FIX v5.3: dump payload structure so we can diagnose API drift
+        top_keys = list(payload.keys())[:10]
+        values_keys = list((payload.get('values') or {}).keys())[:10]
+        raise RuntimeError(
+            f'IMF response missing values.{indicator} '
+            f'(top_keys={top_keys}, values_keys={values_keys})'
+        )
 
     year_dict = next(iter(values_root.values())) if values_root else {}
     if not isinstance(year_dict, dict):
@@ -378,27 +341,37 @@ def _fetch_imf_indicator(indicator: str) -> List[Dict[str, Any]]:
 
 
 def _fetch_all_imf(errors: List[str]) -> Dict[str, List[Dict[str, Any]]]:
+    """
+    Try each candidate indicator ID per output key; first non-empty wins.
+    Robust against IMF retiring/renaming indicators.
+    """
     result: Dict[str, List[Dict[str, Any]]] = {'crude_oil': [], 'eu_gas': []}
-    for key, indicator in IMF_INDICATORS.items():
-        try:
-            data = _fetch_imf_indicator(indicator)
-            result[key] = data
-            last = data[-1] if data else None
-            print(f'    imf/{key} ({indicator}): {len(data)} pts, last={last["year"] if last else "—"}')
+    for key, candidates in IMF_INDICATORS.items():
+        for indicator in candidates:
+            try:
+                data = _fetch_imf_indicator(indicator)
+                if data:
+                    result[key] = data
+                    print(f'    imf/{key} ({indicator}): {len(data)} pts, last={data[-1]["year"]}')
+                    break  # first success wins
+                print(f'    imf/{key} ({indicator}): empty, trying next candidate')
+            except Exception as e:
+                # Only record final failure
+                if indicator == candidates[-1]:
+                    msg = f'imf/{key}: all candidates failed ({len(candidates)} tried), last={indicator}: {e}'
+                    print(f'  ! {msg}')
+                    errors.append(msg)
+                else:
+                    print(f'    imf/{key} ({indicator}): {e}, trying next')
             time.sleep(0.3)
-        except Exception as e:
-            msg = f'imf/{key} ({indicator}): {e}'
-            print(f'  ! {msg}')
-            errors.append(msg)
     return result
 
 
-# ════════════════════════════════════════════════════════════
-# Spot prices — recycled from data/commodities.json
-# ════════════════════════════════════════════════════════════
+# ──────────────────────────────────────────────────────────────────────
+# Spot prices from commodities.json
+# ──────────────────────────────────────────────────────────────────────
 
 def _read_commodities_spot() -> Dict[str, Any]:
-    """Read spot prices from commodities.json. No Yahoo re-call."""
     if not os.path.exists(COMMODITIES_FILE):
         print('  ! spot: commodities.json not yet present')
         return {}
@@ -442,12 +415,11 @@ def _read_commodities_spot() -> Dict[str, Any]:
     return out
 
 
-# ════════════════════════════════════════════════════════════
-# Previous-week snapshot (JSONL append-only)
-# ════════════════════════════════════════════════════════════
+# ──────────────────────────────────────────────────────────────────────
+# Snapshot JSONL
+# ──────────────────────────────────────────────────────────────────────
 
 def _save_snapshot(record: Dict[str, Any]) -> None:
-    """Append today's snapshot; replace if today already present (idempotent)."""
     os.makedirs(os.path.dirname(HISTORY_FILE), exist_ok=True)
     today = record['date']
 
@@ -476,13 +448,7 @@ def _save_snapshot(record: Dict[str, Any]) -> None:
 
 
 def _load_previous_snapshot() -> Dict[str, List[Dict[str, Any]]]:
-    """Return snapshot closest to 7 days old in [5,30]-day window."""
-    empty = {
-        'eia_brent':  [],
-        'eia_wti':    [],
-        'eia_hh_gas': [],
-        'eia_eu_gas': [],
-    }
+    empty = {'eia_brent': [], 'eia_wti': [], 'eia_hh_gas': [], 'eia_eu_gas': []}
     if not os.path.exists(HISTORY_FILE):
         return empty
 
@@ -527,15 +493,11 @@ def _load_previous_snapshot() -> Dict[str, List[Dict[str, Any]]]:
     }
 
 
-# ════════════════════════════════════════════════════════════
+# ──────────────────────────────────────────────────────────────────────
 # Main entrypoint
-# ════════════════════════════════════════════════════════════
+# ──────────────────────────────────────────────────────────────────────
 
 def fetch() -> dict:
-    """
-    Orchestrates EIA + WB + IMF + spot + history snapshot.
-    Conforms to the v5 fetcher contract: returns {'data': {...}, 'meta': {...}}.
-    """
     errors: List[str] = []
 
     eia_data = _fetch_all_eia(errors)
@@ -587,10 +549,6 @@ def fetch() -> dict:
         },
     }
 
-
-# ════════════════════════════════════════════════════════════
-# Standalone debug entry
-# ════════════════════════════════════════════════════════════
 
 if __name__ == '__main__':
     import pprint
