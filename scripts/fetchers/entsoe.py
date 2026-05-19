@@ -4,12 +4,6 @@ ENTSO-E Transparency Platform — electricity prices, generation, cross-border f
 Uses direct XML REST calls to the ENTSOE Transparency Platform API.
 No external library required — pure stdlib xml.etree.ElementTree.
 
-Root cause of the previous failure:
-  The old entsoe.py at this path contained ENTSOG (gas) code, not ENTSOE (power)
-  code — a naming mixup from early in the project. The store.py wrapper rejected
-  it because `fetch()` returned a flat dict without the required {'data': ...}
-  envelope, causing "fetcher entsoe did not return dict with 'data' key".
-
 Data contract (matches index.html renderCrossBorder()):
   D.entsoe.awaiting_key  → bool, True if no token configured
   D.entsoe.flows_in      → {neighbour: [{ts, v}]}  (imports INTO DE)
@@ -21,6 +15,14 @@ Data contract (matches index.html renderCrossBorder()):
 
 Auth: ENTSOE_SECURITY_TOKEN environment variable.
 Register at: https://transparency.entsoe.eu → Account → Web API Security Token
+
+v5.3 fixes:
+  - truthiness bug on ElementTree elements: `el1 or el2` is False when el1 has
+    no children (which <price.amount> never has), causing every price point
+    to be silently dropped. Replaced with explicit `is None` checks.
+  - hardcoded namespace list: replaced with a regex that strips ALL default
+    namespace declarations, so future schema versions (7.1, 7.3, ...) work
+    without code changes.
 """
 import os
 import re
@@ -64,12 +66,16 @@ PSRTYPE = {
     'B18': 'Wind Offshore','B19': 'Wind Onshore', 'B20': 'Other',
 }
 
-# All namespaces that appear in ENTSOE publication documents
-_NS_CANDIDATES = [
-    'urn:iec62325.351:tc57wg16:451-3:publicationdocument:7:0',
-    'urn:iec62325.351:tc57wg16:451-6:generationloaddocument:3:0',
-    'urn:iec62325.351:tc57wg16:451-3:acknowledgementsmarketdocument:9:0',
-]
+
+# Strip ALL default namespace declarations in one pass. The previous
+# version listed three hardcoded URIs and silently failed when ENTSO-E
+# emitted a fourth (e.g. publicationdocument:7:3 instead of :7:0). This
+# regex catches every `xmlns="..."` regardless of URI value.
+_NS_DECL_RE = re.compile(r'\sxmlns="[^"]+"')
+
+
+def _strip_default_ns(xml_text: str) -> str:
+    return _NS_DECL_RE.sub('', xml_text)
 
 
 def _fmt(dt: datetime) -> str:
@@ -99,14 +105,10 @@ def _res_minutes(res_str: str) -> int:
 def _parse_xml(xml_text: str, label_tag: Optional[str] = None) -> Dict[str, List[dict]]:
     """
     Parse ENTSOE publication XML into {label: [{ts, v}, ...]} dict.
-    Works for prices (price.amount), flows and generation (quantity).
+    Works for prices (price.amount) and flows/generation/load (quantity).
     label_tag: child element name whose text becomes the series key; None = counter.
     """
-    # Strip default namespace from element tags for simpler .find() calls
-    # by replacing all known NS URIs with empty string.
-    clean = xml_text
-    for ns in _NS_CANDIDATES:
-        clean = clean.replace(f' xmlns="{ns}"', '').replace(f'{{{ns}}}', '')
+    clean = _strip_default_ns(xml_text)
     try:
         root = ET.fromstring(clean)
     except ET.ParseError:
@@ -115,7 +117,7 @@ def _parse_xml(xml_text: str, label_tag: Optional[str] = None) -> Dict[str, List
     result: Dict[str, List[dict]] = {}
     counter = 0
     for ts_el in root.iter('TimeSeries'):
-        # Determine series label
+        # Determine series label (e.g. psrType for generation mix)
         label = str(counter)
         counter += 1
         if label_tag:
@@ -128,14 +130,19 @@ def _parse_xml(xml_text: str, label_tag: Optional[str] = None) -> Dict[str, List
             res_el   = period_el.find('resolution')
             if start_el is None or not start_el.text:
                 continue
-            start_ts  = _to_ts(start_el.text)
-            res_min   = _res_minutes(res_el.text if res_el is not None else '')
+            start_ts = _to_ts(start_el.text)
+            res_min  = _res_minutes(res_el.text if res_el is not None else '')
 
             for pt in period_el.iter('Point'):
                 pos_el = pt.find('position')
-                # price.amount for day-ahead prices, quantity for everything else
-                val_el = pt.find('price.amount') or pt.find('quantity')
-                if pos_el is None or val_el is None:
+                # CRITICAL: explicit `is None` checks. `el1 or el2` is broken
+                # for ElementTree elements without children (bool(el) == False
+                # when len(el) == 0), so `pt.find('price.amount') or pt.find('quantity')`
+                # silently discarded every single price point.
+                val_el = pt.find('price.amount')
+                if val_el is None:
+                    val_el = pt.find('quantity')
+                if pos_el is None or val_el is None or val_el.text is None:
                     continue
                 try:
                     pos = int(pos_el.text) - 1  # 1-indexed → 0-indexed
@@ -145,7 +152,7 @@ def _parse_xml(xml_text: str, label_tag: Optional[str] = None) -> Dict[str, List
                 except (TypeError, ValueError):
                     continue
 
-    # Deduplicate and sort
+    # Deduplicate (overlapping periods can repeat timestamps) and sort
     for k in result:
         seen = {}
         for p in result[k]:
@@ -163,7 +170,7 @@ def _api(params: dict, timeout: int = 60) -> Optional[str]:
             time.sleep(30)
             r = s.get(BASE, params=p, timeout=timeout)
         if r.status_code == 204:
-            return None   # valid but no data for this window
+            return None   # valid request, no data for this window
         r.raise_for_status()
         return r.text
     except Exception as e:
@@ -182,11 +189,11 @@ def fetch() -> dict:
             },
         }
 
-    now      = datetime.now(timezone.utc)
-    start_7d = now - timedelta(days=7)
-    start_14d= now - timedelta(days=14)
+    now       = datetime.now(timezone.utc)
+    start_7d  = now - timedelta(days=7)
+    start_14d = now - timedelta(days=14)
 
-    # ── Prices ────────────────────────────────────────────────────────
+    # ── Prices (A44, day-ahead) ───────────────────────────────────────
     prices: Dict[str, List[dict]] = {}
     for name, bzn_code in BZN.items():
         try:
@@ -200,12 +207,13 @@ def fetch() -> dict:
                 print(f'    entsoe/price_{name}: {len(pts)} pts')
             else:
                 prices[name] = []
+                print(f'    entsoe/price_{name}: 204 no content')
             time.sleep(0.4)
         except Exception as e:
             print(f'  ! entsoe/price_{name}: {e}')
             prices[name] = []
 
-    # ── Generation ────────────────────────────────────────────────────
+    # ── Generation per fuel type (A75) ────────────────────────────────
     generation: Dict[str, List[dict]] = {}
     try:
         xml = _api({'documentType': 'A75', 'processType': 'A16',
@@ -220,7 +228,7 @@ def fetch() -> dict:
     except Exception as e:
         print(f'  ! entsoe/generation: {e}')
 
-    # ── Load ──────────────────────────────────────────────────────────
+    # ── Load (A65) ────────────────────────────────────────────────────
     load: List[dict] = []
     try:
         xml = _api({'documentType': 'A65', 'processType': 'A16',
@@ -234,7 +242,7 @@ def fetch() -> dict:
     except Exception as e:
         print(f'  ! entsoe/load: {e}')
 
-    # ── Cross-border flows ─────────────────────────────────────────────
+    # ── Cross-border flows (A11) ──────────────────────────────────────
     flows_in: Dict[str, List[dict]]  = {}
     flows_out: Dict[str, List[dict]] = {}
     for src, dst in FLOW_PAIRS:
@@ -260,7 +268,7 @@ def fetch() -> dict:
             except Exception as e:
                 print(f'  ! entsoe/flow {direction}: {e}')
 
-    # ── Net position from flows ────────────────────────────────────────
+    # ── Net position derived from flows ───────────────────────────────
     net: Dict[int, float] = {}
     for pts in flows_in.values():
         for p in pts:
