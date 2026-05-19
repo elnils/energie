@@ -368,9 +368,9 @@ def fetch() -> dict:
     notations = _extract_oil_notations(html)
     quarterly = _extract_quarterly(html)
 
-    q_count   = len([v for v in quarterly.values() if 'q' in next(iter([k for k in quarterly if v == quarterly[k]], ''))])
-    yr_count  = len([k for k in quarterly if k.startswith('y')])
     q_total   = len([k for k in quarterly if k.startswith('q')])
+    yr_count  = len([k for k in quarterly if k.startswith('y')])
+
 
     print(
         f'    tecson: ref={ref_price} EUR/L'
