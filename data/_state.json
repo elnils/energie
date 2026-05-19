@@ -20,10 +20,10 @@
     "last_success_iso": "2026-05-19T07:47:17Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1779176603,
-    "last_attempt_iso": "2026-05-19T07:43:23Z",
-    "last_success_epoch": 1779176681,
-    "last_success_iso": "2026-05-19T07:44:41Z"
+    "last_attempt_epoch": 1779186428,
+    "last_attempt_iso": "2026-05-19T10:27:08Z",
+    "last_success_epoch": 1779186509,
+    "last_success_iso": "2026-05-19T10:28:29Z"
   },
   "energy_futures": {
     "last_attempt_epoch": 1779176837,
@@ -78,24 +78,24 @@
     "last_success_iso": "2026-05-19T07:44:58Z"
   },
   "heating_oil": {
-    "last_attempt_epoch": 1779179575,
-    "last_attempt_iso": "2026-05-19T08:32:55Z",
+    "last_attempt_epoch": 1779186509,
+    "last_attempt_iso": "2026-05-19T10:28:29Z",
     "last_error_epoch": 1779179576,
     "last_error_message": "TypeError: iter(v, w): v must be callable | at File \"/home/runner/work/energie/energie/scripts/fetchers/heating_oil.py\", line 371, in <listcomp>",
-    "last_success_epoch": 1778668711,
-    "last_success_iso": "2026-05-13T10:38:31Z"
+    "last_success_epoch": 1779186510,
+    "last_success_iso": "2026-05-19T10:28:30Z"
   },
   "news": {
-    "last_attempt_epoch": 1779176945,
-    "last_attempt_iso": "2026-05-19T07:49:05Z",
-    "last_success_epoch": 1779176967,
-    "last_success_iso": "2026-05-19T07:49:27Z"
+    "last_attempt_epoch": 1779186510,
+    "last_attempt_iso": "2026-05-19T10:28:30Z",
+    "last_success_epoch": 1779186534,
+    "last_success_iso": "2026-05-19T10:28:54Z"
   },
   "smard": {
-    "last_attempt_epoch": 1779176597,
-    "last_attempt_iso": "2026-05-19T07:43:17Z",
-    "last_success_epoch": 1779176603,
-    "last_success_iso": "2026-05-19T07:43:23Z"
+    "last_attempt_epoch": 1779186419,
+    "last_attempt_iso": "2026-05-19T10:26:59Z",
+    "last_success_epoch": 1779186428,
+    "last_success_iso": "2026-05-19T10:27:08Z"
   },
   "weather": {
     "last_attempt_epoch": 1779176713,
