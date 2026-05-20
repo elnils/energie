@@ -1,9 +1,9 @@
 {
   "commodities": {
-    "last_attempt_epoch": 1779291725,
-    "last_attempt_iso": "2026-05-20T15:42:05Z",
-    "last_success_epoch": 1779291737,
-    "last_success_iso": "2026-05-20T15:42:17Z"
+    "last_attempt_epoch": 1779311047,
+    "last_attempt_iso": "2026-05-20T21:04:07Z",
+    "last_success_epoch": 1779311057,
+    "last_success_iso": "2026-05-20T21:04:17Z"
   },
   "destatis_vpi": {
     "last_attempt_epoch": 1779291737,
@@ -20,10 +20,10 @@
     "last_success_iso": "2026-05-20T18:28:02Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1779301483,
-    "last_attempt_iso": "2026-05-20T18:24:43Z",
-    "last_success_epoch": 1779301565,
-    "last_success_iso": "2026-05-20T18:26:05Z"
+    "last_attempt_epoch": 1779310958,
+    "last_attempt_iso": "2026-05-20T21:02:38Z",
+    "last_success_epoch": 1779311045,
+    "last_success_iso": "2026-05-20T21:04:05Z"
   },
   "energy_futures": {
     "last_attempt_epoch": 1779301682,
@@ -86,21 +86,21 @@
     "last_success_iso": "2026-05-20T18:27:34Z"
   },
   "news": {
-    "last_attempt_epoch": 1779301690,
-    "last_attempt_iso": "2026-05-20T18:28:10Z",
-    "last_success_epoch": 1779301713,
-    "last_success_iso": "2026-05-20T18:28:33Z"
+    "last_attempt_epoch": 1779311057,
+    "last_attempt_iso": "2026-05-20T21:04:17Z",
+    "last_success_epoch": 1779311081,
+    "last_success_iso": "2026-05-20T21:04:41Z"
   },
   "smard": {
-    "last_attempt_epoch": 1779301476,
-    "last_attempt_iso": "2026-05-20T18:24:36Z",
-    "last_success_epoch": 1779301483,
-    "last_success_iso": "2026-05-20T18:24:43Z"
+    "last_attempt_epoch": 1779310952,
+    "last_attempt_iso": "2026-05-20T21:02:32Z",
+    "last_success_epoch": 1779310958,
+    "last_success_iso": "2026-05-20T21:02:38Z"
   },
   "weather": {
-    "last_attempt_epoch": 1779291723,
-    "last_attempt_iso": "2026-05-20T15:42:03Z",
-    "last_success_epoch": 1779291725,
-    "last_success_iso": "2026-05-20T15:42:05Z"
+    "last_attempt_epoch": 1779311045,
+    "last_attempt_iso": "2026-05-20T21:04:05Z",
+    "last_success_epoch": 1779311047,
+    "last_success_iso": "2026-05-20T21:04:07Z"
   }
 }
