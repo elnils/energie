@@ -1,17 +1,17 @@
 {
   "commodities": {
-    "last_attempt_epoch": 1779366696,
-    "last_attempt_iso": "2026-05-21T12:31:36Z",
-    "last_success_epoch": 1779366707,
-    "last_success_iso": "2026-05-21T12:31:47Z"
+    "last_attempt_epoch": 1779380602,
+    "last_attempt_iso": "2026-05-21T16:23:22Z",
+    "last_success_epoch": 1779380613,
+    "last_success_iso": "2026-05-21T16:23:33Z"
   },
   "destatis_vpi": {
-    "last_attempt_epoch": 1779291737,
-    "last_attempt_iso": "2026-05-20T15:42:17Z",
+    "last_attempt_epoch": 1779380613,
+    "last_attempt_iso": "2026-05-21T16:23:33Z",
     "last_error_epoch": 1778569366,
     "last_error_message": "RuntimeError: Destatis auth: BOTH modes failed. header: header-auth exception: HTTPSConnectionPool(host='www-genesis.destatis.de', port=443): Max retries exceeded with url: /ge; body: HTTPSConnectionPool(host='www-genesis.destatis.de', port=443): Max retries exceeded with url: /genesisWS/rest/2020/helloworld/logincheck (Caused by ReadTimeoutError(\"HTTPSConnectionPool(host='www-genesis.destatis.de', port=443): Read timed out. (read timeout=30)\"))",
-    "last_success_epoch": 1779291756,
-    "last_success_iso": "2026-05-20T15:42:36Z"
+    "last_success_epoch": 1779380640,
+    "last_success_iso": "2026-05-21T16:24:00Z"
   },
   "eia_petroleum": {
     "last_attempt_epoch": 1779352812,
@@ -20,10 +20,10 @@
     "last_success_iso": "2026-05-21T08:40:18Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1779366095,
-    "last_attempt_iso": "2026-05-21T12:21:35Z",
-    "last_success_epoch": 1779366634,
-    "last_success_iso": "2026-05-21T12:30:34Z"
+    "last_attempt_epoch": 1779380422,
+    "last_attempt_iso": "2026-05-21T16:20:22Z",
+    "last_success_epoch": 1779380600,
+    "last_success_iso": "2026-05-21T16:23:20Z"
   },
   "energy_futures": {
     "last_attempt_epoch": 1779366741,
@@ -46,12 +46,12 @@
     "last_success_iso": "2026-05-21T12:31:34Z"
   },
   "eurostat_oil": {
-    "last_attempt_epoch": 1779291756,
-    "last_attempt_iso": "2026-05-20T15:42:36Z",
+    "last_attempt_epoch": 1779380640,
+    "last_attempt_iso": "2026-05-21T16:24:00Z",
     "last_error_epoch": 1779176945,
     "last_error_message": "ValueError: fetcher 'eurostat_oil' missing expected keys {'jet_stocks'}; got {'gas_imports', 'electricity_imports', 'oil_motor_gasoline', 'oil_jet_fuel_supply', 'oil_crude_production', 'oil_jet_fuel_exports', 'electricity_wind', 'electricity_solar', 'electricity_generation', 'oil_diesel_stocks', 'gas_consumption', 'oil_crude_imports', 'electricity_nuclear', 'oil_jet_fuel_stocks', 'gas_production', 'oil_jet_fuel_imports', 'oil_heating_oil_stocks', 'oil_jet_fuel_consumption', 'gas_stocks', 'gas_ex",
-    "last_success_epoch": 1779291991,
-    "last_success_iso": "2026-05-20T15:46:31Z"
+    "last_success_epoch": 1779380848,
+    "last_success_iso": "2026-05-21T16:27:28Z"
   },
   "fred_energy": {
     "last_attempt_epoch": 1779352807,
@@ -86,21 +86,21 @@
     "last_success_iso": "2026-05-21T08:40:07Z"
   },
   "news": {
-    "last_attempt_epoch": 1779366752,
-    "last_attempt_iso": "2026-05-21T12:32:32Z",
-    "last_success_epoch": 1779366775,
-    "last_success_iso": "2026-05-21T12:32:55Z"
+    "last_attempt_epoch": 1779380848,
+    "last_attempt_iso": "2026-05-21T16:27:28Z",
+    "last_success_epoch": 1779380870,
+    "last_success_iso": "2026-05-21T16:27:50Z"
   },
   "smard": {
-    "last_attempt_epoch": 1779366088,
-    "last_attempt_iso": "2026-05-21T12:21:28Z",
-    "last_success_epoch": 1779366095,
-    "last_success_iso": "2026-05-21T12:21:35Z"
+    "last_attempt_epoch": 1779380415,
+    "last_attempt_iso": "2026-05-21T16:20:15Z",
+    "last_success_epoch": 1779380422,
+    "last_success_iso": "2026-05-21T16:20:22Z"
   },
   "weather": {
-    "last_attempt_epoch": 1779366694,
-    "last_attempt_iso": "2026-05-21T12:31:34Z",
-    "last_success_epoch": 1779366696,
-    "last_success_iso": "2026-05-21T12:31:36Z"
+    "last_attempt_epoch": 1779380600,
+    "last_attempt_iso": "2026-05-21T16:23:20Z",
+    "last_success_epoch": 1779380602,
+    "last_success_iso": "2026-05-21T16:23:22Z"
   }
 }
