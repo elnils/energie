@@ -20,10 +20,10 @@
     "last_success_iso": "2026-05-22T11:54:56Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1779479872,
-    "last_attempt_iso": "2026-05-22T19:57:52Z",
-    "last_success_epoch": 1779479974,
-    "last_success_iso": "2026-05-22T19:59:34Z"
+    "last_attempt_epoch": 1779484771,
+    "last_attempt_iso": "2026-05-22T21:19:31Z",
+    "last_success_epoch": 1779484808,
+    "last_success_iso": "2026-05-22T21:20:08Z"
   },
   "energy_futures": {
     "last_attempt_epoch": 1779480097,
@@ -92,10 +92,10 @@
     "last_success_iso": "2026-05-22T20:02:13Z"
   },
   "smard": {
-    "last_attempt_epoch": 1779479865,
-    "last_attempt_iso": "2026-05-22T19:57:45Z",
-    "last_success_epoch": 1779479872,
-    "last_success_iso": "2026-05-22T19:57:52Z"
+    "last_attempt_epoch": 1779484763,
+    "last_attempt_iso": "2026-05-22T21:19:23Z",
+    "last_success_epoch": 1779484771,
+    "last_success_iso": "2026-05-22T21:19:31Z"
   },
   "weather": {
     "last_attempt_epoch": 1779480010,
