@@ -1,15 +1,15 @@
 {
   "commodities": {
-    "last_attempt_epoch": 1779638889,
-    "last_attempt_iso": "2026-05-24T16:08:09Z",
-    "last_success_epoch": 1779638898,
-    "last_success_iso": "2026-05-24T16:08:18Z"
+    "last_attempt_epoch": 1779653621,
+    "last_attempt_iso": "2026-05-24T20:13:41Z",
+    "last_success_epoch": 1779653629,
+    "last_success_iso": "2026-05-24T20:13:49Z"
   },
   "destatis_vpi": {
-    "last_attempt_epoch": 1779564185,
-    "last_attempt_iso": "2026-05-23T19:23:05Z",
-    "last_error_epoch": 1778569366,
-    "last_error_message": "RuntimeError: Destatis auth: BOTH modes failed. header: header-auth exception: HTTPSConnectionPool(host='www-genesis.destatis.de', port=443): Max retries exceeded with url: /ge; body: HTTPSConnectionPool(host='www-genesis.destatis.de', port=443): Max retries exceeded with url: /genesisWS/rest/2020/helloworld/logincheck (Caused by ReadTimeoutError(\"HTTPSConnectionPool(host='www-genesis.destatis.de', port=443): Read timed out. (read timeout=30)\"))",
+    "last_attempt_epoch": 1779653629,
+    "last_attempt_iso": "2026-05-24T20:13:49Z",
+    "last_error_epoch": 1779653830,
+    "last_error_message": "RuntimeError: Destatis auth: BOTH modes failed. header: header-auth exception: source exceeded wallclock budget; body: HTTPSConnectionPool(host='www-genesis.destatis.de', port=443): Max retries exceeded with url: /genesisWS/rest/2020/helloworld/logincheck (Caused by ReadTimeoutError(\"HTTPSConnectionPool(host='www-genesis.destatis.de', port=443): Read timed out. (read timeout=30)\")) | at File \"/home/runner/work/energie/energie/scripts/fetchers/destatis_vpi.py\", line 199, in _check_login",
     "last_success_epoch": 1779564203,
     "last_success_iso": "2026-05-23T19:23:23Z"
   },
@@ -20,40 +20,40 @@
     "last_success_iso": "2026-05-24T08:45:02Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1779645765,
-    "last_attempt_iso": "2026-05-24T18:02:45Z",
+    "last_attempt_epoch": 1779653508,
+    "last_attempt_iso": "2026-05-24T20:11:48Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1779645796,
-    "last_success_iso": "2026-05-24T18:03:16Z"
+    "last_success_epoch": 1779653590,
+    "last_success_iso": "2026-05-24T20:13:10Z"
   },
   "energy_futures": {
-    "last_attempt_epoch": 1779624854,
-    "last_attempt_iso": "2026-05-24T12:14:14Z",
-    "last_success_epoch": 1779624864,
-    "last_success_iso": "2026-05-24T12:14:24Z"
+    "last_attempt_epoch": 1779653865,
+    "last_attempt_iso": "2026-05-24T20:17:45Z",
+    "last_success_epoch": 1779653874,
+    "last_success_iso": "2026-05-24T20:17:54Z"
   },
   "entsoe": {
-    "last_attempt_epoch": 1779624835,
-    "last_attempt_iso": "2026-05-24T12:13:55Z",
+    "last_attempt_epoch": 1779653830,
+    "last_attempt_iso": "2026-05-24T20:17:10Z",
     "last_error_epoch": 1778568129,
     "last_error_message": "ValueError: fetcher entsoe did not return dict with \"data\" key",
-    "last_success_epoch": 1779624854,
-    "last_success_iso": "2026-05-24T12:14:14Z"
+    "last_success_epoch": 1779653865,
+    "last_success_iso": "2026-05-24T20:17:45Z"
   },
   "entsog": {
-    "last_attempt_epoch": 1779624808,
-    "last_attempt_iso": "2026-05-24T12:13:28Z",
-    "last_success_epoch": 1779624823,
-    "last_success_iso": "2026-05-24T12:13:43Z"
+    "last_attempt_epoch": 1779653607,
+    "last_attempt_iso": "2026-05-24T20:13:27Z",
+    "last_success_epoch": 1779653619,
+    "last_success_iso": "2026-05-24T20:13:39Z"
   },
   "eurostat_oil": {
-    "last_attempt_epoch": 1779564235,
-    "last_attempt_iso": "2026-05-23T19:23:55Z",
+    "last_attempt_epoch": 1779653874,
+    "last_attempt_iso": "2026-05-24T20:17:54Z",
     "last_error_epoch": 1779176945,
     "last_error_message": "ValueError: fetcher 'eurostat_oil' missing expected keys {'jet_stocks'}; got {'gas_imports', 'electricity_imports', 'oil_motor_gasoline', 'oil_jet_fuel_supply', 'oil_crude_production', 'oil_jet_fuel_exports', 'electricity_wind', 'electricity_solar', 'electricity_generation', 'oil_diesel_stocks', 'gas_consumption', 'oil_crude_imports', 'electricity_nuclear', 'oil_jet_fuel_stocks', 'gas_production', 'oil_jet_fuel_imports', 'oil_heating_oil_stocks', 'oil_jet_fuel_consumption', 'gas_stocks', 'gas_ex",
-    "last_success_epoch": 1779564437,
-    "last_success_iso": "2026-05-23T19:27:17Z"
+    "last_success_epoch": 1779654069,
+    "last_success_iso": "2026-05-24T20:21:09Z"
   },
   "fred_energy": {
     "last_attempt_epoch": 1779612293,
@@ -74,10 +74,10 @@
     "last_success_iso": "2026-05-24T08:40:52Z"
   },
   "gas_storage": {
-    "last_attempt_epoch": 1779624784,
-    "last_attempt_iso": "2026-05-24T12:13:04Z",
-    "last_success_epoch": 1779624808,
-    "last_success_iso": "2026-05-24T12:13:28Z"
+    "last_attempt_epoch": 1779653590,
+    "last_attempt_iso": "2026-05-24T20:13:10Z",
+    "last_success_epoch": 1779653607,
+    "last_success_iso": "2026-05-24T20:13:27Z"
   },
   "heating_oil": {
     "last_attempt_epoch": 1779612101,
@@ -88,21 +88,21 @@
     "last_success_iso": "2026-05-24T08:44:53Z"
   },
   "news": {
-    "last_attempt_epoch": 1779645796,
-    "last_attempt_iso": "2026-05-24T18:03:16Z",
-    "last_success_epoch": 1779645822,
-    "last_success_iso": "2026-05-24T18:03:42Z"
+    "last_attempt_epoch": 1779654069,
+    "last_attempt_iso": "2026-05-24T20:21:09Z",
+    "last_success_epoch": 1779654092,
+    "last_success_iso": "2026-05-24T20:21:32Z"
   },
   "smard": {
-    "last_attempt_epoch": 1779645758,
-    "last_attempt_iso": "2026-05-24T18:02:38Z",
-    "last_success_epoch": 1779645765,
-    "last_success_iso": "2026-05-24T18:02:45Z"
+    "last_attempt_epoch": 1779653502,
+    "last_attempt_iso": "2026-05-24T20:11:42Z",
+    "last_success_epoch": 1779653508,
+    "last_success_iso": "2026-05-24T20:11:48Z"
   },
   "weather": {
-    "last_attempt_epoch": 1779638887,
-    "last_attempt_iso": "2026-05-24T16:08:07Z",
-    "last_success_epoch": 1779638889,
-    "last_success_iso": "2026-05-24T16:08:09Z"
+    "last_attempt_epoch": 1779653619,
+    "last_attempt_iso": "2026-05-24T20:13:39Z",
+    "last_success_epoch": 1779653621,
+    "last_success_iso": "2026-05-24T20:13:41Z"
   }
 }
