@@ -1,15 +1,15 @@
 {
   "commodities": {
-    "last_attempt_epoch": 1779653621,
-    "last_attempt_iso": "2026-05-24T20:13:41Z",
-    "last_success_epoch": 1779653629,
-    "last_success_iso": "2026-05-24T20:13:49Z"
+    "last_attempt_epoch": 1779668163,
+    "last_attempt_iso": "2026-05-25T00:16:03Z",
+    "last_success_epoch": 1779668173,
+    "last_success_iso": "2026-05-25T00:16:13Z"
   },
   "destatis_vpi": {
-    "last_attempt_epoch": 1779660398,
-    "last_attempt_iso": "2026-05-24T22:06:38Z",
-    "last_error_epoch": 1779660582,
-    "last_error_message": "RuntimeError: Destatis auth: BOTH modes failed. header: header-auth exception: source exceeded wallclock budget; body: HTTPSConnectionPool(host='www-genesis.destatis.de', port=443): Max retries exceeded with url: /genesisWS/rest/2020/helloworld/logincheck (Caused by SSLError(SSLEOFError(8, '[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1016)'))) | at File \"/home/runner/work/energie/energie/scripts/fetchers/destatis_vpi.py\", line 199, in _check_login",
+    "last_attempt_epoch": 1779668173,
+    "last_attempt_iso": "2026-05-25T00:16:13Z",
+    "last_error_epoch": 1779668374,
+    "last_error_message": "RuntimeError: Destatis auth: BOTH modes failed. header: header-auth exception: source exceeded wallclock budget; body: HTTPSConnectionPool(host='www-genesis.destatis.de', port=443): Max retries exceeded with url: /genesisWS/rest/2020/helloworld/logincheck (Caused by ReadTimeoutError(\"HTTPSConnectionPool(host='www-genesis.destatis.de', port=443): Read timed out. (read timeout=30)\")) | at File \"/home/runner/work/energie/energie/scripts/fetchers/destatis_vpi.py\", line 199, in _check_login",
     "last_success_epoch": 1779564203,
     "last_success_iso": "2026-05-23T19:23:23Z"
   },
@@ -20,12 +20,12 @@
     "last_success_iso": "2026-05-24T22:09:54Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1779660078,
-    "last_attempt_iso": "2026-05-24T22:01:18Z",
+    "last_attempt_epoch": 1779667604,
+    "last_attempt_iso": "2026-05-25T00:06:44Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1779660168,
-    "last_success_iso": "2026-05-24T22:02:48Z"
+    "last_success_epoch": 1779668161,
+    "last_success_iso": "2026-05-25T00:16:01Z"
   },
   "energy_futures": {
     "last_attempt_epoch": 1779653865,
@@ -88,21 +88,21 @@
     "last_success_iso": "2026-05-24T22:06:38Z"
   },
   "news": {
-    "last_attempt_epoch": 1779654069,
-    "last_attempt_iso": "2026-05-24T20:21:09Z",
-    "last_success_epoch": 1779654092,
-    "last_success_iso": "2026-05-24T20:21:32Z"
+    "last_attempt_epoch": 1779668374,
+    "last_attempt_iso": "2026-05-25T00:19:34Z",
+    "last_success_epoch": 1779668398,
+    "last_success_iso": "2026-05-25T00:19:58Z"
   },
   "smard": {
-    "last_attempt_epoch": 1779660072,
-    "last_attempt_iso": "2026-05-24T22:01:12Z",
-    "last_success_epoch": 1779660078,
-    "last_success_iso": "2026-05-24T22:01:18Z"
+    "last_attempt_epoch": 1779667597,
+    "last_attempt_iso": "2026-05-25T00:06:37Z",
+    "last_success_epoch": 1779667604,
+    "last_success_iso": "2026-05-25T00:06:44Z"
   },
   "weather": {
-    "last_attempt_epoch": 1779653619,
-    "last_attempt_iso": "2026-05-24T20:13:39Z",
-    "last_success_epoch": 1779653621,
-    "last_success_iso": "2026-05-24T20:13:41Z"
+    "last_attempt_epoch": 1779668161,
+    "last_attempt_iso": "2026-05-25T00:16:01Z",
+    "last_success_epoch": 1779668163,
+    "last_success_iso": "2026-05-25T00:16:03Z"
   }
 }
