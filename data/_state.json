@@ -1,14 +1,14 @@
 {
   "commodities": {
-    "last_attempt_epoch": 1779750822,
-    "last_attempt_iso": "2026-05-25T23:13:42Z",
-    "last_success_epoch": 1779750831,
-    "last_success_iso": "2026-05-25T23:13:51Z"
+    "last_attempt_epoch": 1779768746,
+    "last_attempt_iso": "2026-05-26T04:12:26Z",
+    "last_success_epoch": 1779768757,
+    "last_success_iso": "2026-05-26T04:12:37Z"
   },
   "destatis_vpi": {
-    "last_attempt_epoch": 1779751059,
-    "last_attempt_iso": "2026-05-25T23:17:39Z",
-    "last_error_epoch": 1779751236,
+    "last_attempt_epoch": 1779768757,
+    "last_attempt_iso": "2026-05-26T04:12:37Z",
+    "last_error_epoch": 1779768949,
     "last_error_message": "RuntimeError: Destatis auth: BOTH modes failed. header: header-auth exception: source exceeded wallclock budget; body: HTTPSConnectionPool(host='www-genesis.destatis.de', port=443): Max retries exceeded with url: /genesisWS/rest/2020/helloworld/logincheck (Caused by ReadTimeoutError(\"HTTPSConnectionPool(host='www-genesis.destatis.de', port=443): Read timed out. (read timeout=30)\")) | at File \"/home/runner/work/energie/energie/scripts/fetchers/destatis_vpi.py\", line 199, in _check_login",
     "last_success_epoch": 1779564203,
     "last_success_iso": "2026-05-23T19:23:23Z"
@@ -20,32 +20,32 @@
     "last_success_iso": "2026-05-25T23:20:46Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1779750742,
-    "last_attempt_iso": "2026-05-25T23:12:22Z",
+    "last_attempt_epoch": 1779768628,
+    "last_attempt_iso": "2026-05-26T04:10:28Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1779750821,
-    "last_success_iso": "2026-05-25T23:13:41Z"
+    "last_success_epoch": 1779768712,
+    "last_success_iso": "2026-05-26T04:11:52Z"
   },
   "energy_futures": {
-    "last_attempt_epoch": 1779744154,
-    "last_attempt_iso": "2026-05-25T21:22:34Z",
-    "last_success_epoch": 1779744164,
-    "last_success_iso": "2026-05-25T21:22:44Z"
+    "last_attempt_epoch": 1779768988,
+    "last_attempt_iso": "2026-05-26T04:16:28Z",
+    "last_success_epoch": 1779768996,
+    "last_success_iso": "2026-05-26T04:16:36Z"
   },
   "entsoe": {
-    "last_attempt_epoch": 1779744136,
-    "last_attempt_iso": "2026-05-25T21:22:16Z",
+    "last_attempt_epoch": 1779768949,
+    "last_attempt_iso": "2026-05-26T04:15:49Z",
     "last_error_epoch": 1778568129,
     "last_error_message": "ValueError: fetcher entsoe did not return dict with \"data\" key",
-    "last_success_epoch": 1779744154,
-    "last_success_iso": "2026-05-25T21:22:34Z"
+    "last_success_epoch": 1779768988,
+    "last_success_iso": "2026-05-26T04:16:28Z"
   },
   "entsog": {
-    "last_attempt_epoch": 1779743936,
-    "last_attempt_iso": "2026-05-25T21:18:56Z",
-    "last_success_epoch": 1779743949,
-    "last_success_iso": "2026-05-25T21:19:09Z"
+    "last_attempt_epoch": 1779768731,
+    "last_attempt_iso": "2026-05-26T04:12:11Z",
+    "last_success_epoch": 1779768744,
+    "last_success_iso": "2026-05-26T04:12:24Z"
   },
   "eurostat_oil": {
     "last_attempt_epoch": 1779744164,
@@ -74,10 +74,10 @@
     "last_success_iso": "2026-05-25T23:13:52Z"
   },
   "gas_storage": {
-    "last_attempt_epoch": 1779743894,
-    "last_attempt_iso": "2026-05-25T21:18:14Z",
-    "last_success_epoch": 1779743936,
-    "last_success_iso": "2026-05-25T21:18:56Z"
+    "last_attempt_epoch": 1779768712,
+    "last_attempt_iso": "2026-05-26T04:11:52Z",
+    "last_success_epoch": 1779768731,
+    "last_success_iso": "2026-05-26T04:12:11Z"
   },
   "heating_oil": {
     "last_attempt_epoch": 1779750882,
@@ -88,21 +88,21 @@
     "last_success_iso": "2026-05-25T23:17:39Z"
   },
   "news": {
-    "last_attempt_epoch": 1779751246,
-    "last_attempt_iso": "2026-05-25T23:20:46Z",
-    "last_success_epoch": 1779751269,
-    "last_success_iso": "2026-05-25T23:21:09Z"
+    "last_attempt_epoch": 1779768996,
+    "last_attempt_iso": "2026-05-26T04:16:36Z",
+    "last_success_epoch": 1779769020,
+    "last_success_iso": "2026-05-26T04:17:00Z"
   },
   "smard": {
-    "last_attempt_epoch": 1779750736,
-    "last_attempt_iso": "2026-05-25T23:12:16Z",
-    "last_success_epoch": 1779750742,
-    "last_success_iso": "2026-05-25T23:12:22Z"
+    "last_attempt_epoch": 1779768621,
+    "last_attempt_iso": "2026-05-26T04:10:21Z",
+    "last_success_epoch": 1779768628,
+    "last_success_iso": "2026-05-26T04:10:28Z"
   },
   "weather": {
-    "last_attempt_epoch": 1779750821,
-    "last_attempt_iso": "2026-05-25T23:13:41Z",
-    "last_success_epoch": 1779750822,
-    "last_success_iso": "2026-05-25T23:13:42Z"
+    "last_attempt_epoch": 1779768744,
+    "last_attempt_iso": "2026-05-26T04:12:24Z",
+    "last_success_epoch": 1779768746,
+    "last_success_iso": "2026-05-26T04:12:26Z"
   }
 }
