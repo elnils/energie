@@ -1,15 +1,15 @@
 {
   "commodities": {
-    "last_attempt_epoch": 1779768746,
-    "last_attempt_iso": "2026-05-26T04:12:26Z",
-    "last_success_epoch": 1779768757,
-    "last_success_iso": "2026-05-26T04:12:37Z"
+    "last_attempt_epoch": 1779784692,
+    "last_attempt_iso": "2026-05-26T08:38:12Z",
+    "last_success_epoch": 1779784702,
+    "last_success_iso": "2026-05-26T08:38:22Z"
   },
   "destatis_vpi": {
-    "last_attempt_epoch": 1779768757,
-    "last_attempt_iso": "2026-05-26T04:12:37Z",
-    "last_error_epoch": 1779768949,
-    "last_error_message": "RuntimeError: Destatis auth: BOTH modes failed. header: header-auth exception: source exceeded wallclock budget; body: HTTPSConnectionPool(host='www-genesis.destatis.de', port=443): Max retries exceeded with url: /genesisWS/rest/2020/helloworld/logincheck (Caused by ReadTimeoutError(\"HTTPSConnectionPool(host='www-genesis.destatis.de', port=443): Read timed out. (read timeout=30)\")) | at File \"/home/runner/work/energie/energie/scripts/fetchers/destatis_vpi.py\", line 199, in _check_login",
+    "last_attempt_epoch": 1779784702,
+    "last_attempt_iso": "2026-05-26T08:38:22Z",
+    "last_error_epoch": 1779784703,
+    "last_error_message": "RuntimeError: Destatis auth: BOTH modes failed. header: header-auth status: Wegen planmäßiger Wartungsarbeiten steht GENESIS-Webservices vorübergehend nicht zur Verfügung!; body: Wegen planmäßiger Wartungsarbeiten steht GENESIS-Webservices vorübergehend nicht zur Verfügung! | at File \"/home/runner/work/energie/energie/scripts/fetchers/destatis_vpi.py\", line 191, in _check_login",
     "last_success_epoch": 1779564203,
     "last_success_iso": "2026-05-23T19:23:23Z"
   },
@@ -20,12 +20,12 @@
     "last_success_iso": "2026-05-25T23:20:46Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1779768628,
-    "last_attempt_iso": "2026-05-26T04:10:28Z",
+    "last_attempt_epoch": 1779784605,
+    "last_attempt_iso": "2026-05-26T08:36:45Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1779768712,
-    "last_success_iso": "2026-05-26T04:11:52Z"
+    "last_success_epoch": 1779784689,
+    "last_success_iso": "2026-05-26T08:38:09Z"
   },
   "energy_futures": {
     "last_attempt_epoch": 1779768988,
@@ -88,21 +88,21 @@
     "last_success_iso": "2026-05-25T23:17:39Z"
   },
   "news": {
-    "last_attempt_epoch": 1779768996,
-    "last_attempt_iso": "2026-05-26T04:16:36Z",
-    "last_success_epoch": 1779769020,
-    "last_success_iso": "2026-05-26T04:17:00Z"
+    "last_attempt_epoch": 1779784703,
+    "last_attempt_iso": "2026-05-26T08:38:23Z",
+    "last_success_epoch": 1779784727,
+    "last_success_iso": "2026-05-26T08:38:47Z"
   },
   "smard": {
-    "last_attempt_epoch": 1779768621,
-    "last_attempt_iso": "2026-05-26T04:10:21Z",
-    "last_success_epoch": 1779768628,
-    "last_success_iso": "2026-05-26T04:10:28Z"
+    "last_attempt_epoch": 1779784597,
+    "last_attempt_iso": "2026-05-26T08:36:37Z",
+    "last_success_epoch": 1779784605,
+    "last_success_iso": "2026-05-26T08:36:45Z"
   },
   "weather": {
-    "last_attempt_epoch": 1779768744,
-    "last_attempt_iso": "2026-05-26T04:12:24Z",
-    "last_success_epoch": 1779768746,
-    "last_success_iso": "2026-05-26T04:12:26Z"
+    "last_attempt_epoch": 1779784689,
+    "last_attempt_iso": "2026-05-26T08:38:09Z",
+    "last_success_epoch": 1779784692,
+    "last_success_iso": "2026-05-26T08:38:12Z"
   }
 }
