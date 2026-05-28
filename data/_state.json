@@ -1,9 +1,9 @@
 {
   "commodities": {
-    "last_attempt_epoch": 1779979671,
-    "last_attempt_iso": "2026-05-28T14:47:51Z",
-    "last_success_epoch": 1779979681,
-    "last_success_iso": "2026-05-28T14:48:01Z"
+    "last_attempt_epoch": 1779992503,
+    "last_attempt_iso": "2026-05-28T18:21:43Z",
+    "last_success_epoch": 1779992514,
+    "last_success_iso": "2026-05-28T18:21:54Z"
   },
   "destatis_vpi": {
     "last_attempt_epoch": 1779963630,
@@ -20,32 +20,32 @@
     "last_success_iso": "2026-05-28T10:21:26Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1779979294,
-    "last_attempt_iso": "2026-05-28T14:41:34Z",
+    "last_attempt_epoch": 1779992177,
+    "last_attempt_iso": "2026-05-28T18:16:17Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1779979669,
-    "last_success_iso": "2026-05-28T14:47:49Z"
+    "last_success_epoch": 1779992461,
+    "last_success_iso": "2026-05-28T18:21:01Z"
   },
   "energy_futures": {
-    "last_attempt_epoch": 1779963686,
-    "last_attempt_iso": "2026-05-28T10:21:26Z",
-    "last_success_epoch": 1779963694,
-    "last_success_iso": "2026-05-28T10:21:34Z"
+    "last_attempt_epoch": 1779992549,
+    "last_attempt_iso": "2026-05-28T18:22:29Z",
+    "last_success_epoch": 1779992560,
+    "last_success_iso": "2026-05-28T18:22:40Z"
   },
   "entsoe": {
-    "last_attempt_epoch": 1779963649,
-    "last_attempt_iso": "2026-05-28T10:20:49Z",
+    "last_attempt_epoch": 1779992514,
+    "last_attempt_iso": "2026-05-28T18:21:54Z",
     "last_error_epoch": 1778568129,
     "last_error_message": "ValueError: fetcher entsoe did not return dict with \"data\" key",
-    "last_success_epoch": 1779963674,
-    "last_success_iso": "2026-05-28T10:21:14Z"
+    "last_success_epoch": 1779992549,
+    "last_success_iso": "2026-05-28T18:22:29Z"
   },
   "entsog": {
-    "last_attempt_epoch": 1779963531,
-    "last_attempt_iso": "2026-05-28T10:18:51Z",
-    "last_success_epoch": 1779963549,
-    "last_success_iso": "2026-05-28T10:19:09Z"
+    "last_attempt_epoch": 1779992486,
+    "last_attempt_iso": "2026-05-28T18:21:26Z",
+    "last_success_epoch": 1779992501,
+    "last_success_iso": "2026-05-28T18:21:41Z"
   },
   "eurostat_oil": {
     "last_attempt_epoch": 1779963694,
@@ -74,10 +74,10 @@
     "last_success_iso": "2026-05-28T10:19:21Z"
   },
   "gas_storage": {
-    "last_attempt_epoch": 1779963485,
-    "last_attempt_iso": "2026-05-28T10:18:05Z",
-    "last_success_epoch": 1779963531,
-    "last_success_iso": "2026-05-28T10:18:51Z"
+    "last_attempt_epoch": 1779992461,
+    "last_attempt_iso": "2026-05-28T18:21:01Z",
+    "last_success_epoch": 1779992486,
+    "last_success_iso": "2026-05-28T18:21:26Z"
   },
   "heating_oil": {
     "last_attempt_epoch": 1779963618,
@@ -88,21 +88,21 @@
     "last_success_iso": "2026-05-28T10:20:30Z"
   },
   "news": {
-    "last_attempt_epoch": 1779979681,
-    "last_attempt_iso": "2026-05-28T14:48:01Z",
-    "last_success_epoch": 1779979707,
-    "last_success_iso": "2026-05-28T14:48:27Z"
+    "last_attempt_epoch": 1779992560,
+    "last_attempt_iso": "2026-05-28T18:22:40Z",
+    "last_success_epoch": 1779992588,
+    "last_success_iso": "2026-05-28T18:23:08Z"
   },
   "smard": {
-    "last_attempt_epoch": 1779979286,
-    "last_attempt_iso": "2026-05-28T14:41:26Z",
-    "last_success_epoch": 1779979294,
-    "last_success_iso": "2026-05-28T14:41:34Z"
+    "last_attempt_epoch": 1779992170,
+    "last_attempt_iso": "2026-05-28T18:16:10Z",
+    "last_success_epoch": 1779992177,
+    "last_success_iso": "2026-05-28T18:16:17Z"
   },
   "weather": {
-    "last_attempt_epoch": 1779979669,
-    "last_attempt_iso": "2026-05-28T14:47:49Z",
-    "last_success_epoch": 1779979671,
-    "last_success_iso": "2026-05-28T14:47:51Z"
+    "last_attempt_epoch": 1779992501,
+    "last_attempt_iso": "2026-05-28T18:21:41Z",
+    "last_success_epoch": 1779992503,
+    "last_success_iso": "2026-05-28T18:21:43Z"
   }
 }
