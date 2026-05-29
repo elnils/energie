@@ -1,9 +1,9 @@
 {
   "commodities": {
-    "last_attempt_epoch": 1780057583,
-    "last_attempt_iso": "2026-05-29T12:26:23Z",
-    "last_success_epoch": 1780057593,
-    "last_success_iso": "2026-05-29T12:26:33Z"
+    "last_attempt_epoch": 1780073713,
+    "last_attempt_iso": "2026-05-29T16:55:13Z",
+    "last_success_epoch": 1780073722,
+    "last_success_iso": "2026-05-29T16:55:22Z"
   },
   "destatis_vpi": {
     "last_attempt_epoch": 1780057593,
@@ -14,18 +14,18 @@
     "last_success_iso": "2026-05-29T12:26:53Z"
   },
   "eia_petroleum": {
-    "last_attempt_epoch": 1780028794,
-    "last_attempt_iso": "2026-05-29T04:26:34Z",
-    "last_success_epoch": 1780028800,
-    "last_success_iso": "2026-05-29T04:26:40Z"
+    "last_attempt_epoch": 1780073786,
+    "last_attempt_iso": "2026-05-29T16:56:26Z",
+    "last_success_epoch": 1780073792,
+    "last_success_iso": "2026-05-29T16:56:32Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1780057309,
-    "last_attempt_iso": "2026-05-29T12:21:49Z",
+    "last_attempt_epoch": 1780073358,
+    "last_attempt_iso": "2026-05-29T16:49:18Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1780057548,
-    "last_success_iso": "2026-05-29T12:25:48Z"
+    "last_success_epoch": 1780073712,
+    "last_success_iso": "2026-05-29T16:55:12Z"
   },
   "energy_futures": {
     "last_attempt_epoch": 1780057633,
@@ -56,22 +56,22 @@
     "last_success_iso": "2026-05-29T12:29:40Z"
   },
   "fred_energy": {
-    "last_attempt_epoch": 1780028790,
-    "last_attempt_iso": "2026-05-29T04:26:30Z",
-    "last_success_epoch": 1780028794,
-    "last_success_iso": "2026-05-29T04:26:34Z"
+    "last_attempt_epoch": 1780073782,
+    "last_attempt_iso": "2026-05-29T16:56:22Z",
+    "last_success_epoch": 1780073786,
+    "last_success_iso": "2026-05-29T16:56:26Z"
   },
   "fuel": {
-    "last_attempt_epoch": 1780028537,
-    "last_attempt_iso": "2026-05-29T04:22:17Z",
-    "last_success_epoch": 1780028587,
-    "last_success_iso": "2026-05-29T04:23:07Z"
+    "last_attempt_epoch": 1780073723,
+    "last_attempt_iso": "2026-05-29T16:55:23Z",
+    "last_success_epoch": 1780073773,
+    "last_success_iso": "2026-05-29T16:56:13Z"
   },
   "fx": {
-    "last_attempt_epoch": 1780028537,
-    "last_attempt_iso": "2026-05-29T04:22:17Z",
-    "last_success_epoch": 1780028537,
-    "last_success_iso": "2026-05-29T04:22:17Z"
+    "last_attempt_epoch": 1780073722,
+    "last_attempt_iso": "2026-05-29T16:55:22Z",
+    "last_success_epoch": 1780073723,
+    "last_success_iso": "2026-05-29T16:55:23Z"
   },
   "gas_storage": {
     "last_attempt_epoch": 1780057548,
@@ -80,29 +80,29 @@
     "last_success_iso": "2026-05-29T12:26:05Z"
   },
   "heating_oil": {
-    "last_attempt_epoch": 1780028587,
-    "last_attempt_iso": "2026-05-29T04:23:07Z",
+    "last_attempt_epoch": 1780073773,
+    "last_attempt_iso": "2026-05-29T16:56:13Z",
     "last_error_epoch": 1779179576,
     "last_error_message": "TypeError: iter(v, w): v must be callable | at File \"/home/runner/work/energie/energie/scripts/fetchers/heating_oil.py\", line 371, in <listcomp>",
-    "last_success_epoch": 1780028774,
-    "last_success_iso": "2026-05-29T04:26:14Z"
+    "last_success_epoch": 1780073782,
+    "last_success_iso": "2026-05-29T16:56:22Z"
   },
   "news": {
-    "last_attempt_epoch": 1780057780,
-    "last_attempt_iso": "2026-05-29T12:29:40Z",
-    "last_success_epoch": 1780057804,
-    "last_success_iso": "2026-05-29T12:30:04Z"
+    "last_attempt_epoch": 1780073792,
+    "last_attempt_iso": "2026-05-29T16:56:32Z",
+    "last_success_epoch": 1780073823,
+    "last_success_iso": "2026-05-29T16:57:03Z"
   },
   "smard": {
-    "last_attempt_epoch": 1780057301,
-    "last_attempt_iso": "2026-05-29T12:21:41Z",
-    "last_success_epoch": 1780057309,
-    "last_success_iso": "2026-05-29T12:21:49Z"
+    "last_attempt_epoch": 1780073352,
+    "last_attempt_iso": "2026-05-29T16:49:12Z",
+    "last_success_epoch": 1780073358,
+    "last_success_iso": "2026-05-29T16:49:18Z"
   },
   "weather": {
-    "last_attempt_epoch": 1780057581,
-    "last_attempt_iso": "2026-05-29T12:26:21Z",
-    "last_success_epoch": 1780057583,
-    "last_success_iso": "2026-05-29T12:26:23Z"
+    "last_attempt_epoch": 1780073712,
+    "last_attempt_iso": "2026-05-29T16:55:12Z",
+    "last_success_epoch": 1780073713,
+    "last_success_iso": "2026-05-29T16:55:13Z"
   }
 }
