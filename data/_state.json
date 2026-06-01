@@ -14,38 +14,38 @@
     "last_success_iso": "2026-06-01T16:50:54Z"
   },
   "eia_petroleum": {
-    "last_attempt_epoch": 1780310105,
-    "last_attempt_iso": "2026-06-01T10:35:05Z",
-    "last_success_epoch": 1780310172,
-    "last_success_iso": "2026-06-01T10:36:12Z"
+    "last_attempt_epoch": 1780355618,
+    "last_attempt_iso": "2026-06-01T23:13:38Z",
+    "last_success_epoch": 1780355624,
+    "last_success_iso": "2026-06-01T23:13:44Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1780347584,
-    "last_attempt_iso": "2026-06-01T20:59:44Z",
+    "last_attempt_epoch": 1780355247,
+    "last_attempt_iso": "2026-06-01T23:07:27Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1780347839,
-    "last_success_iso": "2026-06-01T21:03:59Z"
+    "last_success_epoch": 1780355503,
+    "last_success_iso": "2026-06-01T23:11:43Z"
   },
   "energy_futures": {
-    "last_attempt_epoch": 1780332674,
-    "last_attempt_iso": "2026-06-01T16:51:14Z",
-    "last_success_epoch": 1780332697,
-    "last_success_iso": "2026-06-01T16:51:37Z"
+    "last_attempt_epoch": 1780355624,
+    "last_attempt_iso": "2026-06-01T23:13:44Z",
+    "last_success_epoch": 1780355634,
+    "last_success_iso": "2026-06-01T23:13:54Z"
   },
   "entsoe": {
-    "last_attempt_epoch": 1780332654,
-    "last_attempt_iso": "2026-06-01T16:50:54Z",
+    "last_attempt_epoch": 1780355593,
+    "last_attempt_iso": "2026-06-01T23:13:13Z",
     "last_error_epoch": 1778568129,
     "last_error_message": "ValueError: fetcher entsoe did not return dict with \"data\" key",
-    "last_success_epoch": 1780332674,
-    "last_success_iso": "2026-06-01T16:51:14Z"
+    "last_success_epoch": 1780355612,
+    "last_success_iso": "2026-06-01T23:13:32Z"
   },
   "entsog": {
-    "last_attempt_epoch": 1780332598,
-    "last_attempt_iso": "2026-06-01T16:49:58Z",
-    "last_success_epoch": 1780332612,
-    "last_success_iso": "2026-06-01T16:50:12Z"
+    "last_attempt_epoch": 1780355519,
+    "last_attempt_iso": "2026-06-01T23:11:59Z",
+    "last_success_epoch": 1780355532,
+    "last_success_iso": "2026-06-01T23:12:12Z"
   },
   "eurostat_oil": {
     "last_attempt_epoch": 1780332697,
@@ -56,48 +56,48 @@
     "last_success_iso": "2026-06-01T16:53:58Z"
   },
   "fred_energy": {
-    "last_attempt_epoch": 1780310098,
-    "last_attempt_iso": "2026-06-01T10:34:58Z",
-    "last_success_epoch": 1780310105,
-    "last_success_iso": "2026-06-01T10:35:05Z"
+    "last_attempt_epoch": 1780355612,
+    "last_attempt_iso": "2026-06-01T23:13:32Z",
+    "last_success_epoch": 1780355618,
+    "last_success_iso": "2026-06-01T23:13:38Z"
   },
   "fuel": {
-    "last_attempt_epoch": 1780310007,
-    "last_attempt_iso": "2026-06-01T10:33:27Z",
-    "last_success_epoch": 1780310056,
-    "last_success_iso": "2026-06-01T10:34:16Z"
+    "last_attempt_epoch": 1780355533,
+    "last_attempt_iso": "2026-06-01T23:12:13Z",
+    "last_success_epoch": 1780355583,
+    "last_success_iso": "2026-06-01T23:13:03Z"
   },
   "fx": {
-    "last_attempt_epoch": 1780310006,
-    "last_attempt_iso": "2026-06-01T10:33:26Z",
-    "last_success_epoch": 1780310007,
-    "last_success_iso": "2026-06-01T10:33:27Z"
+    "last_attempt_epoch": 1780355532,
+    "last_attempt_iso": "2026-06-01T23:12:12Z",
+    "last_success_epoch": 1780355533,
+    "last_success_iso": "2026-06-01T23:12:13Z"
   },
   "gas_storage": {
-    "last_attempt_epoch": 1780332580,
-    "last_attempt_iso": "2026-06-01T16:49:40Z",
-    "last_success_epoch": 1780332598,
-    "last_success_iso": "2026-06-01T16:49:58Z"
+    "last_attempt_epoch": 1780355503,
+    "last_attempt_iso": "2026-06-01T23:11:43Z",
+    "last_success_epoch": 1780355519,
+    "last_success_iso": "2026-06-01T23:11:59Z"
   },
   "heating_oil": {
-    "last_attempt_epoch": 1780310056,
-    "last_attempt_iso": "2026-06-01T10:34:16Z",
+    "last_attempt_epoch": 1780355583,
+    "last_attempt_iso": "2026-06-01T23:13:03Z",
     "last_error_epoch": 1779179576,
     "last_error_message": "TypeError: iter(v, w): v must be callable | at File \"/home/runner/work/energie/energie/scripts/fetchers/heating_oil.py\", line 371, in <listcomp>",
-    "last_success_epoch": 1780310067,
-    "last_success_iso": "2026-06-01T10:34:27Z"
+    "last_success_epoch": 1780355593,
+    "last_success_iso": "2026-06-01T23:13:13Z"
   },
   "news": {
-    "last_attempt_epoch": 1780347850,
-    "last_attempt_iso": "2026-06-01T21:04:10Z",
-    "last_success_epoch": 1780347873,
-    "last_success_iso": "2026-06-01T21:04:33Z"
+    "last_attempt_epoch": 1780355634,
+    "last_attempt_iso": "2026-06-01T23:13:54Z",
+    "last_success_epoch": 1780355656,
+    "last_success_iso": "2026-06-01T23:14:16Z"
   },
   "smard": {
-    "last_attempt_epoch": 1780347576,
-    "last_attempt_iso": "2026-06-01T20:59:36Z",
-    "last_success_epoch": 1780347584,
-    "last_success_iso": "2026-06-01T20:59:44Z"
+    "last_attempt_epoch": 1780355241,
+    "last_attempt_iso": "2026-06-01T23:07:21Z",
+    "last_success_epoch": 1780355247,
+    "last_success_iso": "2026-06-01T23:07:27Z"
   },
   "weather": {
     "last_attempt_epoch": 1780347839,
