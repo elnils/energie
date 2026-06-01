@@ -1,9 +1,9 @@
 {
   "commodities": {
-    "last_attempt_epoch": 1780262136,
-    "last_attempt_iso": "2026-05-31T21:15:36Z",
-    "last_success_epoch": 1780262145,
-    "last_success_iso": "2026-05-31T21:15:45Z"
+    "last_attempt_epoch": 1780290128,
+    "last_attempt_iso": "2026-06-01T05:02:08Z",
+    "last_success_epoch": 1780290138,
+    "last_success_iso": "2026-06-01T05:02:18Z"
   },
   "destatis_vpi": {
     "last_attempt_epoch": 1780241562,
@@ -20,12 +20,12 @@
     "last_success_iso": "2026-05-31T21:16:59Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1780268903,
-    "last_attempt_iso": "2026-05-31T23:08:23Z",
+    "last_attempt_epoch": 1780289840,
+    "last_attempt_iso": "2026-06-01T04:57:20Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1780269167,
-    "last_success_iso": "2026-05-31T23:12:47Z"
+    "last_success_epoch": 1780290126,
+    "last_success_iso": "2026-06-01T05:02:06Z"
   },
   "energy_futures": {
     "last_attempt_epoch": 1780269225,
@@ -88,21 +88,21 @@
     "last_success_iso": "2026-05-31T21:16:49Z"
   },
   "news": {
-    "last_attempt_epoch": 1780269233,
-    "last_attempt_iso": "2026-05-31T23:13:53Z",
-    "last_success_epoch": 1780269258,
-    "last_success_iso": "2026-05-31T23:14:18Z"
+    "last_attempt_epoch": 1780290138,
+    "last_attempt_iso": "2026-06-01T05:02:18Z",
+    "last_success_epoch": 1780290165,
+    "last_success_iso": "2026-06-01T05:02:45Z"
   },
   "smard": {
-    "last_attempt_epoch": 1780268895,
-    "last_attempt_iso": "2026-05-31T23:08:15Z",
-    "last_success_epoch": 1780268903,
-    "last_success_iso": "2026-05-31T23:08:23Z"
+    "last_attempt_epoch": 1780289828,
+    "last_attempt_iso": "2026-06-01T04:57:08Z",
+    "last_success_epoch": 1780289840,
+    "last_success_iso": "2026-06-01T04:57:20Z"
   },
   "weather": {
-    "last_attempt_epoch": 1780262134,
-    "last_attempt_iso": "2026-05-31T21:15:34Z",
-    "last_success_epoch": 1780262136,
-    "last_success_iso": "2026-05-31T21:15:36Z"
+    "last_attempt_epoch": 1780290126,
+    "last_attempt_iso": "2026-06-01T05:02:06Z",
+    "last_success_epoch": 1780290128,
+    "last_success_iso": "2026-06-01T05:02:08Z"
   }
 }
