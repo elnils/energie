@@ -20,12 +20,12 @@
     "last_success_iso": "2026-06-05T12:21:29Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1780675464,
-    "last_attempt_iso": "2026-06-05T16:04:24Z",
+    "last_attempt_epoch": 1780686037,
+    "last_attempt_iso": "2026-06-05T19:00:37Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1780675778,
-    "last_success_iso": "2026-06-05T16:09:38Z"
+    "last_success_epoch": 1780686444,
+    "last_success_iso": "2026-06-05T19:07:24Z"
   },
   "energy_futures": {
     "last_attempt_epoch": 1780675790,
@@ -36,18 +36,18 @@
     "last_success_iso": "2026-06-05T16:10:01Z"
   },
   "entsoe": {
-    "last_attempt_epoch": 1780662040,
-    "last_attempt_iso": "2026-06-05T12:20:40Z",
+    "last_attempt_epoch": 1780686502,
+    "last_attempt_iso": "2026-06-05T19:08:22Z",
     "last_error_epoch": 1778568129,
     "last_error_message": "ValueError: fetcher entsoe did not return dict with \"data\" key",
-    "last_success_epoch": 1780662077,
-    "last_success_iso": "2026-06-05T12:21:17Z"
+    "last_success_epoch": 1780686530,
+    "last_success_iso": "2026-06-05T19:08:50Z"
   },
   "entsog": {
-    "last_attempt_epoch": 1780661949,
-    "last_attempt_iso": "2026-06-05T12:19:09Z",
-    "last_success_epoch": 1780661961,
-    "last_success_iso": "2026-06-05T12:19:21Z"
+    "last_attempt_epoch": 1780686490,
+    "last_attempt_iso": "2026-06-05T19:08:10Z",
+    "last_success_epoch": 1780686502,
+    "last_success_iso": "2026-06-05T19:08:22Z"
   },
   "eurostat_oil": {
     "last_attempt_epoch": 1780601747,
@@ -76,10 +76,10 @@
     "last_success_iso": "2026-06-05T12:19:33Z"
   },
   "gas_storage": {
-    "last_attempt_epoch": 1780661928,
-    "last_attempt_iso": "2026-06-05T12:18:48Z",
-    "last_success_epoch": 1780661949,
-    "last_success_iso": "2026-06-05T12:19:09Z"
+    "last_attempt_epoch": 1780686444,
+    "last_attempt_iso": "2026-06-05T19:07:24Z",
+    "last_success_epoch": 1780686490,
+    "last_success_iso": "2026-06-05T19:08:10Z"
   },
   "heating_oil": {
     "last_attempt_epoch": 1780662031,
@@ -90,16 +90,16 @@
     "last_success_iso": "2026-06-05T12:20:40Z"
   },
   "news": {
-    "last_attempt_epoch": 1780675801,
-    "last_attempt_iso": "2026-06-05T16:10:01Z",
-    "last_success_epoch": 1780675826,
-    "last_success_iso": "2026-06-05T16:10:26Z"
+    "last_attempt_epoch": 1780686530,
+    "last_attempt_iso": "2026-06-05T19:08:50Z",
+    "last_success_epoch": 1780686553,
+    "last_success_iso": "2026-06-05T19:09:13Z"
   },
   "smard": {
-    "last_attempt_epoch": 1780675457,
-    "last_attempt_iso": "2026-06-05T16:04:17Z",
-    "last_success_epoch": 1780675464,
-    "last_success_iso": "2026-06-05T16:04:24Z"
+    "last_attempt_epoch": 1780686031,
+    "last_attempt_iso": "2026-06-05T19:00:31Z",
+    "last_success_epoch": 1780686037,
+    "last_success_iso": "2026-06-05T19:00:37Z"
   },
   "weather": {
     "last_attempt_epoch": 1780675778,
