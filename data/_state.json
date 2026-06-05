@@ -1,9 +1,9 @@
 {
   "commodities": {
-    "last_attempt_epoch": 1780615196,
-    "last_attempt_iso": "2026-06-04T23:19:56Z",
-    "last_success_epoch": 1780615206,
-    "last_success_iso": "2026-06-04T23:20:06Z"
+    "last_attempt_epoch": 1780633763,
+    "last_attempt_iso": "2026-06-05T04:29:23Z",
+    "last_success_epoch": 1780633772,
+    "last_success_iso": "2026-06-05T04:29:32Z"
   },
   "destatis_vpi": {
     "last_attempt_epoch": 1780601566,
@@ -20,12 +20,12 @@
     "last_success_iso": "2026-06-04T21:53:43Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1780614878,
-    "last_attempt_iso": "2026-06-04T23:14:38Z",
+    "last_attempt_epoch": 1780633359,
+    "last_attempt_iso": "2026-06-05T04:22:39Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1780615194,
-    "last_success_iso": "2026-06-04T23:19:54Z"
+    "last_success_epoch": 1780633732,
+    "last_success_iso": "2026-06-05T04:28:52Z"
   },
   "energy_futures": {
     "last_attempt_epoch": 1780615206,
@@ -36,18 +36,18 @@
     "last_success_iso": "2026-06-04T23:20:17Z"
   },
   "entsoe": {
-    "last_attempt_epoch": 1780601719,
-    "last_attempt_iso": "2026-06-04T19:35:19Z",
+    "last_attempt_epoch": 1780633772,
+    "last_attempt_iso": "2026-06-05T04:29:32Z",
     "last_error_epoch": 1778568129,
     "last_error_message": "ValueError: fetcher entsoe did not return dict with \"data\" key",
-    "last_success_epoch": 1780601747,
-    "last_success_iso": "2026-06-04T19:35:47Z"
+    "last_success_epoch": 1780633790,
+    "last_success_iso": "2026-06-05T04:29:50Z"
   },
   "entsog": {
-    "last_attempt_epoch": 1780601543,
-    "last_attempt_iso": "2026-06-04T19:32:23Z",
-    "last_success_epoch": 1780601555,
-    "last_success_iso": "2026-06-04T19:32:35Z"
+    "last_attempt_epoch": 1780633748,
+    "last_attempt_iso": "2026-06-05T04:29:08Z",
+    "last_success_epoch": 1780633761,
+    "last_success_iso": "2026-06-05T04:29:21Z"
   },
   "eurostat_oil": {
     "last_attempt_epoch": 1780601747,
@@ -76,10 +76,10 @@
     "last_success_iso": "2026-06-04T21:51:42Z"
   },
   "gas_storage": {
-    "last_attempt_epoch": 1780601522,
-    "last_attempt_iso": "2026-06-04T19:32:02Z",
-    "last_success_epoch": 1780601543,
-    "last_success_iso": "2026-06-04T19:32:23Z"
+    "last_attempt_epoch": 1780633732,
+    "last_attempt_iso": "2026-06-05T04:28:52Z",
+    "last_success_epoch": 1780633748,
+    "last_success_iso": "2026-06-05T04:29:08Z"
   },
   "heating_oil": {
     "last_attempt_epoch": 1780609951,
@@ -90,23 +90,23 @@
     "last_success_iso": "2026-06-04T21:53:31Z"
   },
   "news": {
-    "last_attempt_epoch": 1780610023,
-    "last_attempt_iso": "2026-06-04T21:53:43Z",
-    "last_success_epoch": 1780610046,
-    "last_success_iso": "2026-06-04T21:54:06Z"
+    "last_attempt_epoch": 1780633790,
+    "last_attempt_iso": "2026-06-05T04:29:50Z",
+    "last_success_epoch": 1780633812,
+    "last_success_iso": "2026-06-05T04:30:12Z"
   },
   "smard": {
-    "last_attempt_epoch": 1780614871,
-    "last_attempt_iso": "2026-06-04T23:14:31Z",
-    "last_success_epoch": 1780614878,
-    "last_success_iso": "2026-06-04T23:14:38Z"
+    "last_attempt_epoch": 1780633352,
+    "last_attempt_iso": "2026-06-05T04:22:32Z",
+    "last_success_epoch": 1780633359,
+    "last_success_iso": "2026-06-05T04:22:39Z"
   },
   "weather": {
-    "last_attempt_epoch": 1780615194,
-    "last_attempt_iso": "2026-06-04T23:19:54Z",
+    "last_attempt_epoch": 1780633761,
+    "last_attempt_iso": "2026-06-05T04:29:21Z",
     "last_error_epoch": 1780575280,
     "last_error_message": "RuntimeError: Open-Meteo: zero cities returned data | at File \"/home/runner/work/energie/energie/scripts/fetchers/weather.py\", line 45, in fetch",
-    "last_success_epoch": 1780615196,
-    "last_success_iso": "2026-06-04T23:19:56Z"
+    "last_success_epoch": 1780633763,
+    "last_success_iso": "2026-06-05T04:29:23Z"
   }
 }
