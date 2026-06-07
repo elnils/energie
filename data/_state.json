@@ -1,9 +1,9 @@
 {
   "commodities": {
-    "last_attempt_epoch": 1780841575,
-    "last_attempt_iso": "2026-06-07T14:12:55Z",
-    "last_success_epoch": 1780841584,
-    "last_success_iso": "2026-06-07T14:13:04Z"
+    "last_attempt_epoch": 1780856122,
+    "last_attempt_iso": "2026-06-07T18:15:22Z",
+    "last_success_epoch": 1780856132,
+    "last_success_iso": "2026-06-07T18:15:32Z"
   },
   "destatis_vpi": {
     "last_attempt_epoch": 1780784060,
@@ -14,26 +14,26 @@
     "last_success_iso": "2026-06-06T22:14:43Z"
   },
   "eia_petroleum": {
-    "last_attempt_epoch": 1780811368,
-    "last_attempt_iso": "2026-06-07T05:49:28Z",
-    "last_success_epoch": 1780811373,
-    "last_success_iso": "2026-06-07T05:49:33Z"
+    "last_attempt_epoch": 1780856200,
+    "last_attempt_iso": "2026-06-07T18:16:40Z",
+    "last_success_epoch": 1780856205,
+    "last_success_iso": "2026-06-07T18:16:45Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1780849383,
-    "last_attempt_iso": "2026-06-07T16:23:03Z",
+    "last_attempt_epoch": 1780855821,
+    "last_attempt_iso": "2026-06-07T18:10:21Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1780849639,
-    "last_success_iso": "2026-06-07T16:27:19Z"
+    "last_success_epoch": 1780856086,
+    "last_success_iso": "2026-06-07T18:14:46Z"
   },
   "energy_futures": {
-    "last_attempt_epoch": 1780833599,
-    "last_attempt_iso": "2026-06-07T11:59:59Z",
+    "last_attempt_epoch": 1780856205,
+    "last_attempt_iso": "2026-06-07T18:16:45Z",
     "last_error_epoch": 1780549132,
     "last_error_message": "RuntimeError: energy_futures: ALL external APIs failed. Errors: eia_steo/brent (BREPUUS): source exceeded wallclock budget; eia_steo/wti (WTIPUUS): HTTPSConnectionPool(host='api.eia.gov', port=443): Max retries exceeded with url: /v2/steo/data/?api_key=irVUjduslyh4dIFImK49hHGQtvzZgUergFPQDNQ9&frequency=monthly&data%5B0%5D=value&facets%5BseriesId%5D%5B%5D=WTIPUUS&sort%5B0%5D%5Bcolumn%5D=period&sort%5B0%5D%5Bdirection%5D=asc&offset=0&length=5000 (Caused by ResponseError('too many 504 error respons",
-    "last_success_epoch": 1780833632,
-    "last_success_iso": "2026-06-07T12:00:32Z"
+    "last_success_epoch": 1780856215,
+    "last_success_iso": "2026-06-07T18:16:55Z"
   },
   "entsoe": {
     "last_attempt_epoch": 1780849639,
@@ -44,10 +44,10 @@
     "last_success_iso": "2026-06-07T16:27:35Z"
   },
   "entsog": {
-    "last_attempt_epoch": 1780833585,
-    "last_attempt_iso": "2026-06-07T11:59:45Z",
-    "last_success_epoch": 1780833599,
-    "last_success_iso": "2026-06-07T11:59:59Z"
+    "last_attempt_epoch": 1780856105,
+    "last_attempt_iso": "2026-06-07T18:15:05Z",
+    "last_success_epoch": 1780856120,
+    "last_success_iso": "2026-06-07T18:15:20Z"
   },
   "eurostat_oil": {
     "last_attempt_epoch": 1780784095,
@@ -58,36 +58,36 @@
     "last_success_iso": "2026-06-06T22:17:09Z"
   },
   "fred_energy": {
-    "last_attempt_epoch": 1780811363,
-    "last_attempt_iso": "2026-06-07T05:49:23Z",
-    "last_success_epoch": 1780811368,
-    "last_success_iso": "2026-06-07T05:49:28Z"
+    "last_attempt_epoch": 1780856195,
+    "last_attempt_iso": "2026-06-07T18:16:35Z",
+    "last_success_epoch": 1780856200,
+    "last_success_iso": "2026-06-07T18:16:40Z"
   },
   "fuel": {
-    "last_attempt_epoch": 1780811302,
-    "last_attempt_iso": "2026-06-07T05:48:22Z",
-    "last_success_epoch": 1780811353,
-    "last_success_iso": "2026-06-07T05:49:13Z"
+    "last_attempt_epoch": 1780856134,
+    "last_attempt_iso": "2026-06-07T18:15:34Z",
+    "last_success_epoch": 1780856185,
+    "last_success_iso": "2026-06-07T18:16:25Z"
   },
   "fx": {
-    "last_attempt_epoch": 1780811301,
-    "last_attempt_iso": "2026-06-07T05:48:21Z",
-    "last_success_epoch": 1780811302,
-    "last_success_iso": "2026-06-07T05:48:22Z"
+    "last_attempt_epoch": 1780856132,
+    "last_attempt_iso": "2026-06-07T18:15:32Z",
+    "last_success_epoch": 1780856134,
+    "last_success_iso": "2026-06-07T18:15:34Z"
   },
   "gas_storage": {
-    "last_attempt_epoch": 1780833566,
-    "last_attempt_iso": "2026-06-07T11:59:26Z",
-    "last_success_epoch": 1780833585,
-    "last_success_iso": "2026-06-07T11:59:45Z"
+    "last_attempt_epoch": 1780856086,
+    "last_attempt_iso": "2026-06-07T18:14:46Z",
+    "last_success_epoch": 1780856105,
+    "last_success_iso": "2026-06-07T18:15:05Z"
   },
   "heating_oil": {
-    "last_attempt_epoch": 1780811353,
-    "last_attempt_iso": "2026-06-07T05:49:13Z",
+    "last_attempt_epoch": 1780856185,
+    "last_attempt_iso": "2026-06-07T18:16:25Z",
     "last_error_epoch": 1779179576,
     "last_error_message": "TypeError: iter(v, w): v must be callable | at File \"/home/runner/work/energie/energie/scripts/fetchers/heating_oil.py\", line 371, in <listcomp>",
-    "last_success_epoch": 1780811363,
-    "last_success_iso": "2026-06-07T05:49:23Z"
+    "last_success_epoch": 1780856195,
+    "last_success_iso": "2026-06-07T18:16:35Z"
   },
   "news": {
     "last_attempt_epoch": 1780849655,
@@ -96,17 +96,17 @@
     "last_success_iso": "2026-06-07T16:28:01Z"
   },
   "smard": {
-    "last_attempt_epoch": 1780849375,
-    "last_attempt_iso": "2026-06-07T16:22:55Z",
-    "last_success_epoch": 1780849383,
-    "last_success_iso": "2026-06-07T16:23:03Z"
+    "last_attempt_epoch": 1780855813,
+    "last_attempt_iso": "2026-06-07T18:10:13Z",
+    "last_success_epoch": 1780855821,
+    "last_success_iso": "2026-06-07T18:10:21Z"
   },
   "weather": {
-    "last_attempt_epoch": 1780841572,
-    "last_attempt_iso": "2026-06-07T14:12:52Z",
+    "last_attempt_epoch": 1780856120,
+    "last_attempt_iso": "2026-06-07T18:15:20Z",
     "last_error_epoch": 1780575280,
     "last_error_message": "RuntimeError: Open-Meteo: zero cities returned data | at File \"/home/runner/work/energie/energie/scripts/fetchers/weather.py\", line 45, in fetch",
-    "last_success_epoch": 1780841575,
-    "last_success_iso": "2026-06-07T14:12:55Z"
+    "last_success_epoch": 1780856122,
+    "last_success_iso": "2026-06-07T18:15:22Z"
   }
 }
