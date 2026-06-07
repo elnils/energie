@@ -20,12 +20,12 @@
     "last_success_iso": "2026-06-07T05:49:33Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1780841318,
-    "last_attempt_iso": "2026-06-07T14:08:38Z",
+    "last_attempt_epoch": 1780849383,
+    "last_attempt_iso": "2026-06-07T16:23:03Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1780841572,
-    "last_success_iso": "2026-06-07T14:12:52Z"
+    "last_success_epoch": 1780849639,
+    "last_success_iso": "2026-06-07T16:27:19Z"
   },
   "energy_futures": {
     "last_attempt_epoch": 1780833599,
@@ -36,12 +36,12 @@
     "last_success_iso": "2026-06-07T12:00:32Z"
   },
   "entsoe": {
-    "last_attempt_epoch": 1780824682,
-    "last_attempt_iso": "2026-06-07T09:31:22Z",
+    "last_attempt_epoch": 1780849639,
+    "last_attempt_iso": "2026-06-07T16:27:19Z",
     "last_error_epoch": 1778568129,
     "last_error_message": "ValueError: fetcher entsoe did not return dict with \"data\" key",
-    "last_success_epoch": 1780824711,
-    "last_success_iso": "2026-06-07T09:31:51Z"
+    "last_success_epoch": 1780849655,
+    "last_success_iso": "2026-06-07T16:27:35Z"
   },
   "entsog": {
     "last_attempt_epoch": 1780833585,
@@ -90,16 +90,16 @@
     "last_success_iso": "2026-06-07T05:49:23Z"
   },
   "news": {
-    "last_attempt_epoch": 1780841584,
-    "last_attempt_iso": "2026-06-07T14:13:04Z",
-    "last_success_epoch": 1780841608,
-    "last_success_iso": "2026-06-07T14:13:28Z"
+    "last_attempt_epoch": 1780849655,
+    "last_attempt_iso": "2026-06-07T16:27:35Z",
+    "last_success_epoch": 1780849681,
+    "last_success_iso": "2026-06-07T16:28:01Z"
   },
   "smard": {
-    "last_attempt_epoch": 1780841309,
-    "last_attempt_iso": "2026-06-07T14:08:29Z",
-    "last_success_epoch": 1780841318,
-    "last_success_iso": "2026-06-07T14:08:38Z"
+    "last_attempt_epoch": 1780849375,
+    "last_attempt_iso": "2026-06-07T16:22:55Z",
+    "last_success_epoch": 1780849383,
+    "last_success_iso": "2026-06-07T16:23:03Z"
   },
   "weather": {
     "last_attempt_epoch": 1780841572,
