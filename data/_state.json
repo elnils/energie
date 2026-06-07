@@ -1,17 +1,17 @@
 {
   "commodities": {
-    "last_attempt_epoch": 1780856122,
-    "last_attempt_iso": "2026-06-07T18:15:22Z",
-    "last_success_epoch": 1780856132,
-    "last_success_iso": "2026-06-07T18:15:32Z"
+    "last_attempt_epoch": 1780870521,
+    "last_attempt_iso": "2026-06-07T22:15:21Z",
+    "last_success_epoch": 1780870529,
+    "last_success_iso": "2026-06-07T22:15:29Z"
   },
   "destatis_vpi": {
-    "last_attempt_epoch": 1780784060,
-    "last_attempt_iso": "2026-06-06T22:14:20Z",
+    "last_attempt_epoch": 1780870529,
+    "last_attempt_iso": "2026-06-07T22:15:29Z",
     "last_error_epoch": 1779784703,
     "last_error_message": "RuntimeError: Destatis auth: BOTH modes failed. header: header-auth status: Wegen planmäßiger Wartungsarbeiten steht GENESIS-Webservices vorübergehend nicht zur Verfügung!; body: Wegen planmäßiger Wartungsarbeiten steht GENESIS-Webservices vorübergehend nicht zur Verfügung! | at File \"/home/runner/work/energie/energie/scripts/fetchers/destatis_vpi.py\", line 191, in _check_login",
-    "last_success_epoch": 1780784083,
-    "last_success_iso": "2026-06-06T22:14:43Z"
+    "last_success_epoch": 1780870549,
+    "last_success_iso": "2026-06-07T22:15:49Z"
   },
   "eia_petroleum": {
     "last_attempt_epoch": 1780856200,
@@ -20,12 +20,12 @@
     "last_success_iso": "2026-06-07T18:16:45Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1780863506,
-    "last_attempt_iso": "2026-06-07T20:18:26Z",
+    "last_attempt_epoch": 1780870263,
+    "last_attempt_iso": "2026-06-07T22:11:03Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1780863793,
-    "last_success_iso": "2026-06-07T20:23:13Z"
+    "last_success_epoch": 1780870519,
+    "last_success_iso": "2026-06-07T22:15:19Z"
   },
   "energy_futures": {
     "last_attempt_epoch": 1780856205,
@@ -96,17 +96,17 @@
     "last_success_iso": "2026-06-07T20:23:37Z"
   },
   "smard": {
-    "last_attempt_epoch": 1780863500,
-    "last_attempt_iso": "2026-06-07T20:18:20Z",
-    "last_success_epoch": 1780863506,
-    "last_success_iso": "2026-06-07T20:18:26Z"
+    "last_attempt_epoch": 1780870259,
+    "last_attempt_iso": "2026-06-07T22:10:59Z",
+    "last_success_epoch": 1780870263,
+    "last_success_iso": "2026-06-07T22:11:03Z"
   },
   "weather": {
-    "last_attempt_epoch": 1780856120,
-    "last_attempt_iso": "2026-06-07T18:15:20Z",
+    "last_attempt_epoch": 1780870519,
+    "last_attempt_iso": "2026-06-07T22:15:19Z",
     "last_error_epoch": 1780575280,
     "last_error_message": "RuntimeError: Open-Meteo: zero cities returned data | at File \"/home/runner/work/energie/energie/scripts/fetchers/weather.py\", line 45, in fetch",
-    "last_success_epoch": 1780856122,
-    "last_success_iso": "2026-06-07T18:15:22Z"
+    "last_success_epoch": 1780870521,
+    "last_success_iso": "2026-06-07T22:15:21Z"
   }
 }
