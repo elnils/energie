@@ -20,12 +20,12 @@
     "last_success_iso": "2026-06-09T12:18:44Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1781032894,
-    "last_attempt_iso": "2026-06-09T19:21:34Z",
+    "last_attempt_epoch": 1781041966,
+    "last_attempt_iso": "2026-06-09T21:52:46Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1781033207,
-    "last_success_iso": "2026-06-09T19:26:47Z"
+    "last_success_epoch": 1781042228,
+    "last_success_iso": "2026-06-09T21:57:08Z"
   },
   "energy_futures": {
     "last_attempt_epoch": 1781033274,
@@ -90,16 +90,16 @@
     "last_success_iso": "2026-06-09T12:17:03Z"
   },
   "news": {
-    "last_attempt_epoch": 1781033282,
-    "last_attempt_iso": "2026-06-09T19:28:02Z",
-    "last_success_epoch": 1781033305,
-    "last_success_iso": "2026-06-09T19:28:25Z"
+    "last_attempt_epoch": 1781042228,
+    "last_attempt_iso": "2026-06-09T21:57:08Z",
+    "last_success_epoch": 1781042250,
+    "last_success_iso": "2026-06-09T21:57:30Z"
   },
   "smard": {
-    "last_attempt_epoch": 1781032886,
-    "last_attempt_iso": "2026-06-09T19:21:26Z",
-    "last_success_epoch": 1781032894,
-    "last_success_iso": "2026-06-09T19:21:34Z"
+    "last_attempt_epoch": 1781041960,
+    "last_attempt_iso": "2026-06-09T21:52:40Z",
+    "last_success_epoch": 1781041966,
+    "last_success_iso": "2026-06-09T21:52:46Z"
   },
   "weather": {
     "last_attempt_epoch": 1781033244,
