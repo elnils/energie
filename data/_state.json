@@ -6,12 +6,12 @@
     "last_success_iso": "2026-06-19T17:29:00Z"
   },
   "destatis_vpi": {
-    "last_attempt_epoch": 1781807673,
-    "last_attempt_iso": "2026-06-18T18:34:33Z",
+    "last_attempt_epoch": 1781899345,
+    "last_attempt_iso": "2026-06-19T20:02:25Z",
     "last_error_epoch": 1779784703,
     "last_error_message": "RuntimeError: Destatis auth: BOTH modes failed. header: header-auth status: Wegen planmäßiger Wartungsarbeiten steht GENESIS-Webservices vorübergehend nicht zur Verfügung!; body: Wegen planmäßiger Wartungsarbeiten steht GENESIS-Webservices vorübergehend nicht zur Verfügung! | at File \"/home/runner/work/energie/energie/scripts/fetchers/destatis_vpi.py\", line 191, in _check_login",
-    "last_success_epoch": 1781807692,
-    "last_success_iso": "2026-06-18T18:34:52Z"
+    "last_success_epoch": 1781899364,
+    "last_success_iso": "2026-06-19T20:02:44Z"
   },
   "eia_petroleum": {
     "last_attempt_epoch": 1781878980,
@@ -20,12 +20,12 @@
     "last_success_iso": "2026-06-19T14:23:05Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1781889761,
-    "last_attempt_iso": "2026-06-19T17:22:41Z",
+    "last_attempt_epoch": 1781899002,
+    "last_attempt_iso": "2026-06-19T19:56:42Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1781890102,
-    "last_success_iso": "2026-06-19T17:28:22Z"
+    "last_success_epoch": 1781899345,
+    "last_success_iso": "2026-06-19T20:02:25Z"
   },
   "energy_futures": {
     "last_attempt_epoch": 1781890155,
@@ -90,16 +90,16 @@
     "last_success_iso": "2026-06-19T14:22:55Z"
   },
   "news": {
-    "last_attempt_epoch": 1781890166,
-    "last_attempt_iso": "2026-06-19T17:29:26Z",
-    "last_success_epoch": 1781890188,
-    "last_success_iso": "2026-06-19T17:29:48Z"
+    "last_attempt_epoch": 1781899364,
+    "last_attempt_iso": "2026-06-19T20:02:44Z",
+    "last_success_epoch": 1781899389,
+    "last_success_iso": "2026-06-19T20:03:09Z"
   },
   "smard": {
-    "last_attempt_epoch": 1781889755,
-    "last_attempt_iso": "2026-06-19T17:22:35Z",
-    "last_success_epoch": 1781889761,
-    "last_success_iso": "2026-06-19T17:22:41Z"
+    "last_attempt_epoch": 1781898995,
+    "last_attempt_iso": "2026-06-19T19:56:35Z",
+    "last_success_epoch": 1781899002,
+    "last_success_iso": "2026-06-19T19:56:42Z"
   },
   "weather": {
     "last_attempt_epoch": 1781890129,
