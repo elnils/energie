@@ -1,9 +1,9 @@
 {
   "commodities": {
-    "last_attempt_epoch": 1782084360,
-    "last_attempt_iso": "2026-06-21T23:26:00Z",
-    "last_success_epoch": 1782084368,
-    "last_success_iso": "2026-06-21T23:26:08Z"
+    "last_attempt_epoch": 1782105162,
+    "last_attempt_iso": "2026-06-22T05:12:42Z",
+    "last_success_epoch": 1782105171,
+    "last_success_iso": "2026-06-22T05:12:51Z"
   },
   "destatis_vpi": {
     "last_attempt_epoch": 1782077185,
@@ -20,34 +20,34 @@
     "last_success_iso": "2026-06-21T20:02:19Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1782084104,
-    "last_attempt_iso": "2026-06-21T23:21:44Z",
+    "last_attempt_epoch": 1782104861,
+    "last_attempt_iso": "2026-06-22T05:07:41Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1782084358,
-    "last_success_iso": "2026-06-21T23:25:58Z"
+    "last_success_epoch": 1782105116,
+    "last_success_iso": "2026-06-22T05:11:56Z"
   },
   "energy_futures": {
-    "last_attempt_epoch": 1782072139,
-    "last_attempt_iso": "2026-06-21T20:02:19Z",
+    "last_attempt_epoch": 1782105190,
+    "last_attempt_iso": "2026-06-22T05:13:10Z",
     "last_error_epoch": 1780549132,
     "last_error_message": "RuntimeError: energy_futures: ALL external APIs failed. Errors: eia_steo/brent (BREPUUS): source exceeded wallclock budget; eia_steo/wti (WTIPUUS): HTTPSConnectionPool(host='api.eia.gov', port=443): Max retries exceeded with url: /v2/steo/data/?api_key=irVUjduslyh4dIFImK49hHGQtvzZgUergFPQDNQ9&frequency=monthly&data%5B0%5D=value&facets%5BseriesId%5D%5B%5D=WTIPUUS&sort%5B0%5D%5Bcolumn%5D=period&sort%5B0%5D%5Bdirection%5D=asc&offset=0&length=5000 (Caused by ResponseError('too many 504 error respons",
-    "last_success_epoch": 1782072152,
-    "last_success_iso": "2026-06-21T20:02:32Z"
+    "last_success_epoch": 1782105200,
+    "last_success_iso": "2026-06-22T05:13:20Z"
   },
   "entsoe": {
-    "last_attempt_epoch": 1782072000,
-    "last_attempt_iso": "2026-06-21T20:00:00Z",
+    "last_attempt_epoch": 1782105171,
+    "last_attempt_iso": "2026-06-22T05:12:51Z",
     "last_error_epoch": 1778568129,
     "last_error_message": "ValueError: fetcher entsoe did not return dict with \"data\" key",
-    "last_success_epoch": 1782072125,
-    "last_success_iso": "2026-06-21T20:02:05Z"
+    "last_success_epoch": 1782105190,
+    "last_success_iso": "2026-06-22T05:13:10Z"
   },
   "entsog": {
-    "last_attempt_epoch": 1782071909,
-    "last_attempt_iso": "2026-06-21T19:58:29Z",
-    "last_success_epoch": 1782071924,
-    "last_success_iso": "2026-06-21T19:58:44Z"
+    "last_attempt_epoch": 1782105144,
+    "last_attempt_iso": "2026-06-22T05:12:24Z",
+    "last_success_epoch": 1782105160,
+    "last_success_iso": "2026-06-22T05:12:40Z"
   },
   "eurostat_oil": {
     "last_attempt_epoch": 1782022604,
@@ -76,10 +76,10 @@
     "last_success_iso": "2026-06-21T19:58:59Z"
   },
   "gas_storage": {
-    "last_attempt_epoch": 1782071892,
-    "last_attempt_iso": "2026-06-21T19:58:12Z",
-    "last_success_epoch": 1782071909,
-    "last_success_iso": "2026-06-21T19:58:29Z"
+    "last_attempt_epoch": 1782105116,
+    "last_attempt_iso": "2026-06-22T05:11:56Z",
+    "last_success_epoch": 1782105144,
+    "last_success_iso": "2026-06-22T05:12:24Z"
   },
   "heating_oil": {
     "last_attempt_epoch": 1782071990,
@@ -90,23 +90,23 @@
     "last_success_iso": "2026-06-21T20:00:00Z"
   },
   "news": {
-    "last_attempt_epoch": 1782084368,
-    "last_attempt_iso": "2026-06-21T23:26:08Z",
-    "last_success_epoch": 1782084403,
-    "last_success_iso": "2026-06-21T23:26:43Z"
+    "last_attempt_epoch": 1782105200,
+    "last_attempt_iso": "2026-06-22T05:13:20Z",
+    "last_success_epoch": 1782105224,
+    "last_success_iso": "2026-06-22T05:13:44Z"
   },
   "smard": {
-    "last_attempt_epoch": 1782084099,
-    "last_attempt_iso": "2026-06-21T23:21:39Z",
-    "last_success_epoch": 1782084104,
-    "last_success_iso": "2026-06-21T23:21:44Z"
+    "last_attempt_epoch": 1782104852,
+    "last_attempt_iso": "2026-06-22T05:07:32Z",
+    "last_success_epoch": 1782104861,
+    "last_success_iso": "2026-06-22T05:07:41Z"
   },
   "weather": {
-    "last_attempt_epoch": 1782084358,
-    "last_attempt_iso": "2026-06-21T23:25:58Z",
+    "last_attempt_epoch": 1782105160,
+    "last_attempt_iso": "2026-06-22T05:12:40Z",
     "last_error_epoch": 1780575280,
     "last_error_message": "RuntimeError: Open-Meteo: zero cities returned data | at File \"/home/runner/work/energie/energie/scripts/fetchers/weather.py\", line 45, in fetch",
-    "last_success_epoch": 1782084360,
-    "last_success_iso": "2026-06-21T23:26:00Z"
+    "last_success_epoch": 1782105162,
+    "last_success_iso": "2026-06-22T05:12:42Z"
   }
 }
