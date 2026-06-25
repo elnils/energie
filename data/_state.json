@@ -20,42 +20,42 @@
     "last_success_iso": "2026-06-25T17:23:41Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1782407931,
-    "last_attempt_iso": "2026-06-25T17:18:51Z",
+    "last_attempt_epoch": 1782418259,
+    "last_attempt_iso": "2026-06-25T20:10:59Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1782408188,
-    "last_success_iso": "2026-06-25T17:23:08Z"
+    "last_success_epoch": 1782418515,
+    "last_success_iso": "2026-06-25T20:15:15Z"
   },
   "energy_futures": {
-    "last_attempt_epoch": 1782388222,
-    "last_attempt_iso": "2026-06-25T11:50:22Z",
+    "last_attempt_epoch": 1782418602,
+    "last_attempt_iso": "2026-06-25T20:16:42Z",
     "last_error_epoch": 1780549132,
     "last_error_message": "RuntimeError: energy_futures: ALL external APIs failed. Errors: eia_steo/brent (BREPUUS): source exceeded wallclock budget; eia_steo/wti (WTIPUUS): HTTPSConnectionPool(host='api.eia.gov', port=443): Max retries exceeded with url: /v2/steo/data/?api_key=irVUjduslyh4dIFImK49hHGQtvzZgUergFPQDNQ9&frequency=monthly&data%5B0%5D=value&facets%5BseriesId%5D%5B%5D=WTIPUUS&sort%5B0%5D%5Bcolumn%5D=period&sort%5B0%5D%5Bdirection%5D=asc&offset=0&length=5000 (Caused by ResponseError('too many 504 error respons",
-    "last_success_epoch": 1782388232,
-    "last_success_iso": "2026-06-25T11:50:32Z"
+    "last_success_epoch": 1782418609,
+    "last_success_iso": "2026-06-25T20:16:49Z"
   },
   "entsoe": {
-    "last_attempt_epoch": 1782388188,
-    "last_attempt_iso": "2026-06-25T11:49:48Z",
+    "last_attempt_epoch": 1782418558,
+    "last_attempt_iso": "2026-06-25T20:15:58Z",
     "last_error_epoch": 1778568129,
     "last_error_message": "ValueError: fetcher entsoe did not return dict with \"data\" key",
-    "last_success_epoch": 1782388222,
-    "last_success_iso": "2026-06-25T11:50:22Z"
+    "last_success_epoch": 1782418602,
+    "last_success_iso": "2026-06-25T20:16:42Z"
   },
   "entsog": {
-    "last_attempt_epoch": 1782388160,
-    "last_attempt_iso": "2026-06-25T11:49:20Z",
-    "last_success_epoch": 1782388177,
-    "last_success_iso": "2026-06-25T11:49:37Z"
+    "last_attempt_epoch": 1782418542,
+    "last_attempt_iso": "2026-06-25T20:15:42Z",
+    "last_success_epoch": 1782418558,
+    "last_success_iso": "2026-06-25T20:15:58Z"
   },
   "eurostat_oil": {
-    "last_attempt_epoch": 1782331426,
-    "last_attempt_iso": "2026-06-24T20:03:46Z",
+    "last_attempt_epoch": 1782418609,
+    "last_attempt_iso": "2026-06-25T20:16:49Z",
     "last_error_epoch": 1779176945,
     "last_error_message": "ValueError: fetcher 'eurostat_oil' missing expected keys {'jet_stocks'}; got {'gas_imports', 'electricity_imports', 'oil_motor_gasoline', 'oil_jet_fuel_supply', 'oil_crude_production', 'oil_jet_fuel_exports', 'electricity_wind', 'electricity_solar', 'electricity_generation', 'oil_diesel_stocks', 'gas_consumption', 'oil_crude_imports', 'electricity_nuclear', 'oil_jet_fuel_stocks', 'gas_production', 'oil_jet_fuel_imports', 'oil_heating_oil_stocks', 'oil_jet_fuel_consumption', 'gas_stocks', 'gas_ex",
-    "last_success_epoch": 1782331568,
-    "last_success_iso": "2026-06-24T20:06:08Z"
+    "last_success_epoch": 1782418744,
+    "last_success_iso": "2026-06-25T20:19:04Z"
   },
   "fred_energy": {
     "last_attempt_epoch": 1782408209,
@@ -78,10 +78,10 @@
     "last_success_iso": "2026-06-25T17:23:20Z"
   },
   "gas_storage": {
-    "last_attempt_epoch": 1782388142,
-    "last_attempt_iso": "2026-06-25T11:49:02Z",
-    "last_success_epoch": 1782388160,
-    "last_success_iso": "2026-06-25T11:49:20Z"
+    "last_attempt_epoch": 1782418515,
+    "last_attempt_iso": "2026-06-25T20:15:15Z",
+    "last_success_epoch": 1782418542,
+    "last_success_iso": "2026-06-25T20:15:42Z"
   },
   "heating_oil": {
     "last_attempt_epoch": 1782408200,
@@ -92,16 +92,16 @@
     "last_success_iso": "2026-06-25T17:23:29Z"
   },
   "news": {
-    "last_attempt_epoch": 1782408221,
-    "last_attempt_iso": "2026-06-25T17:23:41Z",
-    "last_success_epoch": 1782408245,
-    "last_success_iso": "2026-06-25T17:24:05Z"
+    "last_attempt_epoch": 1782418744,
+    "last_attempt_iso": "2026-06-25T20:19:04Z",
+    "last_success_epoch": 1782418768,
+    "last_success_iso": "2026-06-25T20:19:28Z"
   },
   "smard": {
-    "last_attempt_epoch": 1782407924,
-    "last_attempt_iso": "2026-06-25T17:18:44Z",
-    "last_success_epoch": 1782407931,
-    "last_success_iso": "2026-06-25T17:18:51Z"
+    "last_attempt_epoch": 1782418251,
+    "last_attempt_iso": "2026-06-25T20:10:51Z",
+    "last_success_epoch": 1782418259,
+    "last_success_iso": "2026-06-25T20:10:59Z"
   },
   "weather": {
     "last_attempt_epoch": 1782408188,
