@@ -20,12 +20,12 @@
     "last_success_iso": "2026-06-26T09:45:04Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1782487651,
-    "last_attempt_iso": "2026-06-26T15:27:31Z",
+    "last_attempt_epoch": 1782496587,
+    "last_attempt_iso": "2026-06-26T17:56:27Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1782487758,
-    "last_success_iso": "2026-06-26T15:29:18Z"
+    "last_success_epoch": 1782496692,
+    "last_success_iso": "2026-06-26T17:58:12Z"
   },
   "energy_futures": {
     "last_attempt_epoch": 1782487933,
@@ -84,24 +84,24 @@
     "last_success_iso": "2026-06-26T15:29:37Z"
   },
   "heating_oil": {
-    "last_attempt_epoch": 1782487870,
-    "last_attempt_iso": "2026-06-26T15:31:10Z",
-    "last_error_epoch": 1782487871,
+    "last_attempt_epoch": 1782496692,
+    "last_attempt_iso": "2026-06-26T17:58:12Z",
+    "last_error_epoch": 1782496693,
     "last_error_message": "RuntimeError: Tecson: could not extract reference price | at File \"/home/runner/work/energie/energie/scripts/fetchers/heating_oil.py\", line 238, in fetch",
     "last_success_epoch": 1782408209,
     "last_success_iso": "2026-06-25T17:23:29Z"
   },
   "news": {
-    "last_attempt_epoch": 1782487945,
-    "last_attempt_iso": "2026-06-26T15:32:25Z",
-    "last_success_epoch": 1782487970,
-    "last_success_iso": "2026-06-26T15:32:50Z"
+    "last_attempt_epoch": 1782496693,
+    "last_attempt_iso": "2026-06-26T17:58:13Z",
+    "last_success_epoch": 1782496716,
+    "last_success_iso": "2026-06-26T17:58:36Z"
   },
   "smard": {
-    "last_attempt_epoch": 1782487644,
-    "last_attempt_iso": "2026-06-26T15:27:24Z",
-    "last_success_epoch": 1782487651,
-    "last_success_iso": "2026-06-26T15:27:31Z"
+    "last_attempt_epoch": 1782496581,
+    "last_attempt_iso": "2026-06-26T17:56:21Z",
+    "last_success_epoch": 1782496587,
+    "last_success_iso": "2026-06-26T17:56:27Z"
   },
   "weather": {
     "last_attempt_epoch": 1782487791,
