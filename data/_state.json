@@ -20,12 +20,12 @@
     "last_success_iso": "2026-06-27T14:51:26Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1782571660,
-    "last_attempt_iso": "2026-06-27T14:47:40Z",
+    "last_attempt_epoch": 1782576678,
+    "last_attempt_iso": "2026-06-27T16:11:18Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1782571792,
-    "last_success_iso": "2026-06-27T14:49:52Z"
+    "last_success_epoch": 1782576845,
+    "last_success_iso": "2026-06-27T16:14:05Z"
   },
   "energy_futures": {
     "last_attempt_epoch": 1782571886,
@@ -84,9 +84,9 @@
     "last_success_iso": "2026-06-27T14:50:16Z"
   },
   "heating_oil": {
-    "last_attempt_epoch": 1782571847,
-    "last_attempt_iso": "2026-06-27T14:50:47Z",
-    "last_error_epoch": 1782571848,
+    "last_attempt_epoch": 1782576845,
+    "last_attempt_iso": "2026-06-27T16:14:05Z",
+    "last_error_epoch": 1782576847,
     "last_error_message": "RuntimeError: Tecson: could not extract reference price | at File \"/home/runner/work/energie/energie/scripts/fetchers/heating_oil.py\", line 238, in fetch",
     "last_success_epoch": 1782408209,
     "last_success_iso": "2026-06-25T17:23:29Z"
@@ -98,10 +98,10 @@
     "last_success_iso": "2026-06-27T14:52:00Z"
   },
   "smard": {
-    "last_attempt_epoch": 1782571648,
-    "last_attempt_iso": "2026-06-27T14:47:28Z",
-    "last_success_epoch": 1782571660,
-    "last_success_iso": "2026-06-27T14:47:40Z"
+    "last_attempt_epoch": 1782576670,
+    "last_attempt_iso": "2026-06-27T16:11:10Z",
+    "last_success_epoch": 1782576678,
+    "last_success_iso": "2026-06-27T16:11:18Z"
   },
   "weather": {
     "last_attempt_epoch": 1782571833,
