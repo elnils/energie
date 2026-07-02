@@ -20,34 +20,34 @@
     "last_success_iso": "2026-07-02T08:19:19Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1783011331,
-    "last_attempt_iso": "2026-07-02T16:55:31Z",
+    "last_attempt_epoch": 1783017598,
+    "last_attempt_iso": "2026-07-02T18:39:58Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1783011432,
-    "last_success_iso": "2026-07-02T16:57:12Z"
+    "last_success_epoch": 1783017759,
+    "last_success_iso": "2026-07-02T18:42:39Z"
   },
   "energy_futures": {
-    "last_attempt_epoch": 1782992668,
-    "last_attempt_iso": "2026-07-02T11:44:28Z",
+    "last_attempt_epoch": 1783017878,
+    "last_attempt_iso": "2026-07-02T18:44:38Z",
     "last_error_epoch": 1780549132,
     "last_error_message": "RuntimeError: energy_futures: ALL external APIs failed. Errors: eia_steo/brent (BREPUUS): source exceeded wallclock budget; eia_steo/wti (WTIPUUS): HTTPSConnectionPool(host='api.eia.gov', port=443): Max retries exceeded with url: /v2/steo/data/?api_key=irVUjduslyh4dIFImK49hHGQtvzZgUergFPQDNQ9&frequency=monthly&data%5B0%5D=value&facets%5BseriesId%5D%5B%5D=WTIPUUS&sort%5B0%5D%5Bcolumn%5D=period&sort%5B0%5D%5Bdirection%5D=asc&offset=0&length=5000 (Caused by ResponseError('too many 504 error respons",
-    "last_success_epoch": 1782992678,
-    "last_success_iso": "2026-07-02T11:44:38Z"
+    "last_success_epoch": 1783017888,
+    "last_success_iso": "2026-07-02T18:44:48Z"
   },
   "entsoe": {
-    "last_attempt_epoch": 1782992511,
-    "last_attempt_iso": "2026-07-02T11:41:51Z",
+    "last_attempt_epoch": 1783017788,
+    "last_attempt_iso": "2026-07-02T18:43:08Z",
     "last_error_epoch": 1778568129,
     "last_error_message": "ValueError: fetcher entsoe did not return dict with \"data\" key",
-    "last_success_epoch": 1782992668,
-    "last_success_iso": "2026-07-02T11:44:28Z"
+    "last_success_epoch": 1783017878,
+    "last_success_iso": "2026-07-02T18:44:38Z"
   },
   "entsog": {
-    "last_attempt_epoch": 1782992485,
-    "last_attempt_iso": "2026-07-02T11:41:25Z",
-    "last_success_epoch": 1782992498,
-    "last_success_iso": "2026-07-02T11:41:38Z"
+    "last_attempt_epoch": 1783017775,
+    "last_attempt_iso": "2026-07-02T18:42:55Z",
+    "last_success_epoch": 1783017787,
+    "last_success_iso": "2026-07-02T18:43:07Z"
   },
   "eurostat_oil": {
     "last_attempt_epoch": 1782980359,
@@ -78,15 +78,15 @@
     "last_success_iso": "2026-07-02T08:18:17Z"
   },
   "gas_storage": {
-    "last_attempt_epoch": 1782992468,
-    "last_attempt_iso": "2026-07-02T11:41:08Z",
-    "last_success_epoch": 1782992485,
-    "last_success_iso": "2026-07-02T11:41:25Z"
+    "last_attempt_epoch": 1783017759,
+    "last_attempt_iso": "2026-07-02T18:42:39Z",
+    "last_success_epoch": 1783017775,
+    "last_success_iso": "2026-07-02T18:42:55Z"
   },
   "heating_oil": {
-    "last_attempt_epoch": 1783011443,
-    "last_attempt_iso": "2026-07-02T16:57:23Z",
-    "last_error_epoch": 1783011444,
+    "last_attempt_epoch": 1783017787,
+    "last_attempt_iso": "2026-07-02T18:43:07Z",
+    "last_error_epoch": 1783017788,
     "last_error_message": "RuntimeError: Tecson: could not extract reference price | at File \"/home/runner/work/energie/energie/scripts/fetchers/heating_oil.py\", line 238, in fetch",
     "last_success_epoch": 1782408209,
     "last_success_iso": "2026-06-25T17:23:29Z"
@@ -98,10 +98,10 @@
     "last_success_iso": "2026-07-02T16:57:47Z"
   },
   "smard": {
-    "last_attempt_epoch": 1783011324,
-    "last_attempt_iso": "2026-07-02T16:55:24Z",
-    "last_success_epoch": 1783011331,
-    "last_success_iso": "2026-07-02T16:55:31Z"
+    "last_attempt_epoch": 1783017592,
+    "last_attempt_iso": "2026-07-02T18:39:52Z",
+    "last_success_epoch": 1783017598,
+    "last_success_iso": "2026-07-02T18:39:58Z"
   },
   "weather": {
     "last_attempt_epoch": 1783011432,
