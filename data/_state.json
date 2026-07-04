@@ -6,26 +6,26 @@
     "last_success_iso": "2026-07-04T12:13:51Z"
   },
   "destatis_vpi": {
-    "last_attempt_epoch": 1783088887,
-    "last_attempt_iso": "2026-07-03T14:28:07Z",
+    "last_attempt_epoch": 1783176278,
+    "last_attempt_iso": "2026-07-04T14:44:38Z",
     "last_error_epoch": 1779784703,
     "last_error_message": "RuntimeError: Destatis auth: BOTH modes failed. header: header-auth status: Wegen planmäßiger Wartungsarbeiten steht GENESIS-Webservices vorübergehend nicht zur Verfügung!; body: Wegen planmäßiger Wartungsarbeiten steht GENESIS-Webservices vorübergehend nicht zur Verfügung! | at File \"/home/runner/work/energie/energie/scripts/fetchers/destatis_vpi.py\", line 191, in _check_login",
-    "last_success_epoch": 1783088908,
-    "last_success_iso": "2026-07-03T14:28:28Z"
+    "last_success_epoch": 1783176299,
+    "last_success_iso": "2026-07-04T14:44:59Z"
   },
   "eia_petroleum": {
-    "last_attempt_epoch": 1783124646,
-    "last_attempt_iso": "2026-07-04T00:24:06Z",
-    "last_success_epoch": 1783124651,
-    "last_success_iso": "2026-07-04T00:24:11Z"
+    "last_attempt_epoch": 1783176305,
+    "last_attempt_iso": "2026-07-04T14:45:05Z",
+    "last_success_epoch": 1783176310,
+    "last_success_iso": "2026-07-04T14:45:10Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1783167029,
-    "last_attempt_iso": "2026-07-04T12:10:29Z",
+    "last_attempt_epoch": 1783176089,
+    "last_attempt_iso": "2026-07-04T14:41:29Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1783167187,
-    "last_success_iso": "2026-07-04T12:13:07Z"
+    "last_success_epoch": 1783176225,
+    "last_success_iso": "2026-07-04T14:43:45Z"
   },
   "energy_futures": {
     "last_attempt_epoch": 1783167254,
@@ -58,24 +58,24 @@
     "last_success_iso": "2026-07-04T10:24:26Z"
   },
   "fred_energy": {
-    "last_attempt_epoch": 1783124641,
-    "last_attempt_iso": "2026-07-04T00:24:01Z",
-    "last_success_epoch": 1783124646,
-    "last_success_iso": "2026-07-04T00:24:06Z"
+    "last_attempt_epoch": 1783176299,
+    "last_attempt_iso": "2026-07-04T14:44:59Z",
+    "last_success_epoch": 1783176305,
+    "last_success_iso": "2026-07-04T14:45:05Z"
   },
   "fuel": {
-    "last_attempt_epoch": 1783124589,
-    "last_attempt_iso": "2026-07-04T00:23:09Z",
+    "last_attempt_epoch": 1783176226,
+    "last_attempt_iso": "2026-07-04T14:43:46Z",
     "last_error_epoch": 1782312643,
     "last_error_message": "RuntimeError: tankerkoenig: no city returned valid E5 average | at File \"/home/runner/work/energie/energie/scripts/fetchers/fuel.py\", line 116, in fetch",
-    "last_success_epoch": 1783124640,
-    "last_success_iso": "2026-07-04T00:24:00Z"
+    "last_success_epoch": 1783176277,
+    "last_success_iso": "2026-07-04T14:44:37Z"
   },
   "fx": {
-    "last_attempt_epoch": 1783124588,
-    "last_attempt_iso": "2026-07-04T00:23:08Z",
-    "last_success_epoch": 1783124589,
-    "last_success_iso": "2026-07-04T00:23:09Z"
+    "last_attempt_epoch": 1783176225,
+    "last_attempt_iso": "2026-07-04T14:43:45Z",
+    "last_success_epoch": 1783176226,
+    "last_success_iso": "2026-07-04T14:43:46Z"
   },
   "gas_storage": {
     "last_attempt_epoch": 1783167187,
@@ -84,24 +84,24 @@
     "last_success_iso": "2026-07-04T12:13:25Z"
   },
   "heating_oil": {
-    "last_attempt_epoch": 1783167231,
-    "last_attempt_iso": "2026-07-04T12:13:51Z",
-    "last_error_epoch": 1783167232,
+    "last_attempt_epoch": 1783176277,
+    "last_attempt_iso": "2026-07-04T14:44:37Z",
+    "last_error_epoch": 1783176278,
     "last_error_message": "RuntimeError: Tecson: could not extract reference price | at File \"/home/runner/work/energie/energie/scripts/fetchers/heating_oil.py\", line 238, in fetch",
     "last_success_epoch": 1782408209,
     "last_success_iso": "2026-06-25T17:23:29Z"
   },
   "news": {
-    "last_attempt_epoch": 1783160666,
-    "last_attempt_iso": "2026-07-04T10:24:26Z",
-    "last_success_epoch": 1783160689,
-    "last_success_iso": "2026-07-04T10:24:49Z"
+    "last_attempt_epoch": 1783176310,
+    "last_attempt_iso": "2026-07-04T14:45:10Z",
+    "last_success_epoch": 1783176333,
+    "last_success_iso": "2026-07-04T14:45:33Z"
   },
   "smard": {
-    "last_attempt_epoch": 1783167023,
-    "last_attempt_iso": "2026-07-04T12:10:23Z",
-    "last_success_epoch": 1783167029,
-    "last_success_iso": "2026-07-04T12:10:29Z"
+    "last_attempt_epoch": 1783176080,
+    "last_attempt_iso": "2026-07-04T14:41:20Z",
+    "last_success_epoch": 1783176089,
+    "last_success_iso": "2026-07-04T14:41:29Z"
   },
   "weather": {
     "last_attempt_epoch": 1783167221,
