@@ -1,9 +1,9 @@
 {
   "commodities": {
-    "last_attempt_epoch": 1783437118,
-    "last_attempt_iso": "2026-07-07T15:11:58Z",
-    "last_success_epoch": 1783437126,
-    "last_success_iso": "2026-07-07T15:12:06Z"
+    "last_attempt_epoch": 1783457656,
+    "last_attempt_iso": "2026-07-07T20:54:16Z",
+    "last_success_epoch": 1783457666,
+    "last_success_iso": "2026-07-07T20:54:26Z"
   },
   "destatis_vpi": {
     "last_attempt_epoch": 1783447668,
@@ -20,12 +20,12 @@
     "last_success_iso": "2026-07-07T15:13:59Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1783447535,
-    "last_attempt_iso": "2026-07-07T18:05:35Z",
+    "last_attempt_epoch": 1783457513,
+    "last_attempt_iso": "2026-07-07T20:51:53Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1783447668,
-    "last_success_iso": "2026-07-07T18:07:48Z"
+    "last_success_epoch": 1783457654,
+    "last_success_iso": "2026-07-07T20:54:14Z"
   },
   "energy_futures": {
     "last_attempt_epoch": 1783437239,
@@ -84,31 +84,31 @@
     "last_success_iso": "2026-07-07T15:10:54Z"
   },
   "heating_oil": {
-    "last_attempt_epoch": 1783447668,
-    "last_attempt_iso": "2026-07-07T18:07:48Z",
-    "last_error_epoch": 1783447668,
+    "last_attempt_epoch": 1783457666,
+    "last_attempt_iso": "2026-07-07T20:54:26Z",
+    "last_error_epoch": 1783457667,
     "last_error_message": "RuntimeError: Tecson: could not extract reference price | at File \"/home/runner/work/energie/energie/scripts/fetchers/heating_oil.py\", line 238, in fetch",
     "last_success_epoch": 1782408209,
     "last_success_iso": "2026-06-25T17:23:29Z"
   },
   "news": {
-    "last_attempt_epoch": 1783447689,
-    "last_attempt_iso": "2026-07-07T18:08:09Z",
-    "last_success_epoch": 1783447712,
-    "last_success_iso": "2026-07-07T18:08:32Z"
+    "last_attempt_epoch": 1783457667,
+    "last_attempt_iso": "2026-07-07T20:54:27Z",
+    "last_success_epoch": 1783457691,
+    "last_success_iso": "2026-07-07T20:54:51Z"
   },
   "smard": {
-    "last_attempt_epoch": 1783447529,
-    "last_attempt_iso": "2026-07-07T18:05:29Z",
-    "last_success_epoch": 1783447535,
-    "last_success_iso": "2026-07-07T18:05:35Z"
+    "last_attempt_epoch": 1783457505,
+    "last_attempt_iso": "2026-07-07T20:51:45Z",
+    "last_success_epoch": 1783457513,
+    "last_success_iso": "2026-07-07T20:51:53Z"
   },
   "weather": {
-    "last_attempt_epoch": 1783437116,
-    "last_attempt_iso": "2026-07-07T15:11:56Z",
+    "last_attempt_epoch": 1783457654,
+    "last_attempt_iso": "2026-07-07T20:54:14Z",
     "last_error_epoch": 1783124579,
     "last_error_message": "RuntimeError: Open-Meteo: zero cities returned data | at File \"/home/runner/work/energie/energie/scripts/fetchers/weather.py\", line 45, in fetch",
-    "last_success_epoch": 1783437118,
-    "last_success_iso": "2026-07-07T15:11:58Z"
+    "last_success_epoch": 1783457656,
+    "last_success_iso": "2026-07-07T20:54:16Z"
   }
 }
