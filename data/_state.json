@@ -6,12 +6,12 @@
     "last_success_iso": "2026-07-10T19:47:35Z"
   },
   "destatis_vpi": {
-    "last_attempt_epoch": 1783630524,
-    "last_attempt_iso": "2026-07-09T20:55:24Z",
+    "last_attempt_epoch": 1783718052,
+    "last_attempt_iso": "2026-07-10T21:14:12Z",
     "last_error_epoch": 1779784703,
     "last_error_message": "RuntimeError: Destatis auth: BOTH modes failed. header: header-auth status: Wegen planmäßiger Wartungsarbeiten steht GENESIS-Webservices vorübergehend nicht zur Verfügung!; body: Wegen planmäßiger Wartungsarbeiten steht GENESIS-Webservices vorübergehend nicht zur Verfügung! | at File \"/home/runner/work/energie/energie/scripts/fetchers/destatis_vpi.py\", line 191, in _check_login",
-    "last_success_epoch": 1783630530,
-    "last_success_iso": "2026-07-09T20:55:30Z"
+    "last_success_epoch": 1783718073,
+    "last_success_iso": "2026-07-10T21:14:33Z"
   },
   "eia_petroleum": {
     "last_attempt_epoch": 1783685587,
@@ -20,12 +20,12 @@
     "last_success_iso": "2026-07-10T12:13:12Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1783712584,
-    "last_attempt_iso": "2026-07-10T19:43:04Z",
+    "last_attempt_epoch": 1783717916,
+    "last_attempt_iso": "2026-07-10T21:11:56Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1783712747,
-    "last_success_iso": "2026-07-10T19:45:47Z"
+    "last_success_epoch": 1783718051,
+    "last_success_iso": "2026-07-10T21:14:11Z"
   },
   "energy_futures": {
     "last_attempt_epoch": 1783712877,
@@ -84,9 +84,9 @@
     "last_success_iso": "2026-07-10T19:46:04Z"
   },
   "heating_oil": {
-    "last_attempt_epoch": 1783712855,
-    "last_attempt_iso": "2026-07-10T19:47:35Z",
-    "last_error_epoch": 1783712856,
+    "last_attempt_epoch": 1783718051,
+    "last_attempt_iso": "2026-07-10T21:14:11Z",
+    "last_error_epoch": 1783718052,
     "last_error_message": "RuntimeError: Tecson: could not extract reference price | at File \"/home/runner/work/energie/energie/scripts/fetchers/heating_oil.py\", line 238, in fetch",
     "last_success_epoch": 1782408209,
     "last_success_iso": "2026-06-25T17:23:29Z"
@@ -98,10 +98,10 @@
     "last_success_iso": "2026-07-10T19:50:14Z"
   },
   "smard": {
-    "last_attempt_epoch": 1783712577,
-    "last_attempt_iso": "2026-07-10T19:42:57Z",
-    "last_success_epoch": 1783712584,
-    "last_success_iso": "2026-07-10T19:43:04Z"
+    "last_attempt_epoch": 1783717909,
+    "last_attempt_iso": "2026-07-10T21:11:49Z",
+    "last_success_epoch": 1783717916,
+    "last_success_iso": "2026-07-10T21:11:56Z"
   },
   "weather": {
     "last_attempt_epoch": 1783712844,
