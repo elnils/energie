@@ -20,12 +20,12 @@
     "last_success_iso": "2026-07-11T17:09:45Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1783797203,
-    "last_attempt_iso": "2026-07-11T19:13:23Z",
+    "last_attempt_epoch": 1783803493,
+    "last_attempt_iso": "2026-07-11T20:58:13Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1783797339,
-    "last_success_iso": "2026-07-11T19:15:39Z"
+    "last_success_epoch": 1783803655,
+    "last_success_iso": "2026-07-11T21:00:55Z"
   },
   "energy_futures": {
     "last_attempt_epoch": 1783789785,
@@ -50,12 +50,12 @@
     "last_success_iso": "2026-07-11T17:08:15Z"
   },
   "eurostat_oil": {
-    "last_attempt_epoch": 1783712886,
-    "last_attempt_iso": "2026-07-10T19:48:06Z",
+    "last_attempt_epoch": 1783803656,
+    "last_attempt_iso": "2026-07-11T21:00:56Z",
     "last_error_epoch": 1779176945,
     "last_error_message": "ValueError: fetcher 'eurostat_oil' missing expected keys {'jet_stocks'}; got {'gas_imports', 'electricity_imports', 'oil_motor_gasoline', 'oil_jet_fuel_supply', 'oil_crude_production', 'oil_jet_fuel_exports', 'electricity_wind', 'electricity_solar', 'electricity_generation', 'oil_diesel_stocks', 'gas_consumption', 'oil_crude_imports', 'electricity_nuclear', 'oil_jet_fuel_stocks', 'gas_production', 'oil_jet_fuel_imports', 'oil_heating_oil_stocks', 'oil_jet_fuel_consumption', 'gas_stocks', 'gas_ex",
-    "last_success_epoch": 1783712987,
-    "last_success_iso": "2026-07-10T19:49:47Z"
+    "last_success_epoch": 1783803865,
+    "last_success_iso": "2026-07-11T21:04:25Z"
   },
   "fred_energy": {
     "last_attempt_epoch": 1783789772,
@@ -84,9 +84,9 @@
     "last_success_iso": "2026-07-11T17:08:02Z"
   },
   "heating_oil": {
-    "last_attempt_epoch": 1783797349,
-    "last_attempt_iso": "2026-07-11T19:15:49Z",
-    "last_error_epoch": 1783797350,
+    "last_attempt_epoch": 1783803655,
+    "last_attempt_iso": "2026-07-11T21:00:55Z",
+    "last_error_epoch": 1783803656,
     "last_error_message": "RuntimeError: Tecson: could not extract reference price | at File \"/home/runner/work/energie/energie/scripts/fetchers/heating_oil.py\", line 238, in fetch",
     "last_success_epoch": 1782408209,
     "last_success_iso": "2026-06-25T17:23:29Z"
@@ -98,10 +98,10 @@
     "last_success_iso": "2026-07-11T19:16:11Z"
   },
   "smard": {
-    "last_attempt_epoch": 1783797197,
-    "last_attempt_iso": "2026-07-11T19:13:17Z",
-    "last_success_epoch": 1783797203,
-    "last_success_iso": "2026-07-11T19:13:23Z"
+    "last_attempt_epoch": 1783803486,
+    "last_attempt_iso": "2026-07-11T20:58:06Z",
+    "last_success_epoch": 1783803493,
+    "last_success_iso": "2026-07-11T20:58:13Z"
   },
   "weather": {
     "last_attempt_epoch": 1783797339,
