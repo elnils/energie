@@ -6,12 +6,12 @@
     "last_success_iso": "2026-07-12T19:17:40Z"
   },
   "destatis_vpi": {
-    "last_attempt_epoch": 1783807134,
-    "last_attempt_iso": "2026-07-11T21:58:54Z",
+    "last_attempt_epoch": 1783893802,
+    "last_attempt_iso": "2026-07-12T22:03:22Z",
     "last_error_epoch": 1779784703,
     "last_error_message": "RuntimeError: Destatis auth: BOTH modes failed. header: header-auth status: Wegen planmäßiger Wartungsarbeiten steht GENESIS-Webservices vorübergehend nicht zur Verfügung!; body: Wegen planmäßiger Wartungsarbeiten steht GENESIS-Webservices vorübergehend nicht zur Verfügung! | at File \"/home/runner/work/energie/energie/scripts/fetchers/destatis_vpi.py\", line 191, in _check_login",
-    "last_success_epoch": 1783807154,
-    "last_success_iso": "2026-07-11T21:59:14Z"
+    "last_success_epoch": 1783893823,
+    "last_success_iso": "2026-07-12T22:03:43Z"
   },
   "eia_petroleum": {
     "last_attempt_epoch": 1783883942,
@@ -20,12 +20,12 @@
     "last_success_iso": "2026-07-12T19:19:07Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1783889898,
-    "last_attempt_iso": "2026-07-12T20:58:18Z",
+    "last_attempt_epoch": 1783893633,
+    "last_attempt_iso": "2026-07-12T22:00:33Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1783890028,
-    "last_success_iso": "2026-07-12T21:00:28Z"
+    "last_success_epoch": 1783893801,
+    "last_success_iso": "2026-07-12T22:03:21Z"
   },
   "energy_futures": {
     "last_attempt_epoch": 1783883947,
@@ -50,12 +50,12 @@
     "last_success_iso": "2026-07-12T19:17:29Z"
   },
   "eurostat_oil": {
-    "last_attempt_epoch": 1783803656,
-    "last_attempt_iso": "2026-07-11T21:00:56Z",
+    "last_attempt_epoch": 1783893823,
+    "last_attempt_iso": "2026-07-12T22:03:43Z",
     "last_error_epoch": 1779176945,
     "last_error_message": "ValueError: fetcher 'eurostat_oil' missing expected keys {'jet_stocks'}; got {'gas_imports', 'electricity_imports', 'oil_motor_gasoline', 'oil_jet_fuel_supply', 'oil_crude_production', 'oil_jet_fuel_exports', 'electricity_wind', 'electricity_solar', 'electricity_generation', 'oil_diesel_stocks', 'gas_consumption', 'oil_crude_imports', 'electricity_nuclear', 'oil_jet_fuel_stocks', 'gas_production', 'oil_jet_fuel_imports', 'oil_heating_oil_stocks', 'oil_jet_fuel_consumption', 'gas_stocks', 'gas_ex",
-    "last_success_epoch": 1783803865,
-    "last_success_iso": "2026-07-11T21:04:25Z"
+    "last_success_epoch": 1783893954,
+    "last_success_iso": "2026-07-12T22:05:54Z"
   },
   "fred_energy": {
     "last_attempt_epoch": 1783883934,
@@ -84,24 +84,24 @@
     "last_success_iso": "2026-07-12T19:17:14Z"
   },
   "heating_oil": {
-    "last_attempt_epoch": 1783890028,
-    "last_attempt_iso": "2026-07-12T21:00:28Z",
-    "last_error_epoch": 1783890029,
+    "last_attempt_epoch": 1783893801,
+    "last_attempt_iso": "2026-07-12T22:03:21Z",
+    "last_error_epoch": 1783893802,
     "last_error_message": "RuntimeError: Tecson: could not extract reference price | at File \"/home/runner/work/energie/energie/scripts/fetchers/heating_oil.py\", line 238, in fetch",
     "last_success_epoch": 1782408209,
     "last_success_iso": "2026-06-25T17:23:29Z"
   },
   "news": {
-    "last_attempt_epoch": 1783883956,
-    "last_attempt_iso": "2026-07-12T19:19:16Z",
-    "last_success_epoch": 1783883978,
-    "last_success_iso": "2026-07-12T19:19:38Z"
+    "last_attempt_epoch": 1783893954,
+    "last_attempt_iso": "2026-07-12T22:05:54Z",
+    "last_success_epoch": 1783893977,
+    "last_success_iso": "2026-07-12T22:06:17Z"
   },
   "smard": {
-    "last_attempt_epoch": 1783889892,
-    "last_attempt_iso": "2026-07-12T20:58:12Z",
-    "last_success_epoch": 1783889898,
-    "last_success_iso": "2026-07-12T20:58:18Z"
+    "last_attempt_epoch": 1783893627,
+    "last_attempt_iso": "2026-07-12T22:00:27Z",
+    "last_success_epoch": 1783893633,
+    "last_success_iso": "2026-07-12T22:00:33Z"
   },
   "weather": {
     "last_attempt_epoch": 1783883849,
