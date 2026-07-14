@@ -20,34 +20,34 @@
     "last_success_iso": "2026-07-14T08:26:29Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1784017165,
-    "last_attempt_iso": "2026-07-14T08:19:25Z",
+    "last_attempt_epoch": 1784026326,
+    "last_attempt_iso": "2026-07-14T10:52:06Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1784017324,
-    "last_success_iso": "2026-07-14T08:22:04Z"
+    "last_success_epoch": 1784026516,
+    "last_success_iso": "2026-07-14T10:55:16Z"
   },
   "energy_futures": {
-    "last_attempt_epoch": 1783998205,
-    "last_attempt_iso": "2026-07-14T03:03:25Z",
+    "last_attempt_epoch": 1784026594,
+    "last_attempt_iso": "2026-07-14T10:56:34Z",
     "last_error_epoch": 1780549132,
     "last_error_message": "RuntimeError: energy_futures: ALL external APIs failed. Errors: eia_steo/brent (BREPUUS): source exceeded wallclock budget; eia_steo/wti (WTIPUUS): HTTPSConnectionPool(host='api.eia.gov', port=443): Max retries exceeded with url: /v2/steo/data/?api_key=irVUjduslyh4dIFImK49hHGQtvzZgUergFPQDNQ9&frequency=monthly&data%5B0%5D=value&facets%5BseriesId%5D%5B%5D=WTIPUUS&sort%5B0%5D%5Bcolumn%5D=period&sort%5B0%5D%5Bdirection%5D=asc&offset=0&length=5000 (Caused by ResponseError('too many 504 error respons",
-    "last_success_epoch": 1783998214,
-    "last_success_iso": "2026-07-14T03:03:34Z"
+    "last_success_epoch": 1784026606,
+    "last_success_iso": "2026-07-14T10:56:46Z"
   },
   "entsoe": {
-    "last_attempt_epoch": 1783998021,
-    "last_attempt_iso": "2026-07-14T03:00:21Z",
+    "last_attempt_epoch": 1784026558,
+    "last_attempt_iso": "2026-07-14T10:55:58Z",
     "last_error_epoch": 1778568129,
     "last_error_message": "ValueError: fetcher entsoe did not return dict with \"data\" key",
-    "last_success_epoch": 1783998205,
-    "last_success_iso": "2026-07-14T03:03:25Z"
+    "last_success_epoch": 1784026594,
+    "last_success_iso": "2026-07-14T10:56:34Z"
   },
   "entsog": {
-    "last_attempt_epoch": 1783997987,
-    "last_attempt_iso": "2026-07-14T02:59:47Z",
-    "last_success_epoch": 1783998008,
-    "last_success_iso": "2026-07-14T03:00:08Z"
+    "last_attempt_epoch": 1784026538,
+    "last_attempt_iso": "2026-07-14T10:55:38Z",
+    "last_success_epoch": 1784026558,
+    "last_success_iso": "2026-07-14T10:55:58Z"
   },
   "eurostat_oil": {
     "last_attempt_epoch": 1783983826,
@@ -78,10 +78,10 @@
     "last_success_iso": "2026-07-14T08:22:18Z"
   },
   "gas_storage": {
-    "last_attempt_epoch": 1783997972,
-    "last_attempt_iso": "2026-07-14T02:59:32Z",
-    "last_success_epoch": 1783997987,
-    "last_success_iso": "2026-07-14T02:59:47Z"
+    "last_attempt_epoch": 1784026516,
+    "last_attempt_iso": "2026-07-14T10:55:16Z",
+    "last_success_epoch": 1784026538,
+    "last_success_iso": "2026-07-14T10:55:38Z"
   },
   "heating_oil": {
     "last_attempt_epoch": 1784017389,
@@ -92,16 +92,16 @@
     "last_success_iso": "2026-07-14T08:26:19Z"
   },
   "news": {
-    "last_attempt_epoch": 1784017589,
-    "last_attempt_iso": "2026-07-14T08:26:29Z",
-    "last_success_epoch": 1784017613,
-    "last_success_iso": "2026-07-14T08:26:53Z"
+    "last_attempt_epoch": 1784026606,
+    "last_attempt_iso": "2026-07-14T10:56:46Z",
+    "last_success_epoch": 1784026627,
+    "last_success_iso": "2026-07-14T10:57:07Z"
   },
   "smard": {
-    "last_attempt_epoch": 1784017157,
-    "last_attempt_iso": "2026-07-14T08:19:17Z",
-    "last_success_epoch": 1784017165,
-    "last_success_iso": "2026-07-14T08:19:25Z"
+    "last_attempt_epoch": 1784026318,
+    "last_attempt_iso": "2026-07-14T10:51:58Z",
+    "last_success_epoch": 1784026326,
+    "last_success_iso": "2026-07-14T10:52:06Z"
   },
   "weather": {
     "last_attempt_epoch": 1784017324,
