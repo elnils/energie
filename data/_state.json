@@ -20,12 +20,12 @@
     "last_success_iso": "2026-07-16T03:22:48Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1784183086,
-    "last_attempt_iso": "2026-07-16T06:24:46Z",
+    "last_attempt_epoch": 1784193612,
+    "last_attempt_iso": "2026-07-16T09:20:12Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1784183283,
-    "last_success_iso": "2026-07-16T06:28:03Z"
+    "last_success_epoch": 1784193713,
+    "last_success_iso": "2026-07-16T09:21:53Z"
   },
   "energy_futures": {
     "last_attempt_epoch": 1784172168,
@@ -44,10 +44,10 @@
     "last_success_iso": "2026-07-16T03:22:36Z"
   },
   "entsog": {
-    "last_attempt_epoch": 1784172027,
-    "last_attempt_iso": "2026-07-16T03:20:27Z",
-    "last_success_epoch": 1784172045,
-    "last_success_iso": "2026-07-16T03:20:45Z"
+    "last_attempt_epoch": 1784193735,
+    "last_attempt_iso": "2026-07-16T09:22:15Z",
+    "last_success_epoch": 1784193750,
+    "last_success_iso": "2026-07-16T09:22:30Z"
   },
   "eurostat_oil": {
     "last_attempt_epoch": 1784172179,
@@ -78,10 +78,10 @@
     "last_success_iso": "2026-07-16T03:20:59Z"
   },
   "gas_storage": {
-    "last_attempt_epoch": 1784172009,
-    "last_attempt_iso": "2026-07-16T03:20:09Z",
-    "last_success_epoch": 1784172027,
-    "last_success_iso": "2026-07-16T03:20:27Z"
+    "last_attempt_epoch": 1784193713,
+    "last_attempt_iso": "2026-07-16T09:21:53Z",
+    "last_success_epoch": 1784193735,
+    "last_success_iso": "2026-07-16T09:22:15Z"
   },
   "heating_oil": {
     "last_attempt_epoch": 1784172111,
@@ -92,16 +92,16 @@
     "last_success_iso": "2026-07-16T03:22:00Z"
   },
   "news": {
-    "last_attempt_epoch": 1784183293,
-    "last_attempt_iso": "2026-07-16T06:28:13Z",
-    "last_success_epoch": 1784183314,
-    "last_success_iso": "2026-07-16T06:28:34Z"
+    "last_attempt_epoch": 1784193750,
+    "last_attempt_iso": "2026-07-16T09:22:30Z",
+    "last_success_epoch": 1784193771,
+    "last_success_iso": "2026-07-16T09:22:51Z"
   },
   "smard": {
-    "last_attempt_epoch": 1784183080,
-    "last_attempt_iso": "2026-07-16T06:24:40Z",
-    "last_success_epoch": 1784183086,
-    "last_success_iso": "2026-07-16T06:24:46Z"
+    "last_attempt_epoch": 1784193606,
+    "last_attempt_iso": "2026-07-16T09:20:06Z",
+    "last_success_epoch": 1784193612,
+    "last_success_iso": "2026-07-16T09:20:12Z"
   },
   "weather": {
     "last_attempt_epoch": 1784183283,
