@@ -20,12 +20,12 @@
     "last_success_iso": "2026-07-17T20:14:26Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1784319027,
-    "last_attempt_iso": "2026-07-17T20:10:27Z",
+    "last_attempt_epoch": 1784325534,
+    "last_attempt_iso": "2026-07-17T21:58:54Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1784319156,
-    "last_success_iso": "2026-07-17T20:12:36Z"
+    "last_success_epoch": 1784325748,
+    "last_success_iso": "2026-07-17T22:02:28Z"
   },
   "energy_futures": {
     "last_attempt_epoch": 1784319266,
@@ -44,10 +44,10 @@
     "last_success_iso": "2026-07-17T20:14:15Z"
   },
   "entsog": {
-    "last_attempt_epoch": 1784299856,
-    "last_attempt_iso": "2026-07-17T14:50:56Z",
-    "last_success_epoch": 1784299873,
-    "last_success_iso": "2026-07-17T14:51:13Z"
+    "last_attempt_epoch": 1784325774,
+    "last_attempt_iso": "2026-07-17T22:02:54Z",
+    "last_success_epoch": 1784325795,
+    "last_success_iso": "2026-07-17T22:03:15Z"
   },
   "eurostat_oil": {
     "last_attempt_epoch": 1784261822,
@@ -78,10 +78,10 @@
     "last_success_iso": "2026-07-17T20:12:48Z"
   },
   "gas_storage": {
-    "last_attempt_epoch": 1784299830,
-    "last_attempt_iso": "2026-07-17T14:50:30Z",
-    "last_success_epoch": 1784299856,
-    "last_success_iso": "2026-07-17T14:50:56Z"
+    "last_attempt_epoch": 1784325748,
+    "last_attempt_iso": "2026-07-17T22:02:28Z",
+    "last_success_epoch": 1784325774,
+    "last_success_iso": "2026-07-17T22:02:54Z"
   },
   "heating_oil": {
     "last_attempt_epoch": 1784319218,
@@ -98,10 +98,10 @@
     "last_success_iso": "2026-07-17T20:14:58Z"
   },
   "smard": {
-    "last_attempt_epoch": 1784319021,
-    "last_attempt_iso": "2026-07-17T20:10:21Z",
-    "last_success_epoch": 1784319027,
-    "last_success_iso": "2026-07-17T20:10:27Z"
+    "last_attempt_epoch": 1784325528,
+    "last_attempt_iso": "2026-07-17T21:58:48Z",
+    "last_success_epoch": 1784325534,
+    "last_success_iso": "2026-07-17T21:58:54Z"
   },
   "weather": {
     "last_attempt_epoch": 1784319156,
