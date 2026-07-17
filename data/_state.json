@@ -92,16 +92,16 @@
     "last_success_iso": "2026-07-17T20:13:44Z"
   },
   "news": {
-    "last_attempt_epoch": 1784319276,
-    "last_attempt_iso": "2026-07-17T20:14:36Z",
-    "last_success_epoch": 1784319298,
-    "last_success_iso": "2026-07-17T20:14:58Z"
+    "last_attempt_epoch": 1784329196,
+    "last_attempt_iso": "2026-07-17T22:59:56Z",
+    "last_success_epoch": 1784329218,
+    "last_success_iso": "2026-07-17T23:00:18Z"
   },
   "smard": {
-    "last_attempt_epoch": 1784325528,
-    "last_attempt_iso": "2026-07-17T21:58:48Z",
-    "last_success_epoch": 1784325534,
-    "last_success_iso": "2026-07-17T21:58:54Z"
+    "last_attempt_epoch": 1784329191,
+    "last_attempt_iso": "2026-07-17T22:59:51Z",
+    "last_success_epoch": 1784329196,
+    "last_success_iso": "2026-07-17T22:59:56Z"
   },
   "weather": {
     "last_attempt_epoch": 1784319156,
