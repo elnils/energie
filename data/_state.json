@@ -1,9 +1,9 @@
 {
   "commodities": {
-    "last_attempt_epoch": 1784459770,
-    "last_attempt_iso": "2026-07-19T11:16:10Z",
-    "last_success_epoch": 1784459781,
-    "last_success_iso": "2026-07-19T11:16:21Z"
+    "last_attempt_epoch": 1784473508,
+    "last_attempt_iso": "2026-07-19T15:05:08Z",
+    "last_success_epoch": 1784473516,
+    "last_success_iso": "2026-07-19T15:05:16Z"
   },
   "destatis_vpi": {
     "last_attempt_epoch": 1784452238,
@@ -20,12 +20,12 @@
     "last_success_iso": "2026-07-19T11:18:08Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1784468275,
-    "last_attempt_iso": "2026-07-19T13:37:55Z",
+    "last_attempt_epoch": 1784473344,
+    "last_attempt_iso": "2026-07-19T15:02:24Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1784468466,
-    "last_success_iso": "2026-07-19T13:41:06Z"
+    "last_success_epoch": 1784473506,
+    "last_success_iso": "2026-07-19T15:05:06Z"
   },
   "energy_futures": {
     "last_attempt_epoch": 1784459888,
@@ -98,17 +98,17 @@
     "last_success_iso": "2026-07-19T13:41:28Z"
   },
   "smard": {
-    "last_attempt_epoch": 1784468269,
-    "last_attempt_iso": "2026-07-19T13:37:49Z",
-    "last_success_epoch": 1784468275,
-    "last_success_iso": "2026-07-19T13:37:55Z"
+    "last_attempt_epoch": 1784473338,
+    "last_attempt_iso": "2026-07-19T15:02:18Z",
+    "last_success_epoch": 1784473344,
+    "last_success_iso": "2026-07-19T15:02:24Z"
   },
   "weather": {
-    "last_attempt_epoch": 1784459767,
-    "last_attempt_iso": "2026-07-19T11:16:07Z",
+    "last_attempt_epoch": 1784473506,
+    "last_attempt_iso": "2026-07-19T15:05:06Z",
     "last_error_epoch": 1783124579,
     "last_error_message": "RuntimeError: Open-Meteo: zero cities returned data | at File \"/home/runner/work/energie/energie/scripts/fetchers/weather.py\", line 45, in fetch",
-    "last_success_epoch": 1784459770,
-    "last_success_iso": "2026-07-19T11:16:10Z"
+    "last_success_epoch": 1784473508,
+    "last_success_iso": "2026-07-19T15:05:08Z"
   }
 }
