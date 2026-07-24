@@ -1,17 +1,17 @@
 {
   "commodities": {
-    "last_attempt_epoch": 1784907685,
-    "last_attempt_iso": "2026-07-24T15:41:25Z",
-    "last_success_epoch": 1784907694,
-    "last_success_iso": "2026-07-24T15:41:34Z"
+    "last_attempt_epoch": 1784922061,
+    "last_attempt_iso": "2026-07-24T19:41:01Z",
+    "last_success_epoch": 1784922070,
+    "last_success_iso": "2026-07-24T19:41:10Z"
   },
   "destatis_vpi": {
-    "last_attempt_epoch": 1784835446,
-    "last_attempt_iso": "2026-07-23T19:37:26Z",
+    "last_attempt_epoch": 1784922070,
+    "last_attempt_iso": "2026-07-24T19:41:10Z",
     "last_error_epoch": 1779784703,
     "last_error_message": "RuntimeError: Destatis auth: BOTH modes failed. header: header-auth status: Wegen planmäßiger Wartungsarbeiten steht GENESIS-Webservices vorübergehend nicht zur Verfügung!; body: Wegen planmäßiger Wartungsarbeiten steht GENESIS-Webservices vorübergehend nicht zur Verfügung! | at File \"/home/runner/work/energie/energie/scripts/fetchers/destatis_vpi.py\", line 191, in _check_login",
-    "last_success_epoch": 1784835466,
-    "last_success_iso": "2026-07-23T19:37:46Z"
+    "last_success_epoch": 1784922091,
+    "last_success_iso": "2026-07-24T19:41:31Z"
   },
   "eia_petroleum": {
     "last_attempt_epoch": 1784893785,
@@ -20,12 +20,12 @@
     "last_success_iso": "2026-07-24T11:49:50Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1784915000,
-    "last_attempt_iso": "2026-07-24T17:43:20Z",
+    "last_attempt_epoch": 1784921923,
+    "last_attempt_iso": "2026-07-24T19:38:43Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1784915162,
-    "last_success_iso": "2026-07-24T17:46:02Z"
+    "last_success_epoch": 1784922060,
+    "last_success_iso": "2026-07-24T19:41:00Z"
   },
   "energy_futures": {
     "last_attempt_epoch": 1784907714,
@@ -50,12 +50,12 @@
     "last_success_iso": "2026-07-24T15:41:22Z"
   },
   "eurostat_oil": {
-    "last_attempt_epoch": 1784835495,
-    "last_attempt_iso": "2026-07-23T19:38:15Z",
+    "last_attempt_epoch": 1784922091,
+    "last_attempt_iso": "2026-07-24T19:41:31Z",
     "last_error_epoch": 1779176945,
     "last_error_message": "ValueError: fetcher 'eurostat_oil' missing expected keys {'jet_stocks'}; got {'gas_imports', 'electricity_imports', 'oil_motor_gasoline', 'oil_jet_fuel_supply', 'oil_crude_production', 'oil_jet_fuel_exports', 'electricity_wind', 'electricity_solar', 'electricity_generation', 'oil_diesel_stocks', 'gas_consumption', 'oil_crude_imports', 'electricity_nuclear', 'oil_jet_fuel_stocks', 'gas_production', 'oil_jet_fuel_imports', 'oil_heating_oil_stocks', 'oil_jet_fuel_consumption', 'gas_stocks', 'gas_ex",
-    "last_success_epoch": 1784835599,
-    "last_success_iso": "2026-07-23T19:39:59Z"
+    "last_success_epoch": 1784922277,
+    "last_success_iso": "2026-07-24T19:44:37Z"
   },
   "fred_energy": {
     "last_attempt_epoch": 1784893779,
@@ -98,19 +98,19 @@
     "last_success_iso": "2026-07-24T17:46:25Z"
   },
   "smard": {
-    "last_attempt_epoch": 1784914994,
-    "last_attempt_iso": "2026-07-24T17:43:14Z",
+    "last_attempt_epoch": 1784921918,
+    "last_attempt_iso": "2026-07-24T19:38:38Z",
     "last_error_epoch": 1784702205,
     "last_error_message": "RuntimeError: SMARD: all filters returned empty | at File \"/home/runner/work/energie/energie/scripts/fetchers/smard.py\", line 109, in fetch",
-    "last_success_epoch": 1784915000,
-    "last_success_iso": "2026-07-24T17:43:20Z"
+    "last_success_epoch": 1784921923,
+    "last_success_iso": "2026-07-24T19:38:43Z"
   },
   "weather": {
-    "last_attempt_epoch": 1784907682,
-    "last_attempt_iso": "2026-07-24T15:41:22Z",
+    "last_attempt_epoch": 1784922060,
+    "last_attempt_iso": "2026-07-24T19:41:00Z",
     "last_error_epoch": 1783124579,
     "last_error_message": "RuntimeError: Open-Meteo: zero cities returned data | at File \"/home/runner/work/energie/energie/scripts/fetchers/weather.py\", line 45, in fetch",
-    "last_success_epoch": 1784907685,
-    "last_success_iso": "2026-07-24T15:41:25Z"
+    "last_success_epoch": 1784922061,
+    "last_success_iso": "2026-07-24T19:41:01Z"
   }
 }
