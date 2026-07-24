@@ -20,34 +20,34 @@
     "last_success_iso": "2026-07-23T23:06:14Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1784874715,
-    "last_attempt_iso": "2026-07-24T06:31:55Z",
+    "last_attempt_epoch": 1784885111,
+    "last_attempt_iso": "2026-07-24T09:25:11Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1784874903,
-    "last_success_iso": "2026-07-24T06:35:03Z"
+    "last_success_epoch": 1784885298,
+    "last_success_iso": "2026-07-24T09:28:18Z"
   },
   "energy_futures": {
-    "last_attempt_epoch": 1784863626,
-    "last_attempt_iso": "2026-07-24T03:27:06Z",
+    "last_attempt_epoch": 1784885367,
+    "last_attempt_iso": "2026-07-24T09:29:27Z",
     "last_error_epoch": 1780549132,
     "last_error_message": "RuntimeError: energy_futures: ALL external APIs failed. Errors: eia_steo/brent (BREPUUS): source exceeded wallclock budget; eia_steo/wti (WTIPUUS): HTTPSConnectionPool(host='api.eia.gov', port=443): Max retries exceeded with url: /v2/steo/data/?api_key=irVUjduslyh4dIFImK49hHGQtvzZgUergFPQDNQ9&frequency=monthly&data%5B0%5D=value&facets%5BseriesId%5D%5B%5D=WTIPUUS&sort%5B0%5D%5Bcolumn%5D=period&sort%5B0%5D%5Bdirection%5D=asc&offset=0&length=5000 (Caused by ResponseError('too many 504 error respons",
-    "last_success_epoch": 1784863636,
-    "last_success_iso": "2026-07-24T03:27:16Z"
+    "last_success_epoch": 1784885379,
+    "last_success_iso": "2026-07-24T09:29:39Z"
   },
   "entsoe": {
-    "last_attempt_epoch": 1784863607,
-    "last_attempt_iso": "2026-07-24T03:26:47Z",
+    "last_attempt_epoch": 1784885331,
+    "last_attempt_iso": "2026-07-24T09:28:51Z",
     "last_error_epoch": 1778568129,
     "last_error_message": "ValueError: fetcher entsoe did not return dict with \"data\" key",
-    "last_success_epoch": 1784863626,
-    "last_success_iso": "2026-07-24T03:27:06Z"
+    "last_success_epoch": 1784885367,
+    "last_success_iso": "2026-07-24T09:29:27Z"
   },
   "entsog": {
-    "last_attempt_epoch": 1784863577,
-    "last_attempt_iso": "2026-07-24T03:26:17Z",
-    "last_success_epoch": 1784863594,
-    "last_success_iso": "2026-07-24T03:26:34Z"
+    "last_attempt_epoch": 1784885315,
+    "last_attempt_iso": "2026-07-24T09:28:35Z",
+    "last_success_epoch": 1784885331,
+    "last_success_iso": "2026-07-24T09:28:51Z"
   },
   "eurostat_oil": {
     "last_attempt_epoch": 1784835495,
@@ -78,10 +78,10 @@
     "last_success_iso": "2026-07-23T23:04:53Z"
   },
   "gas_storage": {
-    "last_attempt_epoch": 1784863532,
-    "last_attempt_iso": "2026-07-24T03:25:32Z",
-    "last_success_epoch": 1784863577,
-    "last_success_iso": "2026-07-24T03:26:17Z"
+    "last_attempt_epoch": 1784885298,
+    "last_attempt_iso": "2026-07-24T09:28:18Z",
+    "last_success_epoch": 1784885315,
+    "last_success_iso": "2026-07-24T09:28:35Z"
   },
   "heating_oil": {
     "last_attempt_epoch": 1784847953,
@@ -92,18 +92,18 @@
     "last_success_iso": "2026-07-23T23:06:03Z"
   },
   "news": {
-    "last_attempt_epoch": 1784874914,
-    "last_attempt_iso": "2026-07-24T06:35:14Z",
-    "last_success_epoch": 1784874935,
-    "last_success_iso": "2026-07-24T06:35:35Z"
+    "last_attempt_epoch": 1784885379,
+    "last_attempt_iso": "2026-07-24T09:29:39Z",
+    "last_success_epoch": 1784885400,
+    "last_success_iso": "2026-07-24T09:30:00Z"
   },
   "smard": {
-    "last_attempt_epoch": 1784874708,
-    "last_attempt_iso": "2026-07-24T06:31:48Z",
+    "last_attempt_epoch": 1784885105,
+    "last_attempt_iso": "2026-07-24T09:25:05Z",
     "last_error_epoch": 1784702205,
     "last_error_message": "RuntimeError: SMARD: all filters returned empty | at File \"/home/runner/work/energie/energie/scripts/fetchers/smard.py\", line 109, in fetch",
-    "last_success_epoch": 1784874715,
-    "last_success_iso": "2026-07-24T06:31:55Z"
+    "last_success_epoch": 1784885111,
+    "last_success_iso": "2026-07-24T09:25:11Z"
   },
   "weather": {
     "last_attempt_epoch": 1784874903,
