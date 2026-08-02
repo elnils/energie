@@ -6,12 +6,12 @@
     "last_success_iso": "2026-08-02T11:24:12Z"
   },
   "destatis_vpi": {
-    "last_attempt_epoch": 1785586138,
-    "last_attempt_iso": "2026-08-01T12:08:58Z",
+    "last_attempt_epoch": 1785678310,
+    "last_attempt_iso": "2026-08-02T13:45:10Z",
     "last_error_epoch": 1785484894,
     "last_error_message": "RuntimeError: Destatis auth: BOTH modes failed. header: header-auth exception: source exceeded wallclock budget; body: HTTPSConnectionPool(host='genesis.destatis.de', port=443): Max retries exceeded with url: /genesisWS/rest/2020/helloworld/logincheck (Caused by ResponseError('too many 503 error responses')) | at File \"/home/runner/work/energie/energie/scripts/fetchers/destatis_vpi.py\", line 199, in _check_login",
-    "last_success_epoch": 1785586200,
-    "last_success_iso": "2026-08-01T12:10:00Z"
+    "last_success_epoch": 1785678464,
+    "last_success_iso": "2026-08-02T13:47:44Z"
   },
   "eia_petroleum": {
     "last_attempt_epoch": 1785641853,
@@ -22,12 +22,12 @@
     "last_success_iso": "2026-08-02T03:37:39Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1785669629,
-    "last_attempt_iso": "2026-08-02T11:20:29Z",
+    "last_attempt_epoch": 1785678082,
+    "last_attempt_iso": "2026-08-02T13:41:22Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1785669790,
-    "last_success_iso": "2026-08-02T11:23:10Z"
+    "last_success_epoch": 1785678310,
+    "last_success_iso": "2026-08-02T13:45:10Z"
   },
   "energy_futures": {
     "last_attempt_epoch": 1785669986,
@@ -94,18 +94,18 @@
     "last_success_iso": "2026-08-02T11:25:59Z"
   },
   "news": {
-    "last_attempt_epoch": 1785670216,
-    "last_attempt_iso": "2026-08-02T11:30:16Z",
-    "last_success_epoch": 1785670239,
-    "last_success_iso": "2026-08-02T11:30:39Z"
+    "last_attempt_epoch": 1785678464,
+    "last_attempt_iso": "2026-08-02T13:47:44Z",
+    "last_success_epoch": 1785678487,
+    "last_success_iso": "2026-08-02T13:48:07Z"
   },
   "smard": {
-    "last_attempt_epoch": 1785669622,
-    "last_attempt_iso": "2026-08-02T11:20:22Z",
+    "last_attempt_epoch": 1785678074,
+    "last_attempt_iso": "2026-08-02T13:41:14Z",
     "last_error_epoch": 1784702205,
     "last_error_message": "RuntimeError: SMARD: all filters returned empty | at File \"/home/runner/work/energie/energie/scripts/fetchers/smard.py\", line 109, in fetch",
-    "last_success_epoch": 1785669629,
-    "last_success_iso": "2026-08-02T11:20:29Z"
+    "last_success_epoch": 1785678082,
+    "last_success_iso": "2026-08-02T13:41:22Z"
   },
   "weather": {
     "last_attempt_epoch": 1785669840,
