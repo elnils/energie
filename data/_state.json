@@ -14,20 +14,20 @@
     "last_success_iso": "2026-08-03T15:50:09Z"
   },
   "eia_petroleum": {
-    "last_attempt_epoch": 1785746288,
-    "last_attempt_iso": "2026-08-03T08:38:08Z",
+    "last_attempt_epoch": 1785791619,
+    "last_attempt_iso": "2026-08-03T21:13:39Z",
     "last_error_epoch": 1785097226,
     "last_error_message": "RuntimeError: EIA: all series failed — check EIA_API_KEY | at File \"/home/runner/work/energie/energie/scripts/fetchers/eia_petroleum.py\", line 193, in fetch",
-    "last_success_epoch": 1785746294,
-    "last_success_iso": "2026-08-03T08:38:14Z"
+    "last_success_epoch": 1785791625,
+    "last_success_iso": "2026-08-03T21:13:45Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1785786483,
-    "last_attempt_iso": "2026-08-03T19:48:03Z",
+    "last_attempt_epoch": 1785791472,
+    "last_attempt_iso": "2026-08-03T21:11:12Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1785786630,
-    "last_success_iso": "2026-08-03T19:50:30Z"
+    "last_success_epoch": 1785791619,
+    "last_success_iso": "2026-08-03T21:13:39Z"
   },
   "energy_futures": {
     "last_attempt_epoch": 1785786733,
@@ -94,18 +94,18 @@
     "last_success_iso": "2026-08-03T12:35:44Z"
   },
   "news": {
-    "last_attempt_epoch": 1785779970,
-    "last_attempt_iso": "2026-08-03T17:59:30Z",
-    "last_success_epoch": 1785779991,
-    "last_success_iso": "2026-08-03T17:59:51Z"
+    "last_attempt_epoch": 1785791625,
+    "last_attempt_iso": "2026-08-03T21:13:45Z",
+    "last_success_epoch": 1785791649,
+    "last_success_iso": "2026-08-03T21:14:09Z"
   },
   "smard": {
-    "last_attempt_epoch": 1785786477,
-    "last_attempt_iso": "2026-08-03T19:47:57Z",
+    "last_attempt_epoch": 1785791466,
+    "last_attempt_iso": "2026-08-03T21:11:06Z",
     "last_error_epoch": 1784702205,
     "last_error_message": "RuntimeError: SMARD: all filters returned empty | at File \"/home/runner/work/energie/energie/scripts/fetchers/smard.py\", line 109, in fetch",
-    "last_success_epoch": 1785786483,
-    "last_success_iso": "2026-08-03T19:48:03Z"
+    "last_success_epoch": 1785791472,
+    "last_success_iso": "2026-08-03T21:11:12Z"
   },
   "weather": {
     "last_attempt_epoch": 1785786665,
