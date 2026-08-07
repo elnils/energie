@@ -30,26 +30,26 @@
     "last_success_iso": "2026-08-07T20:52:50Z"
   },
   "energy_futures": {
-    "last_attempt_epoch": 1786115293,
-    "last_attempt_iso": "2026-08-07T15:08:13Z",
+    "last_attempt_epoch": 1786139268,
+    "last_attempt_iso": "2026-08-07T21:47:48Z",
     "last_error_epoch": 1785097256,
     "last_error_message": "RuntimeError: energy_futures: ALL external APIs failed. Errors: eia_steo/brent (BREPUUS): 404 Client Error: Not Found for url: https://api.eia.gov/v2/steo/data/?api_key=irVUjduslyh4dIFImK49hHGQtvzZgUergFPQDNQ9&frequency=monthly&data%5B0%5D=value&facets%5BseriesId%5D%5B%5D=BREPUUS&sort%5B0%5D%5Bcolumn%5D=period&sort%5B0%5D%5Bdirection%5D=asc&offset=0&length=5000; eia_steo/wti (WTIPUUS): 404 Client Error: Not Found for url: https://api.eia.gov/v2/steo/data/?api_key=irVUjduslyh4dIFImK49hHGQtvzZgUer",
-    "last_success_epoch": 1786115328,
-    "last_success_iso": "2026-08-07T15:08:48Z"
+    "last_success_epoch": 1786139299,
+    "last_success_iso": "2026-08-07T21:48:19Z"
   },
   "entsoe": {
-    "last_attempt_epoch": 1786114949,
-    "last_attempt_iso": "2026-08-07T15:02:29Z",
+    "last_attempt_epoch": 1786139235,
+    "last_attempt_iso": "2026-08-07T21:47:15Z",
     "last_error_epoch": 1778568129,
     "last_error_message": "ValueError: fetcher entsoe did not return dict with \"data\" key",
-    "last_success_epoch": 1786115293,
-    "last_success_iso": "2026-08-07T15:08:13Z"
+    "last_success_epoch": 1786139268,
+    "last_success_iso": "2026-08-07T21:47:48Z"
   },
   "entsog": {
-    "last_attempt_epoch": 1786114921,
-    "last_attempt_iso": "2026-08-07T15:02:01Z",
-    "last_success_epoch": 1786114937,
-    "last_success_iso": "2026-08-07T15:02:17Z"
+    "last_attempt_epoch": 1786139220,
+    "last_attempt_iso": "2026-08-07T21:47:00Z",
+    "last_success_epoch": 1786139235,
+    "last_success_iso": "2026-08-07T21:47:15Z"
   },
   "eurostat_oil": {
     "last_attempt_epoch": 1786061584,
@@ -80,10 +80,10 @@
     "last_success_iso": "2026-08-07T13:19:45Z"
   },
   "gas_storage": {
-    "last_attempt_epoch": 1786114880,
-    "last_attempt_iso": "2026-08-07T15:01:20Z",
-    "last_success_epoch": 1786114921,
-    "last_success_iso": "2026-08-07T15:02:01Z"
+    "last_attempt_epoch": 1786139130,
+    "last_attempt_iso": "2026-08-07T21:45:30Z",
+    "last_success_epoch": 1786139220,
+    "last_success_iso": "2026-08-07T21:47:00Z"
   },
   "heating_oil": {
     "last_attempt_epoch": 1786108846,
@@ -94,10 +94,10 @@
     "last_success_iso": "2026-08-07T13:20:57Z"
   },
   "news": {
-    "last_attempt_epoch": 1786129645,
-    "last_attempt_iso": "2026-08-07T19:07:25Z",
-    "last_success_epoch": 1786129667,
-    "last_success_iso": "2026-08-07T19:07:47Z"
+    "last_attempt_epoch": 1786139299,
+    "last_attempt_iso": "2026-08-07T21:48:19Z",
+    "last_success_epoch": 1786139323,
+    "last_success_iso": "2026-08-07T21:48:43Z"
   },
   "smard": {
     "last_attempt_epoch": 1786135744,
