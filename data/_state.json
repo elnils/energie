@@ -22,12 +22,12 @@
     "last_success_iso": "2026-08-08T16:44:48Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1786241379,
-    "last_attempt_iso": "2026-08-09T02:09:39Z",
+    "last_attempt_epoch": 1786249323,
+    "last_attempt_iso": "2026-08-09T04:22:03Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1786241537,
-    "last_success_iso": "2026-08-09T02:12:17Z"
+    "last_success_epoch": 1786249452,
+    "last_success_iso": "2026-08-09T04:24:12Z"
   },
   "energy_futures": {
     "last_attempt_epoch": 1786232194,
@@ -60,24 +60,24 @@
     "last_success_iso": "2026-08-09T02:16:17Z"
   },
   "fred_energy": {
-    "last_attempt_epoch": 1786200064,
-    "last_attempt_iso": "2026-08-08T14:41:04Z",
-    "last_success_epoch": 1786200070,
-    "last_success_iso": "2026-08-08T14:41:10Z"
+    "last_attempt_epoch": 1786249534,
+    "last_attempt_iso": "2026-08-09T04:25:34Z",
+    "last_success_epoch": 1786249539,
+    "last_success_iso": "2026-08-09T04:25:39Z"
   },
   "fuel": {
-    "last_attempt_epoch": 1786199998,
-    "last_attempt_iso": "2026-08-08T14:39:58Z",
+    "last_attempt_epoch": 1786249454,
+    "last_attempt_iso": "2026-08-09T04:24:14Z",
     "last_error_epoch": 1782312643,
     "last_error_message": "RuntimeError: tankerkoenig: no city returned valid E5 average | at File \"/home/runner/work/energie/energie/scripts/fetchers/fuel.py\", line 116, in fetch",
-    "last_success_epoch": 1786200055,
-    "last_success_iso": "2026-08-08T14:40:55Z"
+    "last_success_epoch": 1786249524,
+    "last_success_iso": "2026-08-09T04:25:24Z"
   },
   "fx": {
-    "last_attempt_epoch": 1786199997,
-    "last_attempt_iso": "2026-08-08T14:39:57Z",
-    "last_success_epoch": 1786199998,
-    "last_success_iso": "2026-08-08T14:39:58Z"
+    "last_attempt_epoch": 1786249452,
+    "last_attempt_iso": "2026-08-09T04:24:12Z",
+    "last_success_epoch": 1786249454,
+    "last_success_iso": "2026-08-09T04:24:14Z"
   },
   "gas_storage": {
     "last_attempt_epoch": 1786232053,
@@ -86,26 +86,26 @@
     "last_success_iso": "2026-08-08T23:35:36Z"
   },
   "heating_oil": {
-    "last_attempt_epoch": 1786200055,
-    "last_attempt_iso": "2026-08-08T14:40:55Z",
+    "last_attempt_epoch": 1786249524,
+    "last_attempt_iso": "2026-08-09T04:25:24Z",
     "last_error_epoch": 1784007636,
     "last_error_message": "RuntimeError: Tecson: could not extract reference price | at File \"/home/runner/work/energie/energie/scripts/fetchers/heating_oil.py\", line 238, in fetch",
-    "last_success_epoch": 1786200064,
-    "last_success_iso": "2026-08-08T14:41:04Z"
+    "last_success_epoch": 1786249534,
+    "last_success_iso": "2026-08-09T04:25:34Z"
   },
   "news": {
-    "last_attempt_epoch": 1786241777,
-    "last_attempt_iso": "2026-08-09T02:16:17Z",
-    "last_success_epoch": 1786241800,
-    "last_success_iso": "2026-08-09T02:16:40Z"
+    "last_attempt_epoch": 1786249539,
+    "last_attempt_iso": "2026-08-09T04:25:39Z",
+    "last_success_epoch": 1786249564,
+    "last_success_iso": "2026-08-09T04:26:04Z"
   },
   "smard": {
-    "last_attempt_epoch": 1786241372,
-    "last_attempt_iso": "2026-08-09T02:09:32Z",
+    "last_attempt_epoch": 1786249315,
+    "last_attempt_iso": "2026-08-09T04:21:55Z",
     "last_error_epoch": 1784702205,
     "last_error_message": "RuntimeError: SMARD: all filters returned empty | at File \"/home/runner/work/energie/energie/scripts/fetchers/smard.py\", line 109, in fetch",
-    "last_success_epoch": 1786241379,
-    "last_success_iso": "2026-08-09T02:09:39Z"
+    "last_success_epoch": 1786249323,
+    "last_success_iso": "2026-08-09T04:22:03Z"
   },
   "weather": {
     "last_attempt_epoch": 1786241537,
