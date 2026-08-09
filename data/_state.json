@@ -30,26 +30,26 @@
     "last_success_iso": "2026-08-09T18:52:57Z"
   },
   "energy_futures": {
-    "last_attempt_epoch": 1786280895,
-    "last_attempt_iso": "2026-08-09T13:08:15Z",
+    "last_attempt_epoch": 1786304390,
+    "last_attempt_iso": "2026-08-09T19:39:50Z",
     "last_error_epoch": 1785097256,
     "last_error_message": "RuntimeError: energy_futures: ALL external APIs failed. Errors: eia_steo/brent (BREPUUS): 404 Client Error: Not Found for url: https://api.eia.gov/v2/steo/data/?api_key=irVUjduslyh4dIFImK49hHGQtvzZgUergFPQDNQ9&frequency=monthly&data%5B0%5D=value&facets%5BseriesId%5D%5B%5D=BREPUUS&sort%5B0%5D%5Bcolumn%5D=period&sort%5B0%5D%5Bdirection%5D=asc&offset=0&length=5000; eia_steo/wti (WTIPUUS): 404 Client Error: Not Found for url: https://api.eia.gov/v2/steo/data/?api_key=irVUjduslyh4dIFImK49hHGQtvzZgUer",
-    "last_success_epoch": 1786280927,
-    "last_success_iso": "2026-08-09T13:08:47Z"
+    "last_success_epoch": 1786304422,
+    "last_success_iso": "2026-08-09T19:40:22Z"
   },
   "entsoe": {
-    "last_attempt_epoch": 1786280840,
-    "last_attempt_iso": "2026-08-09T13:07:20Z",
+    "last_attempt_epoch": 1786304353,
+    "last_attempt_iso": "2026-08-09T19:39:13Z",
     "last_error_epoch": 1778568129,
     "last_error_message": "ValueError: fetcher entsoe did not return dict with \"data\" key",
-    "last_success_epoch": 1786280895,
-    "last_success_iso": "2026-08-09T13:08:15Z"
+    "last_success_epoch": 1786304390,
+    "last_success_iso": "2026-08-09T19:39:50Z"
   },
   "entsog": {
-    "last_attempt_epoch": 1786280816,
-    "last_attempt_iso": "2026-08-09T13:06:56Z",
-    "last_success_epoch": 1786280829,
-    "last_success_iso": "2026-08-09T13:07:09Z"
+    "last_attempt_epoch": 1786304340,
+    "last_attempt_iso": "2026-08-09T19:39:00Z",
+    "last_success_epoch": 1786304353,
+    "last_success_iso": "2026-08-09T19:39:13Z"
   },
   "eurostat_oil": {
     "last_attempt_epoch": 1786241570,
@@ -80,10 +80,10 @@
     "last_success_iso": "2026-08-09T16:45:02Z"
   },
   "gas_storage": {
-    "last_attempt_epoch": 1786280763,
-    "last_attempt_iso": "2026-08-09T13:06:03Z",
-    "last_success_epoch": 1786280816,
-    "last_success_iso": "2026-08-09T13:06:56Z"
+    "last_attempt_epoch": 1786304298,
+    "last_attempt_iso": "2026-08-09T19:38:18Z",
+    "last_success_epoch": 1786304340,
+    "last_success_iso": "2026-08-09T19:39:00Z"
   },
   "heating_oil": {
     "last_attempt_epoch": 1786293962,
