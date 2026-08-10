@@ -38,18 +38,18 @@
     "last_success_iso": "2026-08-10T17:57:41Z"
   },
   "entsoe": {
-    "last_attempt_epoch": 1786374441,
-    "last_attempt_iso": "2026-08-10T15:07:21Z",
+    "last_attempt_epoch": 1786398578,
+    "last_attempt_iso": "2026-08-10T21:49:38Z",
     "last_error_epoch": 1778568129,
     "last_error_message": "ValueError: fetcher entsoe did not return dict with \"data\" key",
-    "last_success_epoch": 1786374502,
-    "last_success_iso": "2026-08-10T15:08:22Z"
+    "last_success_epoch": 1786398634,
+    "last_success_iso": "2026-08-10T21:50:34Z"
   },
   "entsog": {
-    "last_attempt_epoch": 1786374416,
-    "last_attempt_iso": "2026-08-10T15:06:56Z",
-    "last_success_epoch": 1786374430,
-    "last_success_iso": "2026-08-10T15:07:10Z"
+    "last_attempt_epoch": 1786398565,
+    "last_attempt_iso": "2026-08-10T21:49:25Z",
+    "last_success_epoch": 1786398578,
+    "last_success_iso": "2026-08-10T21:49:38Z"
   },
   "eurostat_oil": {
     "last_attempt_epoch": 1786328617,
@@ -80,10 +80,10 @@
     "last_success_iso": "2026-08-10T17:01:31Z"
   },
   "gas_storage": {
-    "last_attempt_epoch": 1786374390,
-    "last_attempt_iso": "2026-08-10T15:06:30Z",
-    "last_success_epoch": 1786374416,
-    "last_success_iso": "2026-08-10T15:06:56Z"
+    "last_attempt_epoch": 1786398531,
+    "last_attempt_iso": "2026-08-10T21:48:51Z",
+    "last_success_epoch": 1786398565,
+    "last_success_iso": "2026-08-10T21:49:25Z"
   },
   "heating_oil": {
     "last_attempt_epoch": 1786381348,
