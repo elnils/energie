@@ -6,12 +6,12 @@
     "last_success_iso": "2026-08-11T02:10:56Z"
   },
   "destatis_vpi": {
-    "last_attempt_epoch": 1786328539,
-    "last_attempt_iso": "2026-08-10T02:22:19Z",
+    "last_attempt_epoch": 1786422516,
+    "last_attempt_iso": "2026-08-11T04:28:36Z",
     "last_error_epoch": 1785484894,
     "last_error_message": "RuntimeError: Destatis auth: BOTH modes failed. header: header-auth exception: source exceeded wallclock budget; body: HTTPSConnectionPool(host='genesis.destatis.de', port=443): Max retries exceeded with url: /genesisWS/rest/2020/helloworld/logincheck (Caused by ResponseError('too many 503 error responses')) | at File \"/home/runner/work/energie/energie/scripts/fetchers/destatis_vpi.py\", line 199, in _check_login",
-    "last_success_epoch": 1786328561,
-    "last_success_iso": "2026-08-10T02:22:41Z"
+    "last_success_epoch": 1786422537,
+    "last_success_iso": "2026-08-11T04:28:57Z"
   },
   "eia_petroleum": {
     "last_attempt_epoch": 1786395222,
@@ -22,12 +22,12 @@
     "last_success_iso": "2026-08-10T20:53:47Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1786414115,
-    "last_attempt_iso": "2026-08-11T02:08:35Z",
+    "last_attempt_epoch": 1786422291,
+    "last_attempt_iso": "2026-08-11T04:24:51Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1786414245,
-    "last_success_iso": "2026-08-11T02:10:45Z"
+    "last_success_epoch": 1786422451,
+    "last_success_iso": "2026-08-11T04:27:31Z"
   },
   "energy_futures": {
     "last_attempt_epoch": 1786414256,
@@ -38,26 +38,26 @@
     "last_success_iso": "2026-08-11T02:11:30Z"
   },
   "entsoe": {
-    "last_attempt_epoch": 1786398578,
-    "last_attempt_iso": "2026-08-10T21:49:38Z",
+    "last_attempt_epoch": 1786422537,
+    "last_attempt_iso": "2026-08-11T04:28:57Z",
     "last_error_epoch": 1778568129,
     "last_error_message": "ValueError: fetcher entsoe did not return dict with \"data\" key",
-    "last_success_epoch": 1786398634,
-    "last_success_iso": "2026-08-10T21:50:34Z"
+    "last_success_epoch": 1786422570,
+    "last_success_iso": "2026-08-11T04:29:30Z"
   },
   "entsog": {
-    "last_attempt_epoch": 1786398565,
-    "last_attempt_iso": "2026-08-10T21:49:25Z",
-    "last_success_epoch": 1786398578,
-    "last_success_iso": "2026-08-10T21:49:38Z"
+    "last_attempt_epoch": 1786422499,
+    "last_attempt_iso": "2026-08-11T04:28:19Z",
+    "last_success_epoch": 1786422516,
+    "last_success_iso": "2026-08-11T04:28:36Z"
   },
   "eurostat_oil": {
-    "last_attempt_epoch": 1786328617,
-    "last_attempt_iso": "2026-08-10T02:23:37Z",
+    "last_attempt_epoch": 1786422570,
+    "last_attempt_iso": "2026-08-11T04:29:30Z",
     "last_error_epoch": 1779176945,
     "last_error_message": "ValueError: fetcher 'eurostat_oil' missing expected keys {'jet_stocks'}; got {'gas_imports', 'electricity_imports', 'oil_motor_gasoline', 'oil_jet_fuel_supply', 'oil_crude_production', 'oil_jet_fuel_exports', 'electricity_wind', 'electricity_solar', 'electricity_generation', 'oil_diesel_stocks', 'gas_consumption', 'oil_crude_imports', 'electricity_nuclear', 'oil_jet_fuel_stocks', 'gas_production', 'oil_jet_fuel_imports', 'oil_heating_oil_stocks', 'oil_jet_fuel_consumption', 'gas_stocks', 'gas_ex",
-    "last_success_epoch": 1786328829,
-    "last_success_iso": "2026-08-10T02:27:09Z"
+    "last_success_epoch": 1786422773,
+    "last_success_iso": "2026-08-11T04:32:53Z"
   },
   "fred_energy": {
     "last_attempt_epoch": 1786381362,
@@ -80,10 +80,10 @@
     "last_success_iso": "2026-08-10T17:01:31Z"
   },
   "gas_storage": {
-    "last_attempt_epoch": 1786398531,
-    "last_attempt_iso": "2026-08-10T21:48:51Z",
-    "last_success_epoch": 1786398565,
-    "last_success_iso": "2026-08-10T21:49:25Z"
+    "last_attempt_epoch": 1786422451,
+    "last_attempt_iso": "2026-08-11T04:27:31Z",
+    "last_success_epoch": 1786422499,
+    "last_success_iso": "2026-08-11T04:28:19Z"
   },
   "heating_oil": {
     "last_attempt_epoch": 1786381348,
@@ -94,18 +94,18 @@
     "last_success_iso": "2026-08-10T17:02:42Z"
   },
   "news": {
-    "last_attempt_epoch": 1786414290,
-    "last_attempt_iso": "2026-08-11T02:11:30Z",
-    "last_success_epoch": 1786414313,
-    "last_success_iso": "2026-08-11T02:11:53Z"
+    "last_attempt_epoch": 1786422773,
+    "last_attempt_iso": "2026-08-11T04:32:53Z",
+    "last_success_epoch": 1786422795,
+    "last_success_iso": "2026-08-11T04:33:15Z"
   },
   "smard": {
-    "last_attempt_epoch": 1786414107,
-    "last_attempt_iso": "2026-08-11T02:08:27Z",
+    "last_attempt_epoch": 1786422285,
+    "last_attempt_iso": "2026-08-11T04:24:45Z",
     "last_error_epoch": 1784702205,
     "last_error_message": "RuntimeError: SMARD: all filters returned empty | at File \"/home/runner/work/energie/energie/scripts/fetchers/smard.py\", line 109, in fetch",
-    "last_success_epoch": 1786414115,
-    "last_success_iso": "2026-08-11T02:08:35Z"
+    "last_success_epoch": 1786422291,
+    "last_success_iso": "2026-08-11T04:24:51Z"
   },
   "weather": {
     "last_attempt_epoch": 1786414245,
