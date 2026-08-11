@@ -22,12 +22,12 @@
     "last_success_iso": "2026-08-11T21:55:35Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1786481635,
-    "last_attempt_iso": "2026-08-11T20:53:55Z",
+    "last_attempt_epoch": 1786488680,
+    "last_attempt_iso": "2026-08-11T22:51:20Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1786481768,
-    "last_success_iso": "2026-08-11T20:56:08Z"
+    "last_success_epoch": 1786488820,
+    "last_success_iso": "2026-08-11T22:53:40Z"
   },
   "energy_futures": {
     "last_attempt_epoch": 1786467974,
