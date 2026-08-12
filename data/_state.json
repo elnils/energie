@@ -38,12 +38,12 @@
     "last_success_iso": "2026-08-12T20:57:48Z"
   },
   "entsoe": {
-    "last_attempt_epoch": 1786554317,
-    "last_attempt_iso": "2026-08-12T17:05:17Z",
+    "last_attempt_epoch": 1786578543,
+    "last_attempt_iso": "2026-08-12T23:49:03Z",
     "last_error_epoch": 1778568129,
     "last_error_message": "ValueError: fetcher entsoe did not return dict with \"data\" key",
-    "last_success_epoch": 1786554407,
-    "last_success_iso": "2026-08-12T17:06:47Z"
+    "last_success_epoch": 1786578570,
+    "last_success_iso": "2026-08-12T23:49:30Z"
   },
   "entsog": {
     "last_attempt_epoch": 1786568146,
