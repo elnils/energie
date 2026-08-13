@@ -94,18 +94,18 @@
     "last_success_iso": "2026-08-13T10:18:33Z"
   },
   "news": {
-    "last_attempt_epoch": 1786648433,
-    "last_attempt_iso": "2026-08-13T19:13:53Z",
-    "last_success_epoch": 1786648454,
-    "last_success_iso": "2026-08-13T19:14:14Z"
+    "last_attempt_epoch": 1786657979,
+    "last_attempt_iso": "2026-08-13T21:52:59Z",
+    "last_success_epoch": 1786658001,
+    "last_success_iso": "2026-08-13T21:53:21Z"
   },
   "smard": {
-    "last_attempt_epoch": 1786654230,
-    "last_attempt_iso": "2026-08-13T20:50:30Z",
+    "last_attempt_epoch": 1786657973,
+    "last_attempt_iso": "2026-08-13T21:52:53Z",
     "last_error_epoch": 1784702205,
     "last_error_message": "RuntimeError: SMARD: all filters returned empty | at File \"/home/runner/work/energie/energie/scripts/fetchers/smard.py\", line 109, in fetch",
-    "last_success_epoch": 1786654236,
-    "last_success_iso": "2026-08-13T20:50:36Z"
+    "last_success_epoch": 1786657979,
+    "last_success_iso": "2026-08-13T21:52:59Z"
   },
   "weather": {
     "last_attempt_epoch": 1786654398,
