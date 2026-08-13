@@ -22,12 +22,12 @@
     "last_success_iso": "2026-08-12T22:51:27Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1786602140,
-    "last_attempt_iso": "2026-08-13T06:22:20Z",
+    "last_attempt_epoch": 1786609542,
+    "last_attempt_iso": "2026-08-13T08:25:42Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1786602335,
-    "last_success_iso": "2026-08-13T06:25:35Z"
+    "last_success_epoch": 1786609732,
+    "last_success_iso": "2026-08-13T08:28:52Z"
   },
   "energy_futures": {
     "last_attempt_epoch": 1786597234,
@@ -94,18 +94,18 @@
     "last_success_iso": "2026-08-12T20:57:08Z"
   },
   "news": {
-    "last_attempt_epoch": 1786597493,
-    "last_attempt_iso": "2026-08-13T05:04:53Z",
-    "last_success_epoch": 1786597516,
-    "last_success_iso": "2026-08-13T05:05:16Z"
+    "last_attempt_epoch": 1786609732,
+    "last_attempt_iso": "2026-08-13T08:28:52Z",
+    "last_success_epoch": 1786609753,
+    "last_success_iso": "2026-08-13T08:29:13Z"
   },
   "smard": {
-    "last_attempt_epoch": 1786602132,
-    "last_attempt_iso": "2026-08-13T06:22:12Z",
+    "last_attempt_epoch": 1786609535,
+    "last_attempt_iso": "2026-08-13T08:25:35Z",
     "last_error_epoch": 1784702205,
     "last_error_message": "RuntimeError: SMARD: all filters returned empty | at File \"/home/runner/work/energie/energie/scripts/fetchers/smard.py\", line 109, in fetch",
-    "last_success_epoch": 1786602140,
-    "last_success_iso": "2026-08-13T06:22:20Z"
+    "last_success_epoch": 1786609542,
+    "last_success_iso": "2026-08-13T08:25:42Z"
   },
   "weather": {
     "last_attempt_epoch": 1786602335,
