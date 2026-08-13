@@ -100,12 +100,12 @@
     "last_success_iso": "2026-08-13T21:53:21Z"
   },
   "smard": {
-    "last_attempt_epoch": 1786657973,
-    "last_attempt_iso": "2026-08-13T21:52:53Z",
+    "last_attempt_epoch": 1786664958,
+    "last_attempt_iso": "2026-08-13T23:49:18Z",
     "last_error_epoch": 1784702205,
     "last_error_message": "RuntimeError: SMARD: all filters returned empty | at File \"/home/runner/work/energie/energie/scripts/fetchers/smard.py\", line 109, in fetch",
-    "last_success_epoch": 1786657979,
-    "last_success_iso": "2026-08-13T21:52:59Z"
+    "last_success_epoch": 1786664966,
+    "last_success_iso": "2026-08-13T23:49:26Z"
   },
   "weather": {
     "last_attempt_epoch": 1786654398,
