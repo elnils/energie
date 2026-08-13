@@ -14,28 +14,28 @@
     "last_success_iso": "2026-08-13T05:00:34Z"
   },
   "eia_petroleum": {
-    "last_attempt_epoch": 1786575079,
-    "last_attempt_iso": "2026-08-12T22:51:19Z",
+    "last_attempt_epoch": 1786622176,
+    "last_attempt_iso": "2026-08-13T11:56:16Z",
     "last_error_epoch": 1785097226,
     "last_error_message": "RuntimeError: EIA: all series failed — check EIA_API_KEY | at File \"/home/runner/work/energie/energie/scripts/fetchers/eia_petroleum.py\", line 193, in fetch",
-    "last_success_epoch": 1786575087,
-    "last_success_iso": "2026-08-12T22:51:27Z"
+    "last_success_epoch": 1786622182,
+    "last_success_iso": "2026-08-13T11:56:22Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1786616069,
-    "last_attempt_iso": "2026-08-13T10:14:29Z",
+    "last_attempt_epoch": 1786621975,
+    "last_attempt_iso": "2026-08-13T11:52:55Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1786616236,
-    "last_success_iso": "2026-08-13T10:17:16Z"
+    "last_success_epoch": 1786622109,
+    "last_success_iso": "2026-08-13T11:55:09Z"
   },
   "energy_futures": {
-    "last_attempt_epoch": 1786597234,
-    "last_attempt_iso": "2026-08-13T05:00:34Z",
+    "last_attempt_epoch": 1786622182,
+    "last_attempt_iso": "2026-08-13T11:56:22Z",
     "last_error_epoch": 1786328617,
     "last_error_message": "RuntimeError: energy_futures: ALL external APIs failed. Errors: eia_steo/brent (BREPUUS): 403 Client Error: Forbidden for url: https://api.eia.gov/v2/steo/data/?api_key=irVUjduslyh4dIFImK49hHGQtvzZgUergFPQDNQ9&frequency=monthly&data%5B0%5D=value&facets%5BseriesId%5D%5B%5D=BREPUUS&sort%5B0%5D%5Bcolumn%5D=period&sort%5B0%5D%5Bdirection%5D=asc&offset=0&length=5000; eia_steo/wti (WTIPUUS): 403 Client Error: Forbidden for url: https://api.eia.gov/v2/steo/data/?api_key=irVUjduslyh4dIFImK49hHGQtvzZgUer",
-    "last_success_epoch": 1786597277,
-    "last_success_iso": "2026-08-13T05:01:17Z"
+    "last_success_epoch": 1786622213,
+    "last_success_iso": "2026-08-13T11:56:53Z"
   },
   "entsoe": {
     "last_attempt_epoch": 1786602346,
@@ -46,10 +46,10 @@
     "last_success_iso": "2026-08-13T06:26:46Z"
   },
   "entsog": {
-    "last_attempt_epoch": 1786597197,
-    "last_attempt_iso": "2026-08-13T04:59:57Z",
-    "last_success_epoch": 1786597213,
-    "last_success_iso": "2026-08-13T05:00:13Z"
+    "last_attempt_epoch": 1786622162,
+    "last_attempt_iso": "2026-08-13T11:56:02Z",
+    "last_success_epoch": 1786622176,
+    "last_success_iso": "2026-08-13T11:56:16Z"
   },
   "eurostat_oil": {
     "last_attempt_epoch": 1786597277,
@@ -80,10 +80,10 @@
     "last_success_iso": "2026-08-13T10:17:29Z"
   },
   "gas_storage": {
-    "last_attempt_epoch": 1786597172,
-    "last_attempt_iso": "2026-08-13T04:59:32Z",
-    "last_success_epoch": 1786597197,
-    "last_success_iso": "2026-08-13T04:59:57Z"
+    "last_attempt_epoch": 1786622109,
+    "last_attempt_iso": "2026-08-13T11:55:09Z",
+    "last_success_epoch": 1786622162,
+    "last_success_iso": "2026-08-13T11:56:02Z"
   },
   "heating_oil": {
     "last_attempt_epoch": 1786616303,
@@ -94,18 +94,18 @@
     "last_success_iso": "2026-08-13T10:18:33Z"
   },
   "news": {
-    "last_attempt_epoch": 1786609732,
-    "last_attempt_iso": "2026-08-13T08:28:52Z",
-    "last_success_epoch": 1786609753,
-    "last_success_iso": "2026-08-13T08:29:13Z"
+    "last_attempt_epoch": 1786622213,
+    "last_attempt_iso": "2026-08-13T11:56:53Z",
+    "last_success_epoch": 1786622237,
+    "last_success_iso": "2026-08-13T11:57:17Z"
   },
   "smard": {
-    "last_attempt_epoch": 1786616061,
-    "last_attempt_iso": "2026-08-13T10:14:21Z",
+    "last_attempt_epoch": 1786621967,
+    "last_attempt_iso": "2026-08-13T11:52:47Z",
     "last_error_epoch": 1784702205,
     "last_error_message": "RuntimeError: SMARD: all filters returned empty | at File \"/home/runner/work/energie/energie/scripts/fetchers/smard.py\", line 109, in fetch",
-    "last_success_epoch": 1786616069,
-    "last_success_iso": "2026-08-13T10:14:29Z"
+    "last_success_epoch": 1786621975,
+    "last_success_iso": "2026-08-13T11:52:55Z"
   },
   "weather": {
     "last_attempt_epoch": 1786616236,
