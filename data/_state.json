@@ -30,12 +30,12 @@
     "last_success_iso": "2026-08-14T22:32:01Z"
   },
   "energy_futures": {
-    "last_attempt_epoch": 1786727223,
-    "last_attempt_iso": "2026-08-14T17:07:03Z",
+    "last_attempt_epoch": 1786750089,
+    "last_attempt_iso": "2026-08-14T23:28:09Z",
     "last_error_epoch": 1786328617,
     "last_error_message": "RuntimeError: energy_futures: ALL external APIs failed. Errors: eia_steo/brent (BREPUUS): 403 Client Error: Forbidden for url: https://api.eia.gov/v2/steo/data/?api_key=irVUjduslyh4dIFImK49hHGQtvzZgUergFPQDNQ9&frequency=monthly&data%5B0%5D=value&facets%5BseriesId%5D%5B%5D=BREPUUS&sort%5B0%5D%5Bcolumn%5D=period&sort%5B0%5D%5Bdirection%5D=asc&offset=0&length=5000; eia_steo/wti (WTIPUUS): 403 Client Error: Forbidden for url: https://api.eia.gov/v2/steo/data/?api_key=irVUjduslyh4dIFImK49hHGQtvzZgUer",
-    "last_success_epoch": 1786727323,
-    "last_success_iso": "2026-08-14T17:08:43Z"
+    "last_success_epoch": 1786750148,
+    "last_success_iso": "2026-08-14T23:29:08Z"
   },
   "entsoe": {
     "last_attempt_epoch": 1786734241,
@@ -46,10 +46,10 @@
     "last_success_iso": "2026-08-14T19:08:03Z"
   },
   "entsog": {
-    "last_attempt_epoch": 1786727196,
-    "last_attempt_iso": "2026-08-14T17:06:36Z",
-    "last_success_epoch": 1786727212,
-    "last_success_iso": "2026-08-14T17:06:52Z"
+    "last_attempt_epoch": 1786750071,
+    "last_attempt_iso": "2026-08-14T23:27:51Z",
+    "last_success_epoch": 1786750089,
+    "last_success_iso": "2026-08-14T23:28:09Z"
   },
   "eurostat_oil": {
     "last_attempt_epoch": 1786688500,
@@ -80,10 +80,10 @@
     "last_success_iso": "2026-08-14T11:51:56Z"
   },
   "gas_storage": {
-    "last_attempt_epoch": 1786727164,
-    "last_attempt_iso": "2026-08-14T17:06:04Z",
-    "last_success_epoch": 1786727196,
-    "last_success_iso": "2026-08-14T17:06:36Z"
+    "last_attempt_epoch": 1786750045,
+    "last_attempt_iso": "2026-08-14T23:27:25Z",
+    "last_success_epoch": 1786750071,
+    "last_success_iso": "2026-08-14T23:27:51Z"
   },
   "heating_oil": {
     "last_attempt_epoch": 1786708367,
@@ -94,10 +94,10 @@
     "last_success_iso": "2026-08-14T11:52:59Z"
   },
   "news": {
-    "last_attempt_epoch": 1786739907,
-    "last_attempt_iso": "2026-08-14T20:38:27Z",
-    "last_success_epoch": 1786739929,
-    "last_success_iso": "2026-08-14T20:38:49Z"
+    "last_attempt_epoch": 1786750148,
+    "last_attempt_iso": "2026-08-14T23:29:08Z",
+    "last_success_epoch": 1786750172,
+    "last_success_iso": "2026-08-14T23:29:32Z"
   },
   "smard": {
     "last_attempt_epoch": 1786746555,
