@@ -1,9 +1,9 @@
 {
   "commodities": {
-    "last_attempt_epoch": 1786758018,
-    "last_attempt_iso": "2026-08-15T01:40:18Z",
-    "last_success_epoch": 1786758027,
-    "last_success_iso": "2026-08-15T01:40:27Z"
+    "last_attempt_epoch": 1786771872,
+    "last_attempt_iso": "2026-08-15T05:31:12Z",
+    "last_success_epoch": 1786771882,
+    "last_success_iso": "2026-08-15T05:31:22Z"
   },
   "destatis_vpi": {
     "last_attempt_epoch": 1786688477,
@@ -30,12 +30,12 @@
     "last_success_iso": "2026-08-15T04:40:03Z"
   },
   "energy_futures": {
-    "last_attempt_epoch": 1786750089,
-    "last_attempt_iso": "2026-08-14T23:28:09Z",
+    "last_attempt_epoch": 1786771882,
+    "last_attempt_iso": "2026-08-15T05:31:22Z",
     "last_error_epoch": 1786328617,
     "last_error_message": "RuntimeError: energy_futures: ALL external APIs failed. Errors: eia_steo/brent (BREPUUS): 403 Client Error: Forbidden for url: https://api.eia.gov/v2/steo/data/?api_key=irVUjduslyh4dIFImK49hHGQtvzZgUergFPQDNQ9&frequency=monthly&data%5B0%5D=value&facets%5BseriesId%5D%5B%5D=BREPUUS&sort%5B0%5D%5Bcolumn%5D=period&sort%5B0%5D%5Bdirection%5D=asc&offset=0&length=5000; eia_steo/wti (WTIPUUS): 403 Client Error: Forbidden for url: https://api.eia.gov/v2/steo/data/?api_key=irVUjduslyh4dIFImK49hHGQtvzZgUer",
-    "last_success_epoch": 1786750148,
-    "last_success_iso": "2026-08-14T23:29:08Z"
+    "last_success_epoch": 1786772019,
+    "last_success_iso": "2026-08-15T05:33:39Z"
   },
   "entsoe": {
     "last_attempt_epoch": 1786758091,
@@ -46,10 +46,10 @@
     "last_success_iso": "2026-08-15T01:42:01Z"
   },
   "entsog": {
-    "last_attempt_epoch": 1786750071,
-    "last_attempt_iso": "2026-08-14T23:27:51Z",
-    "last_success_epoch": 1786750089,
-    "last_success_iso": "2026-08-14T23:28:09Z"
+    "last_attempt_epoch": 1786771856,
+    "last_attempt_iso": "2026-08-15T05:30:56Z",
+    "last_success_epoch": 1786771870,
+    "last_success_iso": "2026-08-15T05:31:10Z"
   },
   "eurostat_oil": {
     "last_attempt_epoch": 1786688500,
@@ -80,10 +80,10 @@
     "last_success_iso": "2026-08-15T01:40:28Z"
   },
   "gas_storage": {
-    "last_attempt_epoch": 1786750045,
-    "last_attempt_iso": "2026-08-14T23:27:25Z",
-    "last_success_epoch": 1786750071,
-    "last_success_iso": "2026-08-14T23:27:51Z"
+    "last_attempt_epoch": 1786771798,
+    "last_attempt_iso": "2026-08-15T05:29:58Z",
+    "last_success_epoch": 1786771856,
+    "last_success_iso": "2026-08-15T05:30:56Z"
   },
   "heating_oil": {
     "last_attempt_epoch": 1786758080,
@@ -108,11 +108,11 @@
     "last_success_iso": "2026-08-15T04:37:22Z"
   },
   "weather": {
-    "last_attempt_epoch": 1786758015,
-    "last_attempt_iso": "2026-08-15T01:40:15Z",
+    "last_attempt_epoch": 1786771870,
+    "last_attempt_iso": "2026-08-15T05:31:10Z",
     "last_error_epoch": 1783124579,
     "last_error_message": "RuntimeError: Open-Meteo: zero cities returned data | at File \"/home/runner/work/energie/energie/scripts/fetchers/weather.py\", line 45, in fetch",
-    "last_success_epoch": 1786758018,
-    "last_success_iso": "2026-08-15T01:40:18Z"
+    "last_success_epoch": 1786771872,
+    "last_success_iso": "2026-08-15T05:31:12Z"
   }
 }
