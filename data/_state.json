@@ -22,12 +22,12 @@
     "last_success_iso": "2026-08-15T16:36:37Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1786825742,
-    "last_attempt_iso": "2026-08-15T20:29:02Z",
+    "last_attempt_epoch": 1786832873,
+    "last_attempt_iso": "2026-08-15T22:27:53Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1786825881,
-    "last_success_iso": "2026-08-15T20:31:21Z"
+    "last_success_epoch": 1786832979,
+    "last_success_iso": "2026-08-15T22:29:39Z"
   },
   "energy_futures": {
     "last_attempt_epoch": 1786821985,
@@ -38,12 +38,12 @@
     "last_success_iso": "2026-08-15T19:27:46Z"
   },
   "entsoe": {
-    "last_attempt_epoch": 1786807620,
-    "last_attempt_iso": "2026-08-15T15:27:00Z",
+    "last_attempt_epoch": 1786832979,
+    "last_attempt_iso": "2026-08-15T22:29:39Z",
     "last_error_epoch": 1778568129,
     "last_error_message": "ValueError: fetcher entsoe did not return dict with \"data\" key",
-    "last_success_epoch": 1786807678,
-    "last_success_iso": "2026-08-15T15:27:58Z"
+    "last_success_epoch": 1786833062,
+    "last_success_iso": "2026-08-15T22:31:02Z"
   },
   "entsog": {
     "last_attempt_epoch": 1786821971,
@@ -100,12 +100,12 @@
     "last_success_iso": "2026-08-15T21:27:04Z"
   },
   "smard": {
-    "last_attempt_epoch": 1786825736,
-    "last_attempt_iso": "2026-08-15T20:28:56Z",
+    "last_attempt_epoch": 1786832864,
+    "last_attempt_iso": "2026-08-15T22:27:44Z",
     "last_error_epoch": 1784702205,
     "last_error_message": "RuntimeError: SMARD: all filters returned empty | at File \"/home/runner/work/energie/energie/scripts/fetchers/smard.py\", line 109, in fetch",
-    "last_success_epoch": 1786825742,
-    "last_success_iso": "2026-08-15T20:29:02Z"
+    "last_success_epoch": 1786832873,
+    "last_success_iso": "2026-08-15T22:27:53Z"
   },
   "weather": {
     "last_attempt_epoch": 1786825881,
