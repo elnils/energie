@@ -6,12 +6,12 @@
     "last_success_iso": "2026-08-15T05:31:22Z"
   },
   "destatis_vpi": {
-    "last_attempt_epoch": 1786688477,
-    "last_attempt_iso": "2026-08-14T06:21:17Z",
+    "last_attempt_epoch": 1786776687,
+    "last_attempt_iso": "2026-08-15T06:51:27Z",
     "last_error_epoch": 1785484894,
     "last_error_message": "RuntimeError: Destatis auth: BOTH modes failed. header: header-auth exception: source exceeded wallclock budget; body: HTTPSConnectionPool(host='genesis.destatis.de', port=443): Max retries exceeded with url: /genesisWS/rest/2020/helloworld/logincheck (Caused by ResponseError('too many 503 error responses')) | at File \"/home/runner/work/energie/energie/scripts/fetchers/destatis_vpi.py\", line 199, in _check_login",
-    "last_success_epoch": 1786688500,
-    "last_success_iso": "2026-08-14T06:21:40Z"
+    "last_success_epoch": 1786776707,
+    "last_success_iso": "2026-08-15T06:51:47Z"
   },
   "eia_petroleum": {
     "last_attempt_epoch": 1786765618,
@@ -22,12 +22,12 @@
     "last_success_iso": "2026-08-15T03:47:54Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1786768642,
-    "last_attempt_iso": "2026-08-15T04:37:22Z",
+    "last_attempt_epoch": 1786776524,
+    "last_attempt_iso": "2026-08-15T06:48:44Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1786768803,
-    "last_success_iso": "2026-08-15T04:40:03Z"
+    "last_success_epoch": 1786776687,
+    "last_success_iso": "2026-08-15T06:51:27Z"
   },
   "energy_futures": {
     "last_attempt_epoch": 1786771882,
@@ -52,12 +52,12 @@
     "last_success_iso": "2026-08-15T05:31:10Z"
   },
   "eurostat_oil": {
-    "last_attempt_epoch": 1786688500,
-    "last_attempt_iso": "2026-08-14T06:21:40Z",
+    "last_attempt_epoch": 1786776707,
+    "last_attempt_iso": "2026-08-15T06:51:47Z",
     "last_error_epoch": 1779176945,
     "last_error_message": "ValueError: fetcher 'eurostat_oil' missing expected keys {'jet_stocks'}; got {'gas_imports', 'electricity_imports', 'oil_motor_gasoline', 'oil_jet_fuel_supply', 'oil_crude_production', 'oil_jet_fuel_exports', 'electricity_wind', 'electricity_solar', 'electricity_generation', 'oil_diesel_stocks', 'gas_consumption', 'oil_crude_imports', 'electricity_nuclear', 'oil_jet_fuel_stocks', 'gas_production', 'oil_jet_fuel_imports', 'oil_heating_oil_stocks', 'oil_jet_fuel_consumption', 'gas_stocks', 'gas_ex",
-    "last_success_epoch": 1786688695,
-    "last_success_iso": "2026-08-14T06:24:55Z"
+    "last_success_epoch": 1786776904,
+    "last_success_iso": "2026-08-15T06:55:04Z"
   },
   "fred_energy": {
     "last_attempt_epoch": 1786758121,
@@ -94,18 +94,18 @@
     "last_success_iso": "2026-08-15T01:41:31Z"
   },
   "news": {
-    "last_attempt_epoch": 1786765674,
-    "last_attempt_iso": "2026-08-15T03:47:54Z",
-    "last_success_epoch": 1786765696,
-    "last_success_iso": "2026-08-15T03:48:16Z"
+    "last_attempt_epoch": 1786776904,
+    "last_attempt_iso": "2026-08-15T06:55:04Z",
+    "last_success_epoch": 1786776925,
+    "last_success_iso": "2026-08-15T06:55:25Z"
   },
   "smard": {
-    "last_attempt_epoch": 1786768636,
-    "last_attempt_iso": "2026-08-15T04:37:16Z",
+    "last_attempt_epoch": 1786776518,
+    "last_attempt_iso": "2026-08-15T06:48:38Z",
     "last_error_epoch": 1784702205,
     "last_error_message": "RuntimeError: SMARD: all filters returned empty | at File \"/home/runner/work/energie/energie/scripts/fetchers/smard.py\", line 109, in fetch",
-    "last_success_epoch": 1786768642,
-    "last_success_iso": "2026-08-15T04:37:22Z"
+    "last_success_epoch": 1786776524,
+    "last_success_iso": "2026-08-15T06:48:44Z"
   },
   "weather": {
     "last_attempt_epoch": 1786771870,
