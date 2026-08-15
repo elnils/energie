@@ -94,10 +94,10 @@
     "last_success_iso": "2026-08-15T01:41:31Z"
   },
   "news": {
-    "last_attempt_epoch": 1786776904,
-    "last_attempt_iso": "2026-08-15T06:55:04Z",
-    "last_success_epoch": 1786776925,
-    "last_success_iso": "2026-08-15T06:55:25Z"
+    "last_attempt_epoch": 1786786271,
+    "last_attempt_iso": "2026-08-15T09:31:11Z",
+    "last_success_epoch": 1786786292,
+    "last_success_iso": "2026-08-15T09:31:32Z"
   },
   "smard": {
     "last_attempt_epoch": 1786782953,
