@@ -30,12 +30,12 @@
     "last_success_iso": "2026-08-15T18:39:51Z"
   },
   "energy_futures": {
-    "last_attempt_epoch": 1786798301,
-    "last_attempt_iso": "2026-08-15T12:51:41Z",
+    "last_attempt_epoch": 1786821985,
+    "last_attempt_iso": "2026-08-15T19:26:25Z",
     "last_error_epoch": 1786328617,
     "last_error_message": "RuntimeError: energy_futures: ALL external APIs failed. Errors: eia_steo/brent (BREPUUS): 403 Client Error: Forbidden for url: https://api.eia.gov/v2/steo/data/?api_key=irVUjduslyh4dIFImK49hHGQtvzZgUergFPQDNQ9&frequency=monthly&data%5B0%5D=value&facets%5BseriesId%5D%5B%5D=BREPUUS&sort%5B0%5D%5Bcolumn%5D=period&sort%5B0%5D%5Bdirection%5D=asc&offset=0&length=5000; eia_steo/wti (WTIPUUS): 403 Client Error: Forbidden for url: https://api.eia.gov/v2/steo/data/?api_key=irVUjduslyh4dIFImK49hHGQtvzZgUer",
-    "last_success_epoch": 1786798390,
-    "last_success_iso": "2026-08-15T12:53:10Z"
+    "last_success_epoch": 1786822066,
+    "last_success_iso": "2026-08-15T19:27:46Z"
   },
   "entsoe": {
     "last_attempt_epoch": 1786807620,
@@ -46,10 +46,10 @@
     "last_success_iso": "2026-08-15T15:27:58Z"
   },
   "entsog": {
-    "last_attempt_epoch": 1786798275,
-    "last_attempt_iso": "2026-08-15T12:51:15Z",
-    "last_success_epoch": 1786798291,
-    "last_success_iso": "2026-08-15T12:51:31Z"
+    "last_attempt_epoch": 1786821971,
+    "last_attempt_iso": "2026-08-15T19:26:11Z",
+    "last_success_epoch": 1786821985,
+    "last_success_iso": "2026-08-15T19:26:25Z"
   },
   "eurostat_oil": {
     "last_attempt_epoch": 1786776707,
@@ -80,10 +80,10 @@
     "last_success_iso": "2026-08-15T14:30:39Z"
   },
   "gas_storage": {
-    "last_attempt_epoch": 1786798257,
-    "last_attempt_iso": "2026-08-15T12:50:57Z",
-    "last_success_epoch": 1786798275,
-    "last_success_iso": "2026-08-15T12:51:15Z"
+    "last_attempt_epoch": 1786821937,
+    "last_attempt_iso": "2026-08-15T19:25:37Z",
+    "last_success_epoch": 1786821971,
+    "last_success_iso": "2026-08-15T19:26:11Z"
   },
   "heating_oil": {
     "last_attempt_epoch": 1786804291,
