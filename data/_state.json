@@ -6,9 +6,9 @@
     "last_success_iso": "2026-08-16T20:31:58Z"
   },
   "destatis_vpi": {
-    "last_attempt_epoch": 1786912318,
-    "last_attempt_iso": "2026-08-16T20:31:58Z",
-    "last_error_epoch": 1786912322,
+    "last_attempt_epoch": 1786915530,
+    "last_attempt_iso": "2026-08-16T21:25:30Z",
+    "last_error_epoch": 1786915534,
     "last_error_message": "RuntimeError: Destatis auth: BOTH modes failed. header: header-auth status: Ein Fehler ist aufgetreten. (Die Aktion wurde wegen eines unerwarteten Systemfehlers abgebrochen.); body: Ein Fehler ist aufgetreten. (Die Aktion wurde wegen eines unerwarteten Systemfehlers abgebrochen.) | at File \"/home/runner/work/energie/energie/scripts/fetchers/destatis_vpi.py\", line 191, in _check_login",
     "last_success_epoch": 1786776707,
     "last_success_iso": "2026-08-15T06:51:47Z"
@@ -94,10 +94,10 @@
     "last_success_iso": "2026-08-16T15:29:06Z"
   },
   "news": {
-    "last_attempt_epoch": 1786905684,
-    "last_attempt_iso": "2026-08-16T18:41:24Z",
-    "last_success_epoch": 1786905708,
-    "last_success_iso": "2026-08-16T18:41:48Z"
+    "last_attempt_epoch": 1786915534,
+    "last_attempt_iso": "2026-08-16T21:25:34Z",
+    "last_success_epoch": 1786916228,
+    "last_success_iso": "2026-08-16T21:37:08Z"
   },
   "smard": {
     "last_attempt_epoch": 1786912152,
