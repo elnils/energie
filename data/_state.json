@@ -6,9 +6,9 @@
     "last_success_iso": "2026-08-16T16:34:19Z"
   },
   "destatis_vpi": {
-    "last_attempt_epoch": 1786905591,
-    "last_attempt_iso": "2026-08-16T18:39:51Z",
-    "last_error_epoch": 1786905594,
+    "last_attempt_epoch": 1786908306,
+    "last_attempt_iso": "2026-08-16T19:25:06Z",
+    "last_error_epoch": 1786908310,
     "last_error_message": "RuntimeError: Destatis auth: BOTH modes failed. header: header-auth status: Ein Fehler ist aufgetreten. (Die Aktion wurde wegen eines unerwarteten Systemfehlers abgebrochen.); body: Ein Fehler ist aufgetreten. (Die Aktion wurde wegen eines unerwarteten Systemfehlers abgebrochen.) | at File \"/home/runner/work/energie/energie/scripts/fetchers/destatis_vpi.py\", line 191, in _check_login",
     "last_success_epoch": 1786776707,
     "last_success_iso": "2026-08-15T06:51:47Z"
@@ -38,12 +38,12 @@
     "last_success_iso": "2026-08-16T15:30:53Z"
   },
   "entsoe": {
-    "last_attempt_epoch": 1786884797,
-    "last_attempt_iso": "2026-08-16T12:53:17Z",
+    "last_attempt_epoch": 1786908310,
+    "last_attempt_iso": "2026-08-16T19:25:10Z",
     "last_error_epoch": 1778568129,
     "last_error_message": "ValueError: fetcher entsoe did not return dict with \"data\" key",
-    "last_success_epoch": 1786884820,
-    "last_success_iso": "2026-08-16T12:53:40Z"
+    "last_success_epoch": 1786908351,
+    "last_success_iso": "2026-08-16T19:25:51Z"
   },
   "entsog": {
     "last_attempt_epoch": 1786894076,
