@@ -6,9 +6,9 @@
     "last_success_iso": "2026-08-16T05:35:54Z"
   },
   "destatis_vpi": {
-    "last_attempt_epoch": 1786863138,
-    "last_attempt_iso": "2026-08-16T06:52:18Z",
-    "last_error_epoch": 1786863142,
+    "last_attempt_epoch": 1786865771,
+    "last_attempt_iso": "2026-08-16T07:36:11Z",
+    "last_error_epoch": 1786865776,
     "last_error_message": "RuntimeError: Destatis auth: BOTH modes failed. header: header-auth status: Ein Fehler ist aufgetreten. (Die Aktion wurde wegen eines unerwarteten Systemfehlers abgebrochen.); body: Ein Fehler ist aufgetreten. (Die Aktion wurde wegen eines unerwarteten Systemfehlers abgebrochen.) | at File \"/home/runner/work/energie/energie/scripts/fetchers/destatis_vpi.py\", line 191, in _check_login",
     "last_success_epoch": 1786776707,
     "last_success_iso": "2026-08-15T06:51:47Z"
@@ -52,12 +52,12 @@
     "last_success_iso": "2026-08-16T01:48:35Z"
   },
   "eurostat_oil": {
-    "last_attempt_epoch": 1786776707,
-    "last_attempt_iso": "2026-08-15T06:51:47Z",
+    "last_attempt_epoch": 1786865776,
+    "last_attempt_iso": "2026-08-16T07:36:16Z",
     "last_error_epoch": 1779176945,
     "last_error_message": "ValueError: fetcher 'eurostat_oil' missing expected keys {'jet_stocks'}; got {'gas_imports', 'electricity_imports', 'oil_motor_gasoline', 'oil_jet_fuel_supply', 'oil_crude_production', 'oil_jet_fuel_exports', 'electricity_wind', 'electricity_solar', 'electricity_generation', 'oil_diesel_stocks', 'gas_consumption', 'oil_crude_imports', 'electricity_nuclear', 'oil_jet_fuel_stocks', 'gas_production', 'oil_jet_fuel_imports', 'oil_heating_oil_stocks', 'oil_jet_fuel_consumption', 'gas_stocks', 'gas_ex",
-    "last_success_epoch": 1786776904,
-    "last_success_iso": "2026-08-15T06:55:04Z"
+    "last_success_epoch": 1786865987,
+    "last_success_iso": "2026-08-16T07:39:47Z"
   },
   "fred_energy": {
     "last_attempt_epoch": 1786849712,
@@ -94,10 +94,10 @@
     "last_success_iso": "2026-08-16T03:08:32Z"
   },
   "news": {
-    "last_attempt_epoch": 1786858706,
-    "last_attempt_iso": "2026-08-16T05:38:26Z",
-    "last_success_epoch": 1786858728,
-    "last_success_iso": "2026-08-16T05:38:48Z"
+    "last_attempt_epoch": 1786865987,
+    "last_attempt_iso": "2026-08-16T07:39:47Z",
+    "last_success_epoch": 1786866010,
+    "last_success_iso": "2026-08-16T07:40:10Z"
   },
   "smard": {
     "last_attempt_epoch": 1786862997,
