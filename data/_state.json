@@ -38,12 +38,12 @@
     "last_success_iso": "2026-08-17T11:32:55Z"
   },
   "entsoe": {
-    "last_attempt_epoch": 1786956842,
-    "last_attempt_iso": "2026-08-17T08:54:02Z",
+    "last_attempt_epoch": 1786980634,
+    "last_attempt_iso": "2026-08-17T15:30:34Z",
     "last_error_epoch": 1778568129,
     "last_error_message": "ValueError: fetcher entsoe did not return dict with \"data\" key",
-    "last_success_epoch": 1786956931,
-    "last_success_iso": "2026-08-17T08:55:31Z"
+    "last_success_epoch": 1786980750,
+    "last_success_iso": "2026-08-17T15:32:30Z"
   },
   "entsog": {
     "last_attempt_epoch": 1786966315,
@@ -94,10 +94,10 @@
     "last_success_iso": "2026-08-17T04:54:06Z"
   },
   "news": {
-    "last_attempt_epoch": 1786971478,
-    "last_attempt_iso": "2026-08-17T12:57:58Z",
-    "last_success_epoch": 1786971500,
-    "last_success_iso": "2026-08-17T12:58:20Z"
+    "last_attempt_epoch": 1786980750,
+    "last_attempt_iso": "2026-08-17T15:32:30Z",
+    "last_success_epoch": 1786980773,
+    "last_success_iso": "2026-08-17T15:32:53Z"
   },
   "smard": {
     "last_attempt_epoch": 1786977237,
