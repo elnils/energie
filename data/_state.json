@@ -1,14 +1,14 @@
 {
   "commodities": {
-    "last_attempt_epoch": 1786912310,
-    "last_attempt_iso": "2026-08-16T20:31:50Z",
-    "last_success_epoch": 1786912318,
-    "last_success_iso": "2026-08-16T20:31:58Z"
+    "last_attempt_epoch": 1786931078,
+    "last_attempt_iso": "2026-08-17T01:44:38Z",
+    "last_success_epoch": 1786931087,
+    "last_success_iso": "2026-08-17T01:44:47Z"
   },
   "destatis_vpi": {
-    "last_attempt_epoch": 1786922742,
-    "last_attempt_iso": "2026-08-16T23:25:42Z",
-    "last_error_epoch": 1786922746,
+    "last_attempt_epoch": 1786931087,
+    "last_attempt_iso": "2026-08-17T01:44:47Z",
+    "last_error_epoch": 1786931091,
     "last_error_message": "RuntimeError: Destatis auth: BOTH modes failed. header: header-auth status: Ein Fehler ist aufgetreten. (Die Aktion wurde wegen eines unerwarteten Systemfehlers abgebrochen.); body: Ein Fehler ist aufgetreten. (Die Aktion wurde wegen eines unerwarteten Systemfehlers abgebrochen.) | at File \"/home/runner/work/energie/energie/scripts/fetchers/destatis_vpi.py\", line 191, in _check_login",
     "last_success_epoch": 1786776707,
     "last_success_iso": "2026-08-15T06:51:47Z"
@@ -22,12 +22,12 @@
     "last_success_iso": "2026-08-16T18:41:24Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1786919253,
-    "last_attempt_iso": "2026-08-16T22:27:33Z",
+    "last_attempt_epoch": 1786930939,
+    "last_attempt_iso": "2026-08-17T01:42:19Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1786919390,
-    "last_success_iso": "2026-08-16T22:29:50Z"
+    "last_success_epoch": 1786931074,
+    "last_success_iso": "2026-08-17T01:44:34Z"
   },
   "energy_futures": {
     "last_attempt_epoch": 1786919450,
@@ -38,12 +38,12 @@
     "last_success_iso": "2026-08-16T22:32:21Z"
   },
   "entsoe": {
-    "last_attempt_epoch": 1786908310,
-    "last_attempt_iso": "2026-08-16T19:25:10Z",
+    "last_attempt_epoch": 1786931091,
+    "last_attempt_iso": "2026-08-17T01:44:51Z",
     "last_error_epoch": 1778568129,
     "last_error_message": "ValueError: fetcher entsoe did not return dict with \"data\" key",
-    "last_success_epoch": 1786908351,
-    "last_success_iso": "2026-08-16T19:25:51Z"
+    "last_success_epoch": 1786931155,
+    "last_success_iso": "2026-08-17T01:45:55Z"
   },
   "entsog": {
     "last_attempt_epoch": 1786919427,
@@ -94,25 +94,25 @@
     "last_success_iso": "2026-08-16T15:29:06Z"
   },
   "news": {
-    "last_attempt_epoch": 1786915534,
-    "last_attempt_iso": "2026-08-16T21:25:34Z",
-    "last_success_epoch": 1786916228,
-    "last_success_iso": "2026-08-16T21:37:08Z"
+    "last_attempt_epoch": 1786931155,
+    "last_attempt_iso": "2026-08-17T01:45:55Z",
+    "last_success_epoch": 1786931177,
+    "last_success_iso": "2026-08-17T01:46:17Z"
   },
   "smard": {
-    "last_attempt_epoch": 1786919247,
-    "last_attempt_iso": "2026-08-16T22:27:27Z",
+    "last_attempt_epoch": 1786930931,
+    "last_attempt_iso": "2026-08-17T01:42:11Z",
     "last_error_epoch": 1784702205,
     "last_error_message": "RuntimeError: SMARD: all filters returned empty | at File \"/home/runner/work/energie/energie/scripts/fetchers/smard.py\", line 109, in fetch",
-    "last_success_epoch": 1786919253,
-    "last_success_iso": "2026-08-16T22:27:33Z"
+    "last_success_epoch": 1786930939,
+    "last_success_iso": "2026-08-17T01:42:19Z"
   },
   "weather": {
-    "last_attempt_epoch": 1786912298,
-    "last_attempt_iso": "2026-08-16T20:31:38Z",
+    "last_attempt_epoch": 1786931074,
+    "last_attempt_iso": "2026-08-17T01:44:34Z",
     "last_error_epoch": 1783124579,
     "last_error_message": "RuntimeError: Open-Meteo: zero cities returned data | at File \"/home/runner/work/energie/energie/scripts/fetchers/weather.py\", line 45, in fetch",
-    "last_success_epoch": 1786912310,
-    "last_success_iso": "2026-08-16T20:31:50Z"
+    "last_success_epoch": 1786931078,
+    "last_success_iso": "2026-08-17T01:44:38Z"
   }
 }
