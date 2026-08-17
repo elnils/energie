@@ -6,9 +6,9 @@
     "last_success_iso": "2026-08-17T01:44:47Z"
   },
   "destatis_vpi": {
-    "last_attempt_epoch": 1786931087,
-    "last_attempt_iso": "2026-08-17T01:44:47Z",
-    "last_error_epoch": 1786931091,
+    "last_attempt_epoch": 1786936069,
+    "last_attempt_iso": "2026-08-17T03:07:49Z",
+    "last_error_epoch": 1786936073,
     "last_error_message": "RuntimeError: Destatis auth: BOTH modes failed. header: header-auth status: Ein Fehler ist aufgetreten. (Die Aktion wurde wegen eines unerwarteten Systemfehlers abgebrochen.); body: Ein Fehler ist aufgetreten. (Die Aktion wurde wegen eines unerwarteten Systemfehlers abgebrochen.) | at File \"/home/runner/work/energie/energie/scripts/fetchers/destatis_vpi.py\", line 191, in _check_login",
     "last_success_epoch": 1786776707,
     "last_success_iso": "2026-08-15T06:51:47Z"
@@ -22,12 +22,12 @@
     "last_success_iso": "2026-08-16T18:41:24Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1786930939,
-    "last_attempt_iso": "2026-08-17T01:42:19Z",
+    "last_attempt_epoch": 1786935932,
+    "last_attempt_iso": "2026-08-17T03:05:32Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1786931074,
-    "last_success_iso": "2026-08-17T01:44:34Z"
+    "last_success_epoch": 1786936069,
+    "last_success_iso": "2026-08-17T03:07:49Z"
   },
   "energy_futures": {
     "last_attempt_epoch": 1786919450,
@@ -100,12 +100,12 @@
     "last_success_iso": "2026-08-17T01:46:17Z"
   },
   "smard": {
-    "last_attempt_epoch": 1786930931,
-    "last_attempt_iso": "2026-08-17T01:42:11Z",
+    "last_attempt_epoch": 1786935926,
+    "last_attempt_iso": "2026-08-17T03:05:26Z",
     "last_error_epoch": 1784702205,
     "last_error_message": "RuntimeError: SMARD: all filters returned empty | at File \"/home/runner/work/energie/energie/scripts/fetchers/smard.py\", line 109, in fetch",
-    "last_success_epoch": 1786930939,
-    "last_success_iso": "2026-08-17T01:42:19Z"
+    "last_success_epoch": 1786935932,
+    "last_success_iso": "2026-08-17T03:05:32Z"
   },
   "weather": {
     "last_attempt_epoch": 1786931074,
