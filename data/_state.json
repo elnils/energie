@@ -6,12 +6,12 @@
     "last_success_iso": "2026-08-20T07:47:54Z"
   },
   "destatis_vpi": {
-    "last_attempt_epoch": 1787129255,
-    "last_attempt_iso": "2026-08-19T08:47:35Z",
+    "last_attempt_epoch": 1787215759,
+    "last_attempt_iso": "2026-08-20T08:49:19Z",
     "last_error_epoch": 1786945175,
     "last_error_message": "RuntimeError: Destatis auth: BOTH modes failed. header: header-auth status: Ein Fehler ist aufgetreten. (Die Aktion wurde wegen eines unerwarteten Systemfehlers abgebrochen.); body: Ein Fehler ist aufgetreten. (Die Aktion wurde wegen eines unerwarteten Systemfehlers abgebrochen.) | at File \"/home/runner/work/energie/energie/scripts/fetchers/destatis_vpi.py\", line 191, in _check_login",
-    "last_success_epoch": 1787129278,
-    "last_success_iso": "2026-08-19T08:47:58Z"
+    "last_success_epoch": 1787215913,
+    "last_success_iso": "2026-08-20T08:51:53Z"
   },
   "eia_petroleum": {
     "last_attempt_epoch": 1787175040,
@@ -22,12 +22,12 @@
     "last_success_iso": "2026-08-19T21:32:09Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1787208940,
-    "last_attempt_iso": "2026-08-20T06:55:40Z",
+    "last_attempt_epoch": 1787215624,
+    "last_attempt_iso": "2026-08-20T08:47:04Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1787209071,
-    "last_success_iso": "2026-08-20T06:57:51Z"
+    "last_success_epoch": 1787215759,
+    "last_success_iso": "2026-08-20T08:49:19Z"
   },
   "energy_futures": {
     "last_attempt_epoch": 1787204238,
@@ -100,12 +100,12 @@
     "last_success_iso": "2026-08-20T06:58:13Z"
   },
   "smard": {
-    "last_attempt_epoch": 1787208934,
-    "last_attempt_iso": "2026-08-20T06:55:34Z",
+    "last_attempt_epoch": 1787215616,
+    "last_attempt_iso": "2026-08-20T08:46:56Z",
     "last_error_epoch": 1784702205,
     "last_error_message": "RuntimeError: SMARD: all filters returned empty | at File \"/home/runner/work/energie/energie/scripts/fetchers/smard.py\", line 109, in fetch",
-    "last_success_epoch": 1787208940,
-    "last_success_iso": "2026-08-20T06:55:40Z"
+    "last_success_epoch": 1787215624,
+    "last_success_iso": "2026-08-20T08:47:04Z"
   },
   "weather": {
     "last_attempt_epoch": 1787212063,
