@@ -30,12 +30,12 @@
     "last_success_iso": "2026-08-21T20:33:32Z"
   },
   "energy_futures": {
-    "last_attempt_epoch": 1787323464,
-    "last_attempt_iso": "2026-08-21T14:44:24Z",
+    "last_attempt_epoch": 1787347952,
+    "last_attempt_iso": "2026-08-21T21:32:32Z",
     "last_error_epoch": 1786328617,
     "last_error_message": "RuntimeError: energy_futures: ALL external APIs failed. Errors: eia_steo/brent (BREPUUS): 403 Client Error: Forbidden for url: https://api.eia.gov/v2/steo/data/?api_key=irVUjduslyh4dIFImK49hHGQtvzZgUergFPQDNQ9&frequency=monthly&data%5B0%5D=value&facets%5BseriesId%5D%5B%5D=BREPUUS&sort%5B0%5D%5Bcolumn%5D=period&sort%5B0%5D%5Bdirection%5D=asc&offset=0&length=5000; eia_steo/wti (WTIPUUS): 403 Client Error: Forbidden for url: https://api.eia.gov/v2/steo/data/?api_key=irVUjduslyh4dIFImK49hHGQtvzZgUer",
-    "last_success_epoch": 1787323498,
-    "last_success_iso": "2026-08-21T14:44:58Z"
+    "last_success_epoch": 1787347983,
+    "last_success_iso": "2026-08-21T21:33:03Z"
   },
   "entsoe": {
     "last_attempt_epoch": 1787340571,
@@ -46,10 +46,10 @@
     "last_success_iso": "2026-08-21T19:29:52Z"
   },
   "entsog": {
-    "last_attempt_epoch": 1787323438,
-    "last_attempt_iso": "2026-08-21T14:43:58Z",
-    "last_success_epoch": 1787323451,
-    "last_success_iso": "2026-08-21T14:44:11Z"
+    "last_attempt_epoch": 1787347855,
+    "last_attempt_iso": "2026-08-21T21:30:55Z",
+    "last_success_epoch": 1787347884,
+    "last_success_iso": "2026-08-21T21:31:24Z"
   },
   "eurostat_oil": {
     "last_attempt_epoch": 1787311913,
@@ -60,44 +60,44 @@
     "last_success_iso": "2026-08-21T11:35:06Z"
   },
   "fred_energy": {
-    "last_attempt_epoch": 1787302368,
-    "last_attempt_iso": "2026-08-21T08:52:48Z",
-    "last_success_epoch": 1787302374,
-    "last_success_iso": "2026-08-21T08:52:54Z"
+    "last_attempt_epoch": 1787347946,
+    "last_attempt_iso": "2026-08-21T21:32:26Z",
+    "last_success_epoch": 1787347952,
+    "last_success_iso": "2026-08-21T21:32:32Z"
   },
   "fuel": {
-    "last_attempt_epoch": 1787302284,
-    "last_attempt_iso": "2026-08-21T08:51:24Z",
+    "last_attempt_epoch": 1787347885,
+    "last_attempt_iso": "2026-08-21T21:31:25Z",
     "last_error_epoch": 1782312643,
     "last_error_message": "RuntimeError: tankerkoenig: no city returned valid E5 average | at File \"/home/runner/work/energie/energie/scripts/fetchers/fuel.py\", line 116, in fetch",
-    "last_success_epoch": 1787302335,
-    "last_success_iso": "2026-08-21T08:52:15Z"
+    "last_success_epoch": 1787347936,
+    "last_success_iso": "2026-08-21T21:32:16Z"
   },
   "fx": {
-    "last_attempt_epoch": 1787302283,
-    "last_attempt_iso": "2026-08-21T08:51:23Z",
-    "last_success_epoch": 1787302284,
-    "last_success_iso": "2026-08-21T08:51:24Z"
+    "last_attempt_epoch": 1787347884,
+    "last_attempt_iso": "2026-08-21T21:31:24Z",
+    "last_success_epoch": 1787347885,
+    "last_success_iso": "2026-08-21T21:31:25Z"
   },
   "gas_storage": {
-    "last_attempt_epoch": 1787323380,
-    "last_attempt_iso": "2026-08-21T14:43:00Z",
-    "last_success_epoch": 1787323438,
-    "last_success_iso": "2026-08-21T14:43:58Z"
+    "last_attempt_epoch": 1787347813,
+    "last_attempt_iso": "2026-08-21T21:30:13Z",
+    "last_success_epoch": 1787347855,
+    "last_success_iso": "2026-08-21T21:30:55Z"
   },
   "heating_oil": {
-    "last_attempt_epoch": 1787302335,
-    "last_attempt_iso": "2026-08-21T08:52:15Z",
+    "last_attempt_epoch": 1787347936,
+    "last_attempt_iso": "2026-08-21T21:32:16Z",
     "last_error_epoch": 1784007636,
     "last_error_message": "RuntimeError: Tecson: could not extract reference price | at File \"/home/runner/work/energie/energie/scripts/fetchers/heating_oil.py\", line 238, in fetch",
-    "last_success_epoch": 1787302345,
-    "last_success_iso": "2026-08-21T08:52:25Z"
+    "last_success_epoch": 1787347946,
+    "last_success_iso": "2026-08-21T21:32:26Z"
   },
   "news": {
-    "last_attempt_epoch": 1787338071,
-    "last_attempt_iso": "2026-08-21T18:47:51Z",
-    "last_success_epoch": 1787338095,
-    "last_success_iso": "2026-08-21T18:48:15Z"
+    "last_attempt_epoch": 1787347983,
+    "last_attempt_iso": "2026-08-21T21:33:03Z",
+    "last_success_epoch": 1787348010,
+    "last_success_iso": "2026-08-21T21:33:30Z"
   },
   "smard": {
     "last_attempt_epoch": 1787344298,
