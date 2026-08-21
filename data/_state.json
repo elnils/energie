@@ -14,12 +14,12 @@
     "last_success_iso": "2026-08-21T08:52:48Z"
   },
   "eia_petroleum": {
-    "last_attempt_epoch": 1787308685,
-    "last_attempt_iso": "2026-08-21T10:38:05Z",
+    "last_attempt_epoch": 1787354963,
+    "last_attempt_iso": "2026-08-21T23:29:23Z",
     "last_error_epoch": 1785097226,
     "last_error_message": "RuntimeError: EIA: all series failed — check EIA_API_KEY | at File \"/home/runner/work/energie/energie/scripts/fetchers/eia_petroleum.py\", line 193, in fetch",
-    "last_success_epoch": 1787308691,
-    "last_success_iso": "2026-08-21T10:38:11Z"
+    "last_success_epoch": 1787354969,
+    "last_success_iso": "2026-08-21T23:29:29Z"
   },
   "energy_charts": {
     "last_attempt_epoch": 1787351433,
