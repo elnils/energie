@@ -1,9 +1,9 @@
 {
   "commodities": {
-    "last_attempt_epoch": 1787311904,
-    "last_attempt_iso": "2026-08-21T11:31:44Z",
-    "last_success_epoch": 1787311913,
-    "last_success_iso": "2026-08-21T11:31:53Z"
+    "last_attempt_epoch": 1787323453,
+    "last_attempt_iso": "2026-08-21T14:44:13Z",
+    "last_success_epoch": 1787323464,
+    "last_success_iso": "2026-08-21T14:44:24Z"
   },
   "destatis_vpi": {
     "last_attempt_epoch": 1787302345,
@@ -22,20 +22,20 @@
     "last_success_iso": "2026-08-21T10:38:11Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1787317140,
-    "last_attempt_iso": "2026-08-21T12:59:00Z",
+    "last_attempt_epoch": 1787323249,
+    "last_attempt_iso": "2026-08-21T14:40:49Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1787317284,
-    "last_success_iso": "2026-08-21T13:01:24Z"
+    "last_success_epoch": 1787323380,
+    "last_success_iso": "2026-08-21T14:43:00Z"
   },
   "energy_futures": {
-    "last_attempt_epoch": 1787298715,
-    "last_attempt_iso": "2026-08-21T07:51:55Z",
+    "last_attempt_epoch": 1787323464,
+    "last_attempt_iso": "2026-08-21T14:44:24Z",
     "last_error_epoch": 1786328617,
     "last_error_message": "RuntimeError: energy_futures: ALL external APIs failed. Errors: eia_steo/brent (BREPUUS): 403 Client Error: Forbidden for url: https://api.eia.gov/v2/steo/data/?api_key=irVUjduslyh4dIFImK49hHGQtvzZgUergFPQDNQ9&frequency=monthly&data%5B0%5D=value&facets%5BseriesId%5D%5B%5D=BREPUUS&sort%5B0%5D%5Bcolumn%5D=period&sort%5B0%5D%5Bdirection%5D=asc&offset=0&length=5000; eia_steo/wti (WTIPUUS): 403 Client Error: Forbidden for url: https://api.eia.gov/v2/steo/data/?api_key=irVUjduslyh4dIFImK49hHGQtvzZgUer",
-    "last_success_epoch": 1787298746,
-    "last_success_iso": "2026-08-21T07:52:26Z"
+    "last_success_epoch": 1787323498,
+    "last_success_iso": "2026-08-21T14:44:58Z"
   },
   "entsoe": {
     "last_attempt_epoch": 1787317284,
@@ -46,10 +46,10 @@
     "last_success_iso": "2026-08-21T13:03:31Z"
   },
   "entsog": {
-    "last_attempt_epoch": 1787298686,
-    "last_attempt_iso": "2026-08-21T07:51:26Z",
-    "last_success_epoch": 1787298701,
-    "last_success_iso": "2026-08-21T07:51:41Z"
+    "last_attempt_epoch": 1787323438,
+    "last_attempt_iso": "2026-08-21T14:43:58Z",
+    "last_success_epoch": 1787323451,
+    "last_success_iso": "2026-08-21T14:44:11Z"
   },
   "eurostat_oil": {
     "last_attempt_epoch": 1787311913,
@@ -80,10 +80,10 @@
     "last_success_iso": "2026-08-21T08:51:24Z"
   },
   "gas_storage": {
-    "last_attempt_epoch": 1787298594,
-    "last_attempt_iso": "2026-08-21T07:49:54Z",
-    "last_success_epoch": 1787298686,
-    "last_success_iso": "2026-08-21T07:51:26Z"
+    "last_attempt_epoch": 1787323380,
+    "last_attempt_iso": "2026-08-21T14:43:00Z",
+    "last_success_epoch": 1787323438,
+    "last_success_iso": "2026-08-21T14:43:58Z"
   },
   "heating_oil": {
     "last_attempt_epoch": 1787302335,
@@ -100,19 +100,19 @@
     "last_success_iso": "2026-08-21T13:03:53Z"
   },
   "smard": {
-    "last_attempt_epoch": 1787317132,
-    "last_attempt_iso": "2026-08-21T12:58:52Z",
+    "last_attempt_epoch": 1787323242,
+    "last_attempt_iso": "2026-08-21T14:40:42Z",
     "last_error_epoch": 1784702205,
     "last_error_message": "RuntimeError: SMARD: all filters returned empty | at File \"/home/runner/work/energie/energie/scripts/fetchers/smard.py\", line 109, in fetch",
-    "last_success_epoch": 1787317140,
-    "last_success_iso": "2026-08-21T12:59:00Z"
+    "last_success_epoch": 1787323249,
+    "last_success_iso": "2026-08-21T14:40:49Z"
   },
   "weather": {
-    "last_attempt_epoch": 1787311902,
-    "last_attempt_iso": "2026-08-21T11:31:42Z",
+    "last_attempt_epoch": 1787323451,
+    "last_attempt_iso": "2026-08-21T14:44:11Z",
     "last_error_epoch": 1783124579,
     "last_error_message": "RuntimeError: Open-Meteo: zero cities returned data | at File \"/home/runner/work/energie/energie/scripts/fetchers/weather.py\", line 45, in fetch",
-    "last_success_epoch": 1787311904,
-    "last_success_iso": "2026-08-21T11:31:44Z"
+    "last_success_epoch": 1787323453,
+    "last_success_iso": "2026-08-21T14:44:13Z"
   }
 }
