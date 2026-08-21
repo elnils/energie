@@ -1,9 +1,9 @@
 {
   "commodities": {
-    "last_attempt_epoch": 1787298703,
-    "last_attempt_iso": "2026-08-21T07:51:43Z",
-    "last_success_epoch": 1787298715,
-    "last_success_iso": "2026-08-21T07:51:55Z"
+    "last_attempt_epoch": 1787311904,
+    "last_attempt_iso": "2026-08-21T11:31:44Z",
+    "last_success_epoch": 1787311913,
+    "last_success_iso": "2026-08-21T11:31:53Z"
   },
   "destatis_vpi": {
     "last_attempt_epoch": 1787302345,
@@ -52,12 +52,12 @@
     "last_success_iso": "2026-08-21T07:51:41Z"
   },
   "eurostat_oil": {
-    "last_attempt_epoch": 1787222346,
-    "last_attempt_iso": "2026-08-20T10:39:06Z",
+    "last_attempt_epoch": 1787311913,
+    "last_attempt_iso": "2026-08-21T11:31:53Z",
     "last_error_epoch": 1779176945,
     "last_error_message": "ValueError: fetcher 'eurostat_oil' missing expected keys {'jet_stocks'}; got {'gas_imports', 'electricity_imports', 'oil_motor_gasoline', 'oil_jet_fuel_supply', 'oil_crude_production', 'oil_jet_fuel_exports', 'electricity_wind', 'electricity_solar', 'electricity_generation', 'oil_diesel_stocks', 'gas_consumption', 'oil_crude_imports', 'electricity_nuclear', 'oil_jet_fuel_stocks', 'gas_production', 'oil_jet_fuel_imports', 'oil_heating_oil_stocks', 'oil_jet_fuel_consumption', 'gas_stocks', 'gas_ex",
-    "last_success_epoch": 1787222469,
-    "last_success_iso": "2026-08-20T10:41:09Z"
+    "last_success_epoch": 1787312106,
+    "last_success_iso": "2026-08-21T11:35:06Z"
   },
   "fred_energy": {
     "last_attempt_epoch": 1787302368,
@@ -108,11 +108,11 @@
     "last_success_iso": "2026-08-21T10:35:55Z"
   },
   "weather": {
-    "last_attempt_epoch": 1787298701,
-    "last_attempt_iso": "2026-08-21T07:51:41Z",
+    "last_attempt_epoch": 1787311902,
+    "last_attempt_iso": "2026-08-21T11:31:42Z",
     "last_error_epoch": 1783124579,
     "last_error_message": "RuntimeError: Open-Meteo: zero cities returned data | at File \"/home/runner/work/energie/energie/scripts/fetchers/weather.py\", line 45, in fetch",
-    "last_success_epoch": 1787298703,
-    "last_success_iso": "2026-08-21T07:51:43Z"
+    "last_success_epoch": 1787311904,
+    "last_success_iso": "2026-08-21T11:31:44Z"
   }
 }
