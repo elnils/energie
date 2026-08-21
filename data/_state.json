@@ -14,20 +14,20 @@
     "last_success_iso": "2026-08-21T08:52:48Z"
   },
   "eia_petroleum": {
-    "last_attempt_epoch": 1787265407,
-    "last_attempt_iso": "2026-08-20T22:36:47Z",
+    "last_attempt_epoch": 1787308685,
+    "last_attempt_iso": "2026-08-21T10:38:05Z",
     "last_error_epoch": 1785097226,
     "last_error_message": "RuntimeError: EIA: all series failed — check EIA_API_KEY | at File \"/home/runner/work/energie/energie/scripts/fetchers/eia_petroleum.py\", line 193, in fetch",
-    "last_success_epoch": 1787265414,
-    "last_success_iso": "2026-08-20T22:36:54Z"
+    "last_success_epoch": 1787308691,
+    "last_success_iso": "2026-08-21T10:38:11Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1787302122,
-    "last_attempt_iso": "2026-08-21T08:48:42Z",
+    "last_attempt_epoch": 1787308555,
+    "last_attempt_iso": "2026-08-21T10:35:55Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1787302283,
-    "last_success_iso": "2026-08-21T08:51:23Z"
+    "last_success_epoch": 1787308685,
+    "last_success_iso": "2026-08-21T10:38:05Z"
   },
   "energy_futures": {
     "last_attempt_epoch": 1787298715,
@@ -100,12 +100,12 @@
     "last_success_iso": "2026-08-21T09:42:57Z"
   },
   "smard": {
-    "last_attempt_epoch": 1787302116,
-    "last_attempt_iso": "2026-08-21T08:48:36Z",
+    "last_attempt_epoch": 1787308549,
+    "last_attempt_iso": "2026-08-21T10:35:49Z",
     "last_error_epoch": 1784702205,
     "last_error_message": "RuntimeError: SMARD: all filters returned empty | at File \"/home/runner/work/energie/energie/scripts/fetchers/smard.py\", line 109, in fetch",
-    "last_success_epoch": 1787302122,
-    "last_success_iso": "2026-08-21T08:48:42Z"
+    "last_success_epoch": 1787308555,
+    "last_success_iso": "2026-08-21T10:35:55Z"
   },
   "weather": {
     "last_attempt_epoch": 1787298701,
