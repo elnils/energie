@@ -6,12 +6,12 @@
     "last_success_iso": "2026-08-22T08:38:58Z"
   },
   "destatis_vpi": {
-    "last_attempt_epoch": 1787302345,
-    "last_attempt_iso": "2026-08-21T08:52:25Z",
+    "last_attempt_epoch": 1787391130,
+    "last_attempt_iso": "2026-08-22T09:32:10Z",
     "last_error_epoch": 1786945175,
     "last_error_message": "RuntimeError: Destatis auth: BOTH modes failed. header: header-auth status: Ein Fehler ist aufgetreten. (Die Aktion wurde wegen eines unerwarteten Systemfehlers abgebrochen.); body: Ein Fehler ist aufgetreten. (Die Aktion wurde wegen eines unerwarteten Systemfehlers abgebrochen.) | at File \"/home/runner/work/energie/energie/scripts/fetchers/destatis_vpi.py\", line 191, in _check_login",
-    "last_success_epoch": 1787302368,
-    "last_success_iso": "2026-08-21T08:52:48Z"
+    "last_success_epoch": 1787391152,
+    "last_success_iso": "2026-08-22T09:32:32Z"
   },
   "eia_petroleum": {
     "last_attempt_epoch": 1787354963,
@@ -60,10 +60,10 @@
     "last_success_iso": "2026-08-21T11:35:06Z"
   },
   "fred_energy": {
-    "last_attempt_epoch": 1787347946,
-    "last_attempt_iso": "2026-08-21T21:32:26Z",
-    "last_success_epoch": 1787347952,
-    "last_success_iso": "2026-08-21T21:32:32Z"
+    "last_attempt_epoch": 1787391152,
+    "last_attempt_iso": "2026-08-22T09:32:32Z",
+    "last_success_epoch": 1787391157,
+    "last_success_iso": "2026-08-22T09:32:37Z"
   },
   "fuel": {
     "last_attempt_epoch": 1787347885,
@@ -74,10 +74,10 @@
     "last_success_iso": "2026-08-21T21:32:16Z"
   },
   "fx": {
-    "last_attempt_epoch": 1787347884,
-    "last_attempt_iso": "2026-08-21T21:31:24Z",
-    "last_success_epoch": 1787347885,
-    "last_success_iso": "2026-08-21T21:31:25Z"
+    "last_attempt_epoch": 1787391129,
+    "last_attempt_iso": "2026-08-22T09:32:09Z",
+    "last_success_epoch": 1787391130,
+    "last_success_iso": "2026-08-22T09:32:10Z"
   },
   "gas_storage": {
     "last_attempt_epoch": 1787370628,
@@ -94,10 +94,10 @@
     "last_success_iso": "2026-08-21T21:32:26Z"
   },
   "news": {
-    "last_attempt_epoch": 1787381553,
-    "last_attempt_iso": "2026-08-22T06:52:33Z",
-    "last_success_epoch": 1787381576,
-    "last_success_iso": "2026-08-22T06:52:56Z"
+    "last_attempt_epoch": 1787391157,
+    "last_attempt_iso": "2026-08-22T09:32:37Z",
+    "last_success_epoch": 1787391180,
+    "last_success_iso": "2026-08-22T09:33:00Z"
   },
   "smard": {
     "last_attempt_epoch": 1787387813,
