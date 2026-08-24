@@ -74,10 +74,10 @@
     "last_success_iso": "2026-08-24T01:48:51Z"
   },
   "fx": {
-    "last_attempt_epoch": 1787527577,
-    "last_attempt_iso": "2026-08-23T23:26:17Z",
-    "last_success_epoch": 1787527579,
-    "last_success_iso": "2026-08-23T23:26:19Z"
+    "last_attempt_epoch": 1787571263,
+    "last_attempt_iso": "2026-08-24T11:34:23Z",
+    "last_success_epoch": 1787571264,
+    "last_success_iso": "2026-08-24T11:34:24Z"
   },
   "gas_storage": {
     "last_attempt_epoch": 1787561837,
