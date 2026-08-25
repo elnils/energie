@@ -1,9 +1,9 @@
 {
   "commodities": {
-    "last_attempt_epoch": 1787633303,
-    "last_attempt_iso": "2026-08-25T04:48:23Z",
-    "last_success_epoch": 1787633313,
-    "last_success_iso": "2026-08-25T04:48:33Z"
+    "last_attempt_epoch": 1787644281,
+    "last_attempt_iso": "2026-08-25T07:51:21Z",
+    "last_success_epoch": 1787644291,
+    "last_success_iso": "2026-08-25T07:51:31Z"
   },
   "destatis_vpi": {
     "last_attempt_epoch": 1787565258,
@@ -108,11 +108,11 @@
     "last_success_iso": "2026-08-25T06:57:19Z"
   },
   "weather": {
-    "last_attempt_epoch": 1787633301,
-    "last_attempt_iso": "2026-08-25T04:48:21Z",
+    "last_attempt_epoch": 1787644279,
+    "last_attempt_iso": "2026-08-25T07:51:19Z",
     "last_error_epoch": 1783124579,
     "last_error_message": "RuntimeError: Open-Meteo: zero cities returned data | at File \"/home/runner/work/energie/energie/scripts/fetchers/weather.py\", line 45, in fetch",
-    "last_success_epoch": 1787633303,
-    "last_success_iso": "2026-08-25T04:48:23Z"
+    "last_success_epoch": 1787644281,
+    "last_success_iso": "2026-08-25T07:51:21Z"
   }
 }
