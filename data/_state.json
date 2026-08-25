@@ -52,12 +52,12 @@
     "last_success_iso": "2026-08-25T11:34:17Z"
   },
   "eurostat_oil": {
-    "last_attempt_epoch": 1787576704,
-    "last_attempt_iso": "2026-08-24T13:05:04Z",
+    "last_attempt_epoch": 1787666185,
+    "last_attempt_iso": "2026-08-25T13:56:25Z",
     "last_error_epoch": 1779176945,
     "last_error_message": "ValueError: fetcher 'eurostat_oil' missing expected keys {'jet_stocks'}; got {'gas_imports', 'electricity_imports', 'oil_motor_gasoline', 'oil_jet_fuel_supply', 'oil_crude_production', 'oil_jet_fuel_exports', 'electricity_wind', 'electricity_solar', 'electricity_generation', 'oil_diesel_stocks', 'gas_consumption', 'oil_crude_imports', 'electricity_nuclear', 'oil_jet_fuel_stocks', 'gas_production', 'oil_jet_fuel_imports', 'oil_heating_oil_stocks', 'oil_jet_fuel_consumption', 'gas_stocks', 'gas_ex",
-    "last_success_epoch": 1787576909,
-    "last_success_iso": "2026-08-24T13:08:29Z"
+    "last_success_epoch": 1787666378,
+    "last_success_iso": "2026-08-25T13:59:38Z"
   },
   "fred_energy": {
     "last_attempt_epoch": 1787627282,
@@ -74,10 +74,10 @@
     "last_success_iso": "2026-08-25T03:07:53Z"
   },
   "fx": {
-    "last_attempt_epoch": 1787622138,
-    "last_attempt_iso": "2026-08-25T01:42:18Z",
-    "last_success_epoch": 1787622140,
-    "last_success_iso": "2026-08-25T01:42:20Z"
+    "last_attempt_epoch": 1787666184,
+    "last_attempt_iso": "2026-08-25T13:56:24Z",
+    "last_success_epoch": 1787666185,
+    "last_success_iso": "2026-08-25T13:56:25Z"
   },
   "gas_storage": {
     "last_attempt_epoch": 1787657623,
