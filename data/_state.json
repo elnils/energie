@@ -60,18 +60,18 @@
     "last_success_iso": "2026-08-25T13:59:38Z"
   },
   "fred_energy": {
-    "last_attempt_epoch": 1787627282,
-    "last_attempt_iso": "2026-08-25T03:08:02Z",
-    "last_success_epoch": 1787627288,
-    "last_success_iso": "2026-08-25T03:08:08Z"
+    "last_attempt_epoch": 1787673039,
+    "last_attempt_iso": "2026-08-25T15:50:39Z",
+    "last_success_epoch": 1787673046,
+    "last_success_iso": "2026-08-25T15:50:46Z"
   },
   "fuel": {
-    "last_attempt_epoch": 1787627221,
-    "last_attempt_iso": "2026-08-25T03:07:01Z",
+    "last_attempt_epoch": 1787672973,
+    "last_attempt_iso": "2026-08-25T15:49:33Z",
     "last_error_epoch": 1782312643,
     "last_error_message": "RuntimeError: tankerkoenig: no city returned valid E5 average | at File \"/home/runner/work/energie/energie/scripts/fetchers/fuel.py\", line 116, in fetch",
-    "last_success_epoch": 1787627273,
-    "last_success_iso": "2026-08-25T03:07:53Z"
+    "last_success_epoch": 1787673029,
+    "last_success_iso": "2026-08-25T15:50:29Z"
   },
   "fx": {
     "last_attempt_epoch": 1787666184,
@@ -86,18 +86,18 @@
     "last_success_iso": "2026-08-25T11:34:02Z"
   },
   "heating_oil": {
-    "last_attempt_epoch": 1787627273,
-    "last_attempt_iso": "2026-08-25T03:07:53Z",
+    "last_attempt_epoch": 1787673029,
+    "last_attempt_iso": "2026-08-25T15:50:29Z",
     "last_error_epoch": 1784007636,
     "last_error_message": "RuntimeError: Tecson: could not extract reference price | at File \"/home/runner/work/energie/energie/scripts/fetchers/heating_oil.py\", line 238, in fetch",
-    "last_success_epoch": 1787627282,
-    "last_success_iso": "2026-08-25T03:08:02Z"
+    "last_success_epoch": 1787673039,
+    "last_success_iso": "2026-08-25T15:50:39Z"
   },
   "news": {
-    "last_attempt_epoch": 1787662835,
-    "last_attempt_iso": "2026-08-25T13:00:35Z",
-    "last_success_epoch": 1787662859,
-    "last_success_iso": "2026-08-25T13:00:59Z"
+    "last_attempt_epoch": 1787673046,
+    "last_attempt_iso": "2026-08-25T15:50:46Z",
+    "last_success_epoch": 1787673068,
+    "last_success_iso": "2026-08-25T15:51:08Z"
   },
   "smard": {
     "last_attempt_epoch": 1787669629,
