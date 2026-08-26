@@ -22,12 +22,12 @@
     "last_success_iso": "2026-08-26T05:42:47Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1787755819,
-    "last_attempt_iso": "2026-08-26T14:50:19Z",
+    "last_attempt_epoch": 1787761357,
+    "last_attempt_iso": "2026-08-26T16:22:37Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1787755923,
-    "last_success_iso": "2026-08-26T14:52:03Z"
+    "last_success_epoch": 1787761543,
+    "last_success_iso": "2026-08-26T16:25:43Z"
   },
   "energy_futures": {
     "last_attempt_epoch": 1787756048,
@@ -74,10 +74,10 @@
     "last_success_iso": "2026-08-26T04:50:35Z"
   },
   "fx": {
-    "last_attempt_epoch": 1787714042,
-    "last_attempt_iso": "2026-08-26T03:14:02Z",
-    "last_success_epoch": 1787714042,
-    "last_success_iso": "2026-08-26T03:14:02Z"
+    "last_attempt_epoch": 1787761543,
+    "last_attempt_iso": "2026-08-26T16:25:43Z",
+    "last_success_epoch": 1787761543,
+    "last_success_iso": "2026-08-26T16:25:43Z"
   },
   "gas_storage": {
     "last_attempt_epoch": 1787755923,
@@ -94,18 +94,18 @@
     "last_success_iso": "2026-08-26T04:50:45Z"
   },
   "news": {
-    "last_attempt_epoch": 1787749617,
-    "last_attempt_iso": "2026-08-26T13:06:57Z",
-    "last_success_epoch": 1787749639,
-    "last_success_iso": "2026-08-26T13:07:19Z"
+    "last_attempt_epoch": 1787761543,
+    "last_attempt_iso": "2026-08-26T16:25:43Z",
+    "last_success_epoch": 1787761565,
+    "last_success_iso": "2026-08-26T16:26:05Z"
   },
   "smard": {
-    "last_attempt_epoch": 1787755813,
-    "last_attempt_iso": "2026-08-26T14:50:13Z",
+    "last_attempt_epoch": 1787761351,
+    "last_attempt_iso": "2026-08-26T16:22:31Z",
     "last_error_epoch": 1784702205,
     "last_error_message": "RuntimeError: SMARD: all filters returned empty | at File \"/home/runner/work/energie/energie/scripts/fetchers/smard.py\", line 109, in fetch",
-    "last_success_epoch": 1787755819,
-    "last_success_iso": "2026-08-26T14:50:19Z"
+    "last_success_epoch": 1787761357,
+    "last_success_iso": "2026-08-26T16:22:37Z"
   },
   "weather": {
     "last_attempt_epoch": 1787755981,
