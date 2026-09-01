@@ -14,20 +14,20 @@
     "last_success_iso": "2026-09-01T21:45:13Z"
   },
   "eia_petroleum": {
-    "last_attempt_epoch": 1788256578,
-    "last_attempt_iso": "2026-09-01T09:56:18Z",
+    "last_attempt_epoch": 1788307108,
+    "last_attempt_iso": "2026-09-01T23:58:28Z",
     "last_error_epoch": 1785097226,
     "last_error_message": "RuntimeError: EIA: all series failed — check EIA_API_KEY | at File \"/home/runner/work/energie/energie/scripts/fetchers/eia_petroleum.py\", line 193, in fetch",
-    "last_success_epoch": 1788256583,
-    "last_success_iso": "2026-09-01T09:56:23Z"
+    "last_success_epoch": 1788307116,
+    "last_success_iso": "2026-09-01T23:58:36Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1788298815,
-    "last_attempt_iso": "2026-09-01T21:40:15Z",
+    "last_attempt_epoch": 1788306915,
+    "last_attempt_iso": "2026-09-01T23:55:15Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1788298979,
-    "last_success_iso": "2026-09-01T21:42:59Z"
+    "last_success_epoch": 1788307046,
+    "last_success_iso": "2026-09-01T23:57:26Z"
   },
   "energy_futures": {
     "last_attempt_epoch": 1788299313,
@@ -60,24 +60,24 @@
     "last_success_iso": "2026-09-01T21:52:45Z"
   },
   "fred_energy": {
-    "last_attempt_epoch": 1788256573,
-    "last_attempt_iso": "2026-09-01T09:56:13Z",
-    "last_success_epoch": 1788256578,
-    "last_success_iso": "2026-09-01T09:56:18Z"
+    "last_attempt_epoch": 1788307098,
+    "last_attempt_iso": "2026-09-01T23:58:18Z",
+    "last_success_epoch": 1788307108,
+    "last_success_iso": "2026-09-01T23:58:28Z"
   },
   "fuel": {
-    "last_attempt_epoch": 1788256519,
-    "last_attempt_iso": "2026-09-01T09:55:19Z",
+    "last_attempt_epoch": 1788307047,
+    "last_attempt_iso": "2026-09-01T23:57:27Z",
     "last_error_epoch": 1782312643,
     "last_error_message": "RuntimeError: tankerkoenig: no city returned valid E5 average | at File \"/home/runner/work/energie/energie/scripts/fetchers/fuel.py\", line 116, in fetch",
-    "last_success_epoch": 1788256572,
-    "last_success_iso": "2026-09-01T09:56:12Z"
+    "last_success_epoch": 1788307098,
+    "last_success_iso": "2026-09-01T23:58:18Z"
   },
   "fx": {
-    "last_attempt_epoch": 1788256518,
-    "last_attempt_iso": "2026-09-01T09:55:18Z",
-    "last_success_epoch": 1788256519,
-    "last_success_iso": "2026-09-01T09:55:19Z"
+    "last_attempt_epoch": 1788307046,
+    "last_attempt_iso": "2026-09-01T23:57:26Z",
+    "last_success_epoch": 1788307047,
+    "last_success_iso": "2026-09-01T23:57:27Z"
   },
   "gas_storage": {
     "last_attempt_epoch": 1788298979,
@@ -86,26 +86,26 @@
     "last_success_iso": "2026-09-01T21:44:20Z"
   },
   "heating_oil": {
-    "last_attempt_epoch": 1788299089,
-    "last_attempt_iso": "2026-09-01T21:44:49Z",
-    "last_error_epoch": 1788299090,
+    "last_attempt_epoch": 1788307098,
+    "last_attempt_iso": "2026-09-01T23:58:18Z",
+    "last_error_epoch": 1788307098,
     "last_error_message": "RuntimeError: Tecson: could not extract reference price | at File \"/home/runner/work/energie/energie/scripts/fetchers/heating_oil.py\", line 238, in fetch",
     "last_success_epoch": 1788203123,
     "last_success_iso": "2026-08-31T19:05:23Z"
   },
   "news": {
-    "last_attempt_epoch": 1788299565,
-    "last_attempt_iso": "2026-09-01T21:52:45Z",
-    "last_success_epoch": 1788299589,
-    "last_success_iso": "2026-09-01T21:53:09Z"
+    "last_attempt_epoch": 1788307116,
+    "last_attempt_iso": "2026-09-01T23:58:36Z",
+    "last_success_epoch": 1788307138,
+    "last_success_iso": "2026-09-01T23:58:58Z"
   },
   "smard": {
-    "last_attempt_epoch": 1788298807,
-    "last_attempt_iso": "2026-09-01T21:40:07Z",
+    "last_attempt_epoch": 1788306909,
+    "last_attempt_iso": "2026-09-01T23:55:09Z",
     "last_error_epoch": 1784702205,
     "last_error_message": "RuntimeError: SMARD: all filters returned empty | at File \"/home/runner/work/energie/energie/scripts/fetchers/smard.py\", line 109, in fetch",
-    "last_success_epoch": 1788298815,
-    "last_success_iso": "2026-09-01T21:40:15Z"
+    "last_success_epoch": 1788306915,
+    "last_success_iso": "2026-09-01T23:55:15Z"
   },
   "weather": {
     "last_attempt_epoch": 1788299076,
