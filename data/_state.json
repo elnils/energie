@@ -1,33 +1,33 @@
 {
   "commodities": {
-    "last_attempt_epoch": 1789544102,
-    "last_attempt_iso": "2026-09-16T07:35:02Z",
-    "last_success_epoch": 1789544111,
-    "last_success_iso": "2026-09-16T07:35:11Z"
+    "last_attempt_epoch": 1789564990,
+    "last_attempt_iso": "2026-09-16T13:23:10Z",
+    "last_success_epoch": 1789564998,
+    "last_success_iso": "2026-09-16T13:23:18Z"
   },
   "destatis_vpi": {
-    "last_attempt_epoch": 1789457735,
-    "last_attempt_iso": "2026-09-15T07:35:35Z",
+    "last_attempt_epoch": 1789565053,
+    "last_attempt_iso": "2026-09-16T13:24:13Z",
     "last_error_epoch": 1788686422,
     "last_error_message": "RuntimeError: Destatis auth: BOTH modes failed. header: header-auth exception: source exceeded wallclock budget; body: HTTPSConnectionPool(host='genesis.destatis.de', port=443): Max retries exceeded with url: /genesisWS/rest/2020/helloworld/logincheck (Caused by ReadTimeoutError(\"HTTPSConnectionPool(host='genesis.destatis.de', port=443): Read timed out. (read timeout=30)\")) | at File \"/home/runner/work/energie/energie/scripts/fetchers/destatis_vpi.py\", line 199, in _check_login",
-    "last_success_epoch": 1789457755,
-    "last_success_iso": "2026-09-15T07:35:55Z"
+    "last_success_epoch": 1789565072,
+    "last_success_iso": "2026-09-16T13:24:32Z"
   },
   "eia_petroleum": {
-    "last_attempt_epoch": 1789509988,
-    "last_attempt_iso": "2026-09-15T22:06:28Z",
+    "last_attempt_epoch": 1789565077,
+    "last_attempt_iso": "2026-09-16T13:24:37Z",
     "last_error_epoch": 1785097226,
     "last_error_message": "RuntimeError: EIA: all series failed — check EIA_API_KEY | at File \"/home/runner/work/energie/energie/scripts/fetchers/eia_petroleum.py\", line 193, in fetch",
-    "last_success_epoch": 1789510003,
-    "last_success_iso": "2026-09-15T22:06:43Z"
+    "last_success_epoch": 1789565083,
+    "last_success_iso": "2026-09-16T13:24:43Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1789543870,
-    "last_attempt_iso": "2026-09-16T07:31:10Z",
+    "last_attempt_epoch": 1789564849,
+    "last_attempt_iso": "2026-09-16T13:20:49Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1789544006,
-    "last_success_iso": "2026-09-16T07:33:26Z"
+    "last_success_epoch": 1789564987,
+    "last_success_iso": "2026-09-16T13:23:07Z"
   },
   "energy_futures": {
     "last_attempt_epoch": 1789544140,
@@ -52,32 +52,32 @@
     "last_success_iso": "2026-09-16T07:34:59Z"
   },
   "eurostat_oil": {
-    "last_attempt_epoch": 1789457836,
-    "last_attempt_iso": "2026-09-15T07:37:16Z",
+    "last_attempt_epoch": 1789565083,
+    "last_attempt_iso": "2026-09-16T13:24:43Z",
     "last_error_epoch": 1788596786,
     "last_error_message": "RuntimeError: Eurostat: alle Serien fehlgeschlagen — API nicht erreichbar oder alle Produkt-/Flow-Kombinationen leer. Letzter Datensatz wird als stale beibehalten. | at File \"/home/runner/work/energie/energie/scripts/fetchers/eurostat_oil.py\", line 350, in fetch",
-    "last_success_epoch": 1789457941,
-    "last_success_iso": "2026-09-15T07:39:01Z"
+    "last_success_epoch": 1789565308,
+    "last_success_iso": "2026-09-16T13:28:28Z"
   },
   "fred_energy": {
-    "last_attempt_epoch": 1789509960,
-    "last_attempt_iso": "2026-09-15T22:06:00Z",
-    "last_success_epoch": 1789509988,
-    "last_success_iso": "2026-09-15T22:06:28Z"
+    "last_attempt_epoch": 1789565072,
+    "last_attempt_iso": "2026-09-16T13:24:32Z",
+    "last_success_epoch": 1789565077,
+    "last_success_iso": "2026-09-16T13:24:37Z"
   },
   "fuel": {
-    "last_attempt_epoch": 1789509907,
-    "last_attempt_iso": "2026-09-15T22:05:07Z",
+    "last_attempt_epoch": 1789565000,
+    "last_attempt_iso": "2026-09-16T13:23:20Z",
     "last_error_epoch": 1782312643,
     "last_error_message": "RuntimeError: tankerkoenig: no city returned valid E5 average | at File \"/home/runner/work/energie/energie/scripts/fetchers/fuel.py\", line 116, in fetch",
-    "last_success_epoch": 1789509959,
-    "last_success_iso": "2026-09-15T22:05:59Z"
+    "last_success_epoch": 1789565051,
+    "last_success_iso": "2026-09-16T13:24:11Z"
   },
   "fx": {
-    "last_attempt_epoch": 1789509906,
-    "last_attempt_iso": "2026-09-15T22:05:06Z",
-    "last_success_epoch": 1789509907,
-    "last_success_iso": "2026-09-15T22:05:07Z"
+    "last_attempt_epoch": 1789564998,
+    "last_attempt_iso": "2026-09-16T13:23:18Z",
+    "last_success_epoch": 1789565000,
+    "last_success_iso": "2026-09-16T13:23:20Z"
   },
   "gas_storage": {
     "last_attempt_epoch": 1789544006,
@@ -86,33 +86,33 @@
     "last_success_iso": "2026-09-16T07:34:33Z"
   },
   "heating_oil": {
-    "last_attempt_epoch": 1789544111,
-    "last_attempt_iso": "2026-09-16T07:35:11Z",
-    "last_error_epoch": 1789544112,
+    "last_attempt_epoch": 1789565051,
+    "last_attempt_iso": "2026-09-16T13:24:11Z",
+    "last_error_epoch": 1789565053,
     "last_error_message": "RuntimeError: Tecson: could not extract reference price | at File \"/home/runner/work/energie/energie/scripts/fetchers/heating_oil.py\", line 238, in fetch",
     "last_success_epoch": 1789365744,
     "last_success_iso": "2026-09-14T06:02:24Z"
   },
   "news": {
-    "last_attempt_epoch": 1789544173,
-    "last_attempt_iso": "2026-09-16T07:36:13Z",
-    "last_success_epoch": 1789544198,
-    "last_success_iso": "2026-09-16T07:36:38Z"
+    "last_attempt_epoch": 1789565308,
+    "last_attempt_iso": "2026-09-16T13:28:28Z",
+    "last_success_epoch": 1789565332,
+    "last_success_iso": "2026-09-16T13:28:52Z"
   },
   "smard": {
-    "last_attempt_epoch": 1789543862,
-    "last_attempt_iso": "2026-09-16T07:31:02Z",
+    "last_attempt_epoch": 1789564841,
+    "last_attempt_iso": "2026-09-16T13:20:41Z",
     "last_error_epoch": 1784702205,
     "last_error_message": "RuntimeError: SMARD: all filters returned empty | at File \"/home/runner/work/energie/energie/scripts/fetchers/smard.py\", line 109, in fetch",
-    "last_success_epoch": 1789543870,
-    "last_success_iso": "2026-09-16T07:31:10Z"
+    "last_success_epoch": 1789564849,
+    "last_success_iso": "2026-09-16T13:20:49Z"
   },
   "weather": {
-    "last_attempt_epoch": 1789544099,
-    "last_attempt_iso": "2026-09-16T07:34:59Z",
+    "last_attempt_epoch": 1789564987,
+    "last_attempt_iso": "2026-09-16T13:23:07Z",
     "last_error_epoch": 1788409115,
     "last_error_message": "RuntimeError: Open-Meteo: zero cities returned data | at File \"/home/runner/work/energie/energie/scripts/fetchers/weather.py\", line 45, in fetch",
-    "last_success_epoch": 1789544102,
-    "last_success_iso": "2026-09-16T07:35:02Z"
+    "last_success_epoch": 1789564990,
+    "last_success_iso": "2026-09-16T13:23:10Z"
   }
 }
