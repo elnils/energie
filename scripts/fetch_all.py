@@ -37,7 +37,7 @@ from fetchers import (
     smard, energy_charts, gas_storage, fuel, weather,
     commodities, news, fx_ecb, heating_oil, destatis_vpi,
     entsog, entsoe, eia_petroleum, fred_energy, eurostat_oil,
-    energy_futures,
+    energy_futures, eurostat_prices,
 )
 
 
@@ -67,7 +67,10 @@ SCHEDULE = [
     ('FRED Energy',      'fred_energy',     fred_energy.fetch,      720,   60),
     ('EIA Petroleum',    'eia_petroleum',   eia_petroleum.fetch,    720,   90),
     ('Energy Futures',   'energy_futures',  energy_futures.fetch,   360,   90),
-    ('Eurostat Oil',     'eurostat_oil',    eurostat_oil.fetch,     1440,  90),
+    ('Eurostat Oil',     'eurostat_oil',    eurostat_oil.fetch,     1440,  180),
+    # Semi-annual publication — a daily check is already generous. Budget is
+    # wide because it walks 4 datasets x 3 tax levels x 11 countries.
+    ('Eurostat Preise',  'eurostat_prices', eurostat_prices.fetch,  1440,  240),
     ('News RSS',         'news',            news.fetch,             120,   90),
 ]
 

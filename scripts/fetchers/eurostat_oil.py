@@ -1,357 +1,214 @@
 """
 Eurostat — EU energy statistics: oil products, gas, electricity.
 
-Covers all datasets reported by the running fetcher in the 2026-05-12 log:
-  oil  → nrg_cb_oilm  (monthly oil consumption, by product / flow)
+  oil  → nrg_cb_oilm  (monthly oil supply/consumption by product and balance)
   gas  → nrg_cb_gasm  (monthly gas)
-  elec → nrg_cb_e     (electricity)
+  elec → nrg_cb_e     (annual electricity)
 
-Root cause of the previous failure ("REST ok but 0 values parsed"):
-  Eurostat migrated their API to SDMX-JSON v2 format. In the new format
-  the `value` field is a plain ARRAY, not a dict with string-integer keys,
-  and the time dimension is keyed as 'TIME_PERIOD' not 'time'. The old
-  parser silently fell through when it encountered an array for `value`.
+Why this was rewritten
+----------------------
+Ten of the twenty-three series in this file were permanently empty, among
+them every series the Treibstoff tab draws. The cause was not the API being
+down: the requests asked for dimension codes that do not exist in these
+datasets, and Eurostat answers that with HTTP 200 and an empty cube.
 
-  Fix: _parse_eurostat_json() now detects both formats (dict/array for
-  `value`) and tries both 'time' and 'TIME_PERIOD' as the time dimension
-  key. A bulk TSV download is used as fallback if REST returns 0 values.
+    nrg_bal=INTSTOCK / PRIM_PROD / FC_NE     no such balance codes
+    siec=O4651_4652                           no such oil product code
+    siec=E7011 / E7012 / E7100 / E7200        no such electricity codes
+
+The three series that used real codes (IMP, EXP, STK_CHG on gas) worked
+throughout, which is why the file always looked half-alive.
+
+Series are now declared by *intent* — "kerosene-type jet fuel", "imports" —
+and the codes are resolved against the dataset's own published vocabulary at
+fetch time (see fetchers/_eurostat.py). Preferred codes are still listed
+first so a correct guess costs no extra work; the label patterns are what
+survives the next vocabulary revision. Whatever each pattern resolved to is
+written to meta.resolved so a rename shows up as a changed code in the data
+file rather than as a chart that quietly stops drawing.
 
 Docs: https://wikis.ec.europa.eu/display/EUROSTATHELP/API+-+Getting+started+with+statistics+API
 """
-import csv
-import io
-import time
-import zipfile
 from typing import Dict, List, Optional, Tuple
 
-from core import http
-
-BASE = 'https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data'
-BULK = 'https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/data'
+from . import _eurostat as eu
 
 GEO = ['EU27_2020', 'DE', 'FR', 'IT', 'ES', 'NL', 'PL', 'BE', 'AT', 'EA20']
 
+# Data starts here for monthly datasets. Annual ones ignore it and return
+# their full history, which is what the long-run import/export view wants.
+SINCE_MONTHLY = '2015-01'
+
 # ──────────────────────────────────────────────────────────────────────
-# SERIES DEFINITIONS
-# Each tuple: (local_key, dataset, product_code, nrg_flow, description)
+# SIEC (product) intents
+# key -> (preferred codes, label patterns, label exclusions)
 # ──────────────────────────────────────────────────────────────────────
-# Oil — nrg_cb_oilm
-OIL_SERIES = [
-    ('oil_jet_fuel_stocks',     'nrg_cb_oilm', 'O4651_4652', 'INTSTOCK',  'Jet fuel stocks'),
-    ('oil_jet_fuel_supply',     'nrg_cb_oilm', 'O4651_4652', 'PRIM_PROD', 'Jet fuel production/supply'),
-    ('oil_jet_fuel_imports',    'nrg_cb_oilm', 'O4651_4652', 'IMP',       'Jet fuel imports'),
-    ('oil_jet_fuel_exports',    'nrg_cb_oilm', 'O4651_4652', 'EXP',       'Jet fuel exports'),
-    ('oil_jet_fuel_consumption','nrg_cb_oilm', 'O4651_4652', 'FC_NE',     'Jet fuel consumption'),
-    ('oil_crude_imports',       'nrg_cb_oilm', 'O100',       'IMP',       'Crude oil imports'),
-    ('oil_crude_production',    'nrg_cb_oilm', 'O100',       'PRIM_PROD', 'Crude oil production'),
-    ('oil_diesel_stocks',       'nrg_cb_oilm', 'O46',        'INTSTOCK',  'Diesel/gasoil stocks'),
-    ('oil_motor_gasoline',      'nrg_cb_oilm', 'O4652',      'INTSTOCK',  'Motor gasoline stocks'),
-    ('oil_heating_oil_stocks',  'nrg_cb_oilm', 'O4680',      'INTSTOCK',  'Heating oil stocks'),
+PRODUCTS: Dict[str, Tuple[Tuple[str, ...], Tuple[str, ...], Tuple[str, ...]]] = {
+    'jet_fuel':  (('O4661XR5230B', 'O4661'),
+                  (r'kerosene.?type jet fuel', r'\bjet fuel\b', r'kerosene'),
+                  (r'kerosene.*lamp',)),
+    'crude':     (('O4100_TOT_4200-2200', 'O4100_TOT', 'O4100'),
+                  (r'^crude oil', r'crude oil.*ngl', r'\bcrude\b'),
+                  ()),
+    'diesel':    (('O4671XR5220B', 'O4671'),
+                  (r'gas oil and diesel', r'\bdiesel\b'),
+                  ()),
+    'gasoline':  (('O4652XR5210B', 'O4652'),
+                  (r'motor gasoline',),
+                  (r'aviation',)),
+    'heating':   (('O4680', 'O4669'),
+                  (r'fuel oil', r'heating.*oil', r'residual fuel'),
+                  ()),
+    'gas':       (('G3000',),
+                  (r'^natural gas$', r'natural gas'),
+                  ()),
+    'electricity': (('E7000',),
+                    (r'^electricity$', r'electricity'),
+                    ()),
+    'elec_wind': (('RA300',), (r'\bwind\b',), ()),
+    'elec_solar': (('RA400', 'RA420'), (r'solar(?!.*thermal)', r'solar'), ()),
+    'elec_nuclear': (('N9000',), (r'nuclear',), ()),
+    'elec_hydro': (('RA100',), (r'hydro',), (r'pumped',)),
+}
+
+# ──────────────────────────────────────────────────────────────────────
+# nrg_bal (energy balance / flow) intents
+# ──────────────────────────────────────────────────────────────────────
+BALANCES: Dict[str, Tuple[Tuple[str, ...], Tuple[str, ...], Tuple[str, ...]]] = {
+    'imports':     (('IMP',), (r'^imports$', r'\bimports\b'), ()),
+    'exports':     (('EXP',), (r'^exports$', r'\bexports\b'), ()),
+    'production':  (('PPRD', 'PRD'), (r'primary production', r'^production$'), ()),
+    'stocks':      (('STK_CL', 'STK_CHG'),
+                    (r'closing stock', r'stock level', r'stock change'), ()),
+    'stock_change': (('STK_CHG',), (r'stock change',), ()),
+    'deliveries':  (('GID_OBS', 'GID_CAL'),
+                    (r'gross inland deliveries.*observ',
+                     r'gross inland deliver', r'gross inland consumption'), ()),
+    'consumption': (('FC_E', 'FC'),
+                    (r'final consumption.*energy use', r'^final consumption$',
+                     r'final consumption'), ()),
+    'gross_production': (('GEP', 'NEP'),
+                         (r'gross electricity production',
+                          r'net electricity production',
+                          r'gross production', r'primary production'), ()),
+}
+
+# ──────────────────────────────────────────────────────────────────────
+# SERIES = (output_key, dataset, product_intent, balance_intent, description)
+# Output keys are unchanged: existing history and the dashboard both key off
+# them, and nothing is dropped from the file.
+# ──────────────────────────────────────────────────────────────────────
+SERIES: List[Tuple[str, str, str, str, str]] = [
+    ('oil_jet_fuel_stocks',      'nrg_cb_oilm', 'jet_fuel', 'stocks',       'Jet fuel stocks'),
+    ('oil_jet_fuel_supply',      'nrg_cb_oilm', 'jet_fuel', 'production',   'Jet fuel production/supply'),
+    ('oil_jet_fuel_imports',     'nrg_cb_oilm', 'jet_fuel', 'imports',      'Jet fuel imports'),
+    ('oil_jet_fuel_exports',     'nrg_cb_oilm', 'jet_fuel', 'exports',      'Jet fuel exports'),
+    ('oil_jet_fuel_consumption', 'nrg_cb_oilm', 'jet_fuel', 'deliveries',   'Jet fuel gross inland deliveries'),
+    ('oil_crude_imports',        'nrg_cb_oilm', 'crude',    'imports',      'Crude oil imports'),
+    ('oil_crude_production',     'nrg_cb_oilm', 'crude',    'production',   'Crude oil production'),
+    ('oil_diesel_stocks',        'nrg_cb_oilm', 'diesel',   'stocks',       'Diesel/gasoil stocks'),
+    ('oil_motor_gasoline',       'nrg_cb_oilm', 'gasoline', 'stocks',       'Motor gasoline stocks'),
+    ('oil_heating_oil_stocks',   'nrg_cb_oilm', 'heating',  'stocks',       'Heating/fuel oil stocks'),
+
+    ('gas_production',           'nrg_cb_gasm', 'gas', 'production',   'Gas production'),
+    ('gas_imports',              'nrg_cb_gasm', 'gas', 'imports',      'Gas imports'),
+    ('gas_exports',              'nrg_cb_gasm', 'gas', 'exports',      'Gas exports'),
+    ('gas_consumption',          'nrg_cb_gasm', 'gas', 'deliveries',   'Gas gross inland deliveries'),
+    ('gas_stocks',               'nrg_cb_gasm', 'gas', 'stock_change', 'Gas stock change'),
+
+    ('electricity_generation',   'nrg_cb_e', 'electricity',  'gross_production', 'Electricity generation'),
+    ('electricity_imports',      'nrg_cb_e', 'electricity',  'imports',          'Electricity imports'),
+    ('electricity_exports',      'nrg_cb_e', 'electricity',  'exports',          'Electricity exports'),
+    ('electricity_consumption',  'nrg_cb_e', 'electricity',  'consumption',      'Electricity final consumption'),
+    ('electricity_wind',         'nrg_cb_e', 'elec_wind',    'gross_production', 'Wind electricity generation'),
+    ('electricity_solar',        'nrg_cb_e', 'elec_solar',   'gross_production', 'Solar electricity generation'),
+    ('electricity_nuclear',      'nrg_cb_e', 'elec_nuclear', 'gross_production', 'Nuclear electricity generation'),
+    ('electricity_hydro',        'nrg_cb_e', 'elec_hydro',   'gross_production', 'Hydro electricity generation'),
 ]
-# Gas — nrg_cb_gasm
-GAS_SERIES = [
-    ('gas_production',   'nrg_cb_gasm', 'G3000', 'PRIM_PROD', 'Gas production'),
-    ('gas_imports',      'nrg_cb_gasm', 'G3000', 'IMP',       'Gas imports'),
-    ('gas_exports',      'nrg_cb_gasm', 'G3000', 'EXP',       'Gas exports'),
-    ('gas_consumption',  'nrg_cb_gasm', 'G3000', 'FC_NE',     'Gas final consumption'),
-    ('gas_stocks',       'nrg_cb_gasm', 'G3000', 'STK_CHG',   'Gas stock change'),
-]
-# Electricity — nrg_cb_e
-ELEC_SERIES = [
-    ('electricity_generation', 'nrg_cb_e', 'E7000', 'PRIM_PROD', 'Electricity generation'),
-    ('electricity_imports',    'nrg_cb_e', 'E7000', 'IMP',        'Electricity imports'),
-    ('electricity_exports',    'nrg_cb_e', 'E7000', 'EXP',        'Electricity exports'),
-    ('electricity_consumption','nrg_cb_e', 'E7000', 'FC_NE',      'Electricity consumption'),
-    ('electricity_wind',       'nrg_cb_e', 'E7011', 'PRIM_PROD',  'Wind electricity generation'),
-    ('electricity_solar',      'nrg_cb_e', 'E7012', 'PRIM_PROD',  'Solar electricity generation'),
-    ('electricity_nuclear',    'nrg_cb_e', 'E7100', 'PRIM_PROD',  'Nuclear electricity generation'),
-    ('electricity_hydro',      'nrg_cb_e', 'E7200', 'PRIM_PROD',  'Hydro electricity generation'),
-]
 
-ALL_SERIES = OIL_SERIES + GAS_SERIES + ELEC_SERIES
+# Preferred unit per dataset, resolved against what the dataset offers.
+UNITS: Dict[str, Tuple[Tuple[str, ...], Tuple[str, ...]]] = {
+    'nrg_cb_oilm': (('THS_T',), (r'thousand tonnes',)),
+    'nrg_cb_gasm': (('MIO_M3', 'TJ_GCV'), (r'million m', r'terajoule')),
+    'nrg_cb_e':    (('GWH',), (r'gigawatt.?hour',)),
+}
 
 
-# ──────────────────────────────────────────────────────────────────────
-# PARSER — handles both SDMX-JSON v1 (dict values) and v2 (array values)
-# ──────────────────────────────────────────────────────────────────────
+def _resolve_dataset(dataset: str) -> Dict[str, Dict[str, str]]:
+    return eu.describe(dataset)
 
-def _parse_eurostat_json(data: dict, geo: str) -> List[dict]:
-    """
-    Extract a time series for a single geo from a Eurostat JSON response.
-
-    Supports:
-      v1 format: data['value'] = {'0': 1234.5, '1': 5678.9, ...} (string keys)
-      v2 format: data['value'] = [1234.5, 5678.9, ...]           (array)
-
-    Time dimension: tries 'TIME_PERIOD' first (v2), falls back to 'time' (v1).
-    """
-    dim = data.get('dimension', {})
-
-    # ── Locate time labels ──────────────────────────────────────────
-    time_dim = dim.get('TIME_PERIOD') or dim.get('time') or {}
-    time_cats: Dict[str, int] = time_dim.get('category', {}).get('index', {})
-    # time_cats maps period string → integer index
-    if not time_cats:
-        return []
-
-    # Build sorted list of (period_string, index) for lookup
-    time_by_idx: Dict[int, str] = {v: k for k, v in time_cats.items()}
-
-    # ── Locate geo labels ───────────────────────────────────────────
-    geo_dim  = dim.get('geo') or dim.get('GEO') or {}
-    geo_cats: Dict[str, int] = geo_dim.get('category', {}).get('index', {})
-    geo_idx  = geo_cats.get(geo)
-    if geo_idx is None and len(geo_cats) == 1:
-        geo_idx = 0  # single-country request: only one geo present
-
-    # ── Determine dimension sizes for multi-dim index calculation ───
-    # id field lists all dimension names in order; size lists their cardinalities
-    dim_ids   = data.get('id', list(dim.keys()))
-    dim_sizes = data.get('size', [len(dim.get(d, {}).get('category', {}).get('index', {}))
-                                   for d in dim_ids])
-
-    # Index of the time dimension in the dimension array
-    time_dim_name = 'TIME_PERIOD' if 'TIME_PERIOD' in dim else 'time'
-    geo_dim_name  = 'geo' if 'geo' in dim else 'GEO'
-
-    n_time = len(time_cats)
-    n_geo  = max(len(geo_cats), 1)
-
-    # ── Parse value field ───────────────────────────────────────────
-    raw_value = data.get('value', {})
-
-    series: List[dict] = []
-
-    if isinstance(raw_value, list):
-        # SDMX-JSON v2: value is an array. Total cells = product of all dim sizes.
-        # For a single-geo query the geo dimension size = 1, so index = time_index.
-        # For multi-geo: index = geo_idx * n_time + time_idx  (simplified for 2-dim case).
-        for flat_idx, val in enumerate(raw_value):
-            if val is None:
-                continue
-            # Compute time_index from flat_idx
-            if geo_idx is not None and n_geo > 1:
-                # Standard 2-dim layout: flat = geo_idx * n_time + time_idx
-                g = flat_idx // n_time
-                t = flat_idx % n_time
-                if g != geo_idx:
-                    continue
-            else:
-                t = flat_idx % n_time
-            period = time_by_idx.get(t)
-            if period:
-                series.append({'period': period, 'v': round(float(val), 3)})
-
-    elif isinstance(raw_value, dict):
-        # SDMX-JSON v1: value is {'0': x, '1': y, ...}
-        for idx_str, val in raw_value.items():
-            if val is None:
-                continue
-            try:
-                flat_idx = int(idx_str)
-            except ValueError:
-                continue
-            if geo_idx is not None and n_geo > 1:
-                g = flat_idx // n_time
-                t = flat_idx % n_time
-                if g != geo_idx:
-                    continue
-            else:
-                t = flat_idx % n_time
-            period = time_by_idx.get(t)
-            if period:
-                series.append({'period': period, 'v': round(float(val), 3)})
-
-    series.sort(key=lambda x: x['period'])
-    return series
-
-
-# ──────────────────────────────────────────────────────────────────────
-# BULK TSV FALLBACK
-# ──────────────────────────────────────────────────────────────────────
-
-def _fetch_bulk_tsv(dataset: str, product: str, flow: str,
-                    geos: List[str]) -> Dict[str, List[dict]]:
-    """
-    Download bulk TSV.gz for the dataset and extract the relevant series.
-    Used when the REST API returns 0 values (format change or temp outage).
-    """
-    s = http.get_session()
-    url = f'https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/data/{dataset}' \
-          f'?format=TSV&compressed=true'
-    print(f'    eurostat: downloading bulk TSV for {dataset}...')
-    try:
-        r = s.get(url, timeout=120)
-        r.raise_for_status()
-        if r.content[:2] == b'\x1f\x8b':
-            import gzip
-            content = gzip.decompress(r.content).decode('utf-8', errors='replace')
-        elif r.content[:2] == b'PK':
-            with zipfile.ZipFile(io.BytesIO(r.content)) as zf:
-                content = zf.read(zf.namelist()[0]).decode('utf-8', errors='replace')
-        else:
-            content = r.content.decode('utf-8', errors='replace')
-    except Exception as e:
-        print(f'    eurostat bulk {dataset}: {e}')
-        return {}
-
-    results: Dict[str, List[dict]] = {}
-    reader = csv.reader(io.StringIO(content), delimiter='\t')
-    header = next(reader, None)
-    if not header:
-        return {}
-
-    # TSV header: 'freq,nrg_flow,siec,unit,geo\TIME_PERIOD\t2018-01\t2018-02\t...'
-    # or similar — first column contains key dimensions, rest are time periods
-    key_col  = header[0]
-    periods  = [h.strip() for h in header[1:]]
-
-    for row in reader:
-        if not row:
-            continue
-        key_parts = row[0].split(',')
-        # Match product and flow in key parts
-        row_str = ','.join(key_parts).upper()
-        if product.upper() not in row_str:
-            continue
-        if flow.upper() not in row_str:
-            continue
-        # Last key part is typically the geo code
-        geo = key_parts[-1].strip().upper()
-        if geo not in [g.upper() for g in geos]:
-            continue
-        # Parse values
-        series: List[dict] = []
-        for period, raw_val in zip(periods, row[1:]):
-            period = period.strip()
-            raw_val = raw_val.strip().rstrip(' bcp:')
-            if not raw_val or raw_val in (':', '-', '.'):
-                continue
-            try:
-                series.append({'period': period, 'v': round(float(raw_val), 3)})
-            except ValueError:
-                continue
-        if series:
-            geo_key = next((g for g in geos if g.upper() == geo), geo)
-            results[geo_key] = sorted(series, key=lambda x: x['period'])
-
-    return results
-
-
-# ──────────────────────────────────────────────────────────────────────
-# SERIES FETCHER
-# ──────────────────────────────────────────────────────────────────────
-
-def _fetch_one(dataset: str, product: str, flow: str,
-               geos: List[str]) -> Tuple[Dict[str, List[dict]], bool]:
-    """
-    Fetch one series for all geos. Returns (per_country_dict, used_bulk_fallback).
-    """
-    s = http.get_session()
-    results: Dict[str, List[dict]] = {}
-    rest_ok_count = 0
-
-    for geo in geos:
-        try:
-            params = {
-                'format':          'JSON',
-                'lang':            'EN',
-                'freq':            'M',
-                'unit':            'THS_T',
-                'sinceTimePeriod': '2019-01',
-            }
-            # nrg_cb_oilm / nrg_cb_gasm use 'siec' for product; nrg_cb_e uses 'siec' too
-            # Some datasets use 'product' parameter; we try both
-            if dataset.startswith('nrg_cb_oil'):
-                params['siec']     = product
-                params['nrg_flow'] = flow
-            elif dataset.startswith('nrg_cb_gas'):
-                params['siec']     = product
-                params['nrg_flow'] = flow
-            elif dataset.startswith('nrg_cb_e'):
-                params['siec']     = product
-                params['nrg_flow'] = flow
-                params['unit']     = 'GWH'
-            params['geo'] = geo
-
-            r = s.get(f'{BASE}/{dataset}', params=params, timeout=35)
-            ct = r.headers.get('content-type', '')
-
-            if not r.ok:
-                continue
-            if 'json' not in ct and 'javascript' not in ct:
-                continue
-            text = r.text.strip()
-            if not text or text.startswith('<'):
-                continue
-
-            data = r.json()
-            series = _parse_eurostat_json(data, geo)
-
-            if series:
-                results[geo] = series
-                rest_ok_count += 1
-                print(f'    eurostat/{dataset}/{flow}/{geo}: {len(series)} pts')
-            else:
-                # Log "REST ok" so log output matches expected pattern
-                print(f'    eurostat/{dataset}/{flow}/{geo}: REST ok but 0 values parsed')
-
-            time.sleep(0.12)
-
-        except Exception as e:
-            print(f'  ! eurostat/{dataset}/{flow}/{geo}: {e}')
-
-    used_bulk = False
-    if not results:
-        # All geos returned 0 — try bulk TSV
-        bulk = _fetch_bulk_tsv(dataset, product, flow, geos)
-        if bulk:
-            results = bulk
-            used_bulk = True
-        else:
-            print(f'  ! eurostat/{dataset}/{flow}: both REST and bulk failed')
-
-    return results, used_bulk
-
-
-# ──────────────────────────────────────────────────────────────────────
-# PUBLIC ENTRY POINT
-# ──────────────────────────────────────────────────────────────────────
 
 def fetch() -> dict:
-    output = {}
+    output: Dict[str, dict] = {}
+    resolved_log: Dict[str, dict] = {}
+    unresolved: List[str] = []
     any_success = False
 
-    for local_key, dataset, product, flow, desc in ALL_SERIES:
-        try:
-            per_country, used_bulk = _fetch_one(dataset, product, flow, GEO)
-            if per_country:
-                any_success = True
-            output[local_key] = {
-                'series_per_country': per_country,
-                'description': desc,
-                'dataset':     dataset,
-                'product':     product,
-                'flow':        flow,
-                'unit':        'GWH' if dataset == 'nrg_cb_e' else 'THS_T',
-                'source_bulk': used_bulk,
+    # Resolve the unit once per dataset — it is the same for every series.
+    unit_by_dataset: Dict[str, Optional[str]] = {}
+    unit_label_by_dataset: Dict[str, str] = {}
+    for dataset, (codes, patterns) in UNITS.items():
+        cat = _resolve_dataset(dataset).get('unit', {})
+        code = eu.resolve(cat, preferred_codes=codes, label_patterns=patterns)
+        unit_by_dataset[dataset] = code
+        unit_label_by_dataset[dataset] = cat.get(code, code or '')
+        print(f'    eurostat/{dataset}: unit -> {code} ({unit_label_by_dataset[dataset]})')
+
+    for key, dataset, product_intent, balance_intent, desc in SERIES:
+        catalog = _resolve_dataset(dataset)
+        siec_codes, siec_patterns, siec_excl = PRODUCTS[product_intent]
+        bal_codes, bal_patterns, bal_excl = BALANCES[balance_intent]
+
+        siec = eu.resolve(catalog.get('siec', {}), siec_codes, siec_patterns, siec_excl)
+        nrg_bal = eu.resolve(catalog.get('nrg_bal', {}), bal_codes, bal_patterns, bal_excl)
+        unit = unit_by_dataset.get(dataset)
+
+        if not siec or not nrg_bal:
+            # The dataset genuinely has nothing matching this intent. Say so
+            # in the file rather than sending a request that returns an empty
+            # cube indistinguishable from an outage.
+            missing = [n for n, v in (('siec', siec), ('nrg_bal', nrg_bal)) if not v]
+            print(f'  ! eurostat/{key}: no code for {missing} in {dataset}')
+            unresolved.append(key)
+            output[key] = {
+                'series_per_country': {}, 'description': desc, 'dataset': dataset,
+                'unavailable_reason': f'{dataset} has no code for {", ".join(missing)}',
             }
-        except Exception as e:
-            print(f'  ! eurostat {local_key}: {e}')
-            output[local_key] = {
-                'series_per_country': {},
-                'description': desc,
-                'dataset': dataset,
-                'product': product,
-                'flow': flow,
-            }
+            continue
+
+        filters = {'siec': siec, 'nrg_bal': nrg_bal}
+        if unit:
+            filters['unit'] = unit
+        since = SINCE_MONTHLY if dataset.endswith('m') else None
+
+        per_country = eu.fetch_per_country(dataset, filters, GEO, since=since)
+        if per_country:
+            any_success = True
+        total = sum(len(v) for v in per_country.values())
+        print(f'    eurostat/{key}: {len(per_country)} countries, {total} pts '
+              f'[siec={siec} nrg_bal={nrg_bal} unit={unit}]')
+
+        output[key] = {
+            'series_per_country': per_country,
+            'description': desc,
+            'dataset': dataset,
+            'product': siec,
+            'flow': nrg_bal,
+            'unit': unit_label_by_dataset.get(dataset) or unit or '',
+            'unit_code': unit,
+        }
+        resolved_log[key] = {'siec': siec, 'nrg_bal': nrg_bal, 'unit': unit}
 
     if not any_success:
         raise RuntimeError(
-            'Eurostat: alle Serien fehlgeschlagen — '
-            'API nicht erreichbar oder alle Produkt-/Flow-Kombinationen leer. '
+            'Eurostat: alle Serien leer — API nicht erreichbar oder '
+            'Dimensions-Vokabular komplett geändert. '
             'Letzter Datensatz wird als stale beibehalten.'
         )
+
+    empty = [k for k, v in output.items() if not v.get('series_per_country')]
+    if empty:
+        print(f'  ! eurostat: {len(empty)}/{len(output)} series empty: {empty}')
 
     return {
         'data': output,
@@ -359,11 +216,13 @@ def fetch() -> dict:
             'source':  'Eurostat Statistics API (ec.europa.eu/eurostat)',
             'license': 'Eurostat open data — reuse permitted (EC terms)',
             'url':     'https://ec.europa.eu/eurostat/databrowser/view/nrg_cb_oilm',
-            'units':   'THS_T (Thousand Tonnes) for oil/gas; GWH for electricity',
-            'note':    (
-                'Monthly data, typical lag 2 months. '
-                'REST parser handles both SDMX-JSON v1 (dict values) and '
-                'v2 (array values). Bulk TSV used as fallback.'
+            'note': (
+                'Dimension codes are resolved against each dataset\'s own '
+                'published vocabulary at fetch time, not hard-coded. '
+                'meta.resolved records what every series matched.'
             ),
+            'resolved': resolved_log,
+            'unresolved': unresolved,
+            'empty_series': empty,
         },
     }

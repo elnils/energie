@@ -35,7 +35,11 @@ concurrency:
 jobs:
   fetch:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # Must exceed the sum of all per-source budgets in fetch_all.SCHEDULE
+    # (~31 min worst case), otherwise a cold start or a --force run is killed
+    # mid-flight and the freshly fetched data is never committed. Normal runs
+    # finish in 1-2 minutes because frequency gating skips most sources.
+    timeout-minutes: 40
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4

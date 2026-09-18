@@ -51,6 +51,10 @@ EXPECTED_KEYS: Dict[str, Set[str]] = {
     # response still validates, but a foreign-shaped payload (e.g. {'points':…}
     # from ENTSOG) doesn't pass.
     'eurostat_oil':  {'oil_jet_fuel_stocks', 'gas_imports', 'electricity_generation'},
+    # End-user prices: any of the four consumer groups is enough to validate,
+    # so a single dataset outage doesn't reject the whole payload.
+    'eurostat_prices': {'electricity_household', 'electricity_industry',
+                        'gas_household', 'gas_industry'},
 }
 
 FORBIDDEN_KEYS: Dict[str, Set[str]] = {
@@ -69,6 +73,7 @@ FORBIDDEN_KEYS: Dict[str, Set[str]] = {
     'eia_petroleum': {'gas', 'points', 'articles', 'cities'},
     'fred_energy':   {'gas', 'points', 'articles', 'cities'},
     'eurostat_oil':  {'gas', 'points', 'articles', 'cities'},
+    'eurostat_prices': {'gas', 'points', 'articles', 'cities'},
 }
 
 
