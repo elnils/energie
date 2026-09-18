@@ -31,7 +31,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional
 import xml.etree.ElementTree as ET
 
-from core import http
+from core import http, series as series_util
 
 TOKEN = os.environ.get('ENTSOE_SECURITY_TOKEN', '').strip()
 BASE  = 'https://web-api.tp.entsoe.eu/api'
@@ -104,11 +104,18 @@ def _res_minutes(res_str: str) -> int:
     return n * 60 if u == 'H' else n if u == 'M' else n * 1440
 
 
-def _parse_xml(xml_text: str, label_tag: Optional[str] = None) -> Dict[str, List[dict]]:
+def _parse_xml(xml_text: str, label_tag: Optional[str] = None,
+               keep_resolution: bool = False) -> Dict[str, List[dict]]:
     """
     Parse ENTSOE publication XML into {label: [{ts, v}, ...]} dict.
     Works for prices (price.amount) and flows/generation/load (quantity).
     label_tag: child element name whose text becomes the series key; None = counter.
+
+    keep_resolution: attach the publishing resolution (in minutes) to each
+    point as '_res'. Callers that flatten several TimeSeries into one series
+    need it — since the 15-minute MTU go-live ENTSO-E publishes the SAME
+    window as both PT60M and PT15M documents, and without the resolution
+    there is no way to tell a genuine second value from a republication.
     """
     clean = _strip_default_ns(xml_text)
     try:
@@ -150,17 +157,30 @@ def _parse_xml(xml_text: str, label_tag: Optional[str] = None) -> Dict[str, List
                     pos = int(pos_el.text) - 1  # 1-indexed → 0-indexed
                     val = float(val_el.text)
                     slot_ts = start_ts + pos * res_min * 60
-                    result.setdefault(label, []).append({'ts': slot_ts, 'v': round(val, 2)})
+                    point = {'ts': slot_ts, 'v': round(val, 2)}
+                    if keep_resolution:
+                        point['_res'] = res_min
+                    result.setdefault(label, []).append(point)
                 except (TypeError, ValueError):
                     continue
 
-    # Deduplicate (overlapping periods can repeat timestamps) and sort
+    # Deduplicate (overlapping periods can repeat timestamps) and sort.
+    # Finer resolution wins on a collision; a coarser series still keeps the
+    # timestamps the finer one never covered.
     for k in result:
-        seen = {}
-        for p in result[k]:
-            seen[p['ts']] = p['v']
-        result[k] = [{'ts': t, 'v': v} for t, v in sorted(seen.items())]
+        result[k] = _dedupe_points(result[k], keep_resolution)
     return result
+
+
+def _dedupe_points(points: List[dict], keep_resolution: bool) -> List[dict]:
+    """One value per timestamp, finest resolution preferred, sorted ascending."""
+    by_res: Dict[int, List[dict]] = {}
+    for p in points:
+        by_res.setdefault(p.get('_res', 60), []).append(p)
+    merged = series_util.merge_by_resolution(list(by_res.items()), time_key='ts')
+    if keep_resolution:
+        return merged
+    return [{'ts': p['ts'], 'v': p['v']} for p in merged]
 
 
 def _api(params: dict, timeout: int = 60) -> Optional[str]:
@@ -214,10 +234,20 @@ def fetch() -> dict:
                         'in_Domain': bzn_code, 'out_Domain': bzn_code,
                         'periodStart': _fmt(start_7d), 'periodEnd': _fmt(now)})
             if xml:
-                series = _parse_xml(xml)
-                pts = sorted([p for ps in series.values() for p in ps], key=lambda x: x['ts'])
+                parsed = _parse_xml(xml, keep_resolution=True)
+                # Every TimeSeries in an A44 document gets its own label, so
+                # flattening them without a cross-label dedupe produced one
+                # point per publication rather than per timestamp: DE_LU held
+                # 1444 points for 767 distinct timestamps, AT 2213 for 768.
+                # The chart drew every hour twice, at two different prices.
+                flat = [p for ps in parsed.values() for p in ps]
+                pts = _dedupe_points(flat, keep_resolution=False)
                 prices[name] = pts
-                print(f'    entsoe/price_{name}: {len(pts)} pts')
+                if len(flat) != len(pts):
+                    print(f'    entsoe/price_{name}: {len(pts)} pts '
+                          f'({len(flat) - len(pts)} republished values dropped)')
+                else:
+                    print(f'    entsoe/price_{name}: {len(pts)} pts')
             else:
                 prices[name] = []
                 print(f'    entsoe/price_{name}: 204 no content')
@@ -248,8 +278,9 @@ def fetch() -> dict:
                     'outBiddingZone_Domain': BZN['DE_LU'],
                     'periodStart': _fmt(start_7d), 'periodEnd': _fmt(now)})
         if xml:
-            series = _parse_xml(xml)
-            load = sorted([p for ps in series.values() for p in ps], key=lambda x: x['ts'])
+            parsed = _parse_xml(xml, keep_resolution=True)
+            load = _dedupe_points([p for ps in parsed.values() for p in ps],
+                                  keep_resolution=False)
             print(f'    entsoe/load: {len(load)} pts')
         time.sleep(0.4)
     except Exception as e:
@@ -274,8 +305,9 @@ def fetch() -> dict:
                             'out_Domain': out_dom, 'in_Domain': in_dom,
                             'periodStart': _fmt(start_7d), 'periodEnd': _fmt(now)})
                 if xml:
-                    series = _parse_xml(xml)
-                    pts = sorted([p for ps in series.values() for p in ps], key=lambda x: x['ts'])
+                    parsed = _parse_xml(xml, keep_resolution=True)
+                    pts = _dedupe_points([p for ps in parsed.values() for p in ps],
+                                         keep_resolution=False)
                     existing = store.get(label, [])
                     merged   = {p['ts']: p['v'] for p in existing}
                     merged.update({p['ts']: p['v'] for p in pts})

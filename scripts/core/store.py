@@ -22,7 +22,7 @@ import traceback
 from datetime import datetime
 from typing import Any, Callable, Dict, Optional, Set
 
-from . import paths
+from . import paths, series
 
 
 # Minimum-required-keys per data source. Each set lists keys that MUST be
@@ -152,6 +152,17 @@ def write_with_fallback(
             raise ValueError(f'fetcher {name} did not return dict with "data" key')
         # Hard schema check — refuse to write data shaped like another source
         _schema_check(name, fresh.get('data'))
+        # Duplicate backstop. Fetchers dedupe themselves where they can tell
+        # a republication from a real second value; this catches the cases
+        # they can't (and new upstreams that start double-publishing). We
+        # count first so the log names the source instead of silently
+        # cleaning up after it — a duplicate here is an upstream change
+        # worth fixing properly.
+        dup_count = series.count_duplicates(fresh.get('data'))
+        if dup_count:
+            print(f'  ~ {name}: {dup_count} duplicate observations normalized '
+                  f'— check the fetcher, this should be fixed at the source')
+        fresh['data'] = series.normalize_payload(fresh['data'])
         out = {
             'updated': fresh.get('updated') or now_iso(),
             'stale': False,
@@ -161,6 +172,8 @@ def write_with_fallback(
         }
         if 'meta' in fresh:
             out['meta'] = fresh['meta']
+        if dup_count:
+            out.setdefault('meta', {})['duplicates_normalized'] = dup_count
         write_atomic(name, out)
         print(f'  v {name}.json written ({_size_kb(name)} KB)')
         return out

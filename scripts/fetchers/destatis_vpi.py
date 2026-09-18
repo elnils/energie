@@ -35,7 +35,7 @@ the data refreshes when Destatis publishes the new month.
 import io
 import os
 import zipfile
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 import csv as csv_mod
 
@@ -374,68 +374,148 @@ def _filter_energy(rows: List[dict]) -> List[dict]:
     return out
 
 
-def _build_series(rows: List[dict]) -> Dict[str, List[dict]]:
+DE_MONTHS = {
+    'januar': 1, 'februar': 2, 'märz': 3, 'maerz': 3, 'april': 4,
+    'mai': 5, 'juni': 6, 'juli': 7, 'august': 8, 'september': 9,
+    'oktober': 10, 'november': 11, 'dezember': 12,
+}
+
+# GENESIS variable codes that are NOT the subject category of a row.
+# MONAT/QUARTAL carry the period; DINSG/BUNDESLAENDER carry the region.
+# Everything else in a numbered slot is the classifying variable we want
+# (for the VPI detail table: the COICOP category, e.g. "Strom").
+TIME_VARIABLE_CODES = {'MONAT', 'QUARTAL', 'HALBJAHR', 'JAHR'}
+REGION_VARIABLE_CODES = {'DINSG', 'BUNDESLAENDER', 'KREISE', 'GEMEINDEN'}
+
+
+def _slots(row: dict) -> List[Tuple[str, str]]:
     """
-    Group rows into time series by category label.
-    Returns: { '<category>': [{period: 'YYYY-MM', v: float}, ...], ... }
+    Return the row's numbered GENESIS variable slots as (code, attribute_label).
 
-    Robust label extraction: tries the well-known *_attribute_label columns
-    first, then falls back to any other label-looking column (ends with
-    '_label' or contains 'label'/'auspraegung'), then to the first non-time
-    string value in the row.
+    A ffcsv row carries its classifying variables as parallel numbered
+    columns: `1_variable_code` / `1_variable_attribute_label`,
+    `2_variable_code` / `2_variable_attribute_label`, and so on.
     """
-    DE_MONTHS = {
-        'januar': 1, 'februar': 2, 'märz': 3, 'maerz': 3, 'april': 4,
-        'mai': 5, 'juni': 6, 'juli': 7, 'august': 8, 'september': 9,
-        'oktober': 10, 'november': 11, 'dezember': 12,
-    }
+    out: List[Tuple[str, str]] = []
+    for i in range(1, 6):
+        code = (row.get(f'{i}_variable_code') or '').strip().upper()
+        label = (row.get(f'{i}_variable_attribute_label') or '').strip()
+        if code or label:
+            out.append((code, label))
+    return out
 
-    # Reserved column names that should NOT be treated as the category label
-    NON_LABEL_COLS = {'time', 'time_label', 'value', 'value_variable_code',
-                      'value_variable_label', 'value_unit_code', 'value_unit_label'}
 
-    def _extract_label(r: dict) -> Optional[str]:
-        # Tier 1: specific known names
-        for k in ('1_variable_attribute_label', '2_variable_attribute_label',
-                  '3_variable_attribute_label'):
-            v = r.get(k)
-            if isinstance(v, str) and v.strip():
-                return v.strip()
-        # Tier 2: any column that smells like a category label
-        for k, v in r.items():
-            if k in NON_LABEL_COLS or not isinstance(v, str) or not v.strip():
-                continue
-            kl = k.lower()
-            if 'label' in kl or 'auspraegung' in kl:
-                return v.strip()
-        # Tier 3: first non-trivial string we find (excluding reserved cols)
-        for k, v in r.items():
-            if k in NON_LABEL_COLS:
-                continue
-            if isinstance(v, str) and len(v.strip()) >= 3 and not v.strip().isdigit():
-                return v.strip()
+def _period_of(row: dict) -> Optional[str]:
+    """
+    Build 'YYYY' or 'YYYY-MM' for a row.
+
+    The year is in `time`. The month is NOT in `time_label` (that holds the
+    name of the time axis, e.g. "Jahr") — for a monthly table it arrives as
+    its own classifying variable, MONAT, whose attribute label is the German
+    month name.
+    """
+    year = (row.get('time') or '').strip()
+    if not year:
         return None
+    month: Optional[int] = None
+    for code, label in _slots(row):
+        if code == 'MONAT':
+            month = DE_MONTHS.get(label.lower())
+            break
+    if month is None:
+        # Fall back to time_label for tables that do put the month there.
+        month = DE_MONTHS.get((row.get('time_label') or '').strip().lower())
+    return f'{year}-{month:02d}' if month else year
 
-    series: Dict[str, List[dict]] = {}
-    for r in rows:
-        label = _extract_label(r)
+
+def _category_of(row: dict) -> Optional[str]:
+    """
+    The subject of the row: the first numbered slot that is neither the
+    period nor the region.
+
+    This is the bug that made the VPI chart unreadable. The previous
+    implementation took the first column whose *name* contained "label",
+    which on the monthly table is `2_variable_attribute_label` — the MONAT
+    slot. So every series was keyed by a month name ("Februar", "März", …),
+    each holding 126 points that all claimed `period: "2020"`: twelve
+    unrelated COICOP categories across ten years, stacked on one another.
+    """
+    for code, label in _slots(row):
         if not label:
             continue
-        year = (r.get('time') or '').strip()
-        month_lbl = (r.get('time_label') or '').strip().lower()
-        if not year:
+        if code in TIME_VARIABLE_CODES or code in REGION_VARIABLE_CODES:
             continue
-        if month_lbl in DE_MONTHS:
-            period = f'{year}-{DE_MONTHS[month_lbl]:02d}'
-        else:
-            period = year
+        return label
+    # Region-only tables (the headline VPI is just "Deutschland") have no
+    # other slot; use the region so the series still has a name.
+    for code, label in _slots(row):
+        if label and code in REGION_VARIABLE_CODES:
+            return label
+    return None
+
+
+def _measure_of(row: dict) -> str:
+    """
+    Which statistic the row reports, e.g. the index itself vs. its
+    year-on-year change rate.
+
+    Destatis ships both in one table, one row each, sharing a period. Keying
+    only by category collapsed them into a single series that alternated
+    between an index around 120 and a rate around 2 — the sawtooth visible
+    in the VPI card and in heating oil's producer index.
+    """
+    return ((row.get('value_variable_code') or '').strip().upper()
+            or (row.get('value_variable_label') or '').strip()
+            or 'VALUE')
+
+
+def _measure_suffix(measure: str, label: str) -> str:
+    """Human-readable suffix appended to a series key when a table has several measures."""
+    text = f'{measure} {label}'.lower()
+    if 'veränderung' in text or 'vorjahr' in text or 'chg' in text or 'rate' in text:
+        return ' — Veränderung ggü. Vorjahr (%)'
+    return ' — Index'
+
+
+def _build_series(rows: List[dict]) -> Dict[str, List[dict]]:
+    """
+    Group rows into time series keyed by category.
+
+    Returns: { '<category>': [{period: 'YYYY-MM', v: float}, ...], ... }
+
+    When a table reports more than one measure per category (index AND
+    change rate), the measure is appended to the key so the two never share
+    a series. When there is only one measure the key stays the bare category
+    name, which is what the frontend matches against ("Strom", "Gas", …).
+
+    Every returned series has exactly one point per period.
+    """
+    # First pass: collect (category, measure) -> {period: value}
+    grouped: Dict[Tuple[str, str], Dict[str, float]] = {}
+    measure_labels: Dict[str, str] = {}
+    for r in rows:
+        category = _category_of(r)
+        if not category:
+            continue
+        period = _period_of(r)
+        if not period:
+            continue
         v = _to_float(r.get('value'))
         if v is None:
             continue
-        series.setdefault(label, []).append({'period': period, 'v': v})
+        measure = _measure_of(r)
+        measure_labels.setdefault(measure, (r.get('value_variable_label') or '').strip())
+        grouped.setdefault((category, measure), {})[period] = v
 
-    for k in list(series.keys()):
-        series[k].sort(key=lambda x: x['period'])
+    measures = {m for _cat, m in grouped}
+    multi_measure = len(measures) > 1
+
+    series: Dict[str, List[dict]] = {}
+    for (category, measure), points in grouped.items():
+        key = category
+        if multi_measure:
+            key = category + _measure_suffix(measure, measure_labels.get(measure, ''))
+        series[key] = [{'period': p, 'v': points[p]} for p in sorted(points)]
     return series
 
 
