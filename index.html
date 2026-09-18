@@ -103,7 +103,7 @@ main{padding:18px 20px 70px;max-width:1600px;margin:0 auto}
 .loading{display:flex;align-items:center;justify-content:center;height:90px;color:var(--text3);font-size:11px;gap:6px}
 .spin{width:14px;height:14px;border:2px solid var(--border-strong);border-top-color:var(--accent);border-radius:50%;animation:sp .7s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
-.nodata{display:flex;flex-direction:column;align-items:center;justify-content:center;height:90px;color:var(--text3);font-size:11px;gap:4px;text-align:center;padding:8px}
+.nodata{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;min-height:90px;color:var(--text3);font-size:11px;gap:4px;text-align:center;padding:8px}
 
 /* Datenstand stamp — every chart says where its numbers come from and how
    old they are. Added because several cards drew a perfectly normal-looking
@@ -135,6 +135,18 @@ main{padding:18px 20px 70px;max-width:1600px;margin:0 auto}
 .leg-val{margin-left:auto;font-size:10px;font-weight:600;color:var(--text);flex-shrink:0}
 
 .tbl{width:100%;border-collapse:collapse;font-size:12px}
+/* Wide tables (the forecast comparison is 10 columns) ran off the right edge
+   on a phone with no way to reach the cut-off columns. The wrapper scrolls
+   horizontally and keeps the first column in place so the row stays
+   identifiable while scrolling. */
+.tbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tbl-scroll .tbl{min-width:min-content}
+@media (max-width:760px){
+  .tbl{font-size:11px}
+  .tbl th,.tbl td{padding:6px 7px;white-space:nowrap}
+  .tbl td:first-child,.tbl th:first-child{position:sticky;left:0;background:var(--card);z-index:2;white-space:normal;min-width:7.5em}
+  .tbl tr:hover td:first-child{background:var(--bg-alt)}
+}
 .tbl thead{position:sticky;top:0;background:var(--card);z-index:5}
 .tbl th{text-align:left;padding:7px 10px;color:var(--text2);font-size:10px;text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid var(--border-strong);font-weight:700;background:var(--bg-alt)}
 .tbl td{padding:7px 10px;border-bottom:1px solid var(--border);color:var(--text)}
@@ -1844,7 +1856,7 @@ async function renderKraftstoff() {
 
   const minVal = Math.min(...rows.map(r => r.sortVal).filter(v => v != null));
   const maxVal = Math.max(...rows.map(r => r.sortVal).filter(v => v != null));
-  wrap.innerHTML = `<table class="tbl">
+  wrap.innerHTML = `<div class="tbl-scroll"><table class="tbl">
     <thead><tr>
       <th>Stadt</th>
       <th class="num">E5</th>
@@ -1866,7 +1878,7 @@ async function renderKraftstoff() {
         <td class="num" style="color:var(--text3);font-weight:400">${r.n}</td>
       </tr>`;
     }).join('')}</tbody>
-  </table>`;
+  </table></div>`;
 
   // Spread chart (horizontal bars, sorted by selected fuel type)
   const spreadRows = rows.filter(r => r.sortVal != null);
@@ -2068,13 +2080,13 @@ function renderGas() {
     const d=gasNode(gs,k); const last=d?.data?.filter(x=>x.fill_pct!=null).at(-1);
     return {label:d?.name||k.toUpperCase(),val:last?.fill_pct!=null?fmtN(last.fill_pct,1):'—',unit:'% Füllstand',color:colors[i]};
   }));
-  document.getElementById('gas-table').innerHTML=`<table class="tbl">
+  document.getElementById('gas-table').innerHTML=`<div class="tbl-scroll"><table class="tbl">
     <thead><tr><th>Land</th><th>Füllstand</th><th>Datum</th></tr></thead>
     <tbody>${list.map(k=>{
       const d=gasNode(gs,k);const l=d?.data?.filter(x=>x.fill_pct!=null).at(-1);
       const col=(l?.fill_pct||0)>=70?'var(--green)':(l?.fill_pct||0)>=40?'var(--yellow)':'var(--red)';
       return`<tr><td>${d?.name||k.toUpperCase()}</td><td class="num" style="color:${col}">${l?.fill_pct!=null?fmtN(l.fill_pct,1)+'%':'—'}</td><td style="color:var(--text3)">${l?.date||'—'}</td></tr>`;
-    }).join('')}</tbody></table>`;
+    }).join('')}</tbody></table></div>`;
   renderGasChart();
 }
 
@@ -2360,9 +2372,9 @@ function renderFx() {
   // Full table of today's rates
   const allRates=fx.all_rates_today||{};
   const sorted=Object.keys(allRates).sort();
-  document.getElementById('fx-table').innerHTML=`<table class="tbl">
+  document.getElementById('fx-table').innerHTML=`<div class="tbl-scroll"><table class="tbl">
     <thead><tr><th>CCY</th><th>1 EUR =</th></tr></thead>
-    <tbody>${sorted.map(c=>`<tr><td>${c}</td><td class="num">${fmtN(allRates[c],4)}</td></tr>`).join('')}</tbody></table>`;
+    <tbody>${sorted.map(c=>`<tr><td>${c}</td><td class="num">${fmtN(allRates[c],4)}</td></tr>`).join('')}</tbody></table></div>`;
 }
 
 // ══════════════════════════════════════════════
@@ -2650,7 +2662,7 @@ function renderTreibstoff() {
       </tr>`;
     }).join('');
     macroTable.innerHTML = `
-      <table class="tbl" style="margin-top:6px">
+      <div class="tbl-scroll"><table class="tbl" style="margin-top:6px">
         <thead><tr>
           <th>Indikator</th>
           <th class="num">Aktuell</th>
@@ -2658,7 +2670,7 @@ function renderTreibstoff() {
           <th class="num">Δ 30 Tage</th>
         </tr></thead>
         <tbody>${rows}</tbody>
-      </table>`;
+      </table></div>`;
   }
 }
 
@@ -2834,7 +2846,7 @@ async function renderArchiv() {
   }));
   const total = rows.reduce((a, r) => a + r.n, 0);
   wrap.innerHTML = `
-    <table class="tbl" style="margin-top:4px">
+    <div class="tbl-scroll"><table class="tbl" style="margin-top:4px">
       <thead><tr><th>Reihe</th><th class="num">Einträge</th><th>Zeitraum</th></tr></thead>
       <tbody>${rows.map(r => `<tr>
         <td><strong>${r.label}</strong><div style="font-size:9px;color:var(--text3)">${r.desc}</div></td>
@@ -2843,7 +2855,7 @@ async function renderArchiv() {
           r.n ? `${r.from} – ${r.to}` :
           '<span style="color:var(--text3)">beginnt mit dem nächsten Lauf</span>'}</td>
       </tr>`).join('')}</tbody>
-    </table>
+    </table></div>
     <div style="font-size:9px;color:var(--text3);margin-top:6px;line-height:1.5">
       ${total} Tagesdatensätze insgesamt · gespeichert als JSON-Lines unter
       <code>data/history/</code> und mit jedem Fetch-Lauf committet.
@@ -3085,6 +3097,38 @@ function renderFutures() {
   _renderFuturesTable();
 }
 
+// Chart.js pairs datasets by ARRAY POSITION in index mode. These forecast
+// charts hold series that cover different spans — "Historisch" ends where
+// "Prognose" begins — so position 3 was December 2023 in one and December
+// 2026 in the other, and the tooltip presented them under one date:
+// "Dec 1, 2023 · Historisch 77,63 · EIA Prognose 89" (89 being the December
+// 2026 forecast). Giving every dataset the same period axis, with null where
+// it has no value, makes index pairing correct by construction — and unlike
+// switching to nearest/x it keeps the current and previous forecast visible
+// side by side, which is what those charts are for.
+//
+// `series` is [{label, points:[{period,v}], style:{...}}]; points may be
+// sparse. Returns datasets ready for a time-scale chart.
+function alignedDatasets(series, transform) {
+  const periods = Array.from(new Set(
+    series.flatMap(s => (s.points || []).map(p => p.period)))).sort();
+  return {
+    periods,
+    datasets: series.filter(s => (s.points || []).length).map(s => {
+      const map = {};
+      s.points.forEach(p => { map[p.period] = p.v; });
+      return Object.assign({
+        label: s.label,
+        data: periods.map(period => ({
+          x: period + '-01',
+          y: map[period] == null ? null : (transform ? transform(map[period]) : map[period]),
+        })),
+        spanGaps: false,
+      }, s.style || {});
+    }),
+  };
+}
+
 function _toDisp(v, type) {
   if (v==null) return null;
   const unit = document.getElementById('futures-gas-unit')?.value || 'eur_mwh';
@@ -3107,10 +3151,14 @@ function _renderSteoChart(canvasId, steo, prevSteo, type) {
   const actual   = steo.filter(p=>p.type==='actual'&&p.period>=cutoff3y);
   const forecast = steo.filter(p=>p.type==='forecast');
   const prevFc   = prevSteo.filter(p=>p.type==='forecast');
-  const datasets = [];
-  if (actual.length)   datasets.push({label:'Historisch',data:actual.map(p=>({x:p.period+'-01',y:_toDisp(p.v,type)})),borderColor:'#8c98a8',backgroundColor:'transparent',borderWidth:1.8,pointRadius:0,tension:0.2});
-  if (forecast.length) datasets.push({label:'EIA Prognose (aktuell)',data:forecast.map(p=>({x:p.period+'-01',y:_toDisp(p.v,type)})),borderColor:'#0e6cb6',backgroundColor:'rgba(14,108,182,0.10)',fill:true,borderWidth:2.2,tension:0.2,pointRadius:2});
-  if (prevFc.length)   datasets.push({label:'EIA Prognose (Vorwoche)',data:prevFc.map(p=>({x:p.period+'-01',y:_toDisp(p.v,type)})),borderColor:'#94a3b8',backgroundColor:'transparent',borderWidth:1.2,borderDash:[5,4],pointRadius:0,tension:0.2});
+  const {datasets} = alignedDatasets([
+    {label:'Historisch', points:actual,
+     style:{borderColor:'#8c98a8',backgroundColor:'transparent',borderWidth:1.8,pointRadius:0,tension:0.2}},
+    {label:'EIA Prognose (aktuell)', points:forecast,
+     style:{borderColor:'#0e6cb6',backgroundColor:'rgba(14,108,182,0.10)',fill:true,borderWidth:2.2,tension:0.2,pointRadius:2}},
+    {label:'EIA Prognose (Vorwoche)', points:prevFc,
+     style:{borderColor:'#94a3b8',backgroundColor:'transparent',borderWidth:1.2,borderDash:[5,4],pointRadius:0,tension:0.2}},
+  ], v => _toDisp(v, type));
   const yFt = ft => ft?.worldbank?.crude_oil||ft?.worldbank?.eu_gas||[];
   const wb = type==='oil' ? D.energy_futures?.worldbank?.crude_oil : D.energy_futures?.worldbank?.eu_gas;
   const imf= type==='oil' ? D.energy_futures?.imf?.crude_oil : D.energy_futures?.imf?.eu_gas;
@@ -3141,16 +3189,19 @@ function _renderSpreadChart() {
     const fcst=brent.filter(p=>p.type==='forecast');
     if(CH['chart-futures-spread'])CH['chart-futures-spread'].destroy();
     const el=document.getElementById('chart-futures-spread');if(!el)return;
-    CH['chart-futures-spread']=new Chart(el,{type:'line',data:{datasets:[
-      {label:'Brent hist.',data:actual.map(p=>({x:p.period+'-01',y:p.v})),borderColor:'#8c98a8',backgroundColor:'transparent',borderWidth:1.8,pointRadius:0},
-      {label:'Brent Prognose',data:fcst.map(p=>({x:p.period+'-01',y:p.v})),borderColor:'#dc6803',backgroundColor:'rgba(220,104,3,0.10)',fill:true,borderWidth:2.2,tension:0.2},
-    ]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{type:'time',time:{unit:'month',displayFormats:{month:'MM/yy'}},ticks:{maxTicksLimit:12,color:'#8c98a8',font:{size:10}},grid:{color:'#eef2f6'}},y:{grid:{color:'#eef2f6'},ticks:{color:'#8c98a8',font:{size:10},callback:v=>fmtN(v,1)+' $/bbl'}}},plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}}}});
+    const {datasets:brentDs} = alignedDatasets([
+      {label:'Brent hist.', points:actual,
+       style:{borderColor:'#8c98a8',backgroundColor:'transparent',borderWidth:1.8,pointRadius:0}},
+      {label:'Brent Prognose', points:fcst,
+       style:{borderColor:'#dc6803',backgroundColor:'rgba(220,104,3,0.10)',fill:true,borderWidth:2.2,tension:0.2}},
+    ]);
+    CH['chart-futures-spread']=new Chart(el,{type:'line',data:{datasets:brentDs},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},scales:{x:{type:'time',time:{unit:'month',displayFormats:{month:'MM/yy'}},ticks:{maxTicksLimit:12,color:'#8c98a8',font:{size:10}},grid:{color:'#eef2f6'}},y:{grid:{color:'#eef2f6'},ticks:{color:'#8c98a8',font:{size:10},callback:v=>fmtN(v,1)+' $/bbl'}}},plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}}}});
     return;
   }
   const spreadData=periods.map(p=>{ const b=bMap[p],w=wMap[p]; return(b!=null&&w!=null)?{x:p+'-01',y:+(b-w).toFixed(2)}:null; }).filter(Boolean);
   if(CH['chart-futures-spread'])CH['chart-futures-spread'].destroy();
   const el=document.getElementById('chart-futures-spread');if(!el)return;
-  CH['chart-futures-spread']=new Chart(el,{type:'bar',data:{datasets:[{label:'Brent–WTI (USD/bbl)',data:spreadData,backgroundColor:spreadData.map(p=>p.y>=0?'rgba(14,108,182,0.6)':'rgba(192,57,43,0.5)'),borderRadius:2}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{type:'time',time:{unit:'month',displayFormats:{month:'MM/yy'}},ticks:{maxTicksLimit:12,color:'#8c98a8',font:{size:10}},grid:{color:'#eef2f6'}},y:{grid:{color:'#eef2f6'},ticks:{color:'#8c98a8',font:{size:10},callback:v=>(v>=0?'+':'')+v.toFixed(2)+' $'}}},plugins:{legend:{display:false}}}});
+  CH['chart-futures-spread']=new Chart(el,{type:'bar',data:{datasets:[{label:'Brent–WTI (USD/bbl)',data:spreadData,backgroundColor:spreadData.map(p=>p.y>=0?'rgba(14,108,182,0.6)':'rgba(192,57,43,0.5)'),borderRadius:2}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},scales:{x:{type:'time',time:{unit:'month',displayFormats:{month:'MM/yy'}},ticks:{maxTicksLimit:12,color:'#8c98a8',font:{size:10}},grid:{color:'#eef2f6'}},y:{grid:{color:'#eef2f6'},ticks:{color:'#8c98a8',font:{size:10},callback:v=>(v>=0?'+':'')+v.toFixed(2)+' $'}}},plugins:{legend:{display:false}}}});
 }
 
 function _renderHHChart() {
@@ -3160,14 +3211,17 @@ function _renderHHChart() {
   const cutoff=(() => { const d=new Date(); d.setFullYear(d.getFullYear()-3); return d.toISOString().substring(0,7); })();
   const actual=hh.filter(p=>p.type==='actual'&&p.period>=cutoff),fcst=hh.filter(p=>p.type==='forecast');
   const prevHH=(ft?.previous_week?.eia_hh_gas||[]).filter(p=>p.type==='forecast');
-  const ds=[
-    {label:'Historisch',data:actual.map(p=>({x:p.period+'-01',y:p.v})),borderColor:'#8c98a8',backgroundColor:'transparent',borderWidth:1.8,pointRadius:0},
-    {label:'Prognose',data:fcst.map(p=>({x:p.period+'-01',y:p.v})),borderColor:'#7e57c2',backgroundColor:'rgba(126,87,194,0.10)',fill:true,borderWidth:2.2,tension:0.2},
-  ];
-  if(prevHH.length)ds.push({label:'Prognose Vorwoche',data:prevHH.map(p=>({x:p.period+'-01',y:p.v})),borderColor:'#94a3b8',backgroundColor:'transparent',borderWidth:1.2,borderDash:[5,4],pointRadius:0,tension:0.2});
+  const {datasets:ds} = alignedDatasets([
+    {label:'Historisch', points:actual,
+     style:{borderColor:'#8c98a8',backgroundColor:'transparent',borderWidth:1.8,pointRadius:0}},
+    {label:'Prognose', points:fcst,
+     style:{borderColor:'#7e57c2',backgroundColor:'rgba(126,87,194,0.10)',fill:true,borderWidth:2.2,tension:0.2}},
+    {label:'Prognose Vorwoche', points:prevHH,
+     style:{borderColor:'#94a3b8',backgroundColor:'transparent',borderWidth:1.2,borderDash:[5,4],pointRadius:0,tension:0.2}},
+  ]);
   if(CH['chart-futures-hh'])CH['chart-futures-hh'].destroy();
   const el=document.getElementById('chart-futures-hh');if(!el)return;
-  CH['chart-futures-hh']=new Chart(el,{type:'line',data:{datasets:ds},options:{responsive:true,maintainAspectRatio:false,scales:{x:{type:'time',time:{unit:'month',displayFormats:{month:'MM/yy'}},ticks:{maxTicksLimit:10,color:'#8c98a8',font:{size:10}},grid:{color:'#eef2f6'}},y:{grid:{color:'#eef2f6'},ticks:{color:'#8c98a8',font:{size:10},callback:v=>v.toFixed(2)+' $/MMBtu'}}},plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}}}});
+  CH['chart-futures-hh']=new Chart(el,{type:'line',data:{datasets:ds},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},scales:{x:{type:'time',time:{unit:'month',displayFormats:{month:'MM/yy'}},ticks:{maxTicksLimit:10,color:'#8c98a8',font:{size:10}},grid:{color:'#eef2f6'}},y:{grid:{color:'#eef2f6'},ticks:{color:'#8c98a8',font:{size:10},callback:v=>v.toFixed(2)+' $/MMBtu'}}},plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}}}});
 }
 
 function _renderLngSpreadChart() {
@@ -3187,22 +3241,109 @@ function _renderLngSpreadChart() {
   const spreadData=periods.map(p=>{ const e=euMap[p],h=hhMap[p]; return(e!=null&&h!=null)?{x:p+'-01',y:+(e-h).toFixed(3)}:null; }).filter(Boolean);
   if(CH['chart-futures-lng-spread'])CH['chart-futures-lng-spread'].destroy();
   const el=document.getElementById('chart-futures-lng-spread');if(!el)return;
-  CH['chart-futures-lng-spread']=new Chart(el,{type:'line',data:{datasets:[{label:'EU Gas − Henry Hub',data:spreadData,borderColor:'#f0883e',backgroundColor:'rgba(240,136,62,0.12)',fill:true,tension:0.2,borderWidth:2,pointRadius:0}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{type:'time',time:{unit:'month',displayFormats:{month:'MM/yy'}},ticks:{maxTicksLimit:10,color:'#8c98a8',font:{size:10}},grid:{color:'#eef2f6'}},y:{grid:{color:'#eef2f6'},ticks:{color:'#8c98a8',font:{size:10},callback:v=>(v>=0?'+':'')+v.toFixed(2)+' $/MMBtu'},title:{display:true,text:'EU−HH Spread $/MMBtu',color:'#8c98a8',font:{size:10}}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{ const v=ctx.parsed.y; return ` ${(v>=0?'+':'')+fmtN(v,2)} $/MMBtu${v>3?' → LNG nach EU lohnend':v>0?' → EU-Prämie':' → unter HH-Niveau'}`;}}}}}}); 
+  CH['chart-futures-lng-spread']=new Chart(el,{type:'line',data:{datasets:[{label:'EU Gas − Henry Hub',data:spreadData,borderColor:'#f0883e',backgroundColor:'rgba(240,136,62,0.12)',fill:true,tension:0.2,borderWidth:2,pointRadius:0}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},scales:{x:{type:'time',time:{unit:'month',displayFormats:{month:'MM/yy'}},ticks:{maxTicksLimit:10,color:'#8c98a8',font:{size:10}},grid:{color:'#eef2f6'}},y:{grid:{color:'#eef2f6'},ticks:{color:'#8c98a8',font:{size:10},callback:v=>(v>=0?'+':'')+v.toFixed(2)+' $/MMBtu'},title:{display:true,text:'EU−HH Spread $/MMBtu',color:'#8c98a8',font:{size:10}}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{ const v=ctx.parsed.y; return ` ${(v>=0?'+':'')+fmtN(v,2)} $/MMBtu${v>3?' → LNG nach EU lohnend':v>0?' → EU-Prämie':' → unter HH-Niveau'}`;}}}}}}); 
 }
 
 function _renderFuturesTable() {
   const ft=D.energy_futures; const wrap=document.getElementById('futures-comparison-table'); if(!wrap||!ft)return;
-  const curYear=new Date().getFullYear(); const years=[curYear,curYear+1,curYear+2];
+  const curYear=new Date().getFullYear();
   const steoAvg=(series,year)=>{ const r=(series||[]).filter(p=>p.period.startsWith(String(year))); if(!r.length)return null; const v=r.map(p=>p.v).filter(x=>x!=null); return v.length?+(v.reduce((a,b)=>a+b,0)/v.length).toFixed(2):null; };
   const annVal=(series,year)=>{ const r=(series||[]).find(p=>p.year===year); return r?.v!=null?+r.v.toFixed(2):null; };
   const fmt=v=>v!=null?fmtN(v,2):'—';
-  const rows=[
-    {m:'Brent (USD/bbl)',eia:years.map(y=>steoAvg(ft.eia_steo?.brent,y)),wb:years.map(y=>annVal(ft.worldbank?.crude_oil,y)),imf:years.map(y=>annVal(ft.imf?.crude_oil,y))},
-    {m:'EU Gas (USD/MMBtu)',eia:years.map(y=>steoAvg(ft.eia_steo?.eu_gas,y)),wb:years.map(y=>annVal(ft.worldbank?.eu_gas,y)),imf:years.map(y=>annVal(ft.imf?.eu_gas,y))},
-    {m:'WTI (USD/bbl)',eia:years.map(y=>steoAvg(ft.eia_steo?.wti,y)),wb:null,imf:null},
-    {m:'Henry Hub (USD/MMBtu)',eia:years.map(y=>steoAvg(ft.eia_steo?.hh_gas,y)),wb:null,imf:null},
+  // STEO forecasts roughly 18 months out, so a fixed three-year window always
+  // ended in an empty column — one third of a table that is already tight on
+  // a phone. Keep only years some source actually covers.
+  const candidateYears=[curYear,curYear+1,curYear+2];
+  const rowDefs=[
+    {m:'Brent (USD/bbl)',      key:'brent',  eiaKey:'brent',  wbKey:'crude_oil', imfKey:'crude_oil'},
+    {m:'EU Gas (USD/MMBtu)',   key:'eu_gas', eiaKey:'eu_gas', wbKey:'eu_gas',    imfKey:'eu_gas'},
+    {m:'WTI (USD/bbl)',        key:'wti',    eiaKey:'wti'},
+    {m:'Henry Hub (USD/MMBtu)',key:'hh_gas', eiaKey:'hh_gas'},
   ];
-  wrap.innerHTML=`<table class="tbl" style="margin-top:4px"><thead><tr><th>Rohstoff</th>${years.map(y=>`<th class="num" colspan="3">${y}</th>`).join('')}</tr><tr><th style="font-size:9px;color:var(--text3)">Quelle →</th>${years.map(()=>'<th class="num" style="font-size:9px;color:#0e6cb6">EIA</th><th class="num" style="font-size:9px;color:#bc8cff">WB</th><th class="num" style="font-size:9px;color:#d97706">IMF</th>').join('')}</tr></thead><tbody>${rows.map(row=>`<tr><td><strong>${row.m}</strong></td>${years.map((_,i)=>`<td class="num">${fmt(row.eia?.[i])}</td><td class="num" style="color:var(--text3)">${row.wb?fmt(row.wb[i]):'—'}</td><td class="num" style="color:var(--text3)">${row.imf?fmt(row.imf[i]):'—'}</td>`).join('')}</tr>`).join('')}</tbody></table><div style="font-size:9px;color:var(--text3);margin-top:6px">Jahresdurchschnitte · EIA=Short-Term Energy Outlook · WB=World Bank · IMF=World Economic Outlook · Zukünftige Jahre = Prognose</div>`;
+  const years=candidateYears.filter(y => rowDefs.some(r =>
+    steoAvg(ft.eia_steo?.[r.eiaKey],y)!=null
+    || (r.wbKey && annVal(ft.worldbank?.[r.wbKey],y)!=null)
+    || (r.imfKey && annVal(ft.imf?.[r.imfKey],y)!=null)));
+  if(!years.length){
+    wrap.innerHTML='<div class="nodata"><div>Keine Prognosewerte für '+
+      candidateYears.join(', ')+'</div></div>';
+    return;
+  }
+  const rows=rowDefs.map(r=>({
+    m:r.m, key:r.key,
+    eia:years.map(y=>steoAvg(ft.eia_steo?.[r.eiaKey],y)),
+    wb: r.wbKey ? years.map(y=>annVal(ft.worldbank?.[r.wbKey],y)) : null,
+    imf:r.imfKey ? years.map(y=>annVal(ft.imf?.[r.imfKey],y)) : null,
+  }));
+  // Which forecasters have anything at all. A column of dashes says nothing
+  // about whether the World Bank has no view on Henry Hub or whether we
+  // simply failed to reach them — the fetcher records that per source, so
+  // the table can state it.
+  const srcInfo = ft.sources || {};
+  const colHas = {
+    eia: !!(ft.eia_steo && Object.values(ft.eia_steo).some(v => v && v.length)),
+    wb:  !!(ft.worldbank && Object.values(ft.worldbank).some(v => v && v.length)),
+    imf: !!(ft.imf && Object.values(ft.imf).some(v => v && v.length)),
+  };
+  const shown = [['eia','EIA','#0e6cb6'], ['wb','WB','#bc8cff'], ['imf','IMF','#d97706']]
+                  .filter(([k]) => colHas[k]);
+  // If every forecaster is out, there is no table to draw.
+  if (!shown.length) {
+    wrap.innerHTML = `<div class="nodata"><div>Keine Prognosen verfügbar</div>` +
+      `<div class="why">Alle drei Quellen sind derzeit nicht abrufbar. ` +
+      `Gründe laut Fetcher: ${
+        ['eia_steo','worldbank','imf'].map(k =>
+          `<code>${k}: ${(srcInfo[k]?.reason || 'unbekannt').slice(0,90)}</code>`).join(' ')
+      }</div></div>`;
+    return;
+  }
+
+  const cell = (key, vals, i) => {
+    if (!colHas[key]) return '';
+    const v = vals ? vals[i] : null;
+    return `<td class="num"${key==='eia'?'':' style="color:var(--text3)"'}>${v!=null?fmtN(v,2):'—'}</td>`;
+  };
+  const rowIsEmpty = row => ![row.eia, row.wb, row.imf]
+    .some(vals => vals && vals.some(v => v != null));
+  // Why a whole row is blank: the fetcher logs one error string per series.
+  const rowReason = row => {
+    const hit = (ft.errors || []).find(e => e.includes(row.key));
+    return hit ? hit.replace(/^[a-z_]+\/[a-z_]+[^:]*:\s*/i, '').slice(0, 120) : null;
+  };
+  const bodyRows = rows.map(row => {
+    const cells = years.map((_, i) =>
+      cell('eia', row.eia, i) + cell('wb', row.wb, i) + cell('imf', row.imf, i)).join('');
+    const empty = rowIsEmpty(row);
+    const reason = empty ? rowReason(row) : null;
+    return `<tr><td><strong>${row.m}</strong>${
+      empty ? `<div style="font-size:9px;color:var(--yellow);white-space:normal">${
+        reason ? 'Quelle meldet: ' + reason : 'derzeit von keiner Quelle geliefert'}</div>` : ''
+    }</td>${cells}</tr>`;
+  }).join('');
+
+  // Name the sources that dropped out, and why.
+  const missing = [['eia','EIA STEO','eia_steo'], ['wb','World Bank','worldbank'], ['imf','IMF','imf']]
+    .filter(([k]) => !colHas[k])
+    .map(([, label, key]) => {
+      const reason = srcInfo[key]?.reason;
+      return `<strong>${label}</strong> nicht verfügbar${
+        reason ? `: <code>${reason.replace(/^[a-z_]+[:/]\s*/, '').slice(0, 110)}</code>` : ''}`;
+    });
+
+  wrap.innerHTML = `<div class="tbl-scroll"><table class="tbl" style="margin-top:4px">
+    <thead>
+      <tr><th>Rohstoff</th>${years.map(y => `<th class="num" colspan="${shown.length}">${y}</th>`).join('')}</tr>
+      <tr><th style="font-size:9px;color:var(--text3)">Quelle →</th>${
+        years.map(() => shown.map(([, label, color]) =>
+          `<th class="num" style="font-size:9px;color:${color}">${label}</th>`).join('')).join('')}</tr>
+    </thead>
+    <tbody>${bodyRows}</tbody>
+  </table></div>
+  <div style="font-size:9px;color:var(--text3);margin-top:6px;line-height:1.6">
+    Jahresdurchschnitte · EIA=Short-Term Energy Outlook · WB=World Bank · IMF=World Economic Outlook · Zukünftige Jahre = Prognose
+    ${missing.length ? `<div style="margin-top:5px;color:var(--yellow)">${missing.join('<br>')}</div>` : ''}
+    <div style="margin-top:4px">Ein „—" in einer vorhandenen Spalte heißt: diese Quelle veröffentlicht zu diesem Rohstoff keine Prognose.</div>
+  </div>`;
 }
 
 // ══════════════════════════════════════════════
