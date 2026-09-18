@@ -30,11 +30,21 @@ TICKERS = [
     ('rbob_gasoline',   'RB=F',  'USD/Gallon',     None,                 'oil',     'Benzin Future (RBOB)'),
     # ── Energie: Natural gas ──
     ('natgas_henry',    'NG=F',  'USD/MMBtu',      'henryhub_usd_mmbtu', 'gas',     'Henry Hub (US)'),
-    ('ttf_eu_proxy',    'TTF=F', 'EUR/MWh',        None,                 'gas',     'TTF (EU proxy)'),
+    ('ttf_eu_proxy',    'TTF=F', 'EUR/MWh',        'gas_ttf_eur_mwh',    'gas',     'TTF Erdgas (EU)'),
     # ── Energie: Coal ──
     ('coal_atw',        'MTF=F', 'USD/t',          None,                 'coal',    'Coal (API2 ARA)'),
     # ── Strom Futures ──
-    ('power_de_proxy',  'EBM=F', 'EUR/MWh',        None,                 'power',   'EU Power Future (proxy)'),
+    # Range-validated: this symbol had been writing a single point of
+    # 66620 "EUR/MWh" into the file, three orders of magnitude off any real
+    # power price, and the Rohstoffe table showed it as a quote. The
+    # validator drops it, which leaves the series empty and honest.
+    ('power_de_proxy',  'EBM=F', 'EUR/MWh',        'price_da_eur_mwh',   'power',   'EU Power Future (Proxy)'),
+    # ── CO2 ──
+    # There is no free, reliable EUA settlement feed. KRBN holds carbon
+    # allowance futures (EUA, CCA, RGGI) and moves with them, so it is a
+    # directional proxy only — never a price in EUR/tCO2, and labelled as
+    # such everywhere it is shown.
+    ('co2_carbon_etf',  'KRBN',  'USD (ETF)',      None,                 'co2',     'Carbon-Allowance ETF (KRBN, Proxy)'),
     # ── Metalle ──
     ('gold',            'GC=F',  'USD/oz',         'gold_usd_oz',        'metals',  'Gold'),
     ('silver',          'SI=F',  'USD/oz',         None,                 'metals',  'Silber'),
@@ -124,7 +134,11 @@ def fetch() -> dict:
             if series is None:
                 series = []
             if metric and series:
-                series = [p for p in series if validators.in_range(metric, p['v'])]
+                kept = [p for p in series if validators.in_range(metric, p['v'])]
+                if len(kept) != len(series):
+                    print(f'    commodity/{tid}: dropped {len(series)-len(kept)} '
+                          f'value(s) outside the plausible range for {metric}')
+                series = kept
             out[tid] = {
                 'unit': unit,
                 'symbol': symbol,
