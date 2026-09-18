@@ -21,7 +21,7 @@ import time
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional
 
-from core import http
+from core import http, history
 
 
 BASE = 'https://api.energy-charts.info'
@@ -177,6 +177,8 @@ def fetch() -> dict:
     out['co2_price'] = {'unix_seconds': [], 'price': [],
                        'note': 'No CO2 endpoint in Energy-Charts API'}
 
+    _record_history(out)
+
     return {
         'data': out,
         'meta': {
@@ -187,3 +189,50 @@ def fetch() -> dict:
                                '/ren_share_forecast', '/cbpf', '/cbet', '/frequency'],
         },
     }
+
+
+def _record_history(out: Dict[str, dict]) -> None:
+    """
+    Archive today's day-ahead price per bidding zone to
+    data/history/spot_price.jsonl.
+
+    The API only serves a short rolling window — the dashboard's long-run
+    view came from data/spot_history.json, a one-off snapshot that froze in
+    April 2026 and has been drawn as if current ever since. Nothing was
+    accumulating a fresh long-run record anywhere, so this closes the gap
+    going forward: a few numbers per day per zone, which stays small in git
+    while a decade of them is what makes the long view possible at all.
+    """
+    record: Dict[str, float] = {}
+    for key, zone in [('price_de', 'de'), ('price_at', 'at'), ('price_fr', 'fr'),
+                      ('price_pl', 'pl'), ('price_nl', 'nl'), ('price_be', 'be'),
+                      ('price_ch', 'ch'), ('price_dk1', 'dk1')]:
+        node = out.get(key) or {}
+        seconds = node.get('unix_seconds') or []
+        prices = node.get('price') or []
+        if not seconds or not prices:
+            continue
+        # Today only, in UTC, matching how history keys its records.
+        today = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+        todays = [p for t, p in zip(seconds, prices)
+                  if p is not None
+                  and datetime.fromtimestamp(t, timezone.utc).strftime('%Y-%m-%d') == today]
+        if not todays:
+            continue
+        record[f'{zone}_avg'] = round(sum(todays) / len(todays), 2)
+        record[f'{zone}_min'] = round(min(todays), 2)
+        record[f'{zone}_max'] = round(max(todays), 2)
+        if zone == 'de':
+            record['de_hours'] = len(todays)
+            # Hours at or below zero: the clearest single marker of a
+            # renewables-heavy day, and not reconstructable later from an
+            # average alone.
+            record['de_negative_hours'] = sum(1 for p in todays if p <= 0)
+
+    ren = out.get('ren_share_de') or {}
+    shares = [v for v in (ren.get('ren_share') or []) if v is not None]
+    if shares:
+        record['de_ren_share_avg'] = round(sum(shares) / len(shares), 2)
+
+    if record:
+        history.record_history('spot_price', record)

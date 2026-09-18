@@ -105,6 +105,24 @@ main{padding:18px 20px 70px;max-width:1600px;margin:0 auto}
 @keyframes sp{to{transform:rotate(360deg)}}
 .nodata{display:flex;flex-direction:column;align-items:center;justify-content:center;height:90px;color:var(--text3);font-size:11px;gap:4px;text-align:center;padding:8px}
 
+/* Datenstand stamp — every chart says where its numbers come from and how
+   old they are. Added because several cards drew a perfectly normal-looking
+   line from a file that had not updated in months, with nothing on screen to
+   say so. */
+.card-stamp{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px;padding-top:6px;border-top:1px solid var(--border);font-size:9px;color:var(--text3);line-height:1.5}
+.card-stamp .src{font-weight:600;color:var(--text2)}
+.card-stamp .age{display:inline-flex;align-items:center;gap:3px}
+.card-stamp.warn{color:var(--yellow)}
+.card-stamp.warn .src{color:var(--yellow)}
+.card-stamp.old{color:var(--red)}
+.card-stamp.old .src{color:var(--red)}
+.stamp-dot{width:5px;height:5px;border-radius:50%;background:var(--green);flex-shrink:0}
+.card-stamp.warn .stamp-dot{background:var(--yellow)}
+.card-stamp.old .stamp-dot{background:var(--red)}
+.stamp-note{opacity:.85}
+.nodata .why{font-size:10px;color:var(--text3);max-width:34em;line-height:1.5}
+.nodata .why code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:9px;background:var(--bg);padding:1px 4px;border-radius:3px}
+
 .donut-wrap{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
 .donut-ctr{position:relative;flex-shrink:0}
 .donut-inner{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
@@ -190,11 +208,11 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
 
 <nav class="tabs">
   <button class="tab active" data-tab="strom">Strom</button>
+  <button class="tab" data-tab="strompreise">Strompreise & Importe</button>
   <button class="tab" data-tab="markt">Marktpreise</button>
   <button class="tab" data-tab="gas">Gas</button>
   <button class="tab" data-tab="rohstoffe">Rohstoffe</button>
   <button class="tab" data-tab="kraftstoff">Kraftstoffe & Heizöl</button>
-  <button class="tab" data-tab="treibstoff">Treibstoff-Versorgung</button>
   <button class="tab" data-tab="erneuerbare">Erneuerbare</button>
   <button class="tab" data-tab="wetter">Wetter</button>
   <button class="tab" data-tab="fx">Wechselkurse</button>
@@ -233,6 +251,85 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
   </div>
 </div>
 
+<!-- STROMPREISE & IMPORTE -->
+<!-- The dashboard tracked wholesale prices in detail and had nothing on what
+     a household or a company actually pays, nor on the physical import
+     balance. Both come from Eurostat. -->
+<div class="panel" id="panel-strompreise">
+  <div class="range-bar" data-tab="strompreise"></div>
+  <div class="kpis" id="kpi-strompreise"></div>
+  <div class="grid">
+    <div class="card g8">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">Endkundenpreise Strom — Haushalt vs. Industrie</div>
+          <div class="card-sub">Eurostat · Halbjahreswerte · Haushalt 2 500–4 999 kWh/Jahr · Industrie 500–1 999 MWh/Jahr</div>
+        </div>
+        <select id="strompreise-geo" onchange="renderStrompreise()" style="font-size:11px">
+          <option value="DE">Deutschland</option>
+          <option value="EU27_2020">EU27</option>
+          <option value="FR">Frankreich</option>
+          <option value="IT">Italien</option>
+          <option value="ES">Spanien</option>
+          <option value="NL">Niederlande</option>
+          <option value="PL">Polen</option>
+          <option value="AT">Österreich</option>
+          <option value="BE">Belgien</option>
+          <option value="DK">Dänemark</option>
+          <option value="SE">Schweden</option>
+        </select>
+      </div>
+      <div class="chart-wrap" style="height:270px"><canvas id="chart-strompreise"></canvas></div>
+    </div>
+    <div class="card g4">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">Woraus der Haushaltspreis besteht</div>
+          <div class="card-sub">Energie & Netz gegenüber Steuern und Abgaben</div>
+        </div>
+      </div>
+      <div class="chart-wrap" style="height:270px"><canvas id="chart-strompreise-anteile"></canvas></div>
+    </div>
+    <div class="card g6">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">Strom-Import und -Export Deutschland</div>
+          <div class="card-sub">Eurostat · Jahreswerte · GWh · Saldo = Import − Export</div>
+        </div>
+        <select id="strom-flow-geo" onchange="renderStrompreise()" style="font-size:11px">
+          <option value="DE">Deutschland</option>
+          <option value="EU27_2020">EU27</option>
+          <option value="FR">Frankreich</option>
+          <option value="IT">Italien</option>
+          <option value="ES">Spanien</option>
+          <option value="NL">Niederlande</option>
+          <option value="PL">Polen</option>
+          <option value="AT">Österreich</option>
+        </select>
+      </div>
+      <div class="chart-wrap" style="height:240px"><canvas id="chart-strom-flows"></canvas></div>
+    </div>
+    <div class="card g6">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">Ländervergleich Haushaltspreis</div>
+          <div class="card-sub">Letzter verfügbarer Halbjahreswert · inkl. aller Steuern und Abgaben</div>
+        </div>
+      </div>
+      <div class="chart-wrap" style="height:240px"><canvas id="chart-strompreise-laender"></canvas></div>
+    </div>
+    <div class="card g12">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">Gaspreise Endkunden</div>
+          <div class="card-sub">Eurostat · Haushalt 20–199 GJ/Jahr · Industrie 10 000–99 999 GJ/Jahr</div>
+        </div>
+      </div>
+      <div class="chart-wrap" style="height:230px"><canvas id="chart-gaspreise"></canvas></div>
+    </div>
+  </div>
+</div>
+
 <!-- MARKT -->
 <div class="panel" id="panel-markt">
   <div class="range-bar" data-tab="markt"></div>
@@ -266,6 +363,7 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
     <button class="fuel-tab" data-cat="gas">Gas</button>
     <button class="fuel-tab" data-cat="coal">Kohle</button>
     <button class="fuel-tab" data-cat="power">Strom</button>
+    <button class="fuel-tab" data-cat="co2">CO₂</button>
     <button class="fuel-tab" data-cat="metals">Metalle</button>
     <button class="fuel-tab" data-cat="macro">Macro</button>
     <button class="fuel-tab" data-cat="indices">Indizes</button>
@@ -307,6 +405,7 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
     <button class="fuel-tab" data-fuel="e10">Super E10</button>
     <button class="fuel-tab" data-fuel="diesel">Diesel</button>
     <button class="fuel-tab" data-fuel="heizoel">Heizöl</button>
+    <button class="fuel-tab" data-fuel="jet">Jet-Fuel & Versorgung</button>
   </div>
   <div class="kpis" id="kpi-kraftstoff"></div>
   <!-- Tankerkönig Kraftstoff (E5/E10/Diesel) -->
@@ -350,6 +449,89 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
         <div id="heatoil-notations"><div class="loading"><span class="spin"></span></div></div>
       </div>
     </div>
+  </div>
+  <!-- Jet fuel / supply situation. Previously its own top-level tab; it sits
+       here because it is the same subject (liquid fuels) and shared half its
+       sources — Brent and the FRED product prices appeared on both. -->
+  <div id="treibstoff-section" style="display:none">
+
+  <!-- Status hero: Versorgungslage-Indikator -->
+  <div class="lage-hero" id="treibstoff-hero">
+    <div id="treibstoff-hero-content">
+      <div class="loading"><span class="spin"></span>Versorgungslage wird berechnet…</div>
+    </div>
+  </div>
+
+  <!-- KPI-Kacheln -->
+  <div class="kpis" id="kpi-treibstoff"></div>
+
+  <div class="grid">
+    <!-- EU Jet Fuel Stocks (das Hauptchart) -->
+    <div class="card g8">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">EU Jet-Fuel-Lagerbestände</div>
+          <div class="card-sub">Eurostat · monatlich · 2 Monate Lag · Thousand Tonnes</div>
+        </div>
+        <select id="treibstoff-geo" onchange="renderKraftstoffMerged()" style="font-size:11px">
+          <option value="EU27_2020">EU27</option>
+          <option value="EA20">Eurozone (EA20)</option>
+          <option value="DE">Deutschland</option>
+          <option value="FR">Frankreich</option>
+          <option value="IT">Italien</option>
+          <option value="ES">Spanien</option>
+          <option value="NL">Niederlande</option>
+          <option value="PL">Polen</option>
+          <option value="BE">Belgien</option>
+        </select>
+      </div>
+      <div class="chart-wrap" style="height:280px"><canvas id="chart-eu-stocks"></canvas></div>
+    </div>
+
+    <!-- US Jet Fuel Spot Price (Frühindikator) -->
+    <div class="card g4">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">US Gulf Jet-Fuel Spot</div>
+          <div class="card-sub">FRED · USD/Gallone · täglich</div>
+        </div>
+      </div>
+      <div class="chart-wrap" style="height:280px"><canvas id="chart-us-jet-spot"></canvas></div>
+    </div>
+
+    <!-- US Petroleum Stocks (Frühindikator) -->
+    <div class="card g6">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">US Lager-Frühindikator</div>
+          <div class="card-sub">EIA · wöchentlich · Mittwoch ~16:30 MEZ · Thousand Barrels</div>
+        </div>
+      </div>
+      <div class="chart-wrap" style="height:240px"><canvas id="chart-us-stocks"></canvas></div>
+    </div>
+
+    <!-- EU Imports per Country -->
+    <div class="card g6">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">EU Jet-Fuel Importe</div>
+          <div class="card-sub">Eurostat · Top-Länder · letzte 24 Monate</div>
+        </div>
+      </div>
+      <div class="chart-wrap" style="height:240px"><canvas id="chart-eu-imports"></canvas></div>
+    </div>
+
+    <!-- Macro context table -->
+    <div class="card g12">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">Makro-Kontext</div>
+          <div class="card-sub">FRED · Anleihen, Dollar, Volatilität — Indikatoren für globalen Energiepreis-Druck</div>
+        </div>
+      </div>
+      <div id="treibstoff-macro-table"><div class="loading"><span class="spin"></span></div></div>
+    </div>
+  </div>
   </div>
 </div>
 
@@ -427,88 +609,6 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
 
 
 
-<!-- TREIBSTOFF-VERSORGUNG -->
-<div class="panel" id="panel-treibstoff">
-  <div class="range-bar" data-tab="treibstoff"></div>
-
-  <!-- Status hero: Versorgungslage-Indikator -->
-  <div class="lage-hero" id="treibstoff-hero">
-    <div id="treibstoff-hero-content">
-      <div class="loading"><span class="spin"></span>Versorgungslage wird berechnet…</div>
-    </div>
-  </div>
-
-  <!-- KPI-Kacheln -->
-  <div class="kpis" id="kpi-treibstoff"></div>
-
-  <div class="grid">
-    <!-- EU Jet Fuel Stocks (das Hauptchart) -->
-    <div class="card g8">
-      <div class="card-hdr">
-        <div>
-          <div class="card-title">EU Jet-Fuel-Lagerbestände</div>
-          <div class="card-sub">Eurostat · monatlich · 2 Monate Lag · Thousand Tonnes</div>
-        </div>
-        <select id="treibstoff-geo" onchange="renderTreibstoff()" style="font-size:11px">
-          <option value="EU27_2020">EU27</option>
-          <option value="EA20">Eurozone (EA20)</option>
-          <option value="DE">Deutschland</option>
-          <option value="FR">Frankreich</option>
-          <option value="IT">Italien</option>
-          <option value="ES">Spanien</option>
-          <option value="NL">Niederlande</option>
-          <option value="PL">Polen</option>
-          <option value="BE">Belgien</option>
-        </select>
-      </div>
-      <div class="chart-wrap" style="height:280px"><canvas id="chart-eu-stocks"></canvas></div>
-    </div>
-
-    <!-- US Jet Fuel Spot Price (Frühindikator) -->
-    <div class="card g4">
-      <div class="card-hdr">
-        <div>
-          <div class="card-title">US Gulf Jet-Fuel Spot</div>
-          <div class="card-sub">FRED · USD/Gallone · täglich</div>
-        </div>
-      </div>
-      <div class="chart-wrap" style="height:280px"><canvas id="chart-us-jet-spot"></canvas></div>
-    </div>
-
-    <!-- US Petroleum Stocks (Frühindikator) -->
-    <div class="card g6">
-      <div class="card-hdr">
-        <div>
-          <div class="card-title">US Lager-Frühindikator</div>
-          <div class="card-sub">EIA · wöchentlich · Mittwoch ~16:30 MEZ · Thousand Barrels</div>
-        </div>
-      </div>
-      <div class="chart-wrap" style="height:240px"><canvas id="chart-us-stocks"></canvas></div>
-    </div>
-
-    <!-- EU Imports per Country -->
-    <div class="card g6">
-      <div class="card-hdr">
-        <div>
-          <div class="card-title">EU Jet-Fuel Importe</div>
-          <div class="card-sub">Eurostat · Top-Länder · letzte 24 Monate</div>
-        </div>
-      </div>
-      <div class="chart-wrap" style="height:240px"><canvas id="chart-eu-imports"></canvas></div>
-    </div>
-
-    <!-- Macro context table -->
-    <div class="card g12">
-      <div class="card-hdr">
-        <div>
-          <div class="card-title">Makro-Kontext</div>
-          <div class="card-sub">FRED · Anleihen, Dollar, Volatilität — Indikatoren für globalen Energiepreis-Druck</div>
-        </div>
-      </div>
-      <div id="treibstoff-macro-table"><div class="loading"><span class="spin"></span></div></div>
-    </div>
-  </div>
-</div><!-- /panel-treibstoff -->
 
 <div class="panel" id="panel-fx">
   <div class="range-bar" data-tab="fx"></div>
@@ -559,6 +659,37 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
     <div class="card g6">
       <div class="card-hdr"><div><div class="card-title">CO₂-Intensität Strommix DE</div><div class="card-sub">Schätzung aus SMARD Erzeugungsmix · gCO₂/kWh</div></div></div>
       <div class="chart-wrap" style="height:240px"><canvas id="chart-lage-co2"></canvas></div>
+    </div>
+    <div class="card g12">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">Langzeit-Archiv · Strompreis Deutschland</div>
+          <div class="card-sub">Tageswerte aus dem eigenen Archiv in diesem Repository (data/history/spot_price.jsonl) — unabhängig davon, wie weit die APIs zurückreichen</div>
+        </div>
+      </div>
+      <div class="chart-wrap" style="height:230px"><canvas id="chart-archiv-spot"></canvas></div>
+    </div>
+    <div class="card g6">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">Langzeit-Archiv · Erneuerbare und CO₂</div>
+          <div class="card-sub">Tagesaggregat des SMARD-Erzeugungsmix (data/history/smard_mix.jsonl)</div>
+        </div>
+      </div>
+      <div class="chart-wrap" style="height:230px"><canvas id="chart-archiv-mix"></canvas></div>
+    </div>
+    <div class="card g6">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">Archiv-Bestand</div>
+          <div class="card-sub">Was dieses Repository selbst aufzeichnet — unabhängig von den Zeitfenstern der Quellen</div>
+        </div>
+      </div>
+      <div id="archiv-table"><div class="loading"><span class="spin"></span></div></div>
+    </div>
+    <div class="card g12">
+      <div class="card-hdr"><div><div class="card-title">Rohöl und Heizöl im Gleichlauf</div><div class="card-sub">Beide auf 100 am Zeitraumbeginn indexiert — zeigt, wie stark der Heizölpreis dem Rohölpreis folgt</div></div></div>
+      <div class="chart-wrap" style="height:230px"><canvas id="chart-lage-oil"></canvas></div>
     </div>
   </div>
 </div>
@@ -663,11 +794,13 @@ const RANGE_DEFS = {
 // Per-tab: which ranges are enabled (others rendered greyed out)
 const TAB_RANGES = {
   strom:       ['24h','7d','30d'],
+  // Eurostat publishes these half-yearly and annually, so anything under a
+  // year would show a single point.
+  strompreise: ['2y','5y','max'],
   markt:       ['7d','30d','90d','1y','2y'],
   gas:         ['30d','90d','1y','2y','max'],
   rohstoffe:   ['30d','90d','1y','2y','max'],
-  kraftstoff:  ['7d','30d','90d','1y','2y','max'],  // merged kraft+heizoel
-  treibstoff:  ['90d','1y','2y','5y','max'],
+  kraftstoff:  ['7d','30d','90d','1y','2y','5y','max'],  // road fuel + heating oil + jet
   erneuerbare: ['30d','90d','1y','2y','5y','max'],
   wetter:      ['24h','7d'],
   fx:          ['30d','90d'],
@@ -678,8 +811,8 @@ const TAB_RANGES = {
 
 // Default range per tab (must be in TAB_RANGES[tab])
 const TAB_DEFAULT_RANGE = {
-  strom:'7d', markt:'30d', gas:'1y', rohstoffe:'1y',
-  kraftstoff:'30d', treibstoff:'2y', erneuerbare:'5y',
+  strom:'7d', strompreise:'max', markt:'30d', gas:'1y', rohstoffe:'1y',
+  kraftstoff:'30d', erneuerbare:'5y',
   wetter:'7d', fx:'90d', futures:'2y', lage:'2y',
 };
 
@@ -761,11 +894,12 @@ function renderRangeBar(tab) {
 
 const TAB_FILES = {
   strom:       ['smard','energy_charts','entsoe'],
+  strompreise: ['eurostat_prices','eurostat_oil'],
   markt:       ['energy_charts','commodities','fx','entsoe'],
   gas:         ['gas_storage','entsog'],
   rohstoffe:   ['commodities','fx'],
-  kraftstoff:  ['fuel','heating_oil','commodities'],   // merged: fuel + heizoel
-  treibstoff:  ['eurostat_oil','eia_petroleum','fred_energy','commodities'],
+  // merged tab: road fuels + heating oil + jet fuel/supply
+  kraftstoff:  ['fuel','heating_oil','commodities','eurostat_oil','eia_petroleum','fred_energy'],
   erneuerbare: ['energy_charts','smard'],
   wetter:      ['weather'],
   fx:          ['fx'],
@@ -844,6 +978,250 @@ const coCutS = days => Date.now()/1000 - days*86400;
 
 // Safe array value getter
 const last = arr => Array.isArray(arr) ? arr.filter(v=>v!=null).at(-1) : null;
+
+// ══════════════════════════════════════════════
+// DATA PROVENANCE — where a number came from and how old it is
+// ══════════════════════════════════════════════
+// Several cards drew a perfectly ordinary-looking line from a file that had
+// not been updated in months (bundesland, charging, expansion, macro and the
+// spot-price archives all still carry their March/April snapshot), and a
+// source that goes stale keeps serving its last good values by design. In
+// neither case was there anything on screen to say so. Every chart now
+// carries a stamp naming its source and its age.
+
+// How often each source is expected to refresh, in hours. Taken from the
+// intervals in scripts/fetch_all.py; the static files are the ones with no
+// fetcher at all.
+const SOURCE_CADENCE_H = {
+  smard:1, energy_charts:1, gas_storage:6, entsog:6, weather:3, commodities:3,
+  fx:12, fuel:12, heating_oil:12, destatis_vpi:24, entsoe:6, fred_energy:12,
+  eia_petroleum:12, energy_futures:6, eurostat_oil:24, eurostat_prices:24,
+  news:2,
+};
+
+const SOURCE_LABEL = {
+  smard:'SMARD / Bundesnetzagentur', energy_charts:'Energy-Charts / Fraunhofer ISE',
+  gas_storage:'GIE AGSI+', entsog:'ENTSOG', weather:'Open-Meteo',
+  commodities:'Yahoo Finance', fx:'EZB', fuel:'Tankerkönig',
+  heating_oil:'TECSON', destatis_vpi:'Destatis', entsoe:'ENTSO-E',
+  fred_energy:'FRED / St. Louis Fed', eia_petroleum:'EIA',
+  energy_futures:'EIA STEO · World Bank · IMF', eurostat_oil:'Eurostat',
+  eurostat_prices:'Eurostat', news:'RSS',
+};
+
+// Files with no fetcher: one-off snapshots committed to the repo. They are
+// genuinely historical, so they are not "broken" — but a chart drawn from
+// them must say which day it froze on.
+const STATIC_FILES = {
+  bundesland:'Energy-Charts (Einmal-Snapshot)',
+  charging:'BNetzA Ladesäulenregister (Einmal-Snapshot)',
+  expansion:'Energy-Charts + BDEW (Einmal-Snapshot)',
+  macro:'EZB SDW (Einmal-Snapshot)',
+  smard_history:'SMARD Archiv (Einmal-Snapshot)',
+  spot_history:'Fraunhofer ISE Archiv (Einmal-Snapshot)',
+  spot_prices:'Fraunhofer ISE Archiv (Einmal-Snapshot)',
+};
+
+function sourceMeta(name) {
+  const d = D[name];
+  const meta = d?.__meta || {};
+  const updatedIso = meta.updated || d?.updated || null;
+  const updatedMs = updatedIso ? Date.parse(updatedIso) : NaN;
+  const ageH = isFinite(updatedMs) ? (Date.now() - updatedMs) / 3600000 : null;
+  const cadence = SOURCE_CADENCE_H[name];
+  const isStatic = !!STATIC_FILES[name];
+  // A source is "old" once it has missed three refreshes, "warn" after 1.5.
+  // Static snapshots are never scored against a cadence they don't have.
+  // Thresholds allow for the hourly cron plus per-source frequency gating,
+  // so a source is only flagged once it has really fallen behind: an hourly
+  // source turns amber after 6h and red after a day, a daily one after 3
+  // and 8 days.
+  let level = 'ok';
+  if (meta.stale) level = 'warn';
+  if (isStatic) level = ageH != null && ageH > 24*60 ? 'old' : 'warn';
+  else if (cadence && ageH != null) {
+    const warnAt = Math.max(cadence * 3, 6);
+    const oldAt  = Math.max(cadence * 8, 24);
+    if (ageH > oldAt) level = 'old';
+    else if (ageH > warnAt && level === 'ok') level = 'warn';
+  }
+  return {
+    updatedIso, ageH, level, isStatic,
+    stale: !!meta.stale,
+    lastError: meta.last_error || null,
+    lastSuccess: meta.last_success || null,
+    label: STATIC_FILES[name] || SOURCE_LABEL[name] || name,
+  };
+}
+
+function fmtAge(ageH) {
+  if (ageH == null || !isFinite(ageH)) return 'unbekannt';
+  if (ageH < 1) return `vor ${Math.max(1, Math.round(ageH*60))} Min.`;
+  if (ageH < 48) return `vor ${Math.round(ageH)} Std.`;
+  const days = Math.round(ageH/24);
+  if (days < 60) return `vor ${days} Tagen`;
+  return `vor ${Math.round(days/30)} Monaten`;
+}
+
+// Attach (or refresh) the provenance stamp on the card containing `anchorId`.
+// `sources` is one or more data-file names; `note` adds a caveat, e.g. that a
+// series is a proxy rather than the real benchmark.
+function stamp(anchorId, sources, note) {
+  const el = document.getElementById(anchorId);
+  const card = el ? el.closest('.card') : null;
+  if (!card) return;
+  const names = Array.isArray(sources) ? sources : [sources];
+  const metas = names.map(sourceMeta);
+  const worst = metas.reduce((acc, m) =>
+    m.level === 'old' ? 'old' : (m.level === 'warn' && acc !== 'old') ? 'warn' : acc, 'ok');
+
+  const parts = metas.map(m =>
+    `<span class="src">${m.label}</span> <span class="age">${fmtAge(m.ageH)}</span>`);
+  let warning = '';
+  const staleMeta = metas.find(m => m.stale);
+  if (staleMeta) {
+    warning = `· <span class="stamp-note">Quelle meldet Fehler, gezeigt werden die letzten guten Werte${
+      staleMeta.lastSuccess ? ' vom ' + fmtDt(staleMeta.lastSuccess) : ''}</span>`;
+  } else if (worst === 'old') {
+    warning = '· <span class="stamp-note">seit längerem nicht aktualisiert</span>';
+  }
+  if (note) parts.push(`<span class="stamp-note">${note}</span>`);
+
+  let box = card.querySelector('.card-stamp');
+  if (!box) {
+    box = document.createElement('div');
+    box.className = 'card-stamp';
+    card.appendChild(box);
+  }
+  box.className = 'card-stamp' + (worst === 'ok' ? '' : ' ' + worst);
+  box.innerHTML = `<span class="stamp-dot"></span>${parts.join(' · ')}${warning}`;
+}
+
+// Replace a chart with an explanation. `why` should say what is missing and
+// what would make it appear — "wird geladen…" on a series that has been empty
+// for months is worse than saying nothing.
+function noData(anchorId, headline, why) {
+  const el = document.getElementById(anchorId);
+  const wrap = el ? el.parentElement : null;
+  if (!wrap) return;
+  if (CH[anchorId]) { CH[anchorId].destroy(); delete CH[anchorId]; }
+  wrap.innerHTML = `<div class="nodata"><div>${headline}</div>` +
+    (why ? `<div class="why">${why}</div>` : '') + '</div>';
+}
+
+// Read the first key that actually holds data. Upstream renames (and our own)
+// have repeatedly left the dashboard reading a key the fetcher no longer
+// writes — the Treibstoff tab asked for `jet_stocks` for months while the
+// file had `oil_jet_fuel_stocks`, so every chart on it was blank.
+function pickKey(obj, ...keys) {
+  if (!obj) return null;
+  for (const k of keys) {
+    const v = obj[k];
+    if (v == null) continue;
+    if (Array.isArray(v) ? v.length : (typeof v === 'object' ? Object.keys(v).length : true)) return v;
+  }
+  return null;
+}
+
+// Eurostat series, with the historical key names kept as fallbacks so the
+// dashboard keeps working across a fetcher rename in either direction.
+function eurostatSeries(name) {
+  const eo = D.eurostat_oil;
+  if (!eo) return {byCountry:{}, info:null};
+  const alias = {
+    jet_stocks:      ['oil_jet_fuel_stocks', 'jet_stocks'],
+    jet_imports:     ['oil_jet_fuel_imports', 'jet_imports'],
+    jet_exports:     ['oil_jet_fuel_exports', 'jet_exports'],
+    jet_supply:      ['oil_jet_fuel_supply', 'jet_supply'],
+    jet_consumption: ['oil_jet_fuel_consumption', 'jet_consumption'],
+    diesel_stocks:   ['oil_diesel_stocks'],
+    gasoline_stocks: ['oil_motor_gasoline'],
+    crude_imports:   ['oil_crude_imports'],
+    elec_imports:    ['electricity_imports'],
+    elec_exports:    ['electricity_exports'],
+  }[name] || [name];
+  for (const key of alias) {
+    const node = eo[key];
+    if (node && Object.keys(node.series_per_country || {}).length) {
+      return {byCountry: node.series_per_country, info: node};
+    }
+  }
+  // Nothing populated — return the node anyway so the caller can show the
+  // fetcher's own reason for it being empty.
+  const node = alias.map(k => eo[k]).find(Boolean) || null;
+  return {byCountry:{}, info:node};
+}
+
+// Why an Eurostat series is empty, in the user's words.
+function eurostatWhy(info) {
+  if (info?.unavailable_reason) {
+    return `Eurostat liefert diese Serie derzeit nicht: <code>${info.unavailable_reason}</code>`;
+  }
+  if (info?.dataset) {
+    return `Eurostat-Datensatz <code>${info.dataset}</code> lieferte keine Werte für die ` +
+           `gewählten Länder. Monatsdaten haben rund 2 Monate Meldeverzug.`;
+  }
+  return 'Eurostat-Daten sind für diese Auswahl nicht verfügbar.';
+}
+
+// Defensive client-side dedupe. The fetchers guarantee unique timestamps
+// (scripts/core/series.py), but the committed data files predate that, so a
+// chart drawn before the next fetch run would still double up.
+function uniqBy(arr, keyFn) {
+  if (!Array.isArray(arr)) return [];
+  const seen = new Map();
+  arr.forEach(x => seen.set(keyFn(x), x));
+  return Array.from(seen.values());
+}
+const uniqTs     = arr => uniqBy(arr, p => p.ts).sort((a,b)=>a.ts-b.ts);
+const uniqPeriod = arr => uniqBy(arr, p => p.period).sort((a,b)=>String(a.period).localeCompare(String(b.period)));
+
+// ══════════════════════════════════════════════
+// BENCHMARK RESOLVERS — one definition per number, used by every tab
+// ══════════════════════════════════════════════
+// TTF and CO2 were read from `energy_charts.gas_price` / `.co2_price`. Those
+// endpoints do not exist — scripts/fetchers/energy_charts.py says so in its
+// own docstring and writes the keys as empty arrays — so the TTF card, the
+// CO2 card, the TTF chart on Marktlage and the TTF KPI were all permanently
+// blank while commodities.json carried 503 points of TTF the whole time.
+// Resolving each benchmark in one place means the same number, with the same
+// source label, wherever it is shown.
+
+function ttfSeries() {
+  const ec = D.energy_charts?.gas_price;
+  if (ec?.unix_seconds?.length && ec?.price?.length) {
+    const pts = ec.unix_seconds
+      .map((t,i) => ({ts:t, v:ec.price[i]}))
+      .filter(x => x.v != null);
+    if (pts.length) return {points:uniqTs(pts), source:'energy_charts', unit:'EUR/MWh', note:null};
+  }
+  const com = D.commodities?.ttf_eu_proxy?.series || [];
+  if (com.length) {
+    return {points:uniqTs(com.filter(p => p.v != null)), source:'commodities',
+            unit:'EUR/MWh', note:'Front-Month-Future (TTF=F) als Spot-Näherung'};
+  }
+  return {points:[], source:null, unit:'EUR/MWh', note:null};
+}
+
+function co2Series() {
+  const ec = D.energy_charts?.co2_price;
+  if (ec?.unix_seconds?.length && ec?.price?.length) {
+    const pts = ec.unix_seconds
+      .map((t,i) => ({ts:t, v:ec.price[i]}))
+      .filter(x => x.v != null);
+    if (pts.length) return {points:uniqTs(pts), source:'energy_charts',
+                            unit:'EUR/tCO₂', isProxy:false, note:null};
+  }
+  const etf = D.commodities?.co2_carbon_etf;
+  const series = etf?.series || [];
+  if (series.length) {
+    return {points:uniqTs(series.filter(p => p.v != null)), source:'commodities',
+            unit:etf.unit || 'USD (ETF)', isProxy:true,
+            note:'KRBN hält CO₂-Zertifikate-Futures — zeigt die Richtung, ' +
+                 'nicht den EUA-Preis in EUR/t'};
+  }
+  return {points:[], source:null, unit:'EUR/tCO₂', isProxy:false, note:null};
+}
 
 function kpis(items) {
   return items.map(({label,val,unit,delta,color})=>`
@@ -930,7 +1308,7 @@ function updateStatus() {
     'st-comm':        isOk('commodities',   () => (D.commodities?.brent_crude?.series?.length||0)>0),
     'st-fred':        isOk('fred_energy',   () => (D.fred_energy?.DJFUELUSGULF?.series?.length||0)>0),
     'st-eia':         isOk('eia_petroleum', () => (D.eia_petroleum?.jet_fuel_us_gulf_weekly?.series?.length||0)>0),
-    'st-eurostat':    isOk('eurostat_oil',  () => Object.keys(D.eurostat_oil?.jet_stocks?.series_per_country||{}).length>0),
+    'st-eurostat':    isOk('eurostat_oil',  () => Object.keys(D.eurostat_oil?.oil_jet_fuel_stocks?.series_per_country||{}).length>0),
     'st-news':        isOk('news',          () => (D.news?.articles?.length||0)>0),
   };
   Object.entries(chk).forEach(([id,ok])=>{
@@ -1091,34 +1469,47 @@ function renderMarkt() {
     datasets.push({label:c.label,data:vals,borderColor:c.color,backgroundColor:'transparent',borderWidth:1.8});
     kpiItems.push({label:`Day-Ahead ${c.label}`,val:fmtN(vals.filter(v=>v!=null).at(-1),1),unit:'EUR/MWh',color:c.color});
   });
-  if(datasets.length) mkChart('chart-da-multi','line',labels,datasets,{plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}}});
-
-  // TTF Gas
-  const gp=ec.gas_price;
-  if(gp?.unix_seconds?.length&&gp?.price?.length) {
-    const f=gp.unix_seconds.map((t,i)=>({t,p:gp.price[i]})).filter(x=>x.p!=null);
-    if(f.length){
-      kpiItems.push({label:'TTF Erdgas',val:fmtN(f.at(-1)?.p,1),unit:'EUR/MWh',color:'#f0883e'});
-      mkChart('chart-ttf','line',f.map(x=>fmtDate(x.t*1000)),[{
-        label:'TTF EUR/MWh',data:f.map(x=>x.p),borderColor:'#f0883e',backgroundColor:'rgba(240,136,62,0.07)',fill:true
-      }]);
-    }
+  if(datasets.length) {
+    mkChart('chart-da-multi','line',labels,datasets,{plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}}});
+    stamp('chart-da-multi','energy_charts');
   } else {
-    document.getElementById('chart-ttf').parentElement.innerHTML='<div class="nodata">TTF-Daten werden beim nächsten Run geladen<br><small style="color:var(--text3)">Key-Diagnose läuft im Actions-Log</small></div>';
+    noData('chart-da-multi','Keine Day-Ahead-Preise im Zeitraum',
+           'Energy-Charts liefert 7 Tage Preisverlauf; für längere Zeiträume ' +
+           'greift der Verlauf auf <code>price_de_monthly</code> zurück.');
   }
 
-  // CO2
-  const cp=ec.co2_price;
-  if(cp?.unix_seconds?.length&&cp?.price?.length) {
-    const f=cp.unix_seconds.map((t,i)=>({t,p:cp.price[i]})).filter(x=>x.p!=null).slice(-120);
-    if(f.length){
-      kpiItems.push({label:'CO₂ EU ETS',val:fmtN(f.at(-1)?.p,1),unit:'EUR/tCO₂',color:'#bc8cff'});
-      mkChart('chart-co2','line',f.map(x=>fmtDate(x.t*1000)),[{
-        label:'EUR/tCO₂',data:f.map(x=>x.p),borderColor:'#bc8cff',backgroundColor:'rgba(188,140,255,0.07)',fill:true
-      }]);
-    }
+  // TTF Gas — resolved benchmark, not the empty energy-charts key
+  const ttf = ttfSeries();
+  const ttfWin = ttf.points.filter(p => p.ts >= co);
+  if (ttfWin.length) {
+    kpiItems.push({label:'TTF Erdgas', val:fmtN(ttfWin.at(-1).v,1), unit:'EUR/MWh', color:'#f0883e'});
+    mkChart('chart-ttf','line', ttfWin.map(p=>fmtDate(p.ts*1000)), [{
+      label:'TTF EUR/MWh', data:ttfWin.map(p=>p.v),
+      borderColor:'#f0883e', backgroundColor:'rgba(240,136,62,0.07)', fill:true
+    }]);
+    stamp('chart-ttf', ttf.source, ttf.note);
   } else {
-    document.getElementById('chart-co2').parentElement.innerHTML='<div class="nodata">CO₂-Daten werden beim nächsten Run geladen</div>';
+    noData('chart-ttf', 'Keine TTF-Daten',
+           'Energy-Charts veröffentlicht keinen Gaspreis-Endpunkt; als Quelle ' +
+           'dient der TTF-Future aus <code>commodities.json</code>, der hier ' +
+           'ebenfalls leer ist.');
+  }
+
+  // CO2 — clearly marked as a proxy when that is what we have
+  const co2 = co2Series();
+  const co2Win = co2.points.filter(p => p.ts >= co).slice(-400);
+  if (co2Win.length) {
+    kpiItems.push({label: co2.isProxy ? 'CO₂-Zertifikate (Proxy)' : 'CO₂ EU ETS',
+                   val:fmtN(co2Win.at(-1).v,1), unit:co2.unit, color:'#bc8cff'});
+    mkChart('chart-co2','line', co2Win.map(p=>fmtDate(p.ts*1000)), [{
+      label:co2.unit, data:co2Win.map(p=>p.v),
+      borderColor:'#bc8cff', backgroundColor:'rgba(188,140,255,0.07)', fill:true
+    }]);
+    stamp('chart-co2', co2.source, co2.note);
+  } else {
+    noData('chart-co2', 'Keine CO₂-Daten',
+           'Für den EUA-Preis gibt es keine freie Quelle in dieser Sammlung; ' +
+           'ersatzweise wird der Carbon-ETF KRBN gezeigt, der hier fehlt.');
   }
 
   // FX EUR/USD KPI — relevant in energy crises (USD-denominated commodities)
@@ -1368,12 +1759,23 @@ function setFuel(type) {
   renderKraftstoffMerged();
 }
 function renderKraftstoffMerged() {
-  const isHO = fuelType === 'heizoel';
-  const ks = document.getElementById('kraftstoff-section');
-  const hs = document.getElementById('heizoel-section');
-  if (ks) ks.style.display = isHO ? 'none' : 'block';
-  if (hs) hs.style.display = isHO ? 'block' : 'none';
-  if (isHO) renderHeizoel(); else renderKraftstoff();
+  const view = fuelType === 'heizoel' ? 'heizoel'
+             : fuelType === 'jet'     ? 'jet'
+             : 'road';
+  const show = (id, on) => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = on ? 'block' : 'none';
+  };
+  show('kraftstoff-section', view === 'road');
+  show('heizoel-section',    view === 'heizoel');
+  show('treibstoff-section', view === 'jet');
+  // The shared KPI strip belongs to the road-fuel view only; the other two
+  // bring their own.
+  const sharedKpi = document.getElementById('kpi-kraftstoff');
+  if (sharedKpi) sharedKpi.style.display = view === 'road' ? '' : 'none';
+  if (view === 'heizoel') renderHeizoel();
+  else if (view === 'jet') renderTreibstoff();
+  else renderKraftstoff();
 }
 
 // History loader (separate from D, lives under D._history)
@@ -1800,7 +2202,7 @@ function renderNews() {
   if (!news?.articles?.length) {
     wrap.innerHTML = '<div class="nodata" style="height:200px"><span style="font-size:32px">📰</span><span>Noch keine News – GitHub Actions einmal manuell starten</span></div>';
     document.getElementById('news-category-tabs').innerHTML = '';
-    document.getElementById('news-filters').innerHTML = '';
+    document.getElementById('news-source-filter').innerHTML = '';
     return;
   }
 
@@ -1826,7 +2228,7 @@ function renderNews() {
   articlesInCat.forEach(a => { sourceCounts[a.source] = (sourceCounts[a.source]||0) + 1; });
   const sources = Object.entries(sourceCounts).sort((a, b) => b[1] - a[1]);
 
-  document.getElementById('news-filters').innerHTML =
+  document.getElementById('news-source-filter').innerHTML =
     `<button class="nf-btn ${newsSource==='alle'?'active':''}" data-src="alle" onclick="filterNews('alle')">Alle Quellen (${articlesInCat.length})</button>`
     + sources.map(([s, n]) =>
         `<button class="nf-btn ${newsSource===s?'active':''}" data-src="${s}" onclick="filterNews('${s.replace(/'/g,"\\'")}')">${s} (${n})</button>`
@@ -2029,9 +2431,16 @@ function classifyLage(ttf, gasStorage, powerDa) {
  * Returns { level: 'ok'|'warn'|'crit', headline, sub, pct }
  */
 function classifyJetFuelStatus() {
-  const eu = D.eurostat_oil?.jet_stocks?.series_per_country?.EU27_2020 || [];
+  // Read through eurostatSeries(): this used to ask for `jet_stocks`, a key
+  // the fetcher has never written — it writes `oil_jet_fuel_stocks` — so the
+  // hero permanently reported "Datenlage unklar" no matter what the file held.
+  const {byCountry, info} = eurostatSeries('jet_stocks');
+  const eu = uniqPeriod(byCountry.EU27_2020 || []);
   if (eu.length < 13) return {level:'unknown', headline:'Datenlage unklar',
-                              sub:'Eurostat-Daten unvollständig — vermutlich erst nach nächstem Update verfügbar.', pct:null};
+                              sub: info?.unavailable_reason
+                                ? `Eurostat liefert die Lagerbestände derzeit nicht (${info.unavailable_reason}).`
+                                : 'Eurostat-Lagerbestände sind noch nicht ausreichend lang verfügbar (mind. 13 Monate nötig, Meldeverzug ca. 2 Monate).',
+                              pct:null};
   const latest = eu[eu.length - 1];
   // 5-year window of the same calendar month
   const latestMonth = parseInt(latest.period.split('-')[1] || '0', 10);
@@ -2110,18 +2519,20 @@ function renderTreibstoff() {
   // ── Chart: EU jet stocks per country (selectable) ──
   const geoSel = document.getElementById('treibstoff-geo');
   const geo = geoSel ? geoSel.value : 'EU27_2020';
-  const eu = D.eurostat_oil?.jet_stocks?.series_per_country?.[geo] || [];
+  const stocks = eurostatSeries('jet_stocks');
+  const eu = uniqPeriod(stocks.byCountry[geo] || []);
   if (eu.length) {
     mkChart('chart-eu-stocks', 'line',
       eu.map(p => p.period),
-      [{label:`Jet-Fuel Stocks ${geo}`, data:eu.map(p => p.v),
+      [{label:`Jet-Fuel Bestände ${geo}`, data:eu.map(p => p.v),
         borderColor:'#0e6cb6', backgroundColor:'rgba(14,108,182,0.10)',
         fill:true, tension:0.2, borderWidth:2}],
-      {scales:{y:{title:{display:true, text:'Tausend Tonnen'}}}});
+      {scales:{y:{title:{display:true, text:stocks.info?.unit || 'Tausend Tonnen'}}}});
+    stamp('chart-eu-stocks', 'eurostat_oil',
+          `${geo} · ${stocks.info?.flow || ''} ${stocks.info?.product || ''}`.trim());
   } else {
-    const wrap = document.getElementById('chart-eu-stocks')?.parentElement;
-    if (wrap) wrap.innerHTML = `<div class="nodata">Keine Eurostat-Daten für ${geo} verfügbar`+
-                                ` <span style="font-size:10px">(2-Monats-Lag, eventuell beim nächsten Run da)</span></div>`;
+    noData('chart-eu-stocks', `Keine Eurostat-Lagerbestände für ${geo}`,
+           eurostatWhy(stocks.info));
   }
 
   // ── Chart: US Gulf Jet Fuel Spot (FRED daily) ──
@@ -2134,9 +2545,11 @@ function renderTreibstoff() {
         borderColor:'#7e57c2', backgroundColor:'rgba(126,87,194,0.10)',
         fill:true, tension:0.2, borderWidth:2, pointRadius:0}],
       {scales:{x:{ticks:{maxTicksLimit:10}}}});
+    stamp('chart-us-jet-spot', 'fred_energy', 'FRED-Tagesreihe DJFUELUSGULF');
   } else {
-    const wrap = document.getElementById('chart-us-jet-spot')?.parentElement;
-    if (wrap) wrap.innerHTML = '<div class="nodata">FRED-Daten werden geladen…</div>';
+    noData('chart-us-jet-spot', 'Keine FRED-Daten',
+           'Die Tagesreihe <code>DJFUELUSGULF</code> kam leer zurück. ' +
+           'Prüfen: FRED_API_KEY in den GitHub Secrets.');
   }
 
   // ── Chart: US Petroleum Stocks (multi-line: Jet, Distillate, Crude) ──
@@ -2169,13 +2582,17 @@ function renderTreibstoff() {
       plugins:{legend:{display:true, labels:{color:'#56657a', boxWidth:6, font:{size:9}}}},
       scales:{x:{ticks:{maxTicksLimit:8}}, y:{title:{display:true, text:'Index (vor 2 Jahren = 100)'}}}
     });
+    stamp('chart-us-stocks', 'eia_petroleum', 'wöchentlich, indexiert');
   } else {
-    const wrap = document.getElementById('chart-us-stocks')?.parentElement;
-    if (wrap) wrap.innerHTML = '<div class="nodata">EIA-Daten werden geladen…</div>';
+    noData('chart-us-stocks', 'Keine EIA-Lagerdaten',
+           'Alle vier Lagerreihen kamen leer zurück. Prüfen: EIA_API_KEY in ' +
+           'den GitHub Secrets, sowie <code>meta.resolved_filters</code> in ' +
+           '<code>data/eia_petroleum.json</code>.');
   }
 
   // ── Chart: EU Imports per country ──
-  const imports = D.eurostat_oil?.jet_imports?.series_per_country || {};
+  const importsNode = eurostatSeries('jet_imports');
+  const imports = importsNode.byCountry;
   const importCountries = Object.entries(imports)
     .filter(([k, v]) => k !== 'EU27_2020' && k !== 'EA20' && v?.length)
     .sort((a, b) => {
@@ -2202,9 +2619,10 @@ function renderTreibstoff() {
       plugins:{legend:{display:true, labels:{color:'#56657a', boxWidth:8, font:{size:10}}}},
       scales:{y:{title:{display:true, text:'Tausend Tonnen'}}}
     });
+    stamp('chart-eu-imports', 'eurostat_oil', 'Top-5 Länder nach letztem Wert');
   } else {
-    const wrap = document.getElementById('chart-eu-imports')?.parentElement;
-    if (wrap) wrap.innerHTML = '<div class="nodata">Eurostat-Importdaten werden geladen…</div>';
+    noData('chart-eu-imports', 'Keine Eurostat-Importdaten',
+           eurostatWhy(importsNode.info));
   }
 
   // ── Macro context table from FRED ──
@@ -2252,7 +2670,8 @@ function renderLage() {
   const com = D.commodities;
 
   // Pull headline indicators
-  const ttfPrice  = ec?.gas_price?.price?.filter(v=>v!=null).at(-1);
+  const ttf       = ttfSeries();
+  const ttfPrice  = ttf.points.at(-1)?.v;
   const daPrice   = ec?.price_de?.price?.filter(v=>v!=null).at(-1);
   const euNode    = gs ? gasNode(gs,'eu') : null;
   const euLast    = euNode?.data?.filter(x=>x.fill_pct!=null).at(-1);
@@ -2316,20 +2735,144 @@ function renderLage() {
   document.getElementById('kpi-lage').innerHTML = kpis(kp);
 
   // Chart 1: TTF with pre-crisis reference line
-  renderLageTtf(ec);
+  renderLageTtf();
   renderLageGas(gs);
   renderLageVpi(vpi);
   renderLageCo2();
+  // renderLageOil has existed since the tab was written but was never
+  // called, so its card stayed on its loading spinner forever.
+  renderLageOil(com, ho);
+  renderArchiv();
+}
+
+// ══════════════════════════════════════════════
+// LANGZEIT-ARCHIV — what this repository records itself
+// ══════════════════════════════════════════════
+// Every upstream here serves a rolling window: SMARD keeps about two weeks
+// at 15-minute resolution, Energy-Charts a few days of prices, Yahoo two
+// years of closes, ENTSO-E a short window. Anything older is unrecoverable
+// once it rolls off. The fetchers therefore append a small daily record to
+// data/history/*.jsonl, committed with everything else, and these cards draw
+// from that archive rather than from the live files.
+
+const ARCHIV_FILES = [
+  ['spot_price',    'Strompreise Day-Ahead', '8 Gebotszonen: Mittel, Min, Max, Negativstunden'],
+  ['smard_mix',     'Erzeugungsmix DE',      'Energie je Quelle, EE-Anteil, CO₂-Intensität'],
+  ['entsoe_flows',  'Grenzflüsse DE',        'Nettoposition und Austausch je Grenze'],
+  ['commodities',   'Rohstoff-Schlusskurse', 'Brent, WTI, TTF, Henry Hub, Kohle, CO₂-ETF'],
+  ['fuel',          'Tankstellenpreise',     'Bundesschnitt E5, E10, Diesel'],
+  ['gas_storage',   'Gasspeicher',           'Füllstände je Land'],
+  ['fx',            'Wechselkurse',          'EUR gegen USD, GBP, CHF, JPY'],
+  ['heating_oil',   'Heizöl',                'Referenzpreis und Ölnotierungen'],
+  ['destatis_vpi',  'Verbraucherpreisindex', 'Energiekategorien'],
+  ['eurostat_prices','Endkundenpreise',      'Strom und Gas, Haushalt und Industrie'],
+  ['energy_futures','Prognose-Schnappschüsse','EIA-STEO-Kurven, täglich 45 Tage, danach monatlich'],
+];
+
+async function renderArchiv() {
+  const spot = await loadHistory('spot_price');
+  const co = rangeCutoffMs('lage');
+  const inWindow = r => !r.date || Date.parse(r.date) >= co;
+
+  // ── Price archive ──
+  const spotRows = spot.filter(r => r.de_avg != null).filter(inWindow);
+  if (spotRows.length >= 2) {
+    mkChart('chart-archiv-spot', 'line', spotRows.map(r => r.date), [
+      {label:'Tagesmittel DE', data:spotRows.map(r => r.de_avg),
+       borderColor:'#0e6cb6', backgroundColor:'rgba(14,108,182,0.10)', fill:true, borderWidth:2},
+      {label:'Tagesmaximum', data:spotRows.map(r => r.de_max ?? null),
+       borderColor:'#c0392b', backgroundColor:'transparent', borderWidth:1, pointRadius:0, spanGaps:true},
+      {label:'Tagesminimum', data:spotRows.map(r => r.de_min ?? null),
+       borderColor:'#1f9d55', backgroundColor:'transparent', borderWidth:1, pointRadius:0, spanGaps:true},
+    ], {
+      plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}},
+      scales:{x:{ticks:{maxTicksLimit:10}},
+              y:{title:{display:true,text:'EUR/MWh',color:'#8c98a8',font:{size:10}}}},
+    });
+    const first = spotRows[0].date, lastDay = spotRows.at(-1).date;
+    stamp('chart-archiv-spot', 'energy_charts',
+          `${spotRows.length} Tage im Archiv (${first} bis ${lastDay})`);
+  } else {
+    noData('chart-archiv-spot', 'Archiv wird noch aufgebaut',
+           'Ab dem nächsten Lauf schreibt der Energy-Charts-Fetcher einen ' +
+           'Tageswert je Gebotszone nach <code>data/history/spot_price.jsonl</code>. ' +
+           'Zwei Tage genügen für die erste Linie.');
+  }
+
+  // ── Generation mix archive ──
+  const mix = (await loadHistory('smard_mix')).filter(r => r.renewable_share_pct != null).filter(inWindow);
+  if (mix.length >= 2) {
+    mkChart('chart-archiv-mix', 'line', mix.map(r => r.date), [
+      {label:'EE-Anteil %', data:mix.map(r => r.renewable_share_pct),
+       borderColor:'#1f9d55', backgroundColor:'rgba(31,157,85,0.10)', fill:true,
+       borderWidth:2, yAxisID:'y'},
+      {label:'CO₂ g/kWh', data:mix.map(r => r.co2_g_per_kwh ?? null),
+       borderColor:'#c0392b', backgroundColor:'transparent', borderWidth:1.5,
+       pointRadius:0, spanGaps:true, yAxisID:'y1'},
+    ], {
+      plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}},
+      scales:{
+        x:{ticks:{maxTicksLimit:8}},
+        y:{position:'left', min:0, max:100, title:{display:true,text:'EE-Anteil %',color:'#8c98a8',font:{size:10}}},
+        y1:{position:'right', grid:{drawOnChartArea:false}, title:{display:true,text:'gCO₂/kWh',color:'#8c98a8',font:{size:10}}},
+      },
+    });
+    stamp('chart-archiv-mix', 'smard', `${mix.length} Tage im Archiv`);
+  } else {
+    noData('chart-archiv-mix', 'Archiv wird noch aufgebaut',
+           'Der SMARD-Fetcher legt ab dem nächsten Lauf ein Tagesaggregat in ' +
+           '<code>data/history/smard_mix.jsonl</code> ab.');
+  }
+
+  // ── Inventory table ──
+  const wrap = document.getElementById('archiv-table');
+  if (!wrap) return;
+  const rows = await Promise.all(ARCHIV_FILES.map(async ([file, label, desc]) => {
+    const recs = await loadHistory(file);
+    const dates = recs.map(r => r.date).filter(Boolean).sort();
+    return {file, label, desc, n:recs.length, from:dates[0], to:dates.at(-1)};
+  }));
+  const total = rows.reduce((a, r) => a + r.n, 0);
+  wrap.innerHTML = `
+    <table class="tbl" style="margin-top:4px">
+      <thead><tr><th>Reihe</th><th class="num">Einträge</th><th>Zeitraum</th></tr></thead>
+      <tbody>${rows.map(r => `<tr>
+        <td><strong>${r.label}</strong><div style="font-size:9px;color:var(--text3)">${r.desc}</div></td>
+        <td class="num">${r.n || '—'}</td>
+        <td style="font-size:10px;color:var(--text2)">${
+          r.n ? `${r.from} – ${r.to}` :
+          '<span style="color:var(--text3)">beginnt mit dem nächsten Lauf</span>'}</td>
+      </tr>`).join('')}</tbody>
+    </table>
+    <div style="font-size:9px;color:var(--text3);margin-top:6px;line-height:1.5">
+      ${total} Tagesdatensätze insgesamt · gespeichert als JSON-Lines unter
+      <code>data/history/</code> und mit jedem Fetch-Lauf committet.
+      Die Quellen selbst halten nur rollierende Fenster vor — dieses Archiv ist der einzige Ort,
+      an dem ältere Werte erhalten bleiben.
+    </div>`;
 }
 function renderLageCo2() {
   const wrap = document.getElementById('chart-lage-co2')?.parentElement;
   if (!wrap) return;
   const sm = D.smard;
-  if (!sm?.series) { wrap.innerHTML='<div class="nodata">SMARD-Daten fehlen</div>'; return; }
+  if (!sm?.series) {
+    noData('chart-lage-co2', 'Keine SMARD-Daten',
+           'Die CO₂-Intensität wird aus dem SMARD-Erzeugungsmix geschätzt.');
+    return;
+  }
   const s = sm.series;
-  const co = rangeCutoffSec('lage');
+  // SMARD timestamps are milliseconds, unlike the second-based series from
+  // Energy-Charts and Yahoo. This chart compared them against a seconds
+  // cutoff (so the filter never excluded anything) and then multiplied them
+  // by 1000 again for the labels, which is why its x-axis read 2052 to 2080.
+  const co = rangeCutoffMs('lage');
   const anchor = (s.wind_onshore||s.solar||s.lignite||[]).filter(p=>p.ts>=co);
-  if (!anchor.length) { wrap.innerHTML='<div class="nodata">Keine Daten im Zeitraum</div>'; return; }
+  if (!anchor.length) {
+    noData('chart-lage-co2', 'Keine SMARD-Daten im Zeitraum',
+           'SMARD hält rund 14 Tage in 15-Minuten-Auflösung vor — für längere ' +
+           'Zeiträume kürzeren Bereich wählen.');
+    return;
+  }
   const step = Math.max(1, Math.floor(anchor.length/200));
   const sampled = anchor.filter((_,i)=>i%step===0);
   const lu = {};
@@ -2343,32 +2886,34 @@ function renderLageCo2() {
     const tot=lig+coal+gas+nuc+ren;
     return tot>0?Math.round((lig*900+coal*800+gas*400+nuc*5+ren*18)/tot):null;
   });
-  mkChart('chart-lage-co2','line',sampled.map(p=>fmtDate(p.ts*1000)),[{
+  mkChart('chart-lage-co2','line',sampled.map(p=>fmtTs(p.ts)),[{
     label:'CO₂ g/kWh',data:co2d,
     borderColor:'#c0392b',backgroundColor:'rgba(192,57,43,0.08)',fill:true,borderWidth:1.5,
   }],{scales:{y:{title:{display:true,text:'gCO₂/kWh',color:'#8c98a8',font:{size:10}}}},plugins:{legend:{display:false}}});
+  stamp('chart-lage-co2', 'smard');
 }
 
-function renderLageTtf(ec) {
-  const wrap = document.getElementById('chart-lage-ttf')?.parentElement;
-  if (!wrap) return;
-  if (!ec?.gas_price?.unix_seconds?.length) {
-    wrap.innerHTML='<div class="nodata">TTF-Daten werden geladen</div>';
+function renderLageTtf() {
+  const ttf = ttfSeries();
+  const co = rangeCutoffSec('lage');
+  const f = ttf.points.filter(p => p.ts >= co);
+  if (!f.length) {
+    noData('chart-lage-ttf', 'Keine TTF-Daten im Zeitraum',
+           ttf.points.length
+             ? 'Die vorhandene TTF-Reihe reicht nicht so weit zurück — kürzeren Zeitraum wählen.'
+             : 'Energy-Charts hat keinen Gaspreis-Endpunkt; Ersatzquelle ist der ' +
+               'TTF-Future aus <code>commodities.json</code>.');
     return;
   }
-  const co = rangeCutoffSec('lage');
-  const f = ec.gas_price.unix_seconds.map((t,i)=>({t,p:ec.gas_price.price[i]}))
-    .filter(x=>x.p!=null && x.t>=co);
-  if (!f.length) { wrap.innerHTML='<div class="nodata">Keine TTF-Daten im Zeitraum</div>'; return; }
-  const refLine = f.map(()=>LAGE_REF.ttf_normal);
-  mkChart('chart-lage-ttf','line', f.map(x=>fmtDate(x.t*1000)), [
-    {label:'TTF EUR/MWh', data:f.map(x=>x.p),
+  mkChart('chart-lage-ttf','line', f.map(p=>fmtDate(p.ts*1000)), [
+    {label:'TTF EUR/MWh', data:f.map(p=>p.v),
       borderColor:'#0e6cb6', backgroundColor:'rgba(14,108,182,0.08)', fill:true},
-    {label:'Vor-Krise ('+LAGE_REF.ttf_normal+')', data:refLine,
+    {label:'Vor-Krise ('+LAGE_REF.ttf_normal+')', data:f.map(()=>LAGE_REF.ttf_normal),
       borderColor:'#1f9d55', backgroundColor:'transparent', borderDash:[5,5], borderWidth:1.5, pointRadius:0},
   ], {
     plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}},
   });
+  stamp('chart-lage-ttf', ttf.source, ttf.note);
 }
 
 function renderLageGas(gs) {
@@ -2406,6 +2951,7 @@ function renderLageGas(gs) {
     plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}},
     scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%'}}},
   });
+  stamp('chart-lage-gas', 'gas_storage');
 }
 
 function renderLageVpi(vpi) {
@@ -2415,15 +2961,29 @@ function renderLageVpi(vpi) {
     wrap.innerHTML='<div class="nodata">Destatis-VPI: Token noch nicht aktiv oder API offline</div>';
     return;
   }
-  // Pick only the 3 most relevant categories
+  // Pick only the 3 most relevant categories.
+  // The fetcher now appends the measure to a key when a table reports both
+  // the index and its year-on-year change rate ("Strom — Index" vs
+  // "Strom — Veränderung ggü. Vorjahr (%)"). This card plots the index, so
+  // prefer that and never fall into the rate series, whose values sit two
+  // orders of magnitude below and would flatten the chart.
   const wanted = ['Strom','Gas','Kraftstoffe'];
   const series = vpi.energy_series;
+  const keys = Object.keys(series);
   const matched = wanted.map(want => {
-    const key = Object.keys(series).find(k => k.toLowerCase().includes(want.toLowerCase()));
-    return key ? {label:want, data:series[key]} : null;
-  }).filter(Boolean);
+    const hits = keys.filter(k => k.toLowerCase().includes(want.toLowerCase()));
+    if (!hits.length) return null;
+    const key = hits.find(k => /index/i.test(k))
+             || hits.find(k => !/veränderung|vorjahr|%/i.test(k))
+             || hits[0];
+    return {label:want, data:uniqPeriod(series[key] || []), key};
+  }).filter(m => m && m.data.length);
   if (!matched.length) {
-    wrap.innerHTML='<div class="nodata">VPI-Kategorien nicht gefunden</div>';
+    noData('chart-lage-vpi', 'VPI-Kategorien nicht gefunden',
+      `Destatis liefert die Reihen unter ${keys.length} Schlüsseln, keiner davon ` +
+      `enthält Strom, Gas oder Kraftstoffe: <code>${keys.slice(0,6).join(', ')}</code>. ` +
+      `Sind das Monatsnamen, stammt die Datei noch aus der Zeit vor dem Fix der ` +
+      `Kategorie-Erkennung und füllt sich beim nächsten Destatis-Lauf.`);
     return;
   }
   // Common period axis
@@ -2443,6 +3003,7 @@ function renderLageVpi(vpi) {
     plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}},
     scales:{x:{ticks:{maxTicksLimit:10}}, y:{title:{display:true,text:'Index 2020=100',color:'#8c98a8',font:{size:10}}}},
   });
+  stamp('chart-lage-vpi', 'destatis_vpi', matched.map(m => m.key).join(' · '));
 }
 
 function renderLageOil(com, ho) {
@@ -2496,6 +3057,8 @@ function renderLageOil(com, ho) {
     plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}},
     scales:{y:{title:{display:true,text:'Index = 100 am Start',color:'#8c98a8',font:{size:10}}}},
   });
+  stamp('chart-lage-oil', ['commodities','heating_oil'],
+        'Heizöl nur als Quartals-/Jahresmittel verfügbar');
 }
 
 
@@ -2531,7 +3094,15 @@ function _toDisp(v, type) {
 function _renderSteoChart(canvasId, steo, prevSteo, type) {
   const wrap = document.getElementById(canvasId)?.parentElement;
   if (!wrap) return;
-  if (!steo.length) { wrap.innerHTML=`<div class="nodata">EIA STEO ${type==='gas'?'EU Gas':'Brent'} wird geladen (Series: ${type==='gas'?'NGEUPUUS':'BREPUUS'})</div>`; return; }
+  if (!steo.length) {
+    const src = D.energy_futures?.sources?.eia_steo;
+    noData(canvasId, `Keine EIA-STEO-Prognose für ${type==='gas'?'EU-Gas':'Brent'}`,
+      src?.reason ? `Die Quelle meldet: <code>${src.reason}</code>`
+                  : 'EIA STEO liefert diese Reihe derzeit nicht. Welche Series-ID ' +
+                    'zuletzt aufgelöst wurde, steht in <code>meta.resolved</code> ' +
+                    'in <code>data/energy_futures.json</code>.');
+    return;
+  }
   const cutoff3y = (() => { const d=new Date(); d.setFullYear(d.getFullYear()-3); return d.toISOString().substring(0,7); })();
   const actual   = steo.filter(p=>p.type==='actual'&&p.period>=cutoff3y);
   const forecast = steo.filter(p=>p.type==='forecast');
@@ -2602,7 +3173,12 @@ function _renderHHChart() {
 function _renderLngSpreadChart() {
   const ft=D.energy_futures; const wrap=document.getElementById('chart-futures-lng-spread')?.parentElement; if(!wrap)return;
   const eu=ft?.eia_steo?.eu_gas||[], hh=ft?.eia_steo?.hh_gas||[];
-  if(!eu.length||!hh.length){wrap.innerHTML='<div class="nodata">Spread-Daten nicht verfügbar</div>';return;}
+  if(!eu.length||!hh.length){
+    noData('chart-futures-lng-spread', 'Spread nicht berechenbar',
+      `Dafür werden beide STEO-Reihen gebraucht — vorhanden: ` +
+      `EU-Gas ${eu.length} Punkte, Henry Hub ${hh.length} Punkte.`);
+    return;
+  }
   const cutoff=(() => { const d=new Date(); d.setFullYear(d.getFullYear()-4); return d.toISOString().substring(0,7); })();
   const euMap={},hhMap={};
   eu.forEach(p=>{if(p.period>=cutoff)euMap[p.period]=p.v;});
@@ -2630,15 +3206,255 @@ function _renderFuturesTable() {
 }
 
 // ══════════════════════════════════════════════
+// STROMPREISE & IMPORTE
+// ══════════════════════════════════════════════
+// Retail prices (what a household or a company pays) against wholesale, plus
+// the physical import/export balance. Eurostat publishes prices half-yearly
+// as "2024-S1"/"2024-S2" and the flows annually, so everything here is on a
+// period axis rather than a timestamp axis.
+
+const STROMPREIS_COUNTRIES = {
+  DE:'Deutschland', EU27_2020:'EU27', FR:'Frankreich', IT:'Italien',
+  ES:'Spanien', NL:'Niederlande', PL:'Polen', AT:'Österreich',
+  BE:'Belgien', DK:'Dänemark', SE:'Schweden',
+};
+
+// "2024-S1" -> sortable, and readable as "1. HJ 2024"
+const fmtHalfYear = p => {
+  const m = String(p).match(/^(\d{4})-?S?([12])$/);
+  return m ? `${m[2]}. HJ ${m[1]}` : String(p);
+};
+
+function priceSeries(key, geo, taxLevel) {
+  const node = D.eurostat_prices?.[key];
+  if (!node) return {points:[], node:null};
+  const pool = taxLevel ? (node.by_tax?.[taxLevel] || {}) : (node.series_per_country || {});
+  return {points: uniqPeriod(pool[geo] || []), node};
+}
+
+function periodCutoff(tab) {
+  // Period strings have no clock, so the range selector is applied by year.
+  const sec = getRangeSeconds(tab);
+  if (sec === Infinity) return '';
+  const d = new Date(Date.now() - sec * 1000);
+  return String(d.getFullYear());
+}
+
+function renderStrompreise() {
+  const ep = D.eurostat_prices;
+  const geo = document.getElementById('strompreise-geo')?.value || 'DE';
+  const flowGeo = document.getElementById('strom-flow-geo')?.value || 'DE';
+  const minYear = periodCutoff('strompreise');
+  const inRange = p => String(p.period).slice(0,4) >= minYear;
+
+  if (!ep) {
+    ['chart-strompreise','chart-strompreise-anteile','chart-strom-flows',
+     'chart-strompreise-laender','chart-gaspreise'].forEach(id =>
+      noData(id, 'Eurostat-Preisdaten noch nicht abgerufen',
+             'Die Quelle <code>eurostat_prices</code> läuft einmal täglich. ' +
+             'Nach dem nächsten GitHub-Actions-Lauf ist sie hier.'));
+    document.getElementById('kpi-strompreise').innerHTML = '';
+    return;
+  }
+
+  // ── KPIs: what each consumer group pays, and the tax share ──
+  const kp = [];
+  const hh = priceSeries('electricity_household', geo).points;
+  const ind = priceSeries('electricity_industry', geo).points;
+  const share = priceSeries('electricity_household_tax_share_pct', geo).points;
+  const gasHh = priceSeries('gas_household', geo).points;
+
+  const pctChange = pts => {
+    if (pts.length < 3) return '';
+    // Same half-year one year earlier, i.e. two publications back.
+    const cur = pts.at(-1).v, prev = pts.at(-3).v;
+    if (prev == null || !prev) return '';
+    const d = (cur - prev) / prev * 100;
+    return (d >= 0 ? '▲ +' : '▼ ') + fmtN(Math.abs(d),1) + '% ggü. Vorjahr';
+  };
+
+  if (hh.length) kp.push({label:'Strom Haushalt', val:fmtN(hh.at(-1).v,4),
+    unit:`EUR/kWh · ${fmtHalfYear(hh.at(-1).period)}`, delta:pctChange(hh), color:'#0e6cb6'});
+  if (ind.length) kp.push({label:'Strom Industrie', val:fmtN(ind.at(-1).v,4),
+    unit:`EUR/kWh · ${fmtHalfYear(ind.at(-1).period)}`, delta:pctChange(ind), color:'#7e57c2'});
+  if (hh.length && ind.length) {
+    const gap = hh.at(-1).v / ind.at(-1).v;
+    kp.push({label:'Haushalt zahlt', val:fmtN(gap,2)+'×', unit:'so viel wie die Industrie',
+             color:'#d97706'});
+  }
+  if (share.length) kp.push({label:'Steuern & Abgaben', val:fmtN(share.at(-1).v,1)+'%',
+    unit:'Anteil am Haushaltspreis', color:'#c0392b'});
+  if (gasHh.length) kp.push({label:'Gas Haushalt', val:fmtN(gasHh.at(-1).v,4),
+    unit:`EUR/kWh · ${fmtHalfYear(gasHh.at(-1).period)}`, color:'#dc6803'});
+  document.getElementById('kpi-strompreise').innerHTML = kpis(kp);
+
+  // ── Chart: household vs industry over time, with the wholesale price for
+  //    scale. The gap between them is grid fees, levies and taxes.
+  const hhR = hh.filter(inRange), indR = ind.filter(inRange);
+  if (hhR.length || indR.length) {
+    const periods = Array.from(new Set([...hhR, ...indR].map(p => p.period))).sort();
+    const map = pts => { const m = {}; pts.forEach(p => m[p.period] = p.v); return m; };
+    const hhM = map(hhR), indM = map(indR);
+    const datasets = [];
+    if (hhR.length) datasets.push({label:'Haushalt (inkl. Steuern)', data:periods.map(p=>hhM[p]??null),
+      borderColor:'#0e6cb6', backgroundColor:'rgba(14,108,182,0.10)', fill:true, spanGaps:true, borderWidth:2});
+    if (indR.length) datasets.push({label:'Industrie', data:periods.map(p=>indM[p]??null),
+      borderColor:'#7e57c2', backgroundColor:'transparent', spanGaps:true, borderWidth:2});
+    const exTax = priceSeries('electricity_household', geo, 'excl_taxes').points.filter(inRange);
+    if (exTax.length) {
+      const exM = map(exTax);
+      datasets.push({label:'Haushalt ohne Steuern & Abgaben', data:periods.map(p=>exM[p]??null),
+        borderColor:'#8c98a8', backgroundColor:'transparent', borderDash:[4,4],
+        spanGaps:true, borderWidth:1.5, pointRadius:0});
+    }
+    mkChart('chart-strompreise','line', periods.map(fmtHalfYear), datasets, {
+      plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}},
+      scales:{y:{title:{display:true,text:'EUR/kWh',color:'#8c98a8',font:{size:10}}},
+              x:{ticks:{maxTicksLimit:12}}},
+    });
+    stamp('chart-strompreise', 'eurostat_prices', STROMPREIS_COUNTRIES[geo] || geo);
+  } else {
+    noData('chart-strompreise', `Keine Preisdaten für ${STROMPREIS_COUNTRIES[geo]||geo}`,
+           ep.electricity_household?.unavailable_reason
+             ? `<code>${ep.electricity_household.unavailable_reason}</code>`
+             : 'Eurostat veröffentlicht Halbjahreswerte etwa fünf Monate nach Periodenende.');
+  }
+
+  // ── Chart: price composition, stacked ──
+  const inclAll = priceSeries('electricity_household', geo, 'incl_all_taxes').points.filter(inRange);
+  const exclAll = priceSeries('electricity_household', geo, 'excl_taxes').points.filter(inRange);
+  if (inclAll.length && exclAll.length) {
+    const exM = {}; exclAll.forEach(p => exM[p.period] = p.v);
+    const periods = inclAll.map(p => p.period).filter(p => exM[p] != null);
+    mkChart('chart-strompreise-anteile','bar', periods.map(fmtHalfYear), [
+      {label:'Energie & Netz', data:periods.map(p => exM[p]),
+       backgroundColor:'rgba(14,108,182,0.75)', stack:'p'},
+      {label:'Steuern & Abgaben',
+       data:periods.map(p => +( (inclAll.find(x=>x.period===p)?.v || 0) - exM[p] ).toFixed(4)),
+       backgroundColor:'rgba(192,57,43,0.70)', stack:'p'},
+    ], {
+      plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}},
+      scales:{x:{stacked:true,ticks:{maxTicksLimit:8}},
+              y:{stacked:true,title:{display:true,text:'EUR/kWh',color:'#8c98a8',font:{size:10}}}},
+    });
+    stamp('chart-strompreise-anteile', 'eurostat_prices',
+          'Differenz der Steuerstufen „inkl. aller Steuern“ und „ohne Steuern“');
+  } else {
+    noData('chart-strompreise-anteile', 'Steueranteil nicht berechenbar',
+           'Dafür braucht es denselben Zeitraum in beiden Steuerstufen ' +
+           '(<code>incl_all_taxes</code> und <code>excl_taxes</code>).');
+  }
+
+  // ── Chart: physical import/export balance ──
+  // This data has been fetched all along and was never shown anywhere.
+  const imp = eurostatSeries('elec_imports');
+  const exp = eurostatSeries('elec_exports');
+  const impS = uniqPeriod(imp.byCountry[flowGeo] || []).filter(inRange);
+  const expS = uniqPeriod(exp.byCountry[flowGeo] || []).filter(inRange);
+  if (impS.length || expS.length) {
+    const periods = Array.from(new Set([...impS, ...expS].map(p => p.period))).sort();
+    const impM = {}; impS.forEach(p => impM[p.period] = p.v);
+    const expM = {}; expS.forEach(p => expM[p.period] = p.v);
+    mkChart('chart-strom-flows','bar', periods, [
+      {label:'Import', data:periods.map(p => impM[p] ?? null),
+       backgroundColor:'rgba(14,108,182,0.70)'},
+      {label:'Export', data:periods.map(p => expM[p] != null ? -expM[p] : null),
+       backgroundColor:'rgba(31,157,85,0.70)'},
+      {label:'Saldo', type:'line', data:periods.map(p =>
+         (impM[p] != null && expM[p] != null) ? +(impM[p] - expM[p]).toFixed(1) : null),
+       borderColor:'#c0392b', backgroundColor:'transparent', borderWidth:2,
+       spanGaps:true, pointRadius:2},
+    ], {
+      plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}},
+      scales:{y:{title:{display:true,text:imp.info?.unit || 'GWh',color:'#8c98a8',font:{size:10}}},
+              x:{ticks:{maxTicksLimit:12}}},
+    });
+    stamp('chart-strom-flows', 'eurostat_oil',
+          `${STROMPREIS_COUNTRIES[flowGeo]||flowGeo} · Export negativ dargestellt`);
+  } else {
+    noData('chart-strom-flows', `Keine Import/Export-Daten für ${STROMPREIS_COUNTRIES[flowGeo]||flowGeo}`,
+           eurostatWhy(imp.info));
+  }
+
+  // ── Chart: country comparison at the latest common period ──
+  const latest = [];
+  Object.keys(STROMPREIS_COUNTRIES).forEach(code => {
+    const pts = priceSeries('electricity_household', code).points;
+    if (pts.length) latest.push({code, v:pts.at(-1).v, period:pts.at(-1).period});
+  });
+  if (latest.length) {
+    latest.sort((a,b) => b.v - a.v);
+    mkChart('chart-strompreise-laender','bar',
+      latest.map(x => STROMPREIS_COUNTRIES[x.code] || x.code),
+      [{label:'EUR/kWh', data:latest.map(x => x.v),
+        backgroundColor:latest.map(x => x.code === 'DE' ? 'rgba(192,57,43,0.80)' : 'rgba(14,108,182,0.60)'),
+        borderRadius:2}],
+      {indexAxis:'y', scales:{x:{title:{display:true,text:'EUR/kWh',color:'#8c98a8',font:{size:10}}}}});
+    stamp('chart-strompreise-laender', 'eurostat_prices',
+          `Stand ${fmtHalfYear(latest[0].period)} · Deutschland hervorgehoben`);
+  } else {
+    noData('chart-strompreise-laender', 'Kein Ländervergleich möglich',
+           'Für keines der abgefragten Länder liegen Haushaltspreise vor.');
+  }
+
+  // ── Chart: gas retail prices ──
+  const gHh = priceSeries('gas_household', geo).points.filter(inRange);
+  const gInd = priceSeries('gas_industry', geo).points.filter(inRange);
+  if (gHh.length || gInd.length) {
+    const periods = Array.from(new Set([...gHh, ...gInd].map(p => p.period))).sort();
+    const m1 = {}; gHh.forEach(p => m1[p.period] = p.v);
+    const m2 = {}; gInd.forEach(p => m2[p.period] = p.v);
+    mkChart('chart-gaspreise','line', periods.map(fmtHalfYear), [
+      {label:'Gas Haushalt (inkl. Steuern)', data:periods.map(p => m1[p] ?? null),
+       borderColor:'#dc6803', backgroundColor:'rgba(220,104,3,0.10)', fill:true,
+       spanGaps:true, borderWidth:2},
+      {label:'Gas Industrie', data:periods.map(p => m2[p] ?? null),
+       borderColor:'#7c5e2a', backgroundColor:'transparent', spanGaps:true, borderWidth:2},
+    ], {
+      plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}},
+      scales:{y:{title:{display:true,text:'EUR/kWh',color:'#8c98a8',font:{size:10}}},
+              x:{ticks:{maxTicksLimit:12}}},
+    });
+    stamp('chart-gaspreise', 'eurostat_prices', STROMPREIS_COUNTRIES[geo] || geo);
+  } else {
+    noData('chart-gaspreise', `Keine Gaspreise für ${STROMPREIS_COUNTRIES[geo]||geo}`,
+           ep.gas_household?.unavailable_reason
+             ? `<code>${ep.gas_household.unavailable_reason}</code>`
+             : 'Eurostat veröffentlicht Halbjahreswerte mit rund fünf Monaten Verzug.');
+  }
+}
+
+// ══════════════════════════════════════════════
 // TABS
 // ══════════════════════════════════════════════
 const RENDERS={
-  strom:renderStrom, markt:renderMarkt, gas:renderGas,
+  strom:renderStrom, strompreise:renderStrompreise, markt:renderMarkt, gas:renderGas,
   rohstoffe:renderRohstoffe, kraftstoff:renderKraftstoffMerged,
-  treibstoff:renderTreibstoff, erneuerbare:renderErneuerbare,
+  erneuerbare:renderErneuerbare,
   wetter:renderWetter, fx:renderFx,
   futures:renderFutures, lage:renderLage, news:renderNews,
 };
+
+// Blanket provenance: after a tab renders, every card that shows data and
+// has not been stamped explicitly gets a stamp naming the tab's sources.
+// Explicit stamp() calls inside a renderer win, because this only fills in
+// cards that still have none — so a chart that mixes two sources or leans on
+// a proxy keeps its more precise label.
+function autoStamp(tab) {
+  const panel = document.getElementById('panel-' + tab);
+  if (!panel) return;
+  const sources = (TAB_FILES[tab] || []).filter(f => D[f]);
+  if (!sources.length) return;
+  panel.querySelectorAll('.card').forEach(card => {
+    if (card.querySelector('.card-stamp')) return;
+    // Only cards that actually show something — a card reduced to a "no data"
+    // note already explains itself and does not need an age line.
+    const hasContent = card.querySelector('canvas, table, .news-card');
+    if (!hasContent) return;
+    const anchor = card.querySelector('canvas[id], [id]');
+    if (anchor?.id) stamp(anchor.id, sources);
+  });
+}
 
 function renderTab(tab){
   // Range bar always renders, even if main render crashes
@@ -2647,7 +3463,7 @@ function renderTab(tab){
   // Main render is wrapped — a single crash must never sabotage other tabs
   const fn = RENDERS[tab];
   if (fn) {
-    try { fn(); }
+    try { fn(); autoStamp(tab); }
     catch(e) {
       console.error('render failed for tab', tab, e);
       const panel = document.getElementById('panel-' + tab);

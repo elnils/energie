@@ -1,6 +1,30 @@
 """
 energy_futures — EIA STEO + World Bank Pink Sheet + IMF WEO.
 
+v5.4 fixes — the three sources that were dead in the data file:
+
+  - EIA STEO eu_gas asked for series id NGEUIPRCNUS, which STEO does not
+    publish ("EIA returned no rows: no rows (total=0)"). The main gas
+    forecast chart, the TTF-Henry-Hub spread and the EU-gas row of the
+    comparison table were therefore all empty. Series ids are now looked up
+    in STEO's own seriesId facet by description, with the hard-coded ids
+    kept as the first candidate.
+
+  - World Bank returned 404: both fallback URLs point at superseded
+    releases, and the release URL changes with every publication. Discovery
+    now scans more landing pages with a wider pattern, and a failure is
+    reported as an unavailable source with a reason instead of leaving the
+    comparison table full of unexplained dashes.
+
+  - IMF candidates POILBREN / POILAPSP / POILBRE all failed with an empty
+    `values` object, i.e. none of those indicator ids exist any more. The
+    indicator is now resolved against the Datamapper's published indicator
+    list by label.
+
+  All three now share one shape: try the known id, else ask the API what it
+  actually offers and match on the human-readable description. What each one
+  resolved to is written to meta.resolved.
+
 v5.3 fixes:
   - EIA _fetch_eia_series: logs the EIA `warnings` field when 0 rows come
     back. EIA returns 200 OK with empty data for invalid filter combos and
@@ -29,16 +53,39 @@ from core import http, paths
 EIA_API_KEY = (os.environ.get('EIA_API_KEY') or '').strip()
 EIA_STEO_URL = 'https://api.eia.gov/v2/steo/data/'
 
-EIA_SERIES: Dict[str, str] = {
-    'brent':  'BREPUUS',
-    'wti':    'WTIPUUS',
-    'hh_gas': 'NGHHMCF',
-    'eu_gas': 'NGEUIPRCNUS',
+EIA_STEO_FACET_URL = 'https://api.eia.gov/v2/steo/facet/seriesId'
+
+# Filled in during a run: which id each key actually resolved to.
+EIA_RESOLVED: Dict[str, str] = {}
+IMF_RESOLVED: Dict[str, str] = {}
+
+# key -> (preferred series ids, regex patterns matched against STEO's own
+# description of each series, exclusion patterns)
+EIA_SERIES: Dict[str, tuple] = {
+    'brent':  (('BREPUUS',),
+               (r'brent.*spot', r'brent'),
+               ()),
+    'wti':    (('WTIPUUS',),
+               (r'west texas intermediate.*spot', r'\bwti\b'),
+               ()),
+    'hh_gas': (('NGHHMCF', 'NGHHUUS'),
+               (r'henry hub.*spot', r'henry hub'),
+               ()),
+    # NGEUIPRCNUS does not exist in STEO. The EU/TTF gas benchmark is
+    # published under a different id that has changed across STEO releases,
+    # so this one leans on the description match.
+    'eu_gas': (('NGEUIPRCNUS',),
+               (r'title transfer facility', r'\bttf\b',
+                r'europe.*natural gas.*(price|spot)',
+                r'natural gas.*europe.*(price|spot)'),
+               (r'liquefied', r'lng')),
 }
 
 WB_LANDING_PAGES = [
     'https://www.worldbank.org/en/research/commodity-markets',
     'https://www.worldbank.org/en/research/commodity-markets/publication/commodity-markets-outlook',
+    'https://thedocs.worldbank.org/en/doc/5d903e848db1d1b83e0ec8f744e55570-0350012021/related/CMO-Historical-Data-Monthly.xlsx',
+    'https://openknowledge.worldbank.org/search?query=commodity%20markets%20outlook',
 ]
 WB_FORECAST_FALLBACKS: List[str] = [
     'https://thedocs.worldbank.org/en/doc/24e8d315bdd05e6ba3c813bbd49b3358-0050012025/related/CMO-October-2025-Forecasts.xlsx',
@@ -48,8 +95,16 @@ WB_FORECAST_FALLBACKS: List[str] = [
 IMF_BASE = 'https://www.imf.org/external/datamapper/api/v1'
 # v5.3: per output key, list of candidate IMF indicator IDs in priority order.
 # IMF has historically renamed/retired indicators between WEO releases.
-IMF_INDICATORS: Dict[str, List[str]] = {
-    'crude_oil': ['POILBREN', 'POILAPSP', 'POILBRE'],
+IMF_INDICATOR_LIST_URL = f'{IMF_BASE}/indicators'
+# key -> (preferred indicator ids, label patterns, label exclusions)
+IMF_INDICATORS: Dict[str, tuple] = {
+    'crude_oil': (('POILBREN', 'POILAPSP', 'POILBRE'),
+                  (r'crude oil.*(brent|average)', r'\bcrude oil\b',
+                   r'petroleum.*spot', r'oil price'),
+                  (r'\bgas\b',)),
+    'eu_gas':    ((),
+                  (r'natural gas.*(europe|eu)', r'\bnatural gas\b'),
+                  (r'oil',)),
 }
 
 HISTORY_FILE = os.path.join(paths.DATA_DIR, 'history', 'energy_futures.jsonl')
@@ -124,9 +179,79 @@ def _fetch_eia_series(series_id: str) -> List[Dict[str, Any]]:
     return out
 
 
+def _match_catalog(catalog: Dict[str, str],
+                   preferred: tuple,
+                   patterns: tuple,
+                   exclusions: tuple = ()) -> Optional[str]:
+    """
+    Pick an id out of {id: description}: an offered preferred id first, then
+    the first id whose description matches a pattern and no exclusion.
+    Patterns are tried in order, so the caller controls precedence.
+    """
+    for pid in preferred:
+        if pid in catalog:
+            return pid
+    for pattern in patterns:
+        rx = re.compile(pattern, re.IGNORECASE)
+        for cid, desc in catalog.items():
+            if not rx.search(desc or ''):
+                continue
+            if any(re.search(x, desc or '', re.IGNORECASE) for x in exclusions):
+                continue
+            return cid
+    return None
+
+
+_EIA_FACET_CACHE: Optional[Dict[str, str]] = None
+
+
+def _eia_steo_catalog() -> Dict[str, str]:
+    """
+    {seriesId: description} for every series STEO publishes.
+
+    EIA answers a request for a non-existent series id with 200 OK and an
+    empty data array, so a wrong id is indistinguishable from an outage
+    unless we can see the real list. One request, cached for the run.
+    """
+    global _EIA_FACET_CACHE
+    if _EIA_FACET_CACHE is not None:
+        return _EIA_FACET_CACHE
+    catalog: Dict[str, str] = {}
+    if EIA_API_KEY:
+        try:
+            s = http.get_session()
+            r = s.get(EIA_STEO_FACET_URL, params={'api_key': EIA_API_KEY}, timeout=40)
+            r.raise_for_status()
+            for row in ((r.json().get('response') or {}).get('facets') or []):
+                sid = row.get('id')
+                if sid:
+                    catalog[str(sid)] = str(row.get('name') or row.get('description') or '')
+            print(f'    eia_steo: catalog has {len(catalog)} series')
+        except Exception as e:
+            print(f'  ! eia_steo/catalog: {str(e)[:140]}')
+    _EIA_FACET_CACHE = catalog
+    return catalog
+
+
 def _fetch_all_eia(errors: List[str]) -> Dict[str, List[Dict[str, Any]]]:
     result: Dict[str, List[Dict[str, Any]]] = {key: [] for key in EIA_SERIES}
-    for key, series_id in EIA_SERIES.items():
+    catalog = _eia_steo_catalog()
+    for key, (preferred, patterns, exclusions) in EIA_SERIES.items():
+        series_id = _match_catalog(catalog, preferred, patterns, exclusions)
+        if series_id is None:
+            # No catalog (request failed) — fall back to the hard-coded id so
+            # a transient facet-endpoint failure doesn't disable a series
+            # that would otherwise work.
+            series_id = preferred[0] if preferred else None
+        if series_id is None:
+            msg = f'eia_steo/{key}: no matching series in STEO catalog'
+            print(f'  ! {msg}')
+            errors.append(msg)
+            continue
+        if preferred and series_id != preferred[0]:
+            print(f'    eia_steo/{key}: resolved to {series_id} '
+                  f'("{catalog.get(series_id, "")[:70]}")')
+        EIA_RESOLVED[key] = series_id
         try:
             data = _fetch_eia_series(series_id)
             result[key] = data
@@ -153,7 +278,10 @@ def _discover_wb_forecast_url(session) -> Optional[str]:
     """Scrape WB pages for the newest CMO-*-Forecasts.xlsx link."""
     patterns = [
         re.compile(r'href="(https?://[^"]+CMO[^"]+Forecasts?\.xlsx)"', re.IGNORECASE),
-        re.compile(r'(https?://thedocs\.worldbank\.org/[^"\s)]+CMO[^"\s)]+Forecasts?\.xlsx)',
+        # Release URLs carry a per-publication hash, so only the tail is
+        # predictable. Both hard-coded fallbacks are superseded releases that
+        # now 404, which is why discovery has to carry this.
+        re.compile(r'(https?://thedocs\.worldbank\.org/[^"\s)]+CMO[^"\s)]*[Ff]orecast[^"\s)]*\.xlsx)',
                    re.IGNORECASE),
     ]
     for landing in WB_LANDING_PAGES:
@@ -340,19 +468,64 @@ def _fetch_imf_indicator(indicator: str) -> List[Dict[str, Any]]:
     return out
 
 
+_IMF_CATALOG_CACHE: Optional[Dict[str, str]] = None
+
+
+def _imf_catalog() -> Dict[str, str]:
+    """
+    {indicator_id: label} from the Datamapper's own indicator list.
+
+    Needed because the three ids we had been trying (POILBREN, POILAPSP,
+    POILBRE) all came back with an empty `values` object — they no longer
+    exist, and there is no way to guess the replacement without the list.
+    """
+    global _IMF_CATALOG_CACHE
+    if _IMF_CATALOG_CACHE is not None:
+        return _IMF_CATALOG_CACHE
+    catalog: Dict[str, str] = {}
+    try:
+        s = http.get_session()
+        r = s.get(IMF_INDICATOR_LIST_URL, timeout=40)
+        r.raise_for_status()
+        for iid, meta in (r.json().get('indicators') or {}).items():
+            if isinstance(meta, dict):
+                catalog[str(iid)] = str(meta.get('label') or meta.get('description') or '')
+            else:
+                catalog[str(iid)] = str(meta)
+        print(f'    imf: catalog has {len(catalog)} indicators')
+    except Exception as e:
+        print(f'  ! imf/catalog: {str(e)[:140]}')
+    _IMF_CATALOG_CACHE = catalog
+    return catalog
+
+
 def _fetch_all_imf(errors: List[str]) -> Dict[str, List[Dict[str, Any]]]:
     """
     Try each candidate indicator ID per output key; first non-empty wins.
     Robust against IMF retiring/renaming indicators.
     """
     result: Dict[str, List[Dict[str, Any]]] = {'crude_oil': [], 'eu_gas': []}
-    for key, candidates in IMF_INDICATORS.items():
+    catalog = _imf_catalog()
+    for key, (preferred, patterns, exclusions) in IMF_INDICATORS.items():
+        # Preferred ids first (cheap when they still exist), then whatever
+        # the catalog offers that matches the description.
+        candidates: List[str] = [c for c in preferred if not catalog or c in catalog]
+        matched = _match_catalog(catalog, preferred, patterns, exclusions)
+        if matched and matched not in candidates:
+            candidates.append(matched)
+        if not candidates:
+            msg = f'imf/{key}: no matching indicator in Datamapper catalog'
+            print(f'  ! {msg}')
+            errors.append(msg)
+            continue
         for indicator in candidates:
             try:
                 data = _fetch_imf_indicator(indicator)
                 if data:
                     result[key] = data
-                    print(f'    imf/{key} ({indicator}): {len(data)} pts, last={data[-1]["year"]}')
+                    IMF_RESOLVED[key] = indicator
+                    print(f'    imf/{key} ({indicator}): {len(data)} pts, '
+                          f'last={data[-1]["year"]} "{catalog.get(indicator, "")[:60]}"')
                     break  # first success wins
                 print(f'    imf/{key} ({indicator}): empty, trying next candidate')
             except Exception as e:
@@ -441,10 +614,59 @@ def _save_snapshot(record: Dict[str, Any]) -> None:
             print(f'  ! history read failed (will overwrite): {e}')
 
     kept.append(json.dumps(record, ensure_ascii=False))
+    kept = _prune_snapshots(kept)
     tmp = HISTORY_FILE + '.tmp'
     with open(tmp, 'w', encoding='utf-8') as f:
         f.write('\n'.join(kept) + '\n')
     os.replace(tmp, HISTORY_FILE)
+
+
+def _prune_snapshots(lines: List[str]) -> List[str]:
+    """
+    Thin out the snapshot archive: daily for the recent window, monthly
+    before that.
+
+    Each snapshot holds four complete STEO curves, roughly 66 KB, and one was
+    appended every day with no pruning — the file had reached 8.1 MB and was
+    rewritten in full on every commit, which in a repo that commits several
+    times a day costs far more than its own size.
+
+    What the archive is actually for decides what to keep:
+      - _load_previous_snapshot() wants one 5-30 days old, so the recent
+        window must stay daily;
+      - the interesting long-run question is how a forecast was revised over
+        months, for which one snapshot per month is plenty.
+
+    Nothing is discarded inside the daily window, and no month ever loses its
+    last snapshot.
+    """
+    daily_window_days = 45
+    today = _now_utc().date()
+
+    dated: List[tuple] = []
+    for line in lines:
+        try:
+            obj = json.loads(line)
+            d = datetime.strptime(obj.get('date', ''), '%Y-%m-%d').date()
+        except (json.JSONDecodeError, ValueError):
+            continue  # unparseable lines are dropped, they can't be read back
+        dated.append((d, line))
+    dated.sort(key=lambda x: x[0])
+
+    keep_by_month: Dict[str, tuple] = {}
+    recent: List[tuple] = []
+    for d, line in dated:
+        if (today - d).days <= daily_window_days:
+            recent.append((d, line))
+        else:
+            keep_by_month[d.strftime('%Y-%m')] = (d, line)  # last of the month
+
+    final = sorted(list(keep_by_month.values()) + recent, key=lambda x: x[0])
+    dropped = len(dated) - len(final)
+    if dropped:
+        print(f'    energy_futures history: pruned {dropped} snapshots '
+              f'({len(final)} kept: {len(recent)} daily + {len(keep_by_month)} monthly)')
+    return [line for _d, line in final]
 
 
 def _load_previous_snapshot() -> Dict[str, List[Dict[str, Any]]]:
@@ -529,6 +751,24 @@ def fetch() -> dict:
             print(f'  ! {msg}')
             errors.append(msg)
 
+    # Per-source availability. Without this the comparison table had no way
+    # to tell "this forecaster has not published that commodity" apart from
+    # "we could not reach the forecaster", and rendered both as a dash.
+    def _status(prefix: str, data: Dict[str, List[Dict[str, Any]]]) -> dict:
+        reason = next((e for e in errors if e.startswith(prefix)), None)
+        available = [k for k, v in data.items() if v]
+        return {
+            'available': bool(available),
+            'series': available,
+            'reason': reason,
+        }
+
+    sources = {
+        'eia_steo':  _status('eia_steo', eia_data),
+        'worldbank': _status('worldbank', wb_data),
+        'imf':       _status('imf', imf_data),
+    }
+
     return {
         'data': {
             'eia_steo':      eia_data,
@@ -536,6 +776,7 @@ def fetch() -> dict:
             'imf':           imf_data,
             'spot':          spot_data,
             'previous_week': prev_week,
+            'sources':       sources,
             'errors':        errors,
         },
         'meta': {
@@ -544,8 +785,10 @@ def fetch() -> dict:
             'wb_release_freq': 'monthly bulletin, semi-annual full forecast (April/October)',
             'imf_release_freq': 'semi-annual (April/October WEO)',
             'license': 'EIA: public domain. WB Pink Sheet: CC BY-4.0. IMF: free with attribution.',
-            'series_ids_eia': EIA_SERIES,
-            'series_ids_imf': IMF_INDICATORS,
+            'resolved': {'eia_steo': dict(EIA_RESOLVED), 'imf': dict(IMF_RESOLVED)},
+            'note': ('Series ids are resolved against each API\'s own catalog '
+                     'by description; meta.resolved records the winners so a '
+                     'rename shows up here instead of as an empty chart.'),
         },
     }
 
