@@ -22,12 +22,12 @@
     "last_success_iso": "2026-09-18T09:36:15Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1789737079,
-    "last_attempt_iso": "2026-09-18T13:11:19Z",
+    "last_attempt_epoch": 1789741064,
+    "last_attempt_iso": "2026-09-18T14:17:44Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1789737204,
-    "last_success_iso": "2026-09-18T13:13:24Z"
+    "last_success_epoch": 1789741203,
+    "last_success_iso": "2026-09-18T14:20:03Z"
   },
   "energy_futures": {
     "last_attempt_epoch": 1789737396,
@@ -92,9 +92,9 @@
     "last_success_iso": "2026-09-18T13:13:57Z"
   },
   "heating_oil": {
-    "last_attempt_epoch": 1789737259,
-    "last_attempt_iso": "2026-09-18T13:14:19Z",
-    "last_error_epoch": 1789737260,
+    "last_attempt_epoch": 1789741203,
+    "last_attempt_iso": "2026-09-18T14:20:03Z",
+    "last_error_epoch": 1789741205,
     "last_error_message": "RuntimeError: Tecson: could not extract reference price | at File \"/home/runner/work/energie/energie/scripts/fetchers/heating_oil.py\", line 238, in fetch",
     "last_success_epoch": 1789365744,
     "last_success_iso": "2026-09-14T06:02:24Z"
@@ -106,12 +106,12 @@
     "last_success_iso": "2026-09-18T13:19:18Z"
   },
   "smard": {
-    "last_attempt_epoch": 1789737073,
-    "last_attempt_iso": "2026-09-18T13:11:13Z",
+    "last_attempt_epoch": 1789741057,
+    "last_attempt_iso": "2026-09-18T14:17:37Z",
     "last_error_epoch": 1784702205,
     "last_error_message": "RuntimeError: SMARD: all filters returned empty | at File \"/home/runner/work/energie/energie/scripts/fetchers/smard.py\", line 109, in fetch",
-    "last_success_epoch": 1789737079,
-    "last_success_iso": "2026-09-18T13:11:19Z"
+    "last_success_epoch": 1789741064,
+    "last_success_iso": "2026-09-18T14:17:44Z"
   },
   "weather": {
     "last_attempt_epoch": 1789737249,
