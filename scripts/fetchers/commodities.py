@@ -17,7 +17,7 @@ v5.3 fixes:
 import time
 from typing import Dict, List, Optional
 
-from core import http, validators
+from core import history, http, validators
 
 
 # ticker_id, yahoo_symbol, unit, validation_metric, category, label
@@ -165,6 +165,8 @@ def fetch() -> dict:
     if success == 0:
         raise RuntimeError('Yahoo: all commodities failed')
 
+    _record_history(out)
+
     return {
         'data': out,
         'meta': {
@@ -175,3 +177,31 @@ def fetch() -> dict:
             'note': 'quote synthesised from last 2 daily closes; v7/quote requires fragile crumb auth.',
         },
     }
+
+
+# The benchmarks worth keeping a permanent record of. Yahoo serves a rolling
+# two-year window, so anything older than that is gone from the file the
+# moment it rolls off — and Yahoo also revises and occasionally drops closes.
+# One line a day preserves what was actually published.
+HISTORY_TICKERS = [
+    ('brent_crude', 'brent_usd_bbl'),
+    ('wti_crude', 'wti_usd_bbl'),
+    ('ttf_eu_proxy', 'ttf_eur_mwh'),
+    ('natgas_henry', 'henryhub_usd_mmbtu'),
+    ('coal_atw', 'coal_usd_t'),
+    ('heating_oil_fut', 'heating_oil_usd_gal'),
+    ('rbob_gasoline', 'gasoline_usd_gal'),
+    ('co2_carbon_etf', 'carbon_etf_usd'),
+    ('dxy', 'usd_index'),
+    ('vix', 'vix'),
+]
+
+
+def _record_history(out: Dict[str, dict]) -> None:
+    record: Dict[str, float] = {}
+    for tid, field in HISTORY_TICKERS:
+        series = (out.get(tid) or {}).get('series') or []
+        if series:
+            record[field] = series[-1]['v']
+    if record:
+        history.record_history('commodities', record)

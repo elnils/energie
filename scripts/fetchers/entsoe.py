@@ -31,7 +31,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional
 import xml.etree.ElementTree as ET
 
-from core import http, series as series_util
+from core import history, http, series as series_util
 
 TOKEN = os.environ.get('ENTSOE_SECURITY_TOKEN', '').strip()
 BASE  = 'https://web-api.tp.entsoe.eu/api'
@@ -330,6 +330,8 @@ def fetch() -> dict:
     net_position = [{'ts': t, 'v': round(v, 1)} for t, v in sorted(net.items())]
     print(f'    entsoe/net_position: {len(net_position)} pts')
 
+    _record_history(prices, net_position, crossborder_flows)
+
     return {
         'data': {
             'awaiting_key': False,
@@ -347,3 +349,51 @@ def fetch() -> dict:
             'note':    'prices A44 · generation A75 · load A65 · flows A11 · zone DE_LU',
         },
     }
+
+
+def _record_history(prices: Dict[str, List[dict]],
+                    net_position: List[dict],
+                    crossborder: Dict[str, List[dict]]) -> None:
+    """
+    Archive today's cross-border balance to data/history/entsoe_flows.jsonl.
+
+    ENTSO-E serves a rolling window and the dashboard only ever asks for the
+    last 7 days, so who Germany imported from on any given past day is gone
+    as soon as it rolls off. The daily net exchange per border is the part
+    worth keeping: a dozen numbers a day against megabytes of raw quarter-
+    hourly flows.
+    """
+    today = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+
+    def todays(points: List[dict]) -> List[dict]:
+        return [p for p in points
+                if p.get('v') is not None
+                and datetime.fromtimestamp(p['ts'], timezone.utc)
+                            .strftime('%Y-%m-%d') == today]
+
+    record: Dict[str, float] = {}
+
+    net_today = todays(net_position)
+    if net_today:
+        # Points are quarter-hourly or hourly MW; MWh needs the real spacing.
+        span_h = max(1.0, (net_today[-1]['ts'] - net_today[0]['ts']) / 3600 or 1.0)
+        record['net_position_avg_mw'] = round(
+            sum(p['v'] for p in net_today) / len(net_today), 1)
+        record['net_position_mwh'] = round(record['net_position_avg_mw'] * span_h, 1)
+        record['hours_covered'] = round(span_h, 2)
+
+    for direction, points in crossborder.items():
+        pts = todays(points)
+        if not pts:
+            continue
+        key = direction.replace('->', '_to_').replace('_LU', '').lower()
+        record[f'{key}_avg_mw'] = round(sum(p['v'] for p in pts) / len(pts), 1)
+
+    for zone, points in prices.items():
+        pts = todays(points)
+        if pts:
+            record[f'price_{zone.lower()}_avg'] = round(
+                sum(p['v'] for p in pts) / len(pts), 2)
+
+    if record:
+        history.record_history('entsoe_flows', record)

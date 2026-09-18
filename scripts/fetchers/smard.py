@@ -16,7 +16,7 @@ from typing import Dict, List
 
 import pytz
 
-from core import http, validators
+from core import history, http, validators
 
 
 FILTERS: Dict[str, int] = {
@@ -108,6 +108,8 @@ def fetch() -> dict:
     if not any(out.values()):
         raise RuntimeError('SMARD: all filters returned empty')
 
+    _record_history(out)
+
     return {
         'data': {
             'series': out,
@@ -125,3 +127,59 @@ def fetch() -> dict:
             ),
         },
     }
+
+
+# Emission factors in g CO2 per kWh, lifecycle basis. Same numbers the
+# dashboard uses for its CO2-intensity chart, kept here so the archived
+# figure and the drawn one cannot drift apart.
+CO2_G_PER_KWH = {
+    'lignite': 900, 'hard_coal': 800, 'natural_gas': 400, 'nuclear': 5,
+    'wind_onshore': 18, 'wind_offshore': 18, 'solar': 18, 'biomass': 18,
+    'hydro': 18, 'other_renewables': 18,
+}
+RENEWABLE_KEYS = ('wind_onshore', 'wind_offshore', 'solar', 'biomass',
+                  'hydro', 'other_renewables')
+
+
+def _record_history(series: dict) -> None:
+    """
+    Archive today's generation mix to data/history/smard_mix.jsonl.
+
+    SMARD only serves a rolling window of roughly two weeks at 15-minute
+    resolution, so the mix for any given past day is unrecoverable once it
+    rolls off. The daily aggregate — energy per source, renewable share and
+    the resulting CO2 intensity — is what a long-run view actually needs,
+    and it is three orders of magnitude smaller than the raw series.
+    """
+    from datetime import datetime, timezone
+    today = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+
+    def todays_points(key):
+        return [p for p in (series.get(key) or [])
+                if p.get('v') is not None
+                and datetime.fromtimestamp(p['ts'] / 1000, timezone.utc)
+                            .strftime('%Y-%m-%d') == today]
+
+    record: dict = {}
+    energy_mwh: dict = {}
+    for key in list(CO2_G_PER_KWH) + ['pumped_storage', 'other_conventional', 'load']:
+        pts = todays_points(key)
+        if not pts:
+            continue
+        # 15-minute averages in MW -> MWh for the day so far.
+        mwh = sum(p['v'] for p in pts) * 0.25
+        energy_mwh[key] = round(mwh, 1)
+        record[f'{key}_mwh'] = round(mwh, 1)
+    if not energy_mwh:
+        return
+
+    generation = {k: v for k, v in energy_mwh.items() if k in CO2_G_PER_KWH}
+    total = sum(generation.values())
+    if total > 0:
+        ren = sum(v for k, v in generation.items() if k in RENEWABLE_KEYS)
+        record['renewable_share_pct'] = round(ren / total * 100, 2)
+        record['co2_g_per_kwh'] = round(
+            sum(v * CO2_G_PER_KWH[k] for k, v in generation.items()) / total, 1)
+        record['generation_mwh'] = round(total, 1)
+    record['hours_covered'] = round(len(todays_points('load')) * 0.25, 2)
+    history.record_history('smard_mix', record)

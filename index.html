@@ -661,6 +661,33 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
       <div class="chart-wrap" style="height:240px"><canvas id="chart-lage-co2"></canvas></div>
     </div>
     <div class="card g12">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">Langzeit-Archiv · Strompreis Deutschland</div>
+          <div class="card-sub">Tageswerte aus dem eigenen Archiv in diesem Repository (data/history/spot_price.jsonl) — unabhängig davon, wie weit die APIs zurückreichen</div>
+        </div>
+      </div>
+      <div class="chart-wrap" style="height:230px"><canvas id="chart-archiv-spot"></canvas></div>
+    </div>
+    <div class="card g6">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">Langzeit-Archiv · Erneuerbare und CO₂</div>
+          <div class="card-sub">Tagesaggregat des SMARD-Erzeugungsmix (data/history/smard_mix.jsonl)</div>
+        </div>
+      </div>
+      <div class="chart-wrap" style="height:230px"><canvas id="chart-archiv-mix"></canvas></div>
+    </div>
+    <div class="card g6">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">Archiv-Bestand</div>
+          <div class="card-sub">Was dieses Repository selbst aufzeichnet — unabhängig von den Zeitfenstern der Quellen</div>
+        </div>
+      </div>
+      <div id="archiv-table"><div class="loading"><span class="spin"></span></div></div>
+    </div>
+    <div class="card g12">
       <div class="card-hdr"><div><div class="card-title">Rohöl und Heizöl im Gleichlauf</div><div class="card-sub">Beide auf 100 am Zeitraumbeginn indexiert — zeigt, wie stark der Heizölpreis dem Rohölpreis folgt</div></div></div>
       <div class="chart-wrap" style="height:230px"><canvas id="chart-lage-oil"></canvas></div>
     </div>
@@ -2715,6 +2742,114 @@ function renderLage() {
   // renderLageOil has existed since the tab was written but was never
   // called, so its card stayed on its loading spinner forever.
   renderLageOil(com, ho);
+  renderArchiv();
+}
+
+// ══════════════════════════════════════════════
+// LANGZEIT-ARCHIV — what this repository records itself
+// ══════════════════════════════════════════════
+// Every upstream here serves a rolling window: SMARD keeps about two weeks
+// at 15-minute resolution, Energy-Charts a few days of prices, Yahoo two
+// years of closes, ENTSO-E a short window. Anything older is unrecoverable
+// once it rolls off. The fetchers therefore append a small daily record to
+// data/history/*.jsonl, committed with everything else, and these cards draw
+// from that archive rather than from the live files.
+
+const ARCHIV_FILES = [
+  ['spot_price',    'Strompreise Day-Ahead', '8 Gebotszonen: Mittel, Min, Max, Negativstunden'],
+  ['smard_mix',     'Erzeugungsmix DE',      'Energie je Quelle, EE-Anteil, CO₂-Intensität'],
+  ['entsoe_flows',  'Grenzflüsse DE',        'Nettoposition und Austausch je Grenze'],
+  ['commodities',   'Rohstoff-Schlusskurse', 'Brent, WTI, TTF, Henry Hub, Kohle, CO₂-ETF'],
+  ['fuel',          'Tankstellenpreise',     'Bundesschnitt E5, E10, Diesel'],
+  ['gas_storage',   'Gasspeicher',           'Füllstände je Land'],
+  ['fx',            'Wechselkurse',          'EUR gegen USD, GBP, CHF, JPY'],
+  ['heating_oil',   'Heizöl',                'Referenzpreis und Ölnotierungen'],
+  ['destatis_vpi',  'Verbraucherpreisindex', 'Energiekategorien'],
+  ['eurostat_prices','Endkundenpreise',      'Strom und Gas, Haushalt und Industrie'],
+  ['energy_futures','Prognose-Schnappschüsse','EIA-STEO-Kurven, täglich 45 Tage, danach monatlich'],
+];
+
+async function renderArchiv() {
+  const spot = await loadHistory('spot_price');
+  const co = rangeCutoffMs('lage');
+  const inWindow = r => !r.date || Date.parse(r.date) >= co;
+
+  // ── Price archive ──
+  const spotRows = spot.filter(r => r.de_avg != null).filter(inWindow);
+  if (spotRows.length >= 2) {
+    mkChart('chart-archiv-spot', 'line', spotRows.map(r => r.date), [
+      {label:'Tagesmittel DE', data:spotRows.map(r => r.de_avg),
+       borderColor:'#0e6cb6', backgroundColor:'rgba(14,108,182,0.10)', fill:true, borderWidth:2},
+      {label:'Tagesmaximum', data:spotRows.map(r => r.de_max ?? null),
+       borderColor:'#c0392b', backgroundColor:'transparent', borderWidth:1, pointRadius:0, spanGaps:true},
+      {label:'Tagesminimum', data:spotRows.map(r => r.de_min ?? null),
+       borderColor:'#1f9d55', backgroundColor:'transparent', borderWidth:1, pointRadius:0, spanGaps:true},
+    ], {
+      plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}},
+      scales:{x:{ticks:{maxTicksLimit:10}},
+              y:{title:{display:true,text:'EUR/MWh',color:'#8c98a8',font:{size:10}}}},
+    });
+    const first = spotRows[0].date, lastDay = spotRows.at(-1).date;
+    stamp('chart-archiv-spot', 'energy_charts',
+          `${spotRows.length} Tage im Archiv (${first} bis ${lastDay})`);
+  } else {
+    noData('chart-archiv-spot', 'Archiv wird noch aufgebaut',
+           'Ab dem nächsten Lauf schreibt der Energy-Charts-Fetcher einen ' +
+           'Tageswert je Gebotszone nach <code>data/history/spot_price.jsonl</code>. ' +
+           'Zwei Tage genügen für die erste Linie.');
+  }
+
+  // ── Generation mix archive ──
+  const mix = (await loadHistory('smard_mix')).filter(r => r.renewable_share_pct != null).filter(inWindow);
+  if (mix.length >= 2) {
+    mkChart('chart-archiv-mix', 'line', mix.map(r => r.date), [
+      {label:'EE-Anteil %', data:mix.map(r => r.renewable_share_pct),
+       borderColor:'#1f9d55', backgroundColor:'rgba(31,157,85,0.10)', fill:true,
+       borderWidth:2, yAxisID:'y'},
+      {label:'CO₂ g/kWh', data:mix.map(r => r.co2_g_per_kwh ?? null),
+       borderColor:'#c0392b', backgroundColor:'transparent', borderWidth:1.5,
+       pointRadius:0, spanGaps:true, yAxisID:'y1'},
+    ], {
+      plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}},
+      scales:{
+        x:{ticks:{maxTicksLimit:8}},
+        y:{position:'left', min:0, max:100, title:{display:true,text:'EE-Anteil %',color:'#8c98a8',font:{size:10}}},
+        y1:{position:'right', grid:{drawOnChartArea:false}, title:{display:true,text:'gCO₂/kWh',color:'#8c98a8',font:{size:10}}},
+      },
+    });
+    stamp('chart-archiv-mix', 'smard', `${mix.length} Tage im Archiv`);
+  } else {
+    noData('chart-archiv-mix', 'Archiv wird noch aufgebaut',
+           'Der SMARD-Fetcher legt ab dem nächsten Lauf ein Tagesaggregat in ' +
+           '<code>data/history/smard_mix.jsonl</code> ab.');
+  }
+
+  // ── Inventory table ──
+  const wrap = document.getElementById('archiv-table');
+  if (!wrap) return;
+  const rows = await Promise.all(ARCHIV_FILES.map(async ([file, label, desc]) => {
+    const recs = await loadHistory(file);
+    const dates = recs.map(r => r.date).filter(Boolean).sort();
+    return {file, label, desc, n:recs.length, from:dates[0], to:dates.at(-1)};
+  }));
+  const total = rows.reduce((a, r) => a + r.n, 0);
+  wrap.innerHTML = `
+    <table class="tbl" style="margin-top:4px">
+      <thead><tr><th>Reihe</th><th class="num">Einträge</th><th>Zeitraum</th></tr></thead>
+      <tbody>${rows.map(r => `<tr>
+        <td><strong>${r.label}</strong><div style="font-size:9px;color:var(--text3)">${r.desc}</div></td>
+        <td class="num">${r.n || '—'}</td>
+        <td style="font-size:10px;color:var(--text2)">${
+          r.n ? `${r.from} – ${r.to}` :
+          '<span style="color:var(--text3)">beginnt mit dem nächsten Lauf</span>'}</td>
+      </tr>`).join('')}</tbody>
+    </table>
+    <div style="font-size:9px;color:var(--text3);margin-top:6px;line-height:1.5">
+      ${total} Tagesdatensätze insgesamt · gespeichert als JSON-Lines unter
+      <code>data/history/</code> und mit jedem Fetch-Lauf committet.
+      Die Quellen selbst halten nur rollierende Fenster vor — dieses Archiv ist der einzige Ort,
+      an dem ältere Werte erhalten bleiben.
+    </div>`;
 }
 function renderLageCo2() {
   const wrap = document.getElementById('chart-lage-co2')?.parentElement;
