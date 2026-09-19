@@ -22,12 +22,12 @@
     "last_success_iso": "2026-09-18T21:38:29Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1789767212,
-    "last_attempt_iso": "2026-09-18T21:33:32Z",
+    "last_attempt_epoch": 1789776267,
+    "last_attempt_iso": "2026-09-19T00:04:27Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1789767348,
-    "last_success_iso": "2026-09-18T21:35:48Z"
+    "last_success_epoch": 1789776396,
+    "last_success_iso": "2026-09-19T00:06:36Z"
   },
   "energy_futures": {
     "last_attempt_epoch": 1789767509,
@@ -92,26 +92,26 @@
     "last_success_iso": "2026-09-18T21:36:34Z"
   },
   "heating_oil": {
-    "last_attempt_epoch": 1789767473,
-    "last_attempt_iso": "2026-09-18T21:37:53Z",
-    "last_error_epoch": 1789767475,
+    "last_attempt_epoch": 1789776396,
+    "last_attempt_iso": "2026-09-19T00:06:36Z",
+    "last_error_epoch": 1789776397,
     "last_error_message": "RuntimeError: Tecson: could not extract reference price | at File \"/home/runner/work/energie/energie/scripts/fetchers/heating_oil.py\", line 238, in fetch",
     "last_success_epoch": 1789365744,
     "last_success_iso": "2026-09-14T06:02:24Z"
   },
   "news": {
-    "last_attempt_epoch": 1789767523,
-    "last_attempt_iso": "2026-09-18T21:38:43Z",
-    "last_success_epoch": 1789767547,
-    "last_success_iso": "2026-09-18T21:39:07Z"
+    "last_attempt_epoch": 1789776397,
+    "last_attempt_iso": "2026-09-19T00:06:37Z",
+    "last_success_epoch": 1789776420,
+    "last_success_iso": "2026-09-19T00:07:00Z"
   },
   "smard": {
-    "last_attempt_epoch": 1789767204,
-    "last_attempt_iso": "2026-09-18T21:33:24Z",
+    "last_attempt_epoch": 1789776261,
+    "last_attempt_iso": "2026-09-19T00:04:21Z",
     "last_error_epoch": 1784702205,
     "last_error_message": "RuntimeError: SMARD: all filters returned empty | at File \"/home/runner/work/energie/energie/scripts/fetchers/smard.py\", line 109, in fetch",
-    "last_success_epoch": 1789767212,
-    "last_success_iso": "2026-09-18T21:33:32Z"
+    "last_success_epoch": 1789776267,
+    "last_success_iso": "2026-09-19T00:04:27Z"
   },
   "weather": {
     "last_attempt_epoch": 1789767408,
