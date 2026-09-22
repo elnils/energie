@@ -177,6 +177,30 @@ main{padding:18px 20px 70px;max-width:1600px;margin:0 auto}
 .city-price{font-size:16px;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums;letter-spacing:-0.01em}
 .city-label{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
 
+/* Consent banner. It sits above everything, including the sticky header,
+   because no analytics cookie may be set before it is answered. */
+.consent{position:fixed;left:0;right:0;bottom:0;z-index:1000;background:var(--card);
+         border-top:2px solid var(--accent);box-shadow:0 -4px 16px rgba(15,30,55,.14);
+         padding:16px 20px calc(16px + env(safe-area-inset-bottom));
+         padding-left:calc(20px + env(safe-area-inset-left));
+         padding-right:calc(20px + env(safe-area-inset-right));
+         display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.consent-txt{flex:1;min-width:260px;font-size:12px;color:var(--text2);line-height:1.6}
+.consent-txt strong{color:var(--text);font-size:13px;display:block;margin-bottom:4px}
+.consent-actions{display:flex;gap:8px;flex-wrap:wrap}
+.consent-btn{border-radius:5px;padding:10px 18px;font-size:13px;font-family:inherit;
+             font-weight:600;cursor:pointer;border:1px solid var(--border-strong);
+             background:var(--bg-alt);color:var(--text);min-height:44px}
+.consent-btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.consent-btn:hover{filter:brightness(0.96)}
+.consent-more{font-size:11px;color:var(--text3);margin-top:6px}
+.consent-more a{color:var(--accent);cursor:pointer}
+@media (max-width:760px){
+  .consent{padding:14px;flex-direction:column;align-items:stretch}
+  .consent-actions{flex-direction:column}
+  .consent-btn{width:100%}
+}
+
 /* Module switches on the front page. Toggling one hides a block; nothing is
    discarded, and the detail tabs are untouched either way. */
 .mod-bar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:14px;
@@ -338,6 +362,7 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
   <button class="tab" data-tab="kraftstoff">Kraftstoffe & Heizöl</button>
   <button class="tab" data-tab="erneuerbare">Erneuerbare</button>
   <button class="tab" data-tab="umwelt">Emissionen & Wärme</button>
+  <button class="tab" data-tab="g20">G20-Vergleich</button>
   <button class="tab" data-tab="wetter">Wetter</button>
   <button class="tab" data-tab="fx">Wechselkurse</button>
   <button class="tab" data-tab="futures">Futures & Prognosen</button>
@@ -848,6 +873,64 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
   </div>
 </div>
 
+<!-- G20-VERGLEICH -->
+<!-- Every country comparison elsewhere comes from Eurostat, which serves the
+     EU plus EFTA and candidates. The World Bank Indicators API is the source
+     that reaches the rest of the G20. -->
+<div class="panel" id="panel-g20">
+  <div class="range-bar" data-tab="g20"></div>
+  <div class="kpis" id="kpi-g20"></div>
+  <div class="grid">
+    <div class="card g12" data-src="worldbank_g20">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">G20 im Vergleich</div>
+          <div class="card-sub">Weltbank · Jahreswerte · letztes gemeinsames Berichtsjahr je Kennzahl</div>
+        </div>
+        <select id="g20-kennzahl" onchange="renderG20()" style="font-size:11px">
+          <option value="co2_per_capita">CO₂ pro Kopf</option>
+          <option value="co2_total">CO₂ gesamt</option>
+          <option value="renewable_share">Erneuerbare am Endenergieverbrauch</option>
+          <option value="renewable_electricity">Erneuerbare am Strom</option>
+          <option value="fossil_share">Fossiler Anteil</option>
+          <option value="energy_use_per_capita">Energieverbrauch pro Kopf</option>
+          <option value="electricity_per_capita">Stromverbrauch pro Kopf</option>
+          <option value="gdp_per_capita">BIP pro Kopf</option>
+        </select>
+      </div>
+      <div class="chart-wrap" style="height:420px"><canvas id="chart-g20-rang"></canvas></div>
+    </div>
+    <div class="card g7" data-src="worldbank_g20">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">Verlauf ausgewählter Länder</div>
+          <div class="card-sub">Dieselbe Kennzahl über die Zeit — anklickbare Länder unten</div>
+        </div>
+      </div>
+      <div class="chart-wrap" style="height:280px"><canvas id="chart-g20-verlauf"></canvas></div>
+      <div id="g20-laender" style="display:flex;gap:5px;flex-wrap:wrap;margin-top:10px"></div>
+    </div>
+    <div class="card g5" data-src="worldbank_g20">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">Emissionen gegen Wohlstand</div>
+          <div class="card-sub">CO₂ pro Kopf über BIP pro Kopf · letztes gemeinsames Jahr</div>
+        </div>
+      </div>
+      <div class="chart-wrap" style="height:280px"><canvas id="chart-g20-streu"></canvas></div>
+    </div>
+    <div class="card g12" data-src="worldbank_g20">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">Alle Kennzahlen</div>
+          <div class="card-sub">Jeweils letzter verfügbarer Wert je Land und Reihe</div>
+        </div>
+      </div>
+      <div id="g20-tabelle"><div class="loading"><span class="spin"></span></div></div>
+    </div>
+  </div>
+</div>
+
 <!-- GAS -->
 <div class="panel" id="panel-gas">
   <div class="range-bar" data-tab="gas"></div>
@@ -1044,6 +1127,27 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
 
 </main>
 
+<!-- Consent gate. Analytics is only loaded after an explicit yes; a no is
+     remembered so the banner does not reappear on every visit. -->
+<div class="consent" id="consent" style="display:none">
+  <div class="consent-txt">
+    <strong>Dürfen wir die Nutzung messen?</strong>
+    Dieses Dashboard würde Google Analytics einsetzen, um zu sehen, welche Seiten
+    genutzt werden. Dabei werden Cookies gesetzt und Daten an Google übertragen,
+    auch in die USA. Ohne Zustimmung wird nichts geladen und kein Cookie gesetzt —
+    alle Daten und Funktionen stehen trotzdem vollständig zur Verfügung.
+    <div class="consent-more">
+      Die Energiedaten selbst kommen als statische Dateien aus diesem Repository;
+      dafür ist keine Zustimmung nötig. Die Entscheidung lässt sich jederzeit unten
+      rechts über „Datenschutz“ ändern.
+    </div>
+  </div>
+  <div class="consent-actions">
+    <button class="consent-btn" onclick="setConsent(false)">Ablehnen</button>
+    <button class="consent-btn primary" onclick="setConsent(true)">Einverstanden</button>
+  </div>
+</div>
+
 <div class="statusbar">
   <div class="st" id="st-smard"><span class="dot"></span>SMARD</div>
   <div class="st" id="st-ec"><span class="dot"></span>Energy-Charts</div>
@@ -1060,7 +1164,10 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
   <div class="st" id="st-eia"><span class="dot"></span>EIA</div>
   <div class="st" id="st-eurostat"><span class="dot"></span>Eurostat</div>
   <div class="st" id="st-news"><span class="dot"></span>News</div>
-  <div style="margin-left:auto;white-space:nowrap">Alle Preise ohne Gewähr</div>
+  <div style="margin-left:auto;white-space:nowrap">
+    <a href="#" onclick="openConsent();return false" style="color:var(--text3)">Datenschutz</a>
+    · Alle Preise ohne Gewähr
+  </div>
 </div>
 
 <script>
@@ -1102,6 +1209,7 @@ const TAB_RANGES = {
   erneuerbare: ['30d','90d','1y','2y','5y','max'],
   // Annual series going back to 1990; anything under five years is a dot.
   umwelt:      ['5y','max'],
+  g20:         ['5y','max'],
   wetter:      ['24h','7d'],   // forward window: Open-Meteo sends 5 days
   fx:          ['30d','90d'],
   futures:     ['90d','1y','2y','5y','max'],
@@ -1112,7 +1220,7 @@ const TAB_RANGES = {
 // Default range per tab (must be in TAB_RANGES[tab])
 const TAB_DEFAULT_RANGE = {
   strom:'7d', strompreise:'max', markt:'30d', gas:'1y', rohstoffe:'1y',
-  kraftstoff:'30d', erneuerbare:'5y', umwelt:'max',
+  kraftstoff:'30d', erneuerbare:'5y', umwelt:'max', g20:'max',
   wetter:'7d', fx:'90d', futures:'2y', lage:'2y',
 };
 
@@ -1210,6 +1318,7 @@ const TAB_FILES = {
   kraftstoff:  ['fuel','heating_oil','commodities','eurostat_oil','eia_petroleum','fred_energy'],
   erneuerbare: ['energy_charts','smard'],
   umwelt:      ['eurostat_env'],
+  g20:         ['worldbank_g20'],
   wetter:      ['weather'],
   fx:          ['fx'],
   futures:     ['energy_futures','commodities'],
@@ -1305,7 +1414,7 @@ const SOURCE_CADENCE_H = {
   smard:1, energy_charts:1, gas_storage:6, entsog:6, weather:3, commodities:3,
   fx:12, fuel:12, heating_oil:12, destatis_vpi:24, entsoe:6, fred_energy:12,
   eia_petroleum:12, energy_futures:6, eurostat_oil:24, eurostat_prices:24,
-  news:2,
+  news:2, eurostat_env:24, worldbank_g20:24,
 };
 
 const SOURCE_LABEL = {
@@ -1316,6 +1425,7 @@ const SOURCE_LABEL = {
   fred_energy:'FRED / St. Louis Fed', eia_petroleum:'EIA',
   energy_futures:'EIA STEO · World Bank · IMF', eurostat_oil:'Eurostat',
   eurostat_prices:'Eurostat', news:'RSS',
+  eurostat_env:'Eurostat (Umwelt)', worldbank_g20:'Weltbank',
 };
 
 // Files with no fetcher: one-off snapshots committed to the repo. They are
@@ -4288,6 +4398,8 @@ const SOURCE_INVENTORY = [
   ['energy_futures',  'EIA STEO / World Bank / IMF','Preisprognosen', 'futures'],
   ['fx',              'EZB',                       'Wechselkurse', 'fx'],
   ['weather',         'Open-Meteo',                'Wind- und Solarvorhersage', 'wetter'],
+  ['eurostat_env',    'Eurostat (Umwelt)',         'Treibhausgase, Fernwärme', 'umwelt'],
+  ['worldbank_g20',   'Weltbank',                  'G20-Vergleich: Emissionen, Erneuerbare, Verbrauch', 'g20'],
   ['news',            'RSS-Quellen',               'Nachrichtenlage', 'news'],
 ];
 
@@ -4562,12 +4674,38 @@ const UMWELT_LAENDER = {
   PT:'Portugal', GR:'Griechenland', IE:'Irland', BE:'Belgien', NO:'Norwegen',
 };
 
+// The CRF classification nests: "Energy" (CRF1) CONTAINS transport (CRF1A3)
+// and residential (CRF1A4B). Stacking those together double-counted — the
+// first live run gave Germany 125% of its own total. These are the disjoint
+// top-level categories, which do sum to the reported total.
 const THG_SEKTOREN = [
-  ['ghg_energy',     'Energie',    '#c0392b'],
-  ['ghg_transport',  'Verkehr',    '#d97706'],
-  ['ghg_industry',   'Industrie',  '#7e57c2'],
-  ['ghg_households', 'Haushalte',  '#0e6cb6'],
+  ['ghg_s_energy_ind', 'Energiewirtschaft',   '#c0392b'],
+  ['ghg_s_manufact',   'Verarb. Gewerbe',     '#d97706'],
+  ['ghg_s_transport',  'Verkehr',             '#0e6cb6'],
+  ['ghg_s_other',      'Gebäude & übrige',    '#7e57c2'],
+  ['ghg_s_processes',  'Industrieprozesse',   '#0891b2'],
+  ['ghg_s_agri',       'Landwirtschaft',      '#1f9d55'],
+  ['ghg_s_waste',      'Abfall',              '#8c98a8'],
+  ['ghg_s_fugitive',   'Diffuse Emissionen',  '#c98a04'],
 ];
+
+// Aggregates that overlap the list above. Shown as single figures, never
+// stacked, and labelled so nobody adds them to the split.
+const THG_AGGREGATE = [
+  ['ghg_energy',     'Energie gesamt',  '#c0392b', 'enthält Verkehr und Gebäude'],
+  ['ghg_households', 'davon Haushalte', '#7e57c2', 'Teil von Energie'],
+];
+
+// Convert a Eurostat energy figure to TWh for display. nrg_cb_h is served in
+// terajoules, not GWh — the first version divided by 1000 and printed "TWh",
+// turning 418100 TJ into "418,1 TWh" when it is 116,1.
+function toTWh(value, unitLabel) {
+  const u = String(unitLabel || '').toLowerCase();
+  if (u.includes('terajoule') || u === 'tj') return value / 3600;
+  if (u.includes('gigawatt') || u === 'gwh')  return value / 1000;
+  if (u.includes('kilotonne of oil')) return value * 11.63 / 1000;
+  return null;   // unknown unit: show the raw figure with its own label
+}
 
 function envSeries(key, geo) {
   const node = D.eurostat_env?.[key];
@@ -4605,19 +4743,34 @@ function renderUmwelt() {
              delta: delta != null
                ? `${delta >= 0 ? '▲ +' : '▼ '}${fmtN(Math.abs(delta),1)}% ggü. 1990` : ''});
   }
-  THG_SEKTOREN.forEach(([key, label, color]) => {
+  // Top three of the disjoint split, so the tiles add up to something.
+  THG_SEKTOREN
+    .map(([key, label, color]) => ({key, label, color, pts: envSeries(key, geo).pts}))
+    .filter(x => x.pts.length)
+    .sort((a, b) => b.pts.at(-1).v - a.pts.at(-1).v)
+    .slice(0, 3)
+    .forEach(x => {
+      const last = x.pts.at(-1);
+      const share = total.length ? total.find(p => p.period === last.period) : null;
+      kp.push({label:x.label, val:fmtN(last.v/1000,1), unit:`Mio. t · ${last.period}`,
+               color:x.color,
+               delta: share ? `${fmtN(last.v / share.v * 100, 1)}% des Gesamtausstoßes` : ''});
+    });
+  THG_AGGREGATE.forEach(([key, label, color, hint]) => {
     const pts = envSeries(key, geo).pts;
     if (!pts.length) return;
-    const last = pts.at(-1);
-    const share = total.length
-      ? total.find(p => p.period === last.period) : null;
-    kp.push({label, val:fmtN(last.v/1000,1), unit:`Mio. t · ${last.period}`, color,
-             delta: share ? `${fmtN(last.v / share.v * 100, 1)}% des Gesamtausstoßes` : ''});
+    kp.push({label, val:fmtN(pts.at(-1).v/1000,1),
+             unit:`Mio. t · ${pts.at(-1).period}`, color, delta:hint});
   });
   const heatProd = envSeries('heat_production', geo).pts;
-  if (heatProd.length) kp.push({label:'Fernwärme-Erzeugung',
-    val:fmtN(heatProd.at(-1).v/1000,1),
-    unit:`TWh · ${heatProd.at(-1).period}`, color:'#f0883e'});
+  if (heatProd.length) {
+    const unit = D.eurostat_env?.heat_production?.unit;
+    const twh = toTWh(heatProd.at(-1).v, unit);
+    kp.push({label:'Fernwärme-Erzeugung',
+             val: twh != null ? fmtN(twh,1) : fmtN(heatProd.at(-1).v,0),
+             unit: `${twh != null ? 'TWh' : unit} · ${heatProd.at(-1).period}`,
+             color:'#f0883e'});
+  }
   document.getElementById('kpi-umwelt').innerHTML = kp.length
     ? kpis(kp) : '<div class="nodata">Keine Werte für dieses Land</div>';
 
@@ -4636,13 +4789,31 @@ function renderUmwelt() {
       scales:{x:{stacked:true, ticks:{maxTicksLimit:12}},
               y:{stacked:true, title:{display:true,text:'Tsd. t CO₂-Äquivalent',color:'#8c98a8',font:{size:10}}}},
     });
+    // State how much of the reported total the stack covers. CRF is nested,
+    // and a stack that silently misses or double-counts a branch is exactly
+    // the failure this replaced.
+    const letzte = periods.at(-1);
+    const summe = sectors.reduce((a, x) =>
+      a + (x.pts.find(p => p.period === letzte)?.v || 0), 0);
+    const gesamt = total.find(p => p.period === letzte)?.v;
     stamp('chart-thg-sektoren','eurostat_env',
-          `${UMWELT_LAENDER[geo]||geo} · ${periods[0]}–${periods.at(-1)}`);
+          `${UMWELT_LAENDER[geo]||geo} · ${periods[0]}–${periods.at(-1)}` +
+          (gesamt ? ` · Summe der Sektoren = ${fmtN(summe/gesamt*100,1)}% des gemeldeten Gesamtwerts` : ''));
   } else {
-    noData('chart-thg-sektoren', `Keine Sektordaten für ${UMWELT_LAENDER[geo]||geo}`,
-           env.ghg_energy?.unavailable_reason
-             ? `<code>${env.ghg_energy.unavailable_reason}</code>`
-             : 'Eurostat liefert für dieses Land keine Sektoraufteilung.');
+    // Distinguish "this country has no breakdown" from "the file predates
+    // the disjoint split" — the second fixes itself with the next daily run,
+    // and saying the first would be wrong.
+    const hatAlte = ['ghg_energy','ghg_households'].some(k =>
+      (D.eurostat_env?.[k]?.series_per_country?.[geo] || []).length);
+    noData('chart-thg-sektoren', `Sektoraufteilung für ${UMWELT_LAENDER[geo]||geo} noch nicht verfügbar`,
+           hatAlte
+             ? 'Die gespeicherte Datei enthält noch die alte, überlappende Aufteilung ' +
+               '(„Energie" enthielt dort Verkehr und Gebäude, die Summe ergab 125%). ' +
+               'Die überschneidungsfreien Sektoren werden beim nächsten Tageslauf geholt ' +
+               'und erscheinen dann hier — bis dahin lieber nichts als eine falsche Summe.'
+             : (env.ghg_s_transport?.unavailable_reason
+                 ? `<code>${env.ghg_s_transport.unavailable_reason}</code>`
+                 : 'Eurostat liefert für dieses Land keine Sektoraufteilung.'));
   }
 
   // ── share of the latest year ──
@@ -4663,7 +4834,8 @@ function renderUmwelt() {
     stamp('chart-thg-anteile','eurostat_env',
           `${UMWELT_LAENDER[geo]||geo} · Stand ${latestShares[0].period}`);
   } else {
-    noData('chart-thg-anteile','Keine Sektoranteile', '');
+    noData('chart-thg-anteile','Keine Sektoranteile',
+           'Erscheint zusammen mit der Sektoraufteilung links.');
   }
 
   // ── country comparison ──
@@ -4730,8 +4902,12 @@ function renderUmwelt() {
               order: x.kind === 'bar' ? 2 : 1};
     }), {plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}},
          scales:{x:{ticks:{maxTicksLimit:12}},
-                 y:{title:{display:true,text:heat[0].info?.unit || 'GWh',color:'#8c98a8',font:{size:10}}}}});
-    stamp('chart-waerme','eurostat_env', `${UMWELT_LAENDER[geo]||geo} · Fernwärme`);
+                 y:{title:{display:true,text:heat[0].info?.unit || '',color:'#8c98a8',font:{size:10}}}}});
+    const hUnit = heat[0].info?.unit;
+    const beispiel = toTWh(heat[0].pts.at(-1).v, hUnit);
+    stamp('chart-waerme','eurostat_env',
+          `${UMWELT_LAENDER[geo]||geo} · Werte in ${hUnit || 'unbekannter Einheit'}` +
+          (beispiel != null ? ` (zuletzt ${fmtN(beispiel,1)} TWh)` : ''));
   } else {
     noData('chart-waerme', `Keine Fernwärmedaten für ${UMWELT_LAENDER[geo]||geo}`,
            env.heat_production?.unavailable_reason
@@ -4741,12 +4917,241 @@ function renderUmwelt() {
 }
 
 // ══════════════════════════════════════════════
+// G20-VERGLEICH
+// ══════════════════════════════════════════════
+// World Bank annual series. Each indicator has its own reporting lag — CO2
+// runs two to three years behind, and energy use per capita stops in the
+// mid-2010s for most countries because the World Bank did not continue it —
+// so every chart names the year it is showing rather than implying "now".
+
+// Countries drawn in the time-series card. Stored per browser so a choice
+// survives a reload; Germany, China and the US are a sensible default
+// because they span the range.
+let g20Selected = (() => {
+  try {
+    const v = JSON.parse(localStorage.getItem('energydash:g20') || 'null');
+    if (Array.isArray(v) && v.length) return v;
+  } catch(e) {}
+  return ['DEU','CHN','USA'];
+})();
+
+function toggleG20Land(iso) {
+  g20Selected = g20Selected.includes(iso)
+    ? g20Selected.filter(x => x !== iso)
+    : [...g20Selected, iso];
+  try { localStorage.setItem('energydash:g20', JSON.stringify(g20Selected)); } catch(e) {}
+  renderG20();
+}
+
+// A stable colour per country, so a line keeps its colour across indicators.
+const G20_FARBEN = ['#0e6cb6','#c0392b','#1f9d55','#d97706','#7e57c2','#0891b2',
+                    '#c98a04','#dc6803','#4a5568','#bc8cff'];
+const g20Color = iso => {
+  const keys = Object.keys(D.worldbank_g20?.countries || {}).sort();
+  const i = Math.max(0, keys.indexOf(iso));
+  return G20_FARBEN[i % G20_FARBEN.length];
+};
+
+function g20Node(key) {
+  return D.worldbank_g20?.[key] || null;
+}
+
+// The most recent year for which a given country has a value.
+function g20Latest(key, iso) {
+  const pts = g20Node(key)?.series_per_country?.[iso] || [];
+  return pts.length ? pts[pts.length - 1] : null;
+}
+
+function renderG20() {
+  const wb = D.worldbank_g20;
+  const ids = ['chart-g20-rang','chart-g20-verlauf','chart-g20-streu'];
+  if (!wb) {
+    ids.forEach(id => noData(id, 'G20-Daten noch nicht abgerufen',
+      'Die Quelle <code>worldbank_g20</code> läuft einmal täglich. ' +
+      'Nach dem nächsten GitHub-Actions-Lauf ist sie hier.'));
+    const t = document.getElementById('g20-tabelle');
+    if (t) t.innerHTML = '<div class="nodata">Noch keine Daten</div>';
+    document.getElementById('kpi-g20').innerHTML = '';
+    return;
+  }
+
+  const laender = wb.countries || {};
+  const key = document.getElementById('g20-kennzahl')?.value || 'co2_per_capita';
+  const node = g20Node(key);
+  const minYear = periodCutoff('g20') || '0';
+
+  // ── ranking for the selected indicator ──
+  const werte = Object.keys(laender)
+    .map(iso => ({iso, name: laender[iso], p: g20Latest(key, iso)}))
+    .filter(x => x.p)
+    .sort((a, b) => b.p.v - a.p.v);
+
+  if (werte.length) {
+    // "Higher is better" flips the colour meaning: a big renewable share is
+    // good news, a big emission total is not.
+    const hib = node?.higher_is_better;
+    const farbe = x => x.iso === 'DEU' ? 'rgba(14,108,182,0.95)'
+      : hib === true  ? 'rgba(31,157,85,0.62)'
+      : hib === false ? 'rgba(192,57,43,0.55)'
+      : 'rgba(86,101,122,0.55)';
+    mkChart('chart-g20-rang','bar',
+      werte.map(x => `${x.name} (${x.p.period})`),
+      [{label: `${node?.label || key} in ${node?.unit || ''}`,
+        data: werte.map(x => x.p.v),
+        backgroundColor: werte.map(farbe), borderRadius:2}],
+      {indexAxis:'y',
+       scales:{x:{title:{display:true,text:node?.unit||'',color:'#8c98a8',font:{size:10}}}}});
+    const jahre = Array.from(new Set(werte.map(x => x.p.period))).sort();
+    stamp('chart-g20-rang','worldbank_g20',
+          `${werte.length} Länder · Berichtsjahre ${jahre[0]}–${jahre.at(-1)}` +
+          (jahre.length > 1 ? ' (je Land der letzte verfügbare Wert)' : '') +
+          (node?.indicator ? ` · Indikator ${node.indicator}` : ''));
+
+    // KPIs: Germany against the extremes of the same indicator.
+    const de = werte.find(x => x.iso === 'DEU');
+    const kp = [];
+    if (de) {
+      const rang = werte.indexOf(de) + 1;
+      kp.push({label:`Deutschland · ${node?.label || key}`, val:fmtN(de.p.v, 2),
+               unit:`${node?.unit || ''} · ${de.p.period}`, color:'#0e6cb6',
+               delta:`Platz ${rang} von ${werte.length}`});
+    }
+    kp.push({label:'Höchster Wert', val:fmtN(werte[0].p.v,2),
+             unit:`${werte[0].name} · ${werte[0].p.period}`, color:'#c0392b'});
+    kp.push({label:'Niedrigster Wert', val:fmtN(werte.at(-1).p.v,2),
+             unit:`${werte.at(-1).name} · ${werte.at(-1).p.period}`, color:'#1f9d55'});
+    const eu = werte.find(x => x.iso === 'EUU');
+    if (eu) kp.push({label:'Europäische Union', val:fmtN(eu.p.v,2),
+                     unit:`${node?.unit || ''} · ${eu.p.period}`, color:'#7e57c2'});
+    document.getElementById('kpi-g20').innerHTML = kpis(kp);
+  } else {
+    noData('chart-g20-rang', `Keine Werte für ${node?.label || key}`,
+           node?.unavailable_reason
+             ? `Die Weltbank meldet: <code>${node.unavailable_reason}</code>`
+             : 'Für diese Kennzahl liefert die Weltbank derzeit keine Werte.');
+    document.getElementById('kpi-g20').innerHTML = '';
+  }
+
+  // ── country picker + time series ──
+  const picker = document.getElementById('g20-laender');
+  if (picker) {
+    picker.innerHTML = Object.keys(laender).sort((a,b) =>
+        laender[a].localeCompare(laender[b]))
+      .map(iso => `<button class="mod-chip ${g20Selected.includes(iso)?'on':''}"
+                     onclick="toggleG20Land('${iso}')">${laender[iso]}</button>`).join('');
+  }
+  const reihen = g20Selected
+    .map(iso => ({iso, name: laender[iso] || iso,
+                  pts: (node?.series_per_country?.[iso] || [])
+                         .filter(p => String(p.period) >= minYear)}))
+    .filter(x => x.pts.length);
+  if (reihen.length) {
+    const periods = Array.from(new Set(reihen.flatMap(x => x.pts.map(p => p.period)))).sort();
+    mkChart('chart-g20-verlauf','line', periods, reihen.map(x => {
+      const m = {}; x.pts.forEach(p => m[p.period] = p.v);
+      return {label:x.name, data:periods.map(p => m[p] ?? null),
+              borderColor:g20Color(x.iso), backgroundColor:'transparent',
+              borderWidth:2, pointRadius:0, spanGaps:true, tension:0.2};
+    }), {plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}},
+         scales:{x:{ticks:{maxTicksLimit:10}},
+                 y:{title:{display:true,text:node?.unit||'',color:'#8c98a8',font:{size:10}}}}});
+    stamp('chart-g20-verlauf','worldbank_g20',
+          `${reihen.length} Länder · ${periods[0]}–${periods.at(-1)}`);
+  } else {
+    noData('chart-g20-verlauf', 'Keine Länder ausgewählt',
+           'Unten ein Land anklicken. Die Auswahl wird im Browser gemerkt.');
+  }
+
+  // ── emissions against wealth ──
+  // Pair values from the SAME year — a 2022 emission against a 2014 GDP
+  // would place a country somewhere it never was. Comparing only the two
+  // latest values is too strict though: the indicators have different lags,
+  // so their last years rarely coincide and the chart would stay empty.
+  // Walk back to the most recent year both series cover instead.
+  const gemeinsamesJahr = (iso) => {
+    const a = g20Node('co2_per_capita')?.series_per_country?.[iso] || [];
+    const b = g20Node('gdp_per_capita')?.series_per_country?.[iso] || [];
+    if (!a.length || !b.length) return null;
+    const bMap = new Map(b.map(p => [p.period, p.v]));
+    for (let i = a.length - 1; i >= 0; i--) {
+      if (bMap.has(a[i].period)) return {jahr: a[i].period, y: a[i].v, x: bMap.get(a[i].period)};
+    }
+    return null;
+  };
+  const punkte = Object.keys(laender).map(iso => {
+    const g = gemeinsamesJahr(iso);
+    return g ? {iso, name: laender[iso], x: g.x, y: g.y, jahr: g.jahr} : null;
+  }).filter(Boolean);
+  if (punkte.length >= 3) {
+    mkChart('chart-g20-streu','scatter', null, [{
+      label:'CO₂ pro Kopf über BIP pro Kopf',
+      data: punkte.map(p => ({x:p.x, y:p.y, name:p.name, jahr:p.jahr})),
+      backgroundColor: punkte.map(p => p.iso === 'DEU' ? '#0e6cb6' : 'rgba(86,101,122,0.6)'),
+      pointRadius: punkte.map(p => p.iso === 'DEU' ? 8 : 5),
+    }], {
+      plugins:{legend:{display:false},
+               tooltip:{callbacks:{label: ctx =>
+                 ` ${ctx.raw.name} (${ctx.raw.jahr}): ${fmtN(ctx.parsed.y,1)} t CO₂ bei ${fmtN(ctx.parsed.x,0)} USD`}}},
+      scales:{x:{type:'linear',title:{display:true,text:'BIP pro Kopf (USD)',color:'#8c98a8',font:{size:10}}},
+              y:{title:{display:true,text:'CO₂ pro Kopf (t)',color:'#8c98a8',font:{size:10}}}},
+    });
+    const jahre = Array.from(new Set(punkte.map(p => p.jahr))).sort();
+    stamp('chart-g20-streu','worldbank_g20',
+          `${punkte.length} Länder · je Land das jüngste Jahr mit beiden Werten ` +
+          `(${jahre[0]}${jahre.length > 1 ? '–' + jahre.at(-1) : ''})`);
+  } else {
+    noData('chart-g20-streu','Streudiagramm nicht möglich',
+           'Dafür braucht es CO₂ und BIP aus demselben Berichtsjahr; ' +
+           'die beiden Reihen haben unterschiedliche Verzüge.');
+  }
+
+  renderG20Tabelle();
+}
+
+function renderG20Tabelle() {
+  const wrap = document.getElementById('g20-tabelle');
+  const wb = D.worldbank_g20;
+  if (!wrap || !wb) return;
+  const laender = wb.countries || {};
+  const spalten = ['co2_per_capita','co2_total','renewable_share',
+                   'renewable_electricity','energy_use_per_capita'];
+  const verfuegbar = spalten.filter(k => Object.keys(g20Node(k)?.series_per_country || {}).length);
+  if (!verfuegbar.length) {
+    wrap.innerHTML = '<div class="nodata">Keine Kennzahlen verfügbar</div>';
+    return;
+  }
+  const zeilen = Object.keys(laender)
+    .sort((a,b) => (g20Latest(verfuegbar[0], b)?.v ?? -Infinity) -
+                   (g20Latest(verfuegbar[0], a)?.v ?? -Infinity))
+    .map(iso => {
+      const zellen = verfuegbar.map(k => {
+        const p = g20Latest(k, iso);
+        return `<td class="num">${p ? fmtN(p.v, 1) : '—'}` +
+               `${p ? `<div style="font-size:8px;color:var(--text3);font-weight:400">${p.period}</div>` : ''}</td>`;
+      }).join('');
+      return `<tr><td><strong>${laender[iso]}</strong></td>${zellen}</tr>`;
+    }).join('');
+  wrap.innerHTML = `<div class="tbl-scroll"><table class="tbl">
+      <thead><tr><th>Land</th>${verfuegbar.map(k =>
+        `<th class="num">${g20Node(k)?.label || k}<div style="font-size:8px;font-weight:400;text-transform:none">${g20Node(k)?.unit||''}</div></th>`
+      ).join('')}</tr></thead>
+      <tbody>${zeilen}</tbody></table></div>
+    <div style="font-size:9px;color:var(--text3);margin-top:6px;line-height:1.6">
+      Je Land und Reihe der letzte verfügbare Wert; die kleine Zahl nennt das Berichtsjahr.
+      Die Reihen haben unterschiedliche Verzüge — Emissionen zwei bis drei Jahre,
+      Energieverbrauch pro Kopf endet bei vielen Ländern 2014, weil die Weltbank ihn
+      nicht weitergeführt hat. Werte aus verschiedenen Jahren sind daher nur eingeschränkt
+      vergleichbar. Quelle: Weltbank, CC BY 4.0.
+    </div>`;
+}
+
+// ══════════════════════════════════════════════
 // TABS
 // ══════════════════════════════════════════════
 const RENDERS={
   ueberblick:renderUeberblick, strom:renderStrom, strompreise:renderStrompreise, markt:renderMarkt, gas:renderGas,
   rohstoffe:renderRohstoffe, kraftstoff:renderKraftstoffMerged,
-  erneuerbare:renderErneuerbare, umwelt:renderUmwelt,
+  erneuerbare:renderErneuerbare, umwelt:renderUmwelt, g20:renderG20,
   wetter:renderWetter, fx:renderFx,
   futures:renderFutures, lage:renderLage, news:renderNews,
 };
@@ -4817,6 +5222,7 @@ document.querySelectorAll('.tab').forEach(btn=>{
     const panel = document.getElementById('panel-' + tab);
     if (panel) panel.classList.add('active');
     activeTab = tab;
+    try { trackTab(tab); } catch(e) {}
     try { saveRangePersistence(); } catch(e) { console.warn('saveRangePersistence', e); }
     // Load data with a hard timeout so a hung fetch doesn't freeze the UI
     try {
@@ -4842,9 +5248,85 @@ document.querySelectorAll('.fuel-tab').forEach(btn => {
 });
 
 // ══════════════════════════════════════════════
+// EINWILLIGUNG UND REICHWEITENMESSUNG
+// ══════════════════════════════════════════════
+// Google Analytics sets cookies and sends data to Google, including outside
+// the EU, so on a German-language site aimed at an EU audience it may not
+// run before the visitor has agreed. The tag is therefore not in the page
+// markup at all: nothing is requested from Google until setConsent(true)
+// injects it. A decline is remembered so the banner does not return every
+// visit, and neither choice affects the dashboard itself — the energy data
+// are static files served from this repository.
+
+const GA_ID = 'G-TYK6N7Y5R5';
+const CONSENT_KEY = 'energydash:consent';
+
+function readConsent() {
+  try { return localStorage.getItem(CONSENT_KEY); } catch(e) { return null; }
+}
+
+function loadAnalytics() {
+  if (window.__gaLoaded) return;
+  window.__gaLoaded = true;
+
+  window.dataLayer = window.dataLayer || [];
+  window.gtag = function(){ window.dataLayer.push(arguments); };
+
+  // Consent Mode: everything but analytics stays denied. We never ask for
+  // advertising consent, so it must not silently default to granted.
+  gtag('consent', 'default', {
+    ad_storage: 'denied',
+    ad_user_data: 'denied',
+    ad_personalization: 'denied',
+    analytics_storage: 'granted',
+  });
+
+  const tag = document.createElement('script');
+  tag.async = true;
+  tag.src = `https://www.googletagmanager.com/gtag/js?id=${GA_ID}`;
+  document.head.appendChild(tag);
+
+  gtag('js', new Date());
+  // IP anonymisation is the default in GA4, but stating it keeps the
+  // intention visible next to the consent text that promises it.
+  gtag('config', GA_ID, {anonymize_ip: true});
+}
+
+function setConsent(granted) {
+  try { localStorage.setItem(CONSENT_KEY, granted ? 'granted' : 'denied'); } catch(e) {}
+  const el = document.getElementById('consent');
+  if (el) el.style.display = 'none';
+  if (granted) loadAnalytics();
+  // A withdrawal cannot un-send what was already sent, so it only stops
+  // future collection; the cookies Google set are cleared on the next
+  // browser cleanup. Saying so honestly beats implying a full erase.
+}
+
+function openConsent() {
+  const el = document.getElementById('consent');
+  if (el) el.style.display = 'flex';
+}
+
+function initConsent() {
+  const choice = readConsent();
+  if (choice === 'granted') { loadAnalytics(); return; }
+  if (choice === 'denied') return;          // remembered no: stay silent
+  openConsent();                            // not asked yet
+}
+
+// Tab switches are the one interaction worth measuring, and only once
+// analytics is actually running.
+function trackTab(tab) {
+  if (window.__gaLoaded && typeof gtag === 'function') {
+    gtag('event', 'tab_view', {tab_name: tab});
+  }
+}
+
+// ══════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════
 loadRangePersistence();
+initConsent();
 init();
 setInterval(async()=>{Object.keys(D).forEach(k=>delete D[k]);await init();},15*60*1000);
 </script>

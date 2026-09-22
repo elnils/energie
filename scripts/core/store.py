@@ -59,6 +59,7 @@ EXPECTED_KEYS: Dict[str, Set[str]] = {
     # outage does not reject the whole payload.
     'eurostat_env':  {'ghg_total', 'ghg_energy', 'heat_production',
                       'heat_consumption'},
+    'worldbank_g20': {'co2_total', 'co2_per_capita', 'renewable_share'},
 }
 
 FORBIDDEN_KEYS: Dict[str, Set[str]] = {
@@ -79,6 +80,7 @@ FORBIDDEN_KEYS: Dict[str, Set[str]] = {
     'eurostat_oil':  {'gas', 'points', 'articles', 'cities'},
     'eurostat_prices': {'gas', 'points', 'articles', 'cities'},
     'eurostat_env':  {'gas', 'points', 'articles', 'cities'},
+    'worldbank_g20': {'gas', 'points', 'articles', 'cities'},
 }
 
 

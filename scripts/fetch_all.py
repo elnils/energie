@@ -37,7 +37,7 @@ from fetchers import (
     smard, energy_charts, gas_storage, fuel, weather,
     commodities, news, fx_ecb, heating_oil, destatis_vpi,
     entsog, entsoe, eia_petroleum, fred_energy, eurostat_oil,
-    energy_futures, eurostat_prices, eurostat_env,
+    energy_futures, eurostat_prices, eurostat_env, worldbank_g20,
 )
 
 
@@ -75,7 +75,10 @@ SCHEDULE = [
     ('Eurostat Preise',  'eurostat_prices', eurostat_prices.fetch,  1440,  240),
     # Annual data with a one-to-two-year reporting lag, so a daily check is
     # already far more often than it can change. 204 requests.
-    ('Eurostat Umwelt',  'eurostat_env',    eurostat_env.fetch,     1440,  180),
+    ('Eurostat Umwelt',  'eurostat_env',    eurostat_env.fetch,     1440,  300),
+    # Annual World Bank series, one request per indicator covering every
+    # country — the whole source is 8 calls.
+    ('World Bank G20',   'worldbank_g20',   worldbank_g20.fetch,    1440,  120),
     ('News RSS',         'news',            news.fetch,             120,   90),
 ]
 
