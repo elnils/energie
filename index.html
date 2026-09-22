@@ -2,7 +2,11 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#1f3a5f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <title>Energie Dashboard DE/EU</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
@@ -173,6 +177,108 @@ main{padding:18px 20px 70px;max-width:1600px;margin:0 auto}
 .city-price{font-size:16px;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums;letter-spacing:-0.01em}
 .city-label{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
 
+/* Module switches on the front page. Toggling one hides a block; nothing is
+   discarded, and the detail tabs are untouched either way. */
+.mod-bar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:14px;
+         padding:10px 12px;background:var(--card);border:1px solid var(--border);
+         border-radius:6px;box-shadow:var(--shadow)}
+.mod-bar-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;
+             letter-spacing:.06em;font-weight:700;margin-right:2px}
+.mod-chip{display:inline-flex;align-items:center;gap:5px;background:var(--bg-alt);
+          border:1px solid var(--border);color:var(--text2);border-radius:99px;
+          padding:6px 12px;font-size:12px;font-family:inherit;cursor:pointer;
+          transition:all .12s;min-height:32px}
+.mod-chip:hover{border-color:var(--border-strong);color:var(--text)}
+.mod-chip.on{background:var(--accent-bg);border-color:var(--accent);color:var(--accent);font-weight:600}
+.mod-chip .mark{font-size:11px;line-height:1}
+.mod-reset{margin-left:auto;background:none;border:none;color:var(--text3);
+           font-size:11px;cursor:pointer;font-family:inherit;text-decoration:underline;
+           padding:6px}
+.mod-reset:hover{color:var(--accent)}
+
+/* ══════════════════════════════════════════════
+   PHONE LAYOUT
+   ══════════════════════════════════════════════
+   Every bug report in this project arrived as an iPhone screenshot, and the
+   layout was built for a desktop grid: 12 columns, a fixed status bar
+   overlapping the last card, tap targets under 30px, and charts sized for a
+   wide viewport. iOS also needs the safe-area insets or content slides under
+   the notch and the home indicator. */
+
+/* The status bar is fixed, so the page needs room for it plus the home
+   indicator — otherwise the last card is permanently half-covered, which is
+   visible in every screenshot taken on a phone. */
+main{padding-bottom:calc(70px + env(safe-area-inset-bottom))}
+.statusbar{padding-bottom:calc(6px + env(safe-area-inset-bottom));
+           padding-left:calc(20px + env(safe-area-inset-left));
+           padding-right:calc(20px + env(safe-area-inset-right))}
+header{padding-left:calc(20px + env(safe-area-inset-left));
+       padding-right:calc(20px + env(safe-area-inset-right))}
+
+/* Momentum scrolling for the tab strip on both platforms, and a hint that
+   it scrolls rather than a hard cut at the edge. */
+.tabs{-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity;
+      overscroll-behavior-x:contain}
+.tab{scroll-snap-align:start}
+
+@media (max-width:760px){
+  body{font-size:14px}                 /* 13px is below comfortable on a phone */
+
+  header{height:auto;min-height:52px;padding-top:6px;padding-bottom:6px;
+         flex-wrap:wrap;gap:6px 10px;row-gap:4px}
+  .logo{font-size:14px}
+  .hdr-right{gap:10px;font-size:11px;flex-wrap:wrap}
+
+  /* 44px is the minimum comfortable tap target on both iOS and Android. */
+  .tab{padding:13px 14px;font-size:14px;min-height:46px}
+  .btn{padding:9px 14px;min-height:40px}
+  .range-opt{min-height:38px;padding:8px 12px;font-size:12px}
+  .fuel-tab{min-height:40px;padding:9px 14px;font-size:13px}
+  .mod-chip{min-height:40px;padding:9px 14px;font-size:13px}
+  .mod-bar{padding:10px}
+  .mod-reset{margin-left:0;width:100%;text-align:left}
+  select{min-height:40px;font-size:14px;max-width:100%}
+
+  main{padding:12px 14px calc(72px + env(safe-area-inset-bottom));
+       padding-left:calc(14px + env(safe-area-inset-left));
+       padding-right:calc(14px + env(safe-area-inset-right))}
+
+  /* One column. The 12-column grid put two charts side by side at 180px
+     wide each, which is unreadable. */
+  .grid{grid-template-columns:1fr;gap:10px;margin-bottom:10px}
+  .g12,.g8,.g7,.g6,.g5,.g4,.g3{grid-column:span 1}
+  .card{padding:12px}
+  .card-hdr{flex-direction:column;align-items:stretch;gap:6px}
+  .card-hdr select{width:100%}
+
+  /* Charts get taller relative to width so a time series stays legible in
+     portrait; the inline height attributes are overridden. */
+  .chart-wrap{height:230px!important}
+  .card.g12 .chart-wrap{height:250px!important}
+
+  .kpis{grid-template-columns:repeat(2,1fr);gap:8px}
+  .kpi{padding:10px}
+  .kpi-val{font-size:20px}
+
+  .city-grid{grid-template-columns:repeat(2,1fr)}
+  .lage-hero{padding:14px}
+  .lage-hero-title{font-size:16px}
+}
+
+@media (max-width:420px){
+  .kpis{grid-template-columns:1fr}     /* two columns get too cramped */
+  .chart-wrap{height:210px!important}
+  .tab{padding:12px 11px;font-size:13px}
+}
+
+/* Coarse pointers of any width: hover styling misfires on touch, where
+   :hover sticks after a tap until something else is tapped. */
+@media (hover:none){
+  .tab:hover{color:var(--text2)}
+  .tbl tr:hover td{background:transparent}
+  .btn:hover{background:rgba(255,255,255,0.12)}
+}
+
 .news-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px}
 .news-card{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:14px;display:flex;flex-direction:column;gap:6px;box-shadow:var(--shadow);transition:box-shadow .15s}
 .news-card:hover{box-shadow:var(--shadow-md)}
@@ -231,6 +337,7 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
   <button class="tab" data-tab="rohstoffe">Rohstoffe</button>
   <button class="tab" data-tab="kraftstoff">Kraftstoffe & Heizöl</button>
   <button class="tab" data-tab="erneuerbare">Erneuerbare</button>
+  <button class="tab" data-tab="umwelt">Emissionen & Wärme</button>
   <button class="tab" data-tab="wetter">Wetter</button>
   <button class="tab" data-tab="fx">Wechselkurse</button>
   <button class="tab" data-tab="futures">Futures & Prognosen</button>
@@ -246,14 +353,15 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
      panel carries one headline figure per domain and the health of every
      source feeding them. -->
 <div class="panel active" id="panel-ueberblick">
-  <div class="lage-hero" id="ueberblick-hero">
+  <div class="mod-bar" id="ueberblick-module"></div>
+  <div class="lage-hero" id="ueberblick-hero" data-module="lage">
     <div id="ueberblick-hero-content">
       <div class="loading"><span class="spin"></span>Lage wird ermittelt…</div>
     </div>
   </div>
   <div class="kpis" id="kpi-ueberblick"></div>
   <div class="grid">
-    <div class="card g7" data-src="energy_charts">
+    <div class="card g7" data-src="energy_charts" data-module="verlauf">
       <div class="card-hdr">
         <div>
           <div class="card-title">Strompreis Day-Ahead · 7 Tage</div>
@@ -262,7 +370,7 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
       </div>
       <div class="chart-wrap" style="height:210px"><canvas id="chart-ueberblick-strom"></canvas></div>
     </div>
-    <div class="card g5" data-src="smard">
+    <div class="card g5" data-src="smard" data-module="mix">
       <div class="card-hdr">
         <div>
           <div class="card-title">Woher der Strom gerade kommt</div>
@@ -271,7 +379,7 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
       </div>
       <div id="ueberblick-mix"><div class="loading"><span class="spin"></span></div></div>
     </div>
-    <div class="card g12">
+    <div class="card g12" data-module="quellen">
       <div class="card-hdr">
         <div>
           <div class="card-title">Quellen</div>
@@ -675,6 +783,71 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
   </div>
 </div>
 
+<!-- EMISSIONEN & WÄRME -->
+<div class="panel" id="panel-umwelt">
+  <div class="range-bar" data-tab="umwelt"></div>
+  <div class="kpis" id="kpi-umwelt"></div>
+  <div class="grid">
+    <div class="card g8" data-src="eurostat_env">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">Treibhausgase nach Sektor</div>
+          <div class="card-sub">Eurostat env_air_gge · Jahreswerte · Tausend Tonnen CO₂-Äquivalent · Inventare erscheinen mit rund zwei Jahren Verzug</div>
+        </div>
+        <select id="umwelt-geo" onchange="renderUmwelt()" style="font-size:11px">
+          <option value="DE">Deutschland</option>
+          <option value="EU27_2020">EU27</option>
+          <option value="FR">Frankreich</option>
+          <option value="IT">Italien</option>
+          <option value="ES">Spanien</option>
+          <option value="NL">Niederlande</option>
+          <option value="PL">Polen</option>
+          <option value="AT">Österreich</option>
+          <option value="SE">Schweden</option>
+          <option value="DK">Dänemark</option>
+        </select>
+      </div>
+      <div class="chart-wrap" style="height:280px"><canvas id="chart-thg-sektoren"></canvas></div>
+    </div>
+    <div class="card g4" data-src="eurostat_env">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">Woher die Emissionen kommen</div>
+          <div class="card-sub">Anteil am Gesamtausstoß · letztes Berichtsjahr</div>
+        </div>
+      </div>
+      <div class="chart-wrap" style="height:280px"><canvas id="chart-thg-anteile"></canvas></div>
+    </div>
+    <div class="card g6" data-src="eurostat_env">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">Treibhausgase im Ländervergleich</div>
+          <div class="card-sub">Gesamtausstoß ohne LULUCF · letztes gemeinsames Berichtsjahr</div>
+        </div>
+      </div>
+      <div class="chart-wrap" style="height:260px"><canvas id="chart-thg-laender"></canvas></div>
+    </div>
+    <div class="card g6" data-src="eurostat_env">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">Einzelne Treibhausgase</div>
+          <div class="card-sub">CO₂, Methan und Lachgas getrennt · Tausend Tonnen</div>
+        </div>
+      </div>
+      <div class="chart-wrap" style="height:260px"><canvas id="chart-thg-gase"></canvas></div>
+    </div>
+    <div class="card g12" data-src="eurostat_env">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">Fernwärme</div>
+          <div class="card-sub">Eurostat nrg_cb_h · Erzeugung und Endverbrauch, aufgeteilt nach Haushalten und Industrie</div>
+        </div>
+      </div>
+      <div class="chart-wrap" style="height:250px"><canvas id="chart-waerme"></canvas></div>
+    </div>
+  </div>
+</div>
+
 <!-- GAS -->
 <div class="panel" id="panel-gas">
   <div class="range-bar" data-tab="gas"></div>
@@ -927,6 +1100,8 @@ const TAB_RANGES = {
   rohstoffe:   ['30d','90d','1y','2y','max'],
   kraftstoff:  ['7d','30d','90d','1y','2y','5y','max'],  // road fuel + heating oil + jet
   erneuerbare: ['30d','90d','1y','2y','5y','max'],
+  // Annual series going back to 1990; anything under five years is a dot.
+  umwelt:      ['5y','max'],
   wetter:      ['24h','7d'],   // forward window: Open-Meteo sends 5 days
   fx:          ['30d','90d'],
   futures:     ['90d','1y','2y','5y','max'],
@@ -937,7 +1112,7 @@ const TAB_RANGES = {
 // Default range per tab (must be in TAB_RANGES[tab])
 const TAB_DEFAULT_RANGE = {
   strom:'7d', strompreise:'max', markt:'30d', gas:'1y', rohstoffe:'1y',
-  kraftstoff:'30d', erneuerbare:'5y',
+  kraftstoff:'30d', erneuerbare:'5y', umwelt:'max',
   wetter:'7d', fx:'90d', futures:'2y', lage:'2y',
 };
 
@@ -1024,7 +1199,8 @@ const TAB_FILES = {
   // The front page pulls a headline number from most sources, so it loads
   // broadly. Everything is optional — a missing file costs one tile.
   ueberblick:  ['smard','energy_charts','gas_storage','commodities','fuel',
-                'heating_oil','eurostat_prices','destatis_vpi','entsoe','_state'],
+                'heating_oil','eurostat_prices','destatis_vpi','entsoe',
+                'eurostat_env','_state'],
   strom:       ['smard','energy_charts','entsoe'],
   strompreise: ['eurostat_prices','eurostat_oil'],
   markt:       ['energy_charts','commodities','fx','entsoe'],
@@ -1033,6 +1209,7 @@ const TAB_FILES = {
   // merged tab: road fuels + heating oil + jet fuel/supply
   kraftstoff:  ['fuel','heating_oil','commodities','eurostat_oil','eia_petroleum','fred_energy'],
   erneuerbare: ['energy_charts','smard'],
+  umwelt:      ['eurostat_env'],
   wetter:      ['weather'],
   fx:          ['fx'],
   futures:     ['energy_futures','commodities'],
@@ -4114,6 +4291,66 @@ const SOURCE_INVENTORY = [
   ['news',            'RSS-Quellen',               'Nachrichtenlage', 'news'],
 ];
 
+// Which blocks the front page shows. Every entry can be switched off; the
+// choice is remembered per browser. Switching one off hides a block here and
+// changes nothing else — the numbers stay in their detail tabs, and nothing
+// is dropped from the data.
+const UEBERBLICK_MODULE = [
+  ['lage',       'Lage',            'Die zusammengefasste Versorgungslage'],
+  ['strom',      'Strom',           'Day-Ahead-Preis und Erneuerbaren-Anteil'],
+  ['gas',        'Gas',             'TTF-Preis und EU-Speicherstand'],
+  ['oel',        'Öl & Kraftstoff', 'Brent, Benzin, Diesel, Heizöl'],
+  ['preise',     'Endkundenpreise', 'Was Haushalte zahlen'],
+  ['emissionen', 'Emissionen',      'Treibhausgase, sobald abgerufen'],
+  ['verlauf',    'Preisverlauf',    'Day-Ahead der letzten 7 Tage'],
+  ['mix',        'Strommix',        'Woher der Strom gerade kommt'],
+  ['quellen',    'Quellen',         'Zustand aller Datenquellen'],
+];
+const MODULE_STORAGE_KEY = 'energydash:ueberblickModule';
+
+function loadModuleChoice() {
+  // Default: everything on. A stored choice may predate a new module, so
+  // unknown ids fall back to visible rather than hiding something the user
+  // never switched off.
+  let stored = {};
+  try { stored = JSON.parse(localStorage.getItem(MODULE_STORAGE_KEY) || '{}'); } catch(e) {}
+  const out = {};
+  UEBERBLICK_MODULE.forEach(([id]) => { out[id] = stored[id] !== false; });
+  return out;
+}
+
+function saveModuleChoice(choice) {
+  try { localStorage.setItem(MODULE_STORAGE_KEY, JSON.stringify(choice)); } catch(e) {}
+}
+
+let moduleChoice = loadModuleChoice();
+
+function toggleModule(id) {
+  moduleChoice[id] = !moduleChoice[id];
+  saveModuleChoice(moduleChoice);
+  renderUeberblick();
+}
+
+function resetModules() {
+  moduleChoice = {};
+  UEBERBLICK_MODULE.forEach(([id]) => { moduleChoice[id] = true; });
+  saveModuleChoice(moduleChoice);
+  renderUeberblick();
+}
+
+function renderModuleBar() {
+  const bar = document.getElementById('ueberblick-module');
+  if (!bar) return;
+  const hidden = UEBERBLICK_MODULE.filter(([id]) => !moduleChoice[id]).length;
+  bar.innerHTML = `<span class="mod-bar-lbl">Anzeigen</span>` +
+    UEBERBLICK_MODULE.map(([id, label, title]) =>
+      `<button class="mod-chip ${moduleChoice[id] ? 'on' : ''}" title="${title}"
+               onclick="toggleModule('${id}')">
+         <span class="mark">${moduleChoice[id] ? '✓' : '＋'}</span>${label}
+       </button>`).join('') +
+    (hidden ? `<button class="mod-reset" onclick="resetModules()">alle wieder einblenden (${hidden} aus)</button>` : '');
+}
+
 function renderUeberblick() {
   const ec = D.energy_charts, sm = D.smard, gs = D.gas_storage;
   const com = D.commodities, ho = D.heating_oil, fu = D.fuel;
@@ -4122,9 +4359,16 @@ function renderUeberblick() {
   const ttf = ttfSeries().points.at(-1)?.v;
   const daNow = ec?.price_de?.price?.filter(v => v != null).at(-1);
   const euPct = gs ? gasNode(gs,'eu')?.data?.filter(x => x.fill_pct != null).at(-1)?.fill_pct : null;
+  renderModuleBar();
+
+  // Blocks marked with data-module follow the switches above.
+  document.querySelectorAll('#panel-ueberblick [data-module]').forEach(el => {
+    el.style.display = moduleChoice[el.dataset.module] === false ? 'none' : '';
+  });
+
   const cls = classifyLage(ttf, euPct, daNow);
   const hero = document.getElementById('ueberblick-hero-content');
-  if (hero) {
+  if (hero && moduleChoice.lage) {
     hero.innerHTML = `
       <div class="lage-hero-title">${cls.headline}</div>
       <div class="lage-hero-sub">${cls.sub}
@@ -4138,45 +4382,60 @@ function renderUeberblick() {
 
   // ── one figure per domain ──
   const kp = [];
-  const push = (label, val, unit, color, delta) => {
-    if (val == null) return;
+  const push = (mod, label, val, unit, color, delta) => {
+    if (val == null || moduleChoice[mod] === false) return;
     kp.push({label, val, unit, color, delta: delta || ''});
   };
 
   if (daNow != null) {
     const prices = (ec.price_de.price || []).filter(v => v != null);
     const avg = prices.reduce((a,b)=>a+b,0) / prices.length;
-    push('Strom Day-Ahead', fmtN(daNow,0), 'EUR/MWh · jetzt', '#0e6cb6',
+    push('strom', 'Strom Day-Ahead', fmtN(daNow,0), 'EUR/MWh · jetzt', '#0e6cb6',
          `Ø ${fmtN(avg,0)} über 7 Tage`);
   }
-  if (ttf != null) push('Erdgas TTF', fmtN(ttf,1), 'EUR/MWh', '#f0883e');
-  if (euPct != null) push('EU-Gasspeicher', fmtN(euPct,1)+'%', 'AGSI+', euPct>=70?'#1f9d55':euPct>=50?'#c98a04':'#c0392b');
+  if (ttf != null) push('gas', 'Erdgas TTF', fmtN(ttf,1), 'EUR/MWh', '#f0883e');
+  if (euPct != null) push('gas', 'EU-Gasspeicher', fmtN(euPct,1)+'%', 'AGSI+', euPct>=70?'#1f9d55':euPct>=50?'#c98a04':'#c0392b');
 
   const brent = com?.brent_crude?.series?.at(-1)?.v;
-  if (brent != null) push('Brent Rohöl', fmtN(brent,1), 'USD/Barrel', '#dc6803');
+  if (brent != null) push('oel', 'Brent Rohöl', fmtN(brent,1), 'USD/Barrel', '#dc6803');
 
   const e5 = fu?.cities?._national?.e5_avg ?? fu?.cities?.Berlin?.e5_avg;
   const diesel = fu?.cities?._national?.diesel_avg ?? fu?.cities?.Berlin?.diesel_avg;
-  if (e5 != null) push('Super E5', fmtN(e5,3), 'EUR/Liter · Bundesschnitt', '#1f9d55');
-  if (diesel != null) push('Diesel', fmtN(diesel,3), 'EUR/Liter · Bundesschnitt', '#7e57c2');
+  if (e5 != null) push('oel', 'Super E5', fmtN(e5,3), 'EUR/Liter · Bundesschnitt', '#1f9d55');
+  if (diesel != null) push('oel', 'Diesel', fmtN(diesel,3), 'EUR/Liter · Bundesschnitt', '#7e57c2');
 
   const heat = ho?.reference_price_eur_l;
-  if (heat != null) push('Heizöl', fmtN(heat,3),
+  if (heat != null) push('oel', 'Heizöl', fmtN(heat,3),
     `EUR/Liter · ${ho.price_source === 'destatis' ? 'Destatis' : 'TECSON'}`, '#d97706');
 
   const hh = D.eurostat_prices?.electricity_household?.series_per_country?.DE;
-  if (hh?.length) push('Strom Haushalt', fmtN(hh.at(-1).v,4),
+  if (hh?.length) push('preise', 'Strom Haushalt', fmtN(hh.at(-1).v,4),
     `EUR/kWh · ${fmtHalfYear(hh.at(-1).period)}`, '#c0392b');
 
   const ren = ec?.ren_share_de?.ren_share?.filter(v => v != null);
-  if (ren?.length) push('EE-Anteil', fmtN(ren.at(-1),0)+'%', 'Prognose Energy-Charts', '#1f9d55');
+  if (ren?.length) push('strom', 'EE-Anteil', fmtN(ren.at(-1),0)+'%', 'Prognose Energy-Charts', '#1f9d55');
 
+  // Emissions land here once the daily run has produced them.
+  const thg = D.eurostat_env?.ghg_total?.series_per_country?.DE;
+  if (thg?.length) {
+    const base = thg.find(p => p.period === '1990');
+    const d = base ? (thg.at(-1).v - base.v) / base.v * 100 : null;
+    push('emissionen', 'Treibhausgase DE', fmtN(thg.at(-1).v/1000,0),
+         `Mio. t CO₂-Äq. · ${thg.at(-1).period}`, '#c0392b',
+         d != null ? `${d>=0?'▲ +':'▼ '}${fmtN(Math.abs(d),1)}% ggü. 1990` : '');
+  }
+
+  const anyKpiModule = ['strom','gas','oel','preise','emissionen']
+    .some(m => moduleChoice[m] !== false);
   document.getElementById('kpi-ueberblick').innerHTML = kp.length
     ? kpis(kp)
-    : '<div class="nodata">Noch keine Daten geladen</div>';
+    : `<div class="nodata">${anyKpiModule
+        ? 'Noch keine Daten geladen'
+        : 'Alle Kennzahlen ausgeblendet — oben wieder einschalten'}</div>`;
 
   // ── day-ahead, last 7 days ──
-  if (ec?.price_de?.unix_seconds?.length) {
+  if (moduleChoice.verlauf === false) { /* hidden */ }
+  else if (ec?.price_de?.unix_seconds?.length) {
     const pts = ec.price_de.unix_seconds
       .map((t,i) => ({ts:t, v:ec.price_de.price[i]}))
       .filter(x => x.v != null);
@@ -4192,7 +4451,7 @@ function renderUeberblick() {
 
   // ── current generation mix, as a share table ──
   const mixEl = document.getElementById('ueberblick-mix');
-  if (mixEl) {
+  if (mixEl && moduleChoice.mix !== false) {
     const series = sm?.series || {};
     const latest = {};
     Object.keys(LN).forEach(k => {
@@ -4220,7 +4479,7 @@ function renderUeberblick() {
     }
   }
 
-  renderQuellen();
+  if (moduleChoice.quellen !== false) renderQuellen();
 }
 
 // The source inventory: what feeds this dashboard, how fresh it is, and
@@ -4290,12 +4549,204 @@ function gotoTab(tab) {
 }
 
 // ══════════════════════════════════════════════
+// EMISSIONEN & WÄRME
+// ══════════════════════════════════════════════
+// Annual Eurostat series. Emissions lag about two years because the
+// inventory is submitted in arrears, heat about one — so every chart here
+// names its last reporting year rather than implying it is current.
+
+const UMWELT_LAENDER = {
+  DE:'Deutschland', EU27_2020:'EU27', FR:'Frankreich', IT:'Italien',
+  ES:'Spanien', NL:'Niederlande', PL:'Polen', AT:'Österreich',
+  SE:'Schweden', DK:'Dänemark', CZ:'Tschechien', FI:'Finnland',
+  PT:'Portugal', GR:'Griechenland', IE:'Irland', BE:'Belgien', NO:'Norwegen',
+};
+
+const THG_SEKTOREN = [
+  ['ghg_energy',     'Energie',    '#c0392b'],
+  ['ghg_transport',  'Verkehr',    '#d97706'],
+  ['ghg_industry',   'Industrie',  '#7e57c2'],
+  ['ghg_households', 'Haushalte',  '#0e6cb6'],
+];
+
+function envSeries(key, geo) {
+  const node = D.eurostat_env?.[key];
+  if (!node) return {pts: [], info: null};
+  return {pts: uniqPeriod(node.series_per_country?.[geo] || []), info: node};
+}
+
+function renderUmwelt() {
+  const env = D.eurostat_env;
+  const geo = document.getElementById('umwelt-geo')?.value || 'DE';
+  const ids = ['chart-thg-sektoren','chart-thg-anteile','chart-thg-laender',
+               'chart-thg-gase','chart-waerme'];
+
+  if (!env) {
+    ids.forEach(id => noData(id, 'Emissions- und Wärmedaten noch nicht abgerufen',
+      'Die Quelle <code>eurostat_env</code> läuft einmal täglich. ' +
+      'Nach dem nächsten GitHub-Actions-Lauf ist sie hier.'));
+    document.getElementById('kpi-umwelt').innerHTML = '';
+    return;
+  }
+
+  const minYear = periodCutoff('umwelt') || '0';
+  const inRange = p => String(p.period) >= minYear;
+
+  // ── KPIs ──
+  const kp = [];
+  const total = envSeries('ghg_total', geo).pts;
+  if (total.length) {
+    const last = total.at(-1);
+    // Against 1990, the reference year every EU climate target is set from.
+    const base = total.find(p => p.period === '1990');
+    const delta = base ? ((last.v - base.v) / base.v * 100) : null;
+    kp.push({label:'Treibhausgase gesamt', val:fmtN(last.v/1000,1),
+             unit:`Mio. t CO₂-Äq. · ${last.period}`, color:'#c0392b',
+             delta: delta != null
+               ? `${delta >= 0 ? '▲ +' : '▼ '}${fmtN(Math.abs(delta),1)}% ggü. 1990` : ''});
+  }
+  THG_SEKTOREN.forEach(([key, label, color]) => {
+    const pts = envSeries(key, geo).pts;
+    if (!pts.length) return;
+    const last = pts.at(-1);
+    const share = total.length
+      ? total.find(p => p.period === last.period) : null;
+    kp.push({label, val:fmtN(last.v/1000,1), unit:`Mio. t · ${last.period}`, color,
+             delta: share ? `${fmtN(last.v / share.v * 100, 1)}% des Gesamtausstoßes` : ''});
+  });
+  const heatProd = envSeries('heat_production', geo).pts;
+  if (heatProd.length) kp.push({label:'Fernwärme-Erzeugung',
+    val:fmtN(heatProd.at(-1).v/1000,1),
+    unit:`TWh · ${heatProd.at(-1).period}`, color:'#f0883e'});
+  document.getElementById('kpi-umwelt').innerHTML = kp.length
+    ? kpis(kp) : '<div class="nodata">Keine Werte für dieses Land</div>';
+
+  // ── sectors over time, stacked ──
+  const sectors = THG_SEKTOREN
+    .map(([key, label, color]) => ({label, color, pts: envSeries(key, geo).pts.filter(inRange)}))
+    .filter(x => x.pts.length);
+  if (sectors.length) {
+    const periods = Array.from(new Set(sectors.flatMap(x => x.pts.map(p => p.period)))).sort();
+    mkChart('chart-thg-sektoren','bar', periods, sectors.map(x => {
+      const m = {}; x.pts.forEach(p => m[p.period] = p.v);
+      return {label:x.label, data:periods.map(p => m[p] ?? null),
+              backgroundColor:x.color + 'cc', borderWidth:0, stack:'thg'};
+    }), {
+      plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}},
+      scales:{x:{stacked:true, ticks:{maxTicksLimit:12}},
+              y:{stacked:true, title:{display:true,text:'Tsd. t CO₂-Äquivalent',color:'#8c98a8',font:{size:10}}}},
+    });
+    stamp('chart-thg-sektoren','eurostat_env',
+          `${UMWELT_LAENDER[geo]||geo} · ${periods[0]}–${periods.at(-1)}`);
+  } else {
+    noData('chart-thg-sektoren', `Keine Sektordaten für ${UMWELT_LAENDER[geo]||geo}`,
+           env.ghg_energy?.unavailable_reason
+             ? `<code>${env.ghg_energy.unavailable_reason}</code>`
+             : 'Eurostat liefert für dieses Land keine Sektoraufteilung.');
+  }
+
+  // ── share of the latest year ──
+  const latestShares = THG_SEKTOREN
+    .map(([key, label, color]) => {
+      const pts = envSeries(key, geo).pts;
+      return pts.length ? {label, color, v: pts.at(-1).v, period: pts.at(-1).period} : null;
+    }).filter(Boolean);
+  if (latestShares.length) {
+    mkChart('chart-thg-anteile','doughnut',
+      latestShares.map(x => x.label),
+      [{data: latestShares.map(x => x.v),
+        backgroundColor: latestShares.map(x => x.color + 'dd'),
+        borderColor:'#fff', borderWidth:2}],
+      {plugins:{legend:{display:true, position:'bottom',
+                        labels:{color:'#56657a',boxWidth:8,font:{size:10}}}},
+       scales:{x:{display:false}, y:{display:false}}});
+    stamp('chart-thg-anteile','eurostat_env',
+          `${UMWELT_LAENDER[geo]||geo} · Stand ${latestShares[0].period}`);
+  } else {
+    noData('chart-thg-anteile','Keine Sektoranteile', '');
+  }
+
+  // ── country comparison ──
+  const comparison = Object.keys(UMWELT_LAENDER)
+    .filter(c => c !== 'EU27_2020')
+    .map(c => {
+      const pts = envSeries('ghg_total', c).pts;
+      return pts.length ? {geo:c, v: pts.at(-1).v, period: pts.at(-1).period} : null;
+    }).filter(Boolean).sort((a,b) => b.v - a.v);
+  if (comparison.length) {
+    mkChart('chart-thg-laender','bar',
+      comparison.map(x => UMWELT_LAENDER[x.geo] || x.geo),
+      [{label:'Tsd. t CO₂-Äq.', data:comparison.map(x => x.v),
+        backgroundColor:comparison.map(x => x.geo === geo ? 'rgba(192,57,43,0.85)' : 'rgba(14,108,182,0.55)'),
+        borderRadius:2}],
+      {indexAxis:'y', scales:{x:{title:{display:true,text:'Tsd. t CO₂-Äquivalent',color:'#8c98a8',font:{size:10}}}}});
+    stamp('chart-thg-laender','eurostat_env',
+          `Stand ${comparison[0].period} · ${UMWELT_LAENDER[geo]||geo} hervorgehoben`);
+  } else {
+    noData('chart-thg-laender','Kein Ländervergleich möglich','');
+  }
+
+  // ── individual gases ──
+  const gases = [
+    ['co2_total','CO₂','#56657a'], ['ch4_total','Methan','#1f9d55'],
+    ['n2o_total','Lachgas','#7e57c2'],
+  ].map(([key,label,color]) => ({label, color, pts: envSeries(key, geo).pts.filter(inRange)}))
+   .filter(x => x.pts.length);
+  if (gases.length) {
+    const periods = Array.from(new Set(gases.flatMap(x => x.pts.map(p => p.period)))).sort();
+    mkChart('chart-thg-gase','line', periods, gases.map(x => {
+      const m = {}; x.pts.forEach(p => m[p.period] = p.v);
+      return {label:x.label, data:periods.map(p => m[p] ?? null),
+              borderColor:x.color, backgroundColor:'transparent',
+              borderWidth:2, pointRadius:0, spanGaps:true, tension:0.2};
+    }), {plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}},
+         scales:{x:{ticks:{maxTicksLimit:10}},
+                 y:{title:{display:true,text:'Tausend Tonnen',color:'#8c98a8',font:{size:10}}}}});
+    stamp('chart-thg-gase','eurostat_env',
+          'CO₂ in Tonnen, Methan und Lachgas in CO₂-Äquivalent — die Skalen sind nicht vergleichbar');
+  } else {
+    noData('chart-thg-gase','Keine Einzelgase verfügbar','');
+  }
+
+  // ── district heat ──
+  const heat = [
+    ['heat_production','Erzeugung','#f0883e','line'],
+    ['heat_consumption','Endverbrauch','#0e6cb6','line'],
+    ['heat_households','davon Haushalte','#1f9d55','bar'],
+    ['heat_industry','davon Industrie','#7e57c2','bar'],
+  ].map(([key,label,color,kind]) => ({label, color, kind,
+         info: D.eurostat_env?.[key],
+         pts: envSeries(key, geo).pts.filter(inRange)}))
+   .filter(x => x.pts.length);
+  if (heat.length) {
+    const periods = Array.from(new Set(heat.flatMap(x => x.pts.map(p => p.period)))).sort();
+    mkChart('chart-waerme','bar', periods, heat.map(x => {
+      const m = {}; x.pts.forEach(p => m[p.period] = p.v);
+      return {label:x.label, type:x.kind, data:periods.map(p => m[p] ?? null),
+              borderColor:x.color,
+              backgroundColor: x.kind === 'bar' ? x.color + '99' : 'transparent',
+              borderWidth: x.kind === 'bar' ? 0 : 2,
+              pointRadius:0, spanGaps:true, tension:0.2,
+              order: x.kind === 'bar' ? 2 : 1};
+    }), {plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}},
+         scales:{x:{ticks:{maxTicksLimit:12}},
+                 y:{title:{display:true,text:heat[0].info?.unit || 'GWh',color:'#8c98a8',font:{size:10}}}}});
+    stamp('chart-waerme','eurostat_env', `${UMWELT_LAENDER[geo]||geo} · Fernwärme`);
+  } else {
+    noData('chart-waerme', `Keine Fernwärmedaten für ${UMWELT_LAENDER[geo]||geo}`,
+           env.heat_production?.unavailable_reason
+             ? `<code>${env.heat_production.unavailable_reason}</code>`
+             : 'Eurostat führt für dieses Land keine abgeleitete Wärme.');
+  }
+}
+
+// ══════════════════════════════════════════════
 // TABS
 // ══════════════════════════════════════════════
 const RENDERS={
   ueberblick:renderUeberblick, strom:renderStrom, strompreise:renderStrompreise, markt:renderMarkt, gas:renderGas,
   rohstoffe:renderRohstoffe, kraftstoff:renderKraftstoffMerged,
-  erneuerbare:renderErneuerbare,
+  erneuerbare:renderErneuerbare, umwelt:renderUmwelt,
   wetter:renderWetter, fx:renderFx,
   futures:renderFutures, lage:renderLage, news:renderNews,
 };
