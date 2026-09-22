@@ -49,26 +49,51 @@ POLLUTANTS: Dict[str, Tuple[Tuple[str, ...], Tuple[str, ...], Tuple[str, ...]]] 
     'n2o':       (('N2O', 'N2O_CO2E'), (r'nitrous oxide', r'\bN2O\b'), ()),
 }
 
+# CRF is a nested classification: CRF1 "Energy" CONTAINS CRF1A3 transport and
+# CRF1A4B residential. Charting those four together double-counted — the
+# first live run gave Germany 83.6% energy + 22.3% transport + 7.4% industry
+# + 12.0% households = 125% of its own total.
+#
+# The `stack_*` intents below are the disjoint top-level split that actually
+# sums to the total; the overlapping ones are kept because they are the
+# figures people quote, and are labelled as subsets where they are shown.
 SECTORS: Dict[str, Tuple[Tuple[str, ...], Tuple[str, ...], Tuple[str, ...]]] = {
-    'total':      (('TOTX4_MEMONIA', 'TOTXMEMONIA', 'TOTX4_MEMO'),
-                   (r'total.*excluding.*lulucf.*memo', r'total.*excluding lulucf',
-                    r'^total'),
+    'total':      (('TOTX4_MEMO', 'TOTX4_MEMONIA', 'TOTXMEMO'),
+                   (r'total.*excluding lulucf', r'^total'),
                    (r'including',)),
-    'energy':     (('CRF1',), (r'^energy$', r'^fuel combustion', r'^energy\b'), ()),
-    'transport':  (('CRF1A3',), (r'transport',), (r'international', r'aviation only')),
-    'industry':   (('CRF2', 'CRF1A2'),
-                   (r'industrial processes', r'manufacturing industries'), ()),
-    'households': (('CRF1A4B', 'CRF1A4'),
-                   (r'residential', r'other sectors.*residential'), ()),
+    # Overlapping aggregates — useful headline numbers, never stacked.
+    'energy':     (('CRF1',), (r'^energy$',), (r'industries', r'combustion')),
+    'households': (('CRF1A4B',), (r'^residential$', r'residential'), ()),
+    # Disjoint split. CRF1A1+1A2+1A3+1A4+1B are the parts of Energy;
+    # CRF2, CRF3 and CRF5 sit beside it.
+    'stack_energy_ind': (('CRF1A1',),
+                         (r'fuel combustion in energy industries',), ()),
+    'stack_manufact':   (('CRF1A2',),
+                         (r'fuel combustion in manufacturing industries',), ()),
+    'stack_transport':  (('CRF1A3',), (r'^transport$', r'\btransport\b'),
+                         (r'international', r'aviation')),
+    'stack_other':      (('CRF1A4',), (r'other sectors',), (r'residential',)),
+    'stack_fugitive':   (('CRF1B',), (r'fugitive emissions',), ()),
+    'stack_processes':  (('CRF2',), (r'industrial processes',), ()),
+    'stack_agri':       (('CRF3',), (r'^agriculture$', r'\bagriculture\b'), ()),
+    'stack_waste':      (('CRF5',), (r'^waste$', r'\bwaste\b'), ()),
 }
 
 # (output key, pollutant intent, sector intent, description)
 EMISSION_SERIES: List[Tuple[str, str, str, str]] = [
     ('ghg_total',       'ghg_total', 'total',      'Treibhausgase gesamt (ohne LULUCF)'),
-    ('ghg_energy',      'ghg_total', 'energy',     'Treibhausgase aus Energie'),
-    ('ghg_transport',   'ghg_total', 'transport',  'Treibhausgase aus Verkehr'),
-    ('ghg_industry',    'ghg_total', 'industry',   'Treibhausgase aus Industrie'),
-    ('ghg_households',  'ghg_total', 'households', 'Treibhausgase aus Haushalten'),
+    # Aggregates that overlap the split below — headline figures only.
+    ('ghg_energy',      'ghg_total', 'energy',     'Treibhausgase aus Energie (enthält Verkehr und Haushalte)'),
+    ('ghg_households',  'ghg_total', 'households', 'Treibhausgase aus Haushalten (Teil von Energie)'),
+    # The disjoint split that sums to the total.
+    ('ghg_s_energy_ind','ghg_total', 'stack_energy_ind', 'Energiewirtschaft'),
+    ('ghg_s_manufact',  'ghg_total', 'stack_manufact',   'Verarbeitendes Gewerbe'),
+    ('ghg_s_transport', 'ghg_total', 'stack_transport',  'Verkehr'),
+    ('ghg_s_other',     'ghg_total', 'stack_other',      'Gebäude und übrige Sektoren'),
+    ('ghg_s_fugitive',  'ghg_total', 'stack_fugitive',   'Diffuse Emissionen'),
+    ('ghg_s_processes', 'ghg_total', 'stack_processes',  'Industrieprozesse'),
+    ('ghg_s_agri',      'ghg_total', 'stack_agri',       'Landwirtschaft'),
+    ('ghg_s_waste',     'ghg_total', 'stack_waste',      'Abfallwirtschaft'),
     ('co2_total',       'co2',       'total',      'CO₂ gesamt'),
     ('ch4_total',       'ch4',       'total',      'Methan gesamt'),
     ('n2o_total',       'n2o',       'total',      'Lachgas gesamt'),
@@ -200,7 +225,8 @@ def fetch() -> dict:
     # straight out of what we fetched.
     shares: Dict[str, List[dict]] = {}
     total_by_geo = out.get('ghg_total', {}).get('series_per_country', {})
-    for sector_key in ('ghg_energy', 'ghg_transport', 'ghg_industry', 'ghg_households'):
+    for sector_key in [k for k, *_ in
+                       [(e[0],) for e in EMISSION_SERIES] if k.startswith('ghg_s_')]:
         node = out.get(sector_key, {}).get('series_per_country', {})
         for geo, series in node.items():
             totals = {p['period']: p['v'] for p in total_by_geo.get(geo, [])}
@@ -209,13 +235,13 @@ def fetch() -> dict:
                    for p in series
                    if totals.get(p['period']) not in (None, 0)]
             if pts:
-                shares.setdefault(sector_key.replace('ghg_', ''), {})[geo] = pts
+                shares.setdefault(sector_key.replace('ghg_s_', ''), {})[geo] = pts
     out['ghg_sector_share_pct'] = {
         'description': 'Anteil der Sektoren an den Gesamtemissionen',
         'unit': '%',
         'by_sector': shares,
-        'derived_from': ['ghg_total', 'ghg_energy', 'ghg_transport',
-                         'ghg_industry', 'ghg_households'],
+        'derived_from': ['ghg_total'] + [e[0] for e in EMISSION_SERIES
+                                         if e[0].startswith('ghg_s_')],
     }
 
     _record_history(out)
@@ -240,7 +266,7 @@ def fetch() -> dict:
 def _record_history(out: Dict[str, dict]) -> None:
     """German headline figures, so a later Eurostat revision stays visible."""
     record: Dict[str, float] = {}
-    for key in ('ghg_total', 'ghg_energy', 'ghg_transport', 'heat_production'):
+    for key in ('ghg_total', 'ghg_energy', 'ghg_s_transport', 'heat_production'):
         series = out.get(key, {}).get('series_per_country', {}).get('DE') or []
         if series:
             record[f'de_{key}'] = series[-1]['v']
