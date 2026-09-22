@@ -2,7 +2,11 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#1f3a5f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <title>Energie Dashboard DE/EU</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
@@ -173,6 +177,108 @@ main{padding:18px 20px 70px;max-width:1600px;margin:0 auto}
 .city-price{font-size:16px;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums;letter-spacing:-0.01em}
 .city-label{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
 
+/* Module switches on the front page. Toggling one hides a block; nothing is
+   discarded, and the detail tabs are untouched either way. */
+.mod-bar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:14px;
+         padding:10px 12px;background:var(--card);border:1px solid var(--border);
+         border-radius:6px;box-shadow:var(--shadow)}
+.mod-bar-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;
+             letter-spacing:.06em;font-weight:700;margin-right:2px}
+.mod-chip{display:inline-flex;align-items:center;gap:5px;background:var(--bg-alt);
+          border:1px solid var(--border);color:var(--text2);border-radius:99px;
+          padding:6px 12px;font-size:12px;font-family:inherit;cursor:pointer;
+          transition:all .12s;min-height:32px}
+.mod-chip:hover{border-color:var(--border-strong);color:var(--text)}
+.mod-chip.on{background:var(--accent-bg);border-color:var(--accent);color:var(--accent);font-weight:600}
+.mod-chip .mark{font-size:11px;line-height:1}
+.mod-reset{margin-left:auto;background:none;border:none;color:var(--text3);
+           font-size:11px;cursor:pointer;font-family:inherit;text-decoration:underline;
+           padding:6px}
+.mod-reset:hover{color:var(--accent)}
+
+/* ══════════════════════════════════════════════
+   PHONE LAYOUT
+   ══════════════════════════════════════════════
+   Every bug report in this project arrived as an iPhone screenshot, and the
+   layout was built for a desktop grid: 12 columns, a fixed status bar
+   overlapping the last card, tap targets under 30px, and charts sized for a
+   wide viewport. iOS also needs the safe-area insets or content slides under
+   the notch and the home indicator. */
+
+/* The status bar is fixed, so the page needs room for it plus the home
+   indicator — otherwise the last card is permanently half-covered, which is
+   visible in every screenshot taken on a phone. */
+main{padding-bottom:calc(70px + env(safe-area-inset-bottom))}
+.statusbar{padding-bottom:calc(6px + env(safe-area-inset-bottom));
+           padding-left:calc(20px + env(safe-area-inset-left));
+           padding-right:calc(20px + env(safe-area-inset-right))}
+header{padding-left:calc(20px + env(safe-area-inset-left));
+       padding-right:calc(20px + env(safe-area-inset-right))}
+
+/* Momentum scrolling for the tab strip on both platforms, and a hint that
+   it scrolls rather than a hard cut at the edge. */
+.tabs{-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity;
+      overscroll-behavior-x:contain}
+.tab{scroll-snap-align:start}
+
+@media (max-width:760px){
+  body{font-size:14px}                 /* 13px is below comfortable on a phone */
+
+  header{height:auto;min-height:52px;padding-top:6px;padding-bottom:6px;
+         flex-wrap:wrap;gap:6px 10px;row-gap:4px}
+  .logo{font-size:14px}
+  .hdr-right{gap:10px;font-size:11px;flex-wrap:wrap}
+
+  /* 44px is the minimum comfortable tap target on both iOS and Android. */
+  .tab{padding:13px 14px;font-size:14px;min-height:46px}
+  .btn{padding:9px 14px;min-height:40px}
+  .range-opt{min-height:38px;padding:8px 12px;font-size:12px}
+  .fuel-tab{min-height:40px;padding:9px 14px;font-size:13px}
+  .mod-chip{min-height:40px;padding:9px 14px;font-size:13px}
+  .mod-bar{padding:10px}
+  .mod-reset{margin-left:0;width:100%;text-align:left}
+  select{min-height:40px;font-size:14px;max-width:100%}
+
+  main{padding:12px 14px calc(72px + env(safe-area-inset-bottom));
+       padding-left:calc(14px + env(safe-area-inset-left));
+       padding-right:calc(14px + env(safe-area-inset-right))}
+
+  /* One column. The 12-column grid put two charts side by side at 180px
+     wide each, which is unreadable. */
+  .grid{grid-template-columns:1fr;gap:10px;margin-bottom:10px}
+  .g12,.g8,.g7,.g6,.g5,.g4,.g3{grid-column:span 1}
+  .card{padding:12px}
+  .card-hdr{flex-direction:column;align-items:stretch;gap:6px}
+  .card-hdr select{width:100%}
+
+  /* Charts get taller relative to width so a time series stays legible in
+     portrait; the inline height attributes are overridden. */
+  .chart-wrap{height:230px!important}
+  .card.g12 .chart-wrap{height:250px!important}
+
+  .kpis{grid-template-columns:repeat(2,1fr);gap:8px}
+  .kpi{padding:10px}
+  .kpi-val{font-size:20px}
+
+  .city-grid{grid-template-columns:repeat(2,1fr)}
+  .lage-hero{padding:14px}
+  .lage-hero-title{font-size:16px}
+}
+
+@media (max-width:420px){
+  .kpis{grid-template-columns:1fr}     /* two columns get too cramped */
+  .chart-wrap{height:210px!important}
+  .tab{padding:12px 11px;font-size:13px}
+}
+
+/* Coarse pointers of any width: hover styling misfires on touch, where
+   :hover sticks after a tap until something else is tapped. */
+@media (hover:none){
+  .tab:hover{color:var(--text2)}
+  .tbl tr:hover td{background:transparent}
+  .btn:hover{background:rgba(255,255,255,0.12)}
+}
+
 .news-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px}
 .news-card{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:14px;display:flex;flex-direction:column;gap:6px;box-shadow:var(--shadow);transition:box-shadow .15s}
 .news-card:hover{box-shadow:var(--shadow-md)}
@@ -247,14 +353,15 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
      panel carries one headline figure per domain and the health of every
      source feeding them. -->
 <div class="panel active" id="panel-ueberblick">
-  <div class="lage-hero" id="ueberblick-hero">
+  <div class="mod-bar" id="ueberblick-module"></div>
+  <div class="lage-hero" id="ueberblick-hero" data-module="lage">
     <div id="ueberblick-hero-content">
       <div class="loading"><span class="spin"></span>Lage wird ermittelt…</div>
     </div>
   </div>
   <div class="kpis" id="kpi-ueberblick"></div>
   <div class="grid">
-    <div class="card g7" data-src="energy_charts">
+    <div class="card g7" data-src="energy_charts" data-module="verlauf">
       <div class="card-hdr">
         <div>
           <div class="card-title">Strompreis Day-Ahead · 7 Tage</div>
@@ -263,7 +370,7 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
       </div>
       <div class="chart-wrap" style="height:210px"><canvas id="chart-ueberblick-strom"></canvas></div>
     </div>
-    <div class="card g5" data-src="smard">
+    <div class="card g5" data-src="smard" data-module="mix">
       <div class="card-hdr">
         <div>
           <div class="card-title">Woher der Strom gerade kommt</div>
@@ -272,7 +379,7 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
       </div>
       <div id="ueberblick-mix"><div class="loading"><span class="spin"></span></div></div>
     </div>
-    <div class="card g12">
+    <div class="card g12" data-module="quellen">
       <div class="card-hdr">
         <div>
           <div class="card-title">Quellen</div>
@@ -1092,7 +1199,8 @@ const TAB_FILES = {
   // The front page pulls a headline number from most sources, so it loads
   // broadly. Everything is optional — a missing file costs one tile.
   ueberblick:  ['smard','energy_charts','gas_storage','commodities','fuel',
-                'heating_oil','eurostat_prices','destatis_vpi','entsoe','_state'],
+                'heating_oil','eurostat_prices','destatis_vpi','entsoe',
+                'eurostat_env','_state'],
   strom:       ['smard','energy_charts','entsoe'],
   strompreise: ['eurostat_prices','eurostat_oil'],
   markt:       ['energy_charts','commodities','fx','entsoe'],
@@ -4183,6 +4291,66 @@ const SOURCE_INVENTORY = [
   ['news',            'RSS-Quellen',               'Nachrichtenlage', 'news'],
 ];
 
+// Which blocks the front page shows. Every entry can be switched off; the
+// choice is remembered per browser. Switching one off hides a block here and
+// changes nothing else — the numbers stay in their detail tabs, and nothing
+// is dropped from the data.
+const UEBERBLICK_MODULE = [
+  ['lage',       'Lage',            'Die zusammengefasste Versorgungslage'],
+  ['strom',      'Strom',           'Day-Ahead-Preis und Erneuerbaren-Anteil'],
+  ['gas',        'Gas',             'TTF-Preis und EU-Speicherstand'],
+  ['oel',        'Öl & Kraftstoff', 'Brent, Benzin, Diesel, Heizöl'],
+  ['preise',     'Endkundenpreise', 'Was Haushalte zahlen'],
+  ['emissionen', 'Emissionen',      'Treibhausgase, sobald abgerufen'],
+  ['verlauf',    'Preisverlauf',    'Day-Ahead der letzten 7 Tage'],
+  ['mix',        'Strommix',        'Woher der Strom gerade kommt'],
+  ['quellen',    'Quellen',         'Zustand aller Datenquellen'],
+];
+const MODULE_STORAGE_KEY = 'energydash:ueberblickModule';
+
+function loadModuleChoice() {
+  // Default: everything on. A stored choice may predate a new module, so
+  // unknown ids fall back to visible rather than hiding something the user
+  // never switched off.
+  let stored = {};
+  try { stored = JSON.parse(localStorage.getItem(MODULE_STORAGE_KEY) || '{}'); } catch(e) {}
+  const out = {};
+  UEBERBLICK_MODULE.forEach(([id]) => { out[id] = stored[id] !== false; });
+  return out;
+}
+
+function saveModuleChoice(choice) {
+  try { localStorage.setItem(MODULE_STORAGE_KEY, JSON.stringify(choice)); } catch(e) {}
+}
+
+let moduleChoice = loadModuleChoice();
+
+function toggleModule(id) {
+  moduleChoice[id] = !moduleChoice[id];
+  saveModuleChoice(moduleChoice);
+  renderUeberblick();
+}
+
+function resetModules() {
+  moduleChoice = {};
+  UEBERBLICK_MODULE.forEach(([id]) => { moduleChoice[id] = true; });
+  saveModuleChoice(moduleChoice);
+  renderUeberblick();
+}
+
+function renderModuleBar() {
+  const bar = document.getElementById('ueberblick-module');
+  if (!bar) return;
+  const hidden = UEBERBLICK_MODULE.filter(([id]) => !moduleChoice[id]).length;
+  bar.innerHTML = `<span class="mod-bar-lbl">Anzeigen</span>` +
+    UEBERBLICK_MODULE.map(([id, label, title]) =>
+      `<button class="mod-chip ${moduleChoice[id] ? 'on' : ''}" title="${title}"
+               onclick="toggleModule('${id}')">
+         <span class="mark">${moduleChoice[id] ? '✓' : '＋'}</span>${label}
+       </button>`).join('') +
+    (hidden ? `<button class="mod-reset" onclick="resetModules()">alle wieder einblenden (${hidden} aus)</button>` : '');
+}
+
 function renderUeberblick() {
   const ec = D.energy_charts, sm = D.smard, gs = D.gas_storage;
   const com = D.commodities, ho = D.heating_oil, fu = D.fuel;
@@ -4191,9 +4359,16 @@ function renderUeberblick() {
   const ttf = ttfSeries().points.at(-1)?.v;
   const daNow = ec?.price_de?.price?.filter(v => v != null).at(-1);
   const euPct = gs ? gasNode(gs,'eu')?.data?.filter(x => x.fill_pct != null).at(-1)?.fill_pct : null;
+  renderModuleBar();
+
+  // Blocks marked with data-module follow the switches above.
+  document.querySelectorAll('#panel-ueberblick [data-module]').forEach(el => {
+    el.style.display = moduleChoice[el.dataset.module] === false ? 'none' : '';
+  });
+
   const cls = classifyLage(ttf, euPct, daNow);
   const hero = document.getElementById('ueberblick-hero-content');
-  if (hero) {
+  if (hero && moduleChoice.lage) {
     hero.innerHTML = `
       <div class="lage-hero-title">${cls.headline}</div>
       <div class="lage-hero-sub">${cls.sub}
@@ -4207,45 +4382,60 @@ function renderUeberblick() {
 
   // ── one figure per domain ──
   const kp = [];
-  const push = (label, val, unit, color, delta) => {
-    if (val == null) return;
+  const push = (mod, label, val, unit, color, delta) => {
+    if (val == null || moduleChoice[mod] === false) return;
     kp.push({label, val, unit, color, delta: delta || ''});
   };
 
   if (daNow != null) {
     const prices = (ec.price_de.price || []).filter(v => v != null);
     const avg = prices.reduce((a,b)=>a+b,0) / prices.length;
-    push('Strom Day-Ahead', fmtN(daNow,0), 'EUR/MWh · jetzt', '#0e6cb6',
+    push('strom', 'Strom Day-Ahead', fmtN(daNow,0), 'EUR/MWh · jetzt', '#0e6cb6',
          `Ø ${fmtN(avg,0)} über 7 Tage`);
   }
-  if (ttf != null) push('Erdgas TTF', fmtN(ttf,1), 'EUR/MWh', '#f0883e');
-  if (euPct != null) push('EU-Gasspeicher', fmtN(euPct,1)+'%', 'AGSI+', euPct>=70?'#1f9d55':euPct>=50?'#c98a04':'#c0392b');
+  if (ttf != null) push('gas', 'Erdgas TTF', fmtN(ttf,1), 'EUR/MWh', '#f0883e');
+  if (euPct != null) push('gas', 'EU-Gasspeicher', fmtN(euPct,1)+'%', 'AGSI+', euPct>=70?'#1f9d55':euPct>=50?'#c98a04':'#c0392b');
 
   const brent = com?.brent_crude?.series?.at(-1)?.v;
-  if (brent != null) push('Brent Rohöl', fmtN(brent,1), 'USD/Barrel', '#dc6803');
+  if (brent != null) push('oel', 'Brent Rohöl', fmtN(brent,1), 'USD/Barrel', '#dc6803');
 
   const e5 = fu?.cities?._national?.e5_avg ?? fu?.cities?.Berlin?.e5_avg;
   const diesel = fu?.cities?._national?.diesel_avg ?? fu?.cities?.Berlin?.diesel_avg;
-  if (e5 != null) push('Super E5', fmtN(e5,3), 'EUR/Liter · Bundesschnitt', '#1f9d55');
-  if (diesel != null) push('Diesel', fmtN(diesel,3), 'EUR/Liter · Bundesschnitt', '#7e57c2');
+  if (e5 != null) push('oel', 'Super E5', fmtN(e5,3), 'EUR/Liter · Bundesschnitt', '#1f9d55');
+  if (diesel != null) push('oel', 'Diesel', fmtN(diesel,3), 'EUR/Liter · Bundesschnitt', '#7e57c2');
 
   const heat = ho?.reference_price_eur_l;
-  if (heat != null) push('Heizöl', fmtN(heat,3),
+  if (heat != null) push('oel', 'Heizöl', fmtN(heat,3),
     `EUR/Liter · ${ho.price_source === 'destatis' ? 'Destatis' : 'TECSON'}`, '#d97706');
 
   const hh = D.eurostat_prices?.electricity_household?.series_per_country?.DE;
-  if (hh?.length) push('Strom Haushalt', fmtN(hh.at(-1).v,4),
+  if (hh?.length) push('preise', 'Strom Haushalt', fmtN(hh.at(-1).v,4),
     `EUR/kWh · ${fmtHalfYear(hh.at(-1).period)}`, '#c0392b');
 
   const ren = ec?.ren_share_de?.ren_share?.filter(v => v != null);
-  if (ren?.length) push('EE-Anteil', fmtN(ren.at(-1),0)+'%', 'Prognose Energy-Charts', '#1f9d55');
+  if (ren?.length) push('strom', 'EE-Anteil', fmtN(ren.at(-1),0)+'%', 'Prognose Energy-Charts', '#1f9d55');
 
+  // Emissions land here once the daily run has produced them.
+  const thg = D.eurostat_env?.ghg_total?.series_per_country?.DE;
+  if (thg?.length) {
+    const base = thg.find(p => p.period === '1990');
+    const d = base ? (thg.at(-1).v - base.v) / base.v * 100 : null;
+    push('emissionen', 'Treibhausgase DE', fmtN(thg.at(-1).v/1000,0),
+         `Mio. t CO₂-Äq. · ${thg.at(-1).period}`, '#c0392b',
+         d != null ? `${d>=0?'▲ +':'▼ '}${fmtN(Math.abs(d),1)}% ggü. 1990` : '');
+  }
+
+  const anyKpiModule = ['strom','gas','oel','preise','emissionen']
+    .some(m => moduleChoice[m] !== false);
   document.getElementById('kpi-ueberblick').innerHTML = kp.length
     ? kpis(kp)
-    : '<div class="nodata">Noch keine Daten geladen</div>';
+    : `<div class="nodata">${anyKpiModule
+        ? 'Noch keine Daten geladen'
+        : 'Alle Kennzahlen ausgeblendet — oben wieder einschalten'}</div>`;
 
   // ── day-ahead, last 7 days ──
-  if (ec?.price_de?.unix_seconds?.length) {
+  if (moduleChoice.verlauf === false) { /* hidden */ }
+  else if (ec?.price_de?.unix_seconds?.length) {
     const pts = ec.price_de.unix_seconds
       .map((t,i) => ({ts:t, v:ec.price_de.price[i]}))
       .filter(x => x.v != null);
@@ -4261,7 +4451,7 @@ function renderUeberblick() {
 
   // ── current generation mix, as a share table ──
   const mixEl = document.getElementById('ueberblick-mix');
-  if (mixEl) {
+  if (mixEl && moduleChoice.mix !== false) {
     const series = sm?.series || {};
     const latest = {};
     Object.keys(LN).forEach(k => {
@@ -4289,7 +4479,7 @@ function renderUeberblick() {
     }
   }
 
-  renderQuellen();
+  if (moduleChoice.quellen !== false) renderQuellen();
 }
 
 // The source inventory: what feeds this dashboard, how fresh it is, and
