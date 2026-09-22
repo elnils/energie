@@ -818,9 +818,9 @@ const TAB_RANGES = {
   rohstoffe:   ['30d','90d','1y','2y','max'],
   kraftstoff:  ['7d','30d','90d','1y','2y','5y','max'],  // road fuel + heating oil + jet
   erneuerbare: ['30d','90d','1y','2y','5y','max'],
-  wetter:      ['24h','7d'],
+  wetter:      ['24h','7d'],   // forward window: Open-Meteo sends 5 days
   fx:          ['30d','90d'],
-  futures:     ['1y','2y','5y'],
+  futures:     ['90d','1y','2y','5y','max'],
   lage:        ['90d','1y','2y','5y','max'],
   news:        [],  // no range
 };
@@ -887,8 +887,11 @@ function renderRangeBar(tab) {
   const enabled = TAB_RANGES[tab] || [];
   if (!enabled.length) { bar.style.display = 'none'; return; }
   const current = getRange(tab);
+  // Weather is the one tab whose data lies in the future, so its selector
+  // reads forward rather than back.
+  const label = tab === 'wetter' ? 'Vorschau' : 'Zeitraum';
   bar.innerHTML = `
-    <span class="range-bar-lbl">Zeitraum</span>
+    <span class="range-bar-lbl">${label}</span>
     <div class="range-opts">
       ${Object.keys(RANGE_DEFS).map(k => {
         const isEnabled = enabled.includes(k);
@@ -2158,17 +2161,35 @@ function renderWetterCharts() {
   if(!w?.cities) return;
   const sc=w.cities[document.getElementById('solar-city')?.value||'Berlin'];
   const wc=w.cities[document.getElementById('wind-city')?.value||'Berlin'];
+
+  // The range selector on this tab used to do nothing. It also cannot mean
+  // what it means everywhere else: Open-Meteo returns a FORECAST — 120 hours
+  // running from today into the next five days — so a "last 24 hours" cutoff
+  // would keep the whole series. Here the range is a forward window: 24h
+  // shows the next day, 7d everything Open-Meteo sent.
+  const aheadMs = getRangeSeconds('wetter') * 1000;
+  const now = Date.now();
+  const windowOf = (h, key) => {
+    const t = h?.time || [], v = h?.[key] || [];
+    const all = t.map((ts, i) => ({ts, v: v[i], ms: Date.parse(ts)}));
+    const within = all.filter(x => !isFinite(x.ms) ||
+                                   (x.ms >= now - 3600000 && x.ms <= now + aheadMs));
+    return within.length ? within : all;
+  };
+
   if(sc?.hourly){
-    const h=sc.hourly,t=h.time||[];
-    mkChart('chart-solar','line',t.map(x=>x.substring(5)),[{
-      label:'W/m²',data:h.direct_radiation||[],borderColor:'#d29922',backgroundColor:'rgba(210,153,34,0.09)',fill:true
+    const pts = windowOf(sc.hourly, 'direct_radiation');
+    mkChart('chart-solar','line',pts.map(x=>x.ts.substring(5)),[{
+      label:'W/m²',data:pts.map(x=>x.v),borderColor:'#d29922',backgroundColor:'rgba(210,153,34,0.09)',fill:true
     }]);
+    stamp('chart-solar','weather',`Vorhersage, ${pts.length} Stundenwerte voraus`);
   }
   if(wc?.hourly){
-    const h=wc.hourly,t=h.time||[];
-    mkChart('chart-wind','line',t.map(x=>x.substring(5)),[{
-      label:'km/h',data:h.wind_speed_100m||[],borderColor:C.wind_on,backgroundColor:'rgba(88,166,255,0.09)',fill:true
+    const pts = windowOf(wc.hourly, 'wind_speed_100m');
+    mkChart('chart-wind','line',pts.map(x=>x.ts.substring(5)),[{
+      label:'km/h',data:pts.map(x=>x.v),borderColor:C.wind_on,backgroundColor:'rgba(88,166,255,0.09)',fill:true
     }]);
+    stamp('chart-wind','weather',`Vorhersage, ${pts.length} Stundenwerte voraus`);
   }
 }
 
@@ -2435,12 +2456,17 @@ function renderFx() {
 
   // Time-series chart
   const sel=document.getElementById('fx-currency')?.value||'USD';
-  const s=series90[sel]||[];
+  const coFx = rangeCutoffMs('fx');
+  const s=(series90[sel]||[]).filter(p => {
+    const ms = Date.parse(p.date);
+    return !isFinite(ms) || ms >= coFx;
+  });
   if(s.length){
     mkChart('chart-fx','line',s.map(p=>fmtDate(p.date)),[{
       label:`EUR / ${sel}`,data:s.map(p=>p.v),
       borderColor:'#39d353',backgroundColor:'rgba(57,211,83,0.07)',fill:true,
     }]);
+    stamp('chart-fx','fx',`${s.length} Handelstage im Zeitraum`);
   } else {
     const wrap=document.getElementById('chart-fx').parentElement;
     wrap.innerHTML='<div class="nodata">Keine 90-Tage-Historie für '+sel+'</div>';
@@ -3215,6 +3241,15 @@ function renderFutures() {
   if (spot.ttf_eur_mwh?.price)   kpiItems.push({label:'TTF Spot (approx)',val:fmtN(spot.ttf_eur_mwh.price,1),unit:'EUR/MWh',color:'#f0883e'});
   if (spot.wti_usd_bbl?.price)   kpiItems.push({label:'WTI Spot',val:fmtN(spot.wti_usd_bbl.price,1),unit:'USD/bbl',color:'#d97706'});
   if (spot.natgas_usd_mmbtu?.price) kpiItems.push({label:'Henry Hub',val:fmtN(spot.natgas_usd_mmbtu.price,2),unit:'USD/MMBtu',color:'#7e57c2'});
+  // energy_futures.spot only carries Brent and WTI, so the gas benchmarks
+  // come straight from commodities — otherwise this tab shows forecasts for
+  // TTF and Henry Hub with no actual price anywhere beside them.
+  const ttfNow = (D.commodities?.ttf_eu_proxy?.series || []).at(-1);
+  if (ttfNow) kpiItems.push({label:'TTF Spot', val:fmtN(ttfNow.v,1),
+    unit:`EUR/MWh · ${fmtDate(ttfNow.ts*1000)} · Yahoo`, color:'#f0883e'});
+  const hhNow = (D.commodities?.natgas_henry?.series || []).at(-1);
+  if (hhNow && !spot.natgas_usd_mmbtu?.price) kpiItems.push({label:'Henry Hub Spot',
+    val:fmtN(hhNow.v,2), unit:`USD/MMBtu · ${fmtDate(hhNow.ts*1000)} · Yahoo`, color:'#7e57c2'});
   const brentFc = (ft?.eia_steo?.brent||[]).filter(p=>p.type==='forecast').slice(11)[0];
   if (brentFc) kpiItems.push({label:'Brent 12M Fwd',val:fmtN(brentFc.v,1),unit:`USD/bbl · EIA ${brentFc.period}`,color:'#bc8cff'});
   document.getElementById('kpi-futures').innerHTML = kpis(kpiItems);
@@ -3265,41 +3300,120 @@ function _toDisp(v, type) {
   return type==='gas' && unit==='eur_mwh' ? +(v/3.41*0.92).toFixed(2) : v;
 }
 
+// The live spot price for a forecast chart, from commodities.json.
+//
+// EIA STEO publishes monthly, and its "actual" values stop at the last
+// completed month — on 22 September the newest actual was August and
+// September was already a forecast, so the chart's right-hand end showed a
+// prediction for a month nearly over while the real price was sitting
+// unused in commodities.json. These charts now carry today's close as a
+// separate point, which is also the only honest way to see whether a
+// forecast is tracking reality.
+function spotFor(type) {
+  const com = D.commodities || {};
+  if (type === 'oil') {
+    const s = com.brent_crude?.series || [];
+    return s.length ? {v: s.at(-1).v, ts: s.at(-1).ts, label: 'Brent Spot (Yahoo)',
+                       unit: 'USD/bbl'} : null;
+  }
+  // Gas: TTF in EUR/MWh. The chart may be displaying USD/MMBtu, so convert
+  // with the same factor _toDisp uses in reverse.
+  const s = com.ttf_eu_proxy?.series || [];
+  if (!s.length) return null;
+  const eurMwh = s.at(-1).v;
+  const wantEur = (document.getElementById('futures-gas-unit')?.value || 'eur_mwh') === 'eur_mwh';
+  return {v: wantEur ? eurMwh : +(eurMwh / 0.92 * 3.41).toFixed(2),
+          ts: s.at(-1).ts, label: 'TTF Spot (Yahoo)',
+          unit: wantEur ? 'EUR/MWh' : 'USD/MMBtu'};
+}
+
+// Range-aware x-axis bounds for the forecast charts. The selector on this
+// tab used to do nothing: the axis was hard-coded to "two years back" and
+// the actuals to "three years back", whatever was clicked.
+function futuresAxisMin() {
+  const sec = getRangeSeconds('futures');
+  if (sec === Infinity) return '2015-01-01';
+  return new Date(Date.now() - sec * 1000).toISOString().substring(0, 10);
+}
+
 function _renderSteoChart(canvasId, steo, prevSteo, type) {
   const wrap = document.getElementById(canvasId)?.parentElement;
   if (!wrap) return;
+  const spot = spotFor(type);
+
+  // No STEO series for this commodity — true for EU gas, whose benchmark
+  // STEO does not publish at all (its catalogue holds only US regional gas).
+  // Rather than leave the card empty, draw the real price history we do have.
   if (!steo.length) {
+    const hist = type === 'gas' ? (D.commodities?.ttf_eu_proxy?.series || []) : [];
+    const co = rangeCutoffSec('futures');
+    const pts = uniqTs(hist.filter(p => p.v != null && p.ts >= co));
+    if (pts.length) {
+      const wantEur = (document.getElementById('futures-gas-unit')?.value || 'eur_mwh') === 'eur_mwh';
+      const conv = v => wantEur ? v : +(v / 0.92 * 3.41).toFixed(2);
+      const unit = wantEur ? 'EUR/MWh' : 'USD/MMBtu';
+      mkChart(canvasId, 'line', pts.map(p => fmtDate(p.ts * 1000)), [{
+        label: `TTF tatsächlich (${unit})`, data: pts.map(p => conv(p.v)),
+        borderColor:'#f0883e', backgroundColor:'rgba(240,136,62,0.10)',
+        fill:true, borderWidth:2, pointRadius:0, tension:0.2,
+      }], {scales:{y:{title:{display:true,text:unit,color:'#8c98a8',font:{size:10}}},
+                   x:{ticks:{maxTicksLimit:10}}}});
+      stamp(canvasId, 'commodities',
+            'Keine Prognosequelle für EU-Gas verfügbar — gezeigt wird der tatsächliche ' +
+            'TTF-Verlauf (Front-Month-Future)');
+      return;
+    }
     const src = D.energy_futures?.sources?.eia_steo;
     noData(canvasId, `Keine EIA-STEO-Prognose für ${type==='gas'?'EU-Gas':'Brent'}`,
-      src?.reason ? `Die Quelle meldet: <code>${src.reason}</code>`
-                  : 'EIA STEO liefert diese Reihe derzeit nicht. Welche Series-ID ' +
-                    'zuletzt aufgelöst wurde, steht in <code>meta.resolved</code> ' +
-                    'in <code>data/energy_futures.json</code>.');
+      (type === 'gas'
+        ? 'EIA STEO veröffentlicht keinen europäischen Gas-Benchmark — sein Katalog ' +
+          'enthält nur US-Regionalreihen. Als Ersatz dient der TTF-Future aus ' +
+          '<code>commodities.json</code>, der hier ebenfalls fehlt.'
+        : (src?.reason ? `Die Quelle meldet: <code>${src.reason}</code>`
+                       : 'EIA STEO liefert diese Reihe derzeit nicht.')));
     return;
   }
-  const cutoff3y = (() => { const d=new Date(); d.setFullYear(d.getFullYear()-3); return d.toISOString().substring(0,7); })();
-  const actual   = steo.filter(p=>p.type==='actual'&&p.period>=cutoff3y);
+
+  const axisMin = futuresAxisMin();
+  const actual   = steo.filter(p=>p.type==='actual' && p.period >= axisMin.substring(0,7));
   const forecast = steo.filter(p=>p.type==='forecast');
   const prevFc   = prevSteo.filter(p=>p.type==='forecast');
   const {datasets} = alignedDatasets([
-    {label:'Historisch', points:actual,
+    {label:'Historisch (EIA, monatlich)', points:actual,
      style:{borderColor:'#8c98a8',backgroundColor:'transparent',borderWidth:1.8,pointRadius:0,tension:0.2}},
     {label:'EIA Prognose (aktuell)', points:forecast,
      style:{borderColor:'#0e6cb6',backgroundColor:'rgba(14,108,182,0.10)',fill:true,borderWidth:2.2,tension:0.2,pointRadius:2}},
     {label:'EIA Prognose (Vorwoche)', points:prevFc,
      style:{borderColor:'#94a3b8',backgroundColor:'transparent',borderWidth:1.2,borderDash:[5,4],pointRadius:0,tension:0.2}},
   ], v => _toDisp(v, type));
-  const yFt = ft => ft?.worldbank?.crude_oil||ft?.worldbank?.eu_gas||[];
+
+  // Today's real price, as a single marked point.
+  if (spot) {
+    datasets.push({
+      type:'scatter', label:`${spot.label} heute`,
+      data:[{x:new Date(spot.ts * 1000).toISOString().substring(0,10), y:spot.v}],
+      borderColor:'#c0392b', backgroundColor:'#c0392b',
+      pointRadius:7, pointStyle:'crossRot', borderWidth:3, showLine:false,
+    });
+  }
+
   const wb = type==='oil' ? D.energy_futures?.worldbank?.crude_oil : D.energy_futures?.worldbank?.eu_gas;
   const imf= type==='oil' ? D.energy_futures?.imf?.crude_oil : D.energy_futures?.imf?.eu_gas;
   const curYear = new Date().getFullYear();
   (wb||[]).filter(p=>p.year>=curYear).forEach(p=>datasets.push({type:'scatter',label:'World Bank',data:[{x:`${p.year}-07-01`,y:_toDisp(p.v,type)}],borderColor:'#bc8cff',backgroundColor:'rgba(188,140,255,0.7)',pointRadius:8,pointStyle:'rectRot',showLine:false}));
   (imf||[]).filter(p=>p.year>=curYear).forEach(p=>datasets.push({type:'scatter',label:'IMF',data:[{x:`${p.year}-07-01`,y:_toDisp(p.v,type)}],borderColor:'#d97706',backgroundColor:'rgba(217,119,6,0.7)',pointRadius:8,pointStyle:'rect',showLine:false}));
+
   if(CH[canvasId])CH[canvasId].destroy();
   const el=document.getElementById(canvasId);
   if(!el)return;
   const unit = type==='gas' ? (document.getElementById('futures-gas-unit')?.value==='eur_mwh'?'EUR/MWh':'USD/MMBtu') : 'USD/bbl';
-  CH[canvasId]=new Chart(el,{type:'line',data:{datasets},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},scales:{x:{type:'time',time:{unit:'month',displayFormats:{month:'MM/yy'}},min:(() => { const d=new Date(); d.setFullYear(d.getFullYear()-2); return d.toISOString().substring(0,10); })(),max:'2028-01-01',ticks:{maxTicksLimit:16,color:'#8c98a8',font:{size:10}},grid:{color:'#eef2f6'}},y:{grid:{color:'#eef2f6'},ticks:{color:'#8c98a8',font:{size:10},callback:v=>v.toFixed(1)+' '+unit},title:{display:true,text:unit,color:'#8c98a8',font:{size:10}}}},plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10},padding:8}}}}});
+  const lastFc = forecast.length ? forecast.at(-1).period : null;
+  CH[canvasId]=new Chart(el,{type:'line',data:{datasets},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},scales:{x:{type:'time',time:{unit:'month',displayFormats:{month:'MM/yy'}},min:axisMin,max:lastFc?lastFc+'-28':'2028-01-01',ticks:{maxTicksLimit:16,color:'#8c98a8',font:{size:10}},grid:{color:'#eef2f6'}},y:{grid:{color:'#eef2f6'},ticks:{color:'#8c98a8',font:{size:10},callback:v=>v.toFixed(1)+' '+unit},title:{display:true,text:unit,color:'#8c98a8',font:{size:10}}}},plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10},padding:8}}}}});
+
+  const lastActual = actual.length ? actual.at(-1).period : '—';
+  stamp(canvasId, spot ? ['energy_futures','commodities'] : 'energy_futures',
+        `EIA-Ist-Werte bis ${lastActual}, Prognose ab dem Folgemonat` +
+        (spot ? ` · roter Punkt = tatsächlicher Preis heute (${fmtN(spot.v,2)} ${spot.unit})` : ''));
 }
 
 function _renderSpreadChart() {
@@ -3338,7 +3452,7 @@ function _renderHHChart() {
   const ft=D.energy_futures; const wrap=document.getElementById('chart-futures-hh')?.parentElement; if(!wrap)return;
   const hh=ft?.eia_steo?.hh_gas||[];
   if(!hh.length){wrap.innerHTML='<div class="nodata">Henry Hub Daten werden geladen</div>';return;}
-  const cutoff=(() => { const d=new Date(); d.setFullYear(d.getFullYear()-3); return d.toISOString().substring(0,7); })();
+  const cutoff=futuresAxisMin().substring(0,7);
   const actual=hh.filter(p=>p.type==='actual'&&p.period>=cutoff),fcst=hh.filter(p=>p.type==='forecast');
   const prevHH=(ft?.previous_week?.eia_hh_gas||[]).filter(p=>p.type==='forecast');
   const {datasets:ds} = alignedDatasets([
@@ -3349,6 +3463,12 @@ function _renderHHChart() {
     {label:'Prognose Vorwoche', points:prevHH,
      style:{borderColor:'#94a3b8',backgroundColor:'transparent',borderWidth:1.2,borderDash:[5,4],pointRadius:0,tension:0.2}},
   ]);
+  // Today's real close, so the forecast can be read against the market.
+  const hhSpot = (D.commodities?.natgas_henry?.series || []).at(-1);
+  if (hhSpot) ds.push({type:'scatter', label:'Henry Hub heute (Yahoo)',
+    data:[{x:new Date(hhSpot.ts*1000).toISOString().substring(0,10), y:hhSpot.v}],
+    borderColor:'#c0392b', backgroundColor:'#c0392b', pointRadius:7,
+    pointStyle:'crossRot', borderWidth:3, showLine:false});
   if(CH['chart-futures-hh'])CH['chart-futures-hh'].destroy();
   const el=document.getElementById('chart-futures-hh');if(!el)return;
   CH['chart-futures-hh']=new Chart(el,{type:'line',data:{datasets:ds},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},scales:{x:{type:'time',time:{unit:'month',displayFormats:{month:'MM/yy'}},ticks:{maxTicksLimit:10,color:'#8c98a8',font:{size:10}},grid:{color:'#eef2f6'}},y:{grid:{color:'#eef2f6'},ticks:{color:'#8c98a8',font:{size:10},callback:v=>v.toFixed(2)+' $/MMBtu'}}},plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}}}});
@@ -3363,7 +3483,7 @@ function _renderLngSpreadChart() {
       `EU-Gas ${eu.length} Punkte, Henry Hub ${hh.length} Punkte.`);
     return;
   }
-  const cutoff=(() => { const d=new Date(); d.setFullYear(d.getFullYear()-4); return d.toISOString().substring(0,7); })();
+  const cutoff=futuresAxisMin().substring(0,7);
   const euMap={},hhMap={};
   eu.forEach(p=>{if(p.period>=cutoff)euMap[p.period]=p.v;});
   hh.forEach(p=>{if(p.period>=cutoff)hhMap[p.period]=p.v;});
