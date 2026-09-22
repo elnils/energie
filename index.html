@@ -231,6 +231,7 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
   <button class="tab" data-tab="rohstoffe">Rohstoffe</button>
   <button class="tab" data-tab="kraftstoff">Kraftstoffe & Heizöl</button>
   <button class="tab" data-tab="erneuerbare">Erneuerbare</button>
+  <button class="tab" data-tab="umwelt">Emissionen & Wärme</button>
   <button class="tab" data-tab="wetter">Wetter</button>
   <button class="tab" data-tab="fx">Wechselkurse</button>
   <button class="tab" data-tab="futures">Futures & Prognosen</button>
@@ -675,6 +676,71 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
   </div>
 </div>
 
+<!-- EMISSIONEN & WÄRME -->
+<div class="panel" id="panel-umwelt">
+  <div class="range-bar" data-tab="umwelt"></div>
+  <div class="kpis" id="kpi-umwelt"></div>
+  <div class="grid">
+    <div class="card g8" data-src="eurostat_env">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">Treibhausgase nach Sektor</div>
+          <div class="card-sub">Eurostat env_air_gge · Jahreswerte · Tausend Tonnen CO₂-Äquivalent · Inventare erscheinen mit rund zwei Jahren Verzug</div>
+        </div>
+        <select id="umwelt-geo" onchange="renderUmwelt()" style="font-size:11px">
+          <option value="DE">Deutschland</option>
+          <option value="EU27_2020">EU27</option>
+          <option value="FR">Frankreich</option>
+          <option value="IT">Italien</option>
+          <option value="ES">Spanien</option>
+          <option value="NL">Niederlande</option>
+          <option value="PL">Polen</option>
+          <option value="AT">Österreich</option>
+          <option value="SE">Schweden</option>
+          <option value="DK">Dänemark</option>
+        </select>
+      </div>
+      <div class="chart-wrap" style="height:280px"><canvas id="chart-thg-sektoren"></canvas></div>
+    </div>
+    <div class="card g4" data-src="eurostat_env">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">Woher die Emissionen kommen</div>
+          <div class="card-sub">Anteil am Gesamtausstoß · letztes Berichtsjahr</div>
+        </div>
+      </div>
+      <div class="chart-wrap" style="height:280px"><canvas id="chart-thg-anteile"></canvas></div>
+    </div>
+    <div class="card g6" data-src="eurostat_env">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">Treibhausgase im Ländervergleich</div>
+          <div class="card-sub">Gesamtausstoß ohne LULUCF · letztes gemeinsames Berichtsjahr</div>
+        </div>
+      </div>
+      <div class="chart-wrap" style="height:260px"><canvas id="chart-thg-laender"></canvas></div>
+    </div>
+    <div class="card g6" data-src="eurostat_env">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">Einzelne Treibhausgase</div>
+          <div class="card-sub">CO₂, Methan und Lachgas getrennt · Tausend Tonnen</div>
+        </div>
+      </div>
+      <div class="chart-wrap" style="height:260px"><canvas id="chart-thg-gase"></canvas></div>
+    </div>
+    <div class="card g12" data-src="eurostat_env">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">Fernwärme</div>
+          <div class="card-sub">Eurostat nrg_cb_h · Erzeugung und Endverbrauch, aufgeteilt nach Haushalten und Industrie</div>
+        </div>
+      </div>
+      <div class="chart-wrap" style="height:250px"><canvas id="chart-waerme"></canvas></div>
+    </div>
+  </div>
+</div>
+
 <!-- GAS -->
 <div class="panel" id="panel-gas">
   <div class="range-bar" data-tab="gas"></div>
@@ -927,6 +993,8 @@ const TAB_RANGES = {
   rohstoffe:   ['30d','90d','1y','2y','max'],
   kraftstoff:  ['7d','30d','90d','1y','2y','5y','max'],  // road fuel + heating oil + jet
   erneuerbare: ['30d','90d','1y','2y','5y','max'],
+  // Annual series going back to 1990; anything under five years is a dot.
+  umwelt:      ['5y','max'],
   wetter:      ['24h','7d'],   // forward window: Open-Meteo sends 5 days
   fx:          ['30d','90d'],
   futures:     ['90d','1y','2y','5y','max'],
@@ -937,7 +1005,7 @@ const TAB_RANGES = {
 // Default range per tab (must be in TAB_RANGES[tab])
 const TAB_DEFAULT_RANGE = {
   strom:'7d', strompreise:'max', markt:'30d', gas:'1y', rohstoffe:'1y',
-  kraftstoff:'30d', erneuerbare:'5y',
+  kraftstoff:'30d', erneuerbare:'5y', umwelt:'max',
   wetter:'7d', fx:'90d', futures:'2y', lage:'2y',
 };
 
@@ -1033,6 +1101,7 @@ const TAB_FILES = {
   // merged tab: road fuels + heating oil + jet fuel/supply
   kraftstoff:  ['fuel','heating_oil','commodities','eurostat_oil','eia_petroleum','fred_energy'],
   erneuerbare: ['energy_charts','smard'],
+  umwelt:      ['eurostat_env'],
   wetter:      ['weather'],
   fx:          ['fx'],
   futures:     ['energy_futures','commodities'],
@@ -4290,12 +4359,204 @@ function gotoTab(tab) {
 }
 
 // ══════════════════════════════════════════════
+// EMISSIONEN & WÄRME
+// ══════════════════════════════════════════════
+// Annual Eurostat series. Emissions lag about two years because the
+// inventory is submitted in arrears, heat about one — so every chart here
+// names its last reporting year rather than implying it is current.
+
+const UMWELT_LAENDER = {
+  DE:'Deutschland', EU27_2020:'EU27', FR:'Frankreich', IT:'Italien',
+  ES:'Spanien', NL:'Niederlande', PL:'Polen', AT:'Österreich',
+  SE:'Schweden', DK:'Dänemark', CZ:'Tschechien', FI:'Finnland',
+  PT:'Portugal', GR:'Griechenland', IE:'Irland', BE:'Belgien', NO:'Norwegen',
+};
+
+const THG_SEKTOREN = [
+  ['ghg_energy',     'Energie',    '#c0392b'],
+  ['ghg_transport',  'Verkehr',    '#d97706'],
+  ['ghg_industry',   'Industrie',  '#7e57c2'],
+  ['ghg_households', 'Haushalte',  '#0e6cb6'],
+];
+
+function envSeries(key, geo) {
+  const node = D.eurostat_env?.[key];
+  if (!node) return {pts: [], info: null};
+  return {pts: uniqPeriod(node.series_per_country?.[geo] || []), info: node};
+}
+
+function renderUmwelt() {
+  const env = D.eurostat_env;
+  const geo = document.getElementById('umwelt-geo')?.value || 'DE';
+  const ids = ['chart-thg-sektoren','chart-thg-anteile','chart-thg-laender',
+               'chart-thg-gase','chart-waerme'];
+
+  if (!env) {
+    ids.forEach(id => noData(id, 'Emissions- und Wärmedaten noch nicht abgerufen',
+      'Die Quelle <code>eurostat_env</code> läuft einmal täglich. ' +
+      'Nach dem nächsten GitHub-Actions-Lauf ist sie hier.'));
+    document.getElementById('kpi-umwelt').innerHTML = '';
+    return;
+  }
+
+  const minYear = periodCutoff('umwelt') || '0';
+  const inRange = p => String(p.period) >= minYear;
+
+  // ── KPIs ──
+  const kp = [];
+  const total = envSeries('ghg_total', geo).pts;
+  if (total.length) {
+    const last = total.at(-1);
+    // Against 1990, the reference year every EU climate target is set from.
+    const base = total.find(p => p.period === '1990');
+    const delta = base ? ((last.v - base.v) / base.v * 100) : null;
+    kp.push({label:'Treibhausgase gesamt', val:fmtN(last.v/1000,1),
+             unit:`Mio. t CO₂-Äq. · ${last.period}`, color:'#c0392b',
+             delta: delta != null
+               ? `${delta >= 0 ? '▲ +' : '▼ '}${fmtN(Math.abs(delta),1)}% ggü. 1990` : ''});
+  }
+  THG_SEKTOREN.forEach(([key, label, color]) => {
+    const pts = envSeries(key, geo).pts;
+    if (!pts.length) return;
+    const last = pts.at(-1);
+    const share = total.length
+      ? total.find(p => p.period === last.period) : null;
+    kp.push({label, val:fmtN(last.v/1000,1), unit:`Mio. t · ${last.period}`, color,
+             delta: share ? `${fmtN(last.v / share.v * 100, 1)}% des Gesamtausstoßes` : ''});
+  });
+  const heatProd = envSeries('heat_production', geo).pts;
+  if (heatProd.length) kp.push({label:'Fernwärme-Erzeugung',
+    val:fmtN(heatProd.at(-1).v/1000,1),
+    unit:`TWh · ${heatProd.at(-1).period}`, color:'#f0883e'});
+  document.getElementById('kpi-umwelt').innerHTML = kp.length
+    ? kpis(kp) : '<div class="nodata">Keine Werte für dieses Land</div>';
+
+  // ── sectors over time, stacked ──
+  const sectors = THG_SEKTOREN
+    .map(([key, label, color]) => ({label, color, pts: envSeries(key, geo).pts.filter(inRange)}))
+    .filter(x => x.pts.length);
+  if (sectors.length) {
+    const periods = Array.from(new Set(sectors.flatMap(x => x.pts.map(p => p.period)))).sort();
+    mkChart('chart-thg-sektoren','bar', periods, sectors.map(x => {
+      const m = {}; x.pts.forEach(p => m[p.period] = p.v);
+      return {label:x.label, data:periods.map(p => m[p] ?? null),
+              backgroundColor:x.color + 'cc', borderWidth:0, stack:'thg'};
+    }), {
+      plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}},
+      scales:{x:{stacked:true, ticks:{maxTicksLimit:12}},
+              y:{stacked:true, title:{display:true,text:'Tsd. t CO₂-Äquivalent',color:'#8c98a8',font:{size:10}}}},
+    });
+    stamp('chart-thg-sektoren','eurostat_env',
+          `${UMWELT_LAENDER[geo]||geo} · ${periods[0]}–${periods.at(-1)}`);
+  } else {
+    noData('chart-thg-sektoren', `Keine Sektordaten für ${UMWELT_LAENDER[geo]||geo}`,
+           env.ghg_energy?.unavailable_reason
+             ? `<code>${env.ghg_energy.unavailable_reason}</code>`
+             : 'Eurostat liefert für dieses Land keine Sektoraufteilung.');
+  }
+
+  // ── share of the latest year ──
+  const latestShares = THG_SEKTOREN
+    .map(([key, label, color]) => {
+      const pts = envSeries(key, geo).pts;
+      return pts.length ? {label, color, v: pts.at(-1).v, period: pts.at(-1).period} : null;
+    }).filter(Boolean);
+  if (latestShares.length) {
+    mkChart('chart-thg-anteile','doughnut',
+      latestShares.map(x => x.label),
+      [{data: latestShares.map(x => x.v),
+        backgroundColor: latestShares.map(x => x.color + 'dd'),
+        borderColor:'#fff', borderWidth:2}],
+      {plugins:{legend:{display:true, position:'bottom',
+                        labels:{color:'#56657a',boxWidth:8,font:{size:10}}}},
+       scales:{x:{display:false}, y:{display:false}}});
+    stamp('chart-thg-anteile','eurostat_env',
+          `${UMWELT_LAENDER[geo]||geo} · Stand ${latestShares[0].period}`);
+  } else {
+    noData('chart-thg-anteile','Keine Sektoranteile', '');
+  }
+
+  // ── country comparison ──
+  const comparison = Object.keys(UMWELT_LAENDER)
+    .filter(c => c !== 'EU27_2020')
+    .map(c => {
+      const pts = envSeries('ghg_total', c).pts;
+      return pts.length ? {geo:c, v: pts.at(-1).v, period: pts.at(-1).period} : null;
+    }).filter(Boolean).sort((a,b) => b.v - a.v);
+  if (comparison.length) {
+    mkChart('chart-thg-laender','bar',
+      comparison.map(x => UMWELT_LAENDER[x.geo] || x.geo),
+      [{label:'Tsd. t CO₂-Äq.', data:comparison.map(x => x.v),
+        backgroundColor:comparison.map(x => x.geo === geo ? 'rgba(192,57,43,0.85)' : 'rgba(14,108,182,0.55)'),
+        borderRadius:2}],
+      {indexAxis:'y', scales:{x:{title:{display:true,text:'Tsd. t CO₂-Äquivalent',color:'#8c98a8',font:{size:10}}}}});
+    stamp('chart-thg-laender','eurostat_env',
+          `Stand ${comparison[0].period} · ${UMWELT_LAENDER[geo]||geo} hervorgehoben`);
+  } else {
+    noData('chart-thg-laender','Kein Ländervergleich möglich','');
+  }
+
+  // ── individual gases ──
+  const gases = [
+    ['co2_total','CO₂','#56657a'], ['ch4_total','Methan','#1f9d55'],
+    ['n2o_total','Lachgas','#7e57c2'],
+  ].map(([key,label,color]) => ({label, color, pts: envSeries(key, geo).pts.filter(inRange)}))
+   .filter(x => x.pts.length);
+  if (gases.length) {
+    const periods = Array.from(new Set(gases.flatMap(x => x.pts.map(p => p.period)))).sort();
+    mkChart('chart-thg-gase','line', periods, gases.map(x => {
+      const m = {}; x.pts.forEach(p => m[p.period] = p.v);
+      return {label:x.label, data:periods.map(p => m[p] ?? null),
+              borderColor:x.color, backgroundColor:'transparent',
+              borderWidth:2, pointRadius:0, spanGaps:true, tension:0.2};
+    }), {plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}},
+         scales:{x:{ticks:{maxTicksLimit:10}},
+                 y:{title:{display:true,text:'Tausend Tonnen',color:'#8c98a8',font:{size:10}}}}});
+    stamp('chart-thg-gase','eurostat_env',
+          'CO₂ in Tonnen, Methan und Lachgas in CO₂-Äquivalent — die Skalen sind nicht vergleichbar');
+  } else {
+    noData('chart-thg-gase','Keine Einzelgase verfügbar','');
+  }
+
+  // ── district heat ──
+  const heat = [
+    ['heat_production','Erzeugung','#f0883e','line'],
+    ['heat_consumption','Endverbrauch','#0e6cb6','line'],
+    ['heat_households','davon Haushalte','#1f9d55','bar'],
+    ['heat_industry','davon Industrie','#7e57c2','bar'],
+  ].map(([key,label,color,kind]) => ({label, color, kind,
+         info: D.eurostat_env?.[key],
+         pts: envSeries(key, geo).pts.filter(inRange)}))
+   .filter(x => x.pts.length);
+  if (heat.length) {
+    const periods = Array.from(new Set(heat.flatMap(x => x.pts.map(p => p.period)))).sort();
+    mkChart('chart-waerme','bar', periods, heat.map(x => {
+      const m = {}; x.pts.forEach(p => m[p.period] = p.v);
+      return {label:x.label, type:x.kind, data:periods.map(p => m[p] ?? null),
+              borderColor:x.color,
+              backgroundColor: x.kind === 'bar' ? x.color + '99' : 'transparent',
+              borderWidth: x.kind === 'bar' ? 0 : 2,
+              pointRadius:0, spanGaps:true, tension:0.2,
+              order: x.kind === 'bar' ? 2 : 1};
+    }), {plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}},
+         scales:{x:{ticks:{maxTicksLimit:12}},
+                 y:{title:{display:true,text:heat[0].info?.unit || 'GWh',color:'#8c98a8',font:{size:10}}}}});
+    stamp('chart-waerme','eurostat_env', `${UMWELT_LAENDER[geo]||geo} · Fernwärme`);
+  } else {
+    noData('chart-waerme', `Keine Fernwärmedaten für ${UMWELT_LAENDER[geo]||geo}`,
+           env.heat_production?.unavailable_reason
+             ? `<code>${env.heat_production.unavailable_reason}</code>`
+             : 'Eurostat führt für dieses Land keine abgeleitete Wärme.');
+  }
+}
+
+// ══════════════════════════════════════════════
 // TABS
 // ══════════════════════════════════════════════
 const RENDERS={
   ueberblick:renderUeberblick, strom:renderStrom, strompreise:renderStrompreise, markt:renderMarkt, gas:renderGas,
   rohstoffe:renderRohstoffe, kraftstoff:renderKraftstoffMerged,
-  erneuerbare:renderErneuerbare,
+  erneuerbare:renderErneuerbare, umwelt:renderUmwelt,
   wetter:renderWetter, fx:renderFx,
   futures:renderFutures, lage:renderLage, news:renderNews,
 };

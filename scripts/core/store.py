@@ -55,6 +55,10 @@ EXPECTED_KEYS: Dict[str, Set[str]] = {
     # so a single dataset outage doesn't reject the whole payload.
     'eurostat_prices': {'electricity_household', 'electricity_industry',
                         'gas_household', 'gas_industry'},
+    # Emissions and heat: any one of them validates, so a single dataset
+    # outage does not reject the whole payload.
+    'eurostat_env':  {'ghg_total', 'ghg_energy', 'heat_production',
+                      'heat_consumption'},
 }
 
 FORBIDDEN_KEYS: Dict[str, Set[str]] = {
@@ -74,6 +78,7 @@ FORBIDDEN_KEYS: Dict[str, Set[str]] = {
     'fred_energy':   {'gas', 'points', 'articles', 'cities'},
     'eurostat_oil':  {'gas', 'points', 'articles', 'cities'},
     'eurostat_prices': {'gas', 'points', 'articles', 'cities'},
+    'eurostat_env':  {'gas', 'points', 'articles', 'cities'},
 }
 
 
