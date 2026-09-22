@@ -51,6 +51,12 @@
     "last_success_epoch": 1790056831,
     "last_success_iso": "2026-09-22T06:00:31Z"
   },
+  "eurostat_env": {
+    "last_attempt_epoch": 1790070175,
+    "last_attempt_iso": "2026-09-22T09:42:55Z",
+    "last_success_epoch": 1790070285,
+    "last_success_iso": "2026-09-22T09:44:45Z"
+  },
   "eurostat_oil": {
     "last_attempt_epoch": 1790032322,
     "last_attempt_iso": "2026-09-21T23:12:02Z",
