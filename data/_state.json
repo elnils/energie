@@ -126,5 +126,11 @@
     "last_error_message": "RuntimeError: Open-Meteo: zero cities returned data | at File \"/home/runner/work/energie/energie/scripts/fetchers/weather.py\", line 45, in fetch",
     "last_success_epoch": 1790069927,
     "last_success_iso": "2026-09-22T09:38:47Z"
+  },
+  "worldbank_g20": {
+    "last_attempt_epoch": 1790072819,
+    "last_attempt_iso": "2026-09-22T10:26:59Z",
+    "last_success_epoch": 1790072824,
+    "last_success_iso": "2026-09-22T10:27:04Z"
   }
 }
