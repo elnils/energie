@@ -378,6 +378,26 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
       </div>
       <div class="chart-wrap" style="height:240px"><canvas id="chart-strompreise-laender"></canvas></div>
     </div>
+    <div class="card g12" data-src="eurostat_oil">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">Stromverbrauch und -erzeugung im Ländervergleich</div>
+          <div class="card-sub">Eurostat · Jahreswerte · GWh · Endverbrauch gegen Bruttoerzeugung — die Differenz deckt Netzverluste, Eigenverbrauch und den Außenhandel ab</div>
+        </div>
+        <select id="verbrauch-geo" onchange="renderStrompreise()" style="font-size:11px">
+          <option value="DE">Deutschland</option>
+          <option value="EU27_2020">EU27</option>
+          <option value="FR">Frankreich</option>
+          <option value="IT">Italien</option>
+          <option value="ES">Spanien</option>
+          <option value="NL">Niederlande</option>
+          <option value="PL">Polen</option>
+          <option value="AT">Österreich</option>
+        </select>
+      </div>
+      <div class="chart-wrap" style="height:240px"><canvas id="chart-verbrauch"></canvas></div>
+    </div>
+
     <div class="card g12" data-src="eurostat_prices">
       <div class="card-hdr">
         <div>
@@ -579,6 +599,50 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
         </div>
       </div>
       <div class="chart-wrap" style="height:240px"><canvas id="chart-eu-imports"></canvas></div>
+    </div>
+
+    <!-- Mineral oil products. These series have been fetched all along and
+         were never shown: diesel, petrol, kerosene and heating oil all sit
+         in eurostat_oil next to the jet-fuel ones the tab already drew. -->
+    <div class="card g8" data-src="eurostat_oil">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">Mineralölprodukte — Bestandsveränderung</div>
+          <div class="card-sub">Eurostat · monatlich · positiv = Aufbau, negativ = Abbau · mindestens 3 Jahre, unabhängig vom Zeitraum-Schalter</div>
+        </div>
+        <select id="mineraloel-geo" onchange="renderKraftstoffMerged()" style="font-size:11px">
+          <option value="EU27_2020">EU27</option>
+          <option value="DE">Deutschland</option>
+          <option value="FR">Frankreich</option>
+          <option value="IT">Italien</option>
+          <option value="ES">Spanien</option>
+          <option value="NL">Niederlande</option>
+          <option value="PL">Polen</option>
+          <option value="BE">Belgien</option>
+          <option value="AT">Österreich</option>
+        </select>
+      </div>
+      <div class="chart-wrap" style="height:260px"><canvas id="chart-mineraloel"></canvas></div>
+    </div>
+
+    <div class="card g4" data-src="eurostat_oil">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">Rohöl-Importe</div>
+          <div class="card-sub">Eurostat · monatlich · Tausend Tonnen</div>
+        </div>
+      </div>
+      <div class="chart-wrap" style="height:260px"><canvas id="chart-rohoel-importe"></canvas></div>
+    </div>
+
+    <div class="card g12" data-src="eurostat_oil">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">Kerosin-Versorgungsbilanz</div>
+          <div class="card-sub">Eurostat · Importe, Exporte und Inlandsabgabe je Monat — die Lücke zwischen Abgabe und Eigenaufkommen zeigt die Importabhängigkeit</div>
+        </div>
+      </div>
+      <div class="chart-wrap" style="height:240px"><canvas id="chart-kerosin-bilanz"></canvas></div>
     </div>
 
     <!-- Macro context table -->
@@ -1231,9 +1295,12 @@ function eurostatSeries(name) {
     jet_consumption: ['oil_jet_fuel_consumption', 'jet_consumption'],
     diesel_stocks:   ['oil_diesel_stocks'],
     gasoline_stocks: ['oil_motor_gasoline'],
+    heating_stocks:  ['oil_heating_oil_stocks'],
     crude_imports:   ['oil_crude_imports'],
     elec_imports:    ['electricity_imports'],
     elec_exports:    ['electricity_exports'],
+    elec_generation: ['electricity_generation'],
+    elec_consumption:['electricity_consumption'],
   }[name] || [name];
   for (const key of alias) {
     const node = eo[key];
@@ -2877,6 +2944,112 @@ function renderTreibstoff() {
         <tbody>${rows}</tbody>
       </table></div>`;
   }
+
+  renderMineraloel();
+}
+
+// ══════════════════════════════════════════════
+// MINERALÖL — Diesel, Benzin, Kerosin, Heizöl
+// ══════════════════════════════════════════════
+// These series have been fetched all along and were never drawn: they sit in
+// eurostat_oil next to the jet-fuel ones this tab already used. Eurostat
+// reports them as monthly stock CHANGES, not levels (see measureOf), so they
+// are signed bars — the question they answer is whether a product is being
+// built up or drawn down, not how much is in store, which Eurostat does not
+// publish for oil.
+const MINERALOEL_PRODUKTE = [
+  ['diesel_stocks',   'Diesel / Gasöl', '#7e57c2'],
+  ['gasoline_stocks', 'Benzin',         '#1f9d55'],
+  ['jet_stocks',      'Kerosin',        '#0e6cb6'],
+  ['heating_stocks',  'Heizöl',         '#d97706'],
+];
+
+function renderMineraloel() {
+  const geo = document.getElementById('mineraloel-geo')?.value || 'EU27_2020';
+  // The tab's range is shared with the road-fuel view, whose data is daily
+  // and whose sensible default is 30 days. Applied unchanged to a monthly
+  // Eurostat series with two months of reporting lag that leaves six points,
+  // so these charts take the selection but never less than three years.
+  const minYear = Math.min(
+    Number(periodCutoff('kraftstoff') || 0) || new Date().getFullYear(),
+    new Date().getFullYear() - 3);
+  const inRange = p => Number(String(p.period).slice(0,4)) >= minYear;
+
+  // ── products side by side ──
+  const loaded = MINERALOEL_PRODUKTE.map(([key, label, color]) => {
+    const node = eurostatSeries(key);
+    return {key, label, color, info: node.info,
+            pts: uniqPeriod(node.byCountry[geo] || []).filter(inRange)};
+  }).filter(x => x.pts.length);
+
+  if (loaded.length) {
+    const periods = Array.from(new Set(loaded.flatMap(x => x.pts.map(p => p.period)))).sort();
+    const datasets = loaded.map(x => {
+      const m = {}; x.pts.forEach(p => m[p.period] = p.v);
+      return {label:x.label, data:periods.map(p => m[p] ?? null),
+              backgroundColor:x.color + 'bb', borderColor:x.color, borderWidth:0};
+    });
+    mkChart('chart-mineraloel','bar', periods, datasets, {
+      plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}},
+      scales:{x:{ticks:{maxTicksLimit:12}},
+              y:{title:{display:true,text:'Tausend Tonnen (Veränderung)',color:'#8c98a8',font:{size:10}}}},
+    });
+    stamp('chart-mineraloel','eurostat_oil',
+          `${geo} · ${loaded.length} Produkte · ${loaded[0].info?.flow_label || 'Bestandsveränderung'}`);
+  } else {
+    noData('chart-mineraloel', `Keine Mineralöldaten für ${geo}`,
+           eurostatWhy(eurostatSeries('diesel_stocks').info));
+  }
+
+  // ── crude imports ──
+  const crude = eurostatSeries('crude_imports');
+  const cpts = uniqPeriod(crude.byCountry[geo] || []).filter(inRange);
+  if (cpts.length) {
+    mkChart('chart-rohoel-importe','line', cpts.map(p => p.period), [{
+      label:'Rohöl-Importe', data:cpts.map(p => p.v),
+      borderColor:'#c0392b', backgroundColor:'rgba(192,57,43,0.10)',
+      fill:true, borderWidth:2, pointRadius:0, tension:0.2,
+    }], {scales:{x:{ticks:{maxTicksLimit:8}},
+                 y:{title:{display:true,text:crude.info?.unit || 'Tausend Tonnen',color:'#8c98a8',font:{size:10}}}}});
+    stamp('chart-rohoel-importe','eurostat_oil', geo);
+  } else {
+    noData('chart-rohoel-importe', `Keine Rohöl-Importe für ${geo}`, eurostatWhy(crude.info));
+  }
+
+  // ── kerosene balance: imports and exports against inland deliveries ──
+  const parts = [
+    ['jet_imports',     'Importe',       '#1f9d55',  1],
+    ['jet_exports',     'Exporte',       '#c0392b', -1],
+    ['jet_consumption', 'Inlandsabgabe', '#0e6cb6',  1],
+  ].map(([key, label, color, sign]) => {
+    const node = eurostatSeries(key);
+    return {label, color, sign, info:node.info,
+            pts: uniqPeriod(node.byCountry[geo] || []).filter(inRange)};
+  }).filter(x => x.pts.length);
+
+  if (parts.length) {
+    const periods = Array.from(new Set(parts.flatMap(x => x.pts.map(p => p.period)))).sort();
+    const datasets = parts.map(x => {
+      const m = {}; x.pts.forEach(p => m[p.period] = p.v);
+      const isFlow = x.label !== 'Inlandsabgabe';
+      return {
+        label: x.label + (x.sign < 0 ? ' (negativ dargestellt)' : ''),
+        data: periods.map(p => m[p] != null ? m[p] * x.sign : null),
+        type: isFlow ? 'bar' : 'line',
+        backgroundColor: isFlow ? x.color + 'aa' : 'transparent',
+        borderColor: x.color, borderWidth: isFlow ? 0 : 2,
+        pointRadius: 0, tension: 0.2, order: isFlow ? 2 : 1,
+      };
+    });
+    mkChart('chart-kerosin-bilanz','bar', periods, datasets, {
+      plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}},
+      scales:{x:{ticks:{maxTicksLimit:12}},
+              y:{title:{display:true,text:'Tausend Tonnen',color:'#8c98a8',font:{size:10}}}},
+    });
+    stamp('chart-kerosin-bilanz','eurostat_oil', `${geo} · Exporte zur Lesbarkeit negativ`);
+  } else {
+    noData('chart-kerosin-bilanz', `Keine Kerosin-Bilanz für ${geo}`, eurostatWhy(parts[0]?.info));
+  }
 }
 
 function renderLage() {
@@ -3862,6 +4035,55 @@ function renderStrompreise() {
              ? `<code>${ep.gas_household.unavailable_reason}</code>`
              : 'Eurostat veröffentlicht Halbjahreswerte mit rund fünf Monaten Verzug.');
   }
+
+  renderVerbrauch();
+}
+
+// Consumption against generation. Both series have been fetched since the
+// Eurostat rewrite and were never drawn; they are annual, so the half-year
+// cutoff used above would throw most of them away.
+function renderVerbrauch() {
+  const geo = document.getElementById('verbrauch-geo')?.value || 'DE';
+  const gen = eurostatSeries('elec_generation');
+  const con = eurostatSeries('elec_consumption');
+  const imp = eurostatSeries('elec_imports');
+  const exp = eurostatSeries('elec_exports');
+
+  const series = [
+    ['Bruttoerzeugung', gen, '#0e6cb6', 'line'],
+    ['Endverbrauch',    con, '#c0392b', 'line'],
+    ['Import',          imp, '#1f9d55', 'bar'],
+    ['Export',          exp, '#d97706', 'bar'],
+  ].map(([label, node, color, kind]) => ({
+    label, color, kind, info: node.info,
+    pts: uniqPeriod(node.byCountry[geo] || []),
+  })).filter(x => x.pts.length);
+
+  if (!series.length) {
+    noData('chart-verbrauch', `Keine Verbrauchsdaten für ${STROMPREIS_COUNTRIES[geo]||geo}`,
+           eurostatWhy(gen.info));
+    return;
+  }
+  const periods = Array.from(new Set(series.flatMap(x => x.pts.map(p => p.period)))).sort();
+  const datasets = series.map(x => {
+    const m = {}; x.pts.forEach(p => m[p.period] = p.v);
+    return {
+      label: x.label, type: x.kind,
+      data: periods.map(p => m[p] ?? null),
+      borderColor: x.color,
+      backgroundColor: x.kind === 'bar' ? x.color + '99' : 'transparent',
+      borderWidth: x.kind === 'bar' ? 0 : 2,
+      pointRadius: 0, spanGaps: true, tension: 0.2,
+      order: x.kind === 'bar' ? 2 : 1,
+    };
+  });
+  mkChart('chart-verbrauch','bar', periods, datasets, {
+    plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}},
+    scales:{x:{ticks:{maxTicksLimit:12}},
+            y:{title:{display:true,text:gen.info?.unit || 'GWh',color:'#8c98a8',font:{size:10}}}},
+  });
+  stamp('chart-verbrauch','eurostat_oil',
+        `${STROMPREIS_COUNTRIES[geo]||geo} · ${periods[0]}–${periods.at(-1)} · Jahreswerte`);
 }
 
 // ══════════════════════════════════════════════

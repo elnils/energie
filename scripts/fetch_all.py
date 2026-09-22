@@ -67,7 +67,9 @@ SCHEDULE = [
     ('FRED Energy',      'fred_energy',     fred_energy.fetch,      720,   60),
     ('EIA Petroleum',    'eia_petroleum',   eia_petroleum.fetch,    720,   90),
     ('Energy Futures',   'energy_futures',  energy_futures.fetch,   360,   90),
-    ('Eurostat Oil',     'eurostat_oil',    eurostat_oil.fetch,     1440,  180),
+    # 25 series x 18 countries = one request each, so the budget scales with
+    # the country list in eurostat_oil.GEO.
+    ('Eurostat Oil',     'eurostat_oil',    eurostat_oil.fetch,     1440,  330),
     # Semi-annual publication — a daily check is already generous. Budget is
     # wide because it walks 4 datasets x 3 tax levels x 11 countries.
     ('Eurostat Preise',  'eurostat_prices', eurostat_prices.fetch,  1440,  240),
