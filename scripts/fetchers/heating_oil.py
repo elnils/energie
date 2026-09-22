@@ -37,25 +37,86 @@ def _parse_de_decimal(s: str) -> Optional[float]:
         return None
 
 
-def _extract_reference_price(html: str) -> Optional[float]:
-    patterns = [
-        (r'Ø\s*([0-9]+[,.]?[0-9]*)\s*€\s*/\s*l',                        'eur_l'),
-        (r'(?:auf|bei|von)\s+([0-9]+[,.][0-9]+)\s*Cent/Liter',           'cent_l'),
-        (r'HEL\s*Ø[\-\s]*Preis[^0-9]{0,80}([0-9]+[,.][0-9]+)\s*Cent/Liter', 'cent_l'),
-        (r'Ø[\-\s]*Preis[^0-9]{0,80}([0-9]+[,.][0-9]+)\s*Cent\s*/\s*Liter', 'cent_l'),
-        (r'Heiz[öo]l[^0-9]{0,80}([0-9]{2,3}[,.][0-9])\s*Cent/Liter',    'cent_l'),
+def _price_candidates(html: str) -> List[dict]:
+    """
+    Every number in the page that is denominated in a heating-oil price unit,
+    normalised to EUR per litre.
+
+    The previous extractor ran five fixed regexes and gave up if none hit,
+    which is what happened when tecson.de changed its markup: the fetcher had
+    been failing since 2026-09-14 with nothing in the log but "could not
+    extract reference price". Scanning for unit-bearing numbers and scoring
+    them survives a layout change, because the unit is the part that cannot
+    change without the page ceasing to be about heating-oil prices.
+    """
+    # Up to three decimals: heating oil is quoted as 1,045 EUR/l as readily
+    # as 1,04. Allowing only two made the regex match the "045" of "1,045"
+    # as a standalone number, which then failed the range check and dropped
+    # the real reference price while leaving the regional ones standing.
+    # The lookbehind stops a match from starting inside a longer number.
+    NUM = r'(?<![0-9.,])([0-9]{1,4}(?:[.,][0-9]{1,3})?)'
+    units = [
+        (NUM + r'\s*(?:€|EUR)\s*/\s*(?:l|Liter)\b', 1.0),
+        (NUM + r'\s*(?:Cent|ct)\s*/\s*(?:l|Liter)\b', 0.01),
+        (NUM + r'\s*(?:€|EUR)\s*/\s*100\s*(?:l|Liter)\b', 0.01),
+        (NUM + r'\s*(?:€|EUR)\s*(?:je|pro)\s*100\s*(?:l|Liter)\b', 0.01),
     ]
-    for pattern, unit in patterns:
-        m = re.search(pattern, html, re.IGNORECASE)
-        if m:
+    out: List[dict] = []
+    for pattern, factor in units:
+        for m in re.finditer(pattern, html, re.IGNORECASE):
             val = _parse_de_decimal(m.group(1))
             if val is None:
                 continue
-            if unit == 'cent_l':
-                val = round(val / 100.0, 4)
-            if 0.30 < val < 5.00:
-                return val
-    return None
+            eur_l = round(val * factor, 4)
+            if not (0.30 < eur_l < 5.00):
+                continue
+            ctx = re.sub(r'\s+', ' ', html[max(0, m.start() - 120): m.end() + 40])
+            out.append({'eur_l': eur_l, 'context': ctx, 'pos': m.start()})
+    return out
+
+
+# Wording that marks a candidate as THE reference price rather than one of
+# the many regional or volume-tier prices the page also lists.
+_REF_HINTS = (
+    (r'Ø|\bDurchschnitt', 3),
+    (r'Referenzpreis|Vergleichspreis', 4),
+    (r'\bHEL\b|Heiz[öo]l', 2),
+    (r'3\.?000\s*(?:l|Liter)', 3),
+    (r'bundesweit|Deutschland', 2),
+)
+
+
+def _extract_reference_price(html: str) -> Optional[float]:
+    candidates = _price_candidates(html)
+    if not candidates:
+        return None
+    for c in candidates:
+        c['score'] = sum(w for pat, w in _REF_HINTS
+                         if re.search(pat, c['context'], re.IGNORECASE))
+    # Highest score wins; ties go to the earliest occurrence, since the page
+    # leads with its headline figure.
+    best = sorted(candidates, key=lambda c: (-c['score'], c['pos']))[0]
+    return best['eur_l'] if best['score'] > 0 else None
+
+
+def _log_price_diagnostics(html: str) -> None:
+    """
+    Print what the page offers when no price could be read, so the next
+    scheduled run shows the current markup instead of just failing again.
+    """
+    candidates = _price_candidates(html)
+    print(f'    tecson: {len(html)} bytes, {len(candidates)} unit-bearing '
+          f'numbers in the plausible range')
+    for c in candidates[:8]:
+        print(f'        {c["eur_l"]} EUR/l  <- ...{c["context"][-110:]}')
+    if not candidates:
+        # No units at all: show where prices would normally be, to tell a
+        # layout change apart from a block page or a cookie wall.
+        for kw in ('Heizöl', 'Cent', 'Preis', 'captcha', 'Cookie'):
+            hits = [m.start() for m in re.finditer(kw, html, re.IGNORECASE)][:2]
+            for h in hits:
+                snippet = re.sub(r'\s+', ' ', html[h: h + 130])
+                print(f'        "{kw}" @{h}: {snippet}')
 
 
 def _extract_change_table(html: str) -> Dict[str, Optional[float]]:
@@ -178,37 +239,45 @@ def _fetch_destatis_supplement() -> Dict[str, List[dict]]:
         print(f'    destatis supplement: auth failed ({e}), skipping')
         return result
 
-    DE_MONTHS = {
-        'januar': 1, 'februar': 2, 'märz': 3, 'maerz': 3, 'april': 4,
-        'mai': 5, 'juni': 6, 'juli': 7, 'august': 8, 'september': 9,
-        'oktober': 10, 'november': 11, 'dezember': 12,
-    }
+    # Use destatis_vpi's series builder rather than a private copy.
+    # The copy that stood here carried the same bug the VPI parser had: it
+    # read the month from `time_label`, but GENESIS ffcsv puts the month in
+    # its own numbered variable slot (MONAT), and it had no notion of the
+    # value variable. Both tables report an index AND its year-on-year change
+    # rate, one row each, so the two were interleaved under the same period —
+    # producer_index read 2019=92.1, 2019=1.1, 2020=91.2, 2020=-1.0.
+    def _series_from_table(rows: List[dict], prefer: str) -> List[dict]:
+        """
+        Build one clean series from a GENESIS table.
 
-    def _rows_to_series(rows: List[dict]) -> List[dict]:
-        pts: List[dict] = []
-        for r in rows:
-            year  = (r.get('time') or '').strip()
-            mlbl  = (r.get('time_label') or '').strip().lower()
-            value = r.get('value')
-            if not year or value is None:
-                continue
-            m_int = DE_MONTHS.get(mlbl)
-            period = f'{year}-{m_int:02d}' if m_int else year
-            try:
-                pts.append({'period': period, 'v': float(str(value).replace(',', '.'))})
-            except (ValueError, TypeError):
-                continue
-        pts.sort(key=lambda x: x['period'])
-        return pts
+        `prefer` is a substring of the wanted measure ('index' or 'preis');
+        change-rate series are never chosen, because they are a different
+        quantity that happens to share the period axis.
+        """
+        built = dv._build_series(rows)
+        if not built:
+            return []
+        keys = list(built.keys())
+        def is_rate(k: str) -> bool:
+            return bool(re.search(r'veränderung|vorjahr|%', k, re.IGNORECASE))
+        candidates = [k for k in keys if not is_rate(k)] or keys
+        wanted = [k for k in candidates if prefer.lower() in k.lower()]
+        chosen = max(wanted or candidates, key=lambda k: len(built[k]))
+        if len(keys) > 1:
+            print(f'      table series: {keys} -> using {chosen!r}')
+        return built[chosen]
 
     try:
         rows = dv._fetch_tablefile(
             creds, DESTATIS_TABLE_HEIZOIL_CONSUMER,
             startyear=2019, mode=auth_mode,
         )
-        result['consumer_eur_100l'] = _rows_to_series(rows)
+        result['consumer_eur_100l'] = _series_from_table(rows, 'preis')
         print(f'    destatis {DESTATIS_TABLE_HEIZOIL_CONSUMER}: '
               f'{len(result["consumer_eur_100l"])} pts (Heizöl EUR/100L)')
+        if not result['consumer_eur_100l'] and rows:
+            print(f'      {len(rows)} rows but no series built; columns: '
+                  f'{list(rows[0].keys())[:20]}')
     except Exception as e:
         print(f'    destatis {DESTATIS_TABLE_HEIZOIL_CONSUMER}: {e}')
 
@@ -217,7 +286,7 @@ def _fetch_destatis_supplement() -> Dict[str, List[dict]]:
             creds, DESTATIS_TABLE_HEIZOIL_INDEX,
             startyear=2019, mode=auth_mode,
         )
-        result['producer_index'] = _rows_to_series(rows)
+        result['producer_index'] = _series_from_table(rows, 'index')
         print(f'    destatis {DESTATIS_TABLE_HEIZOIL_INDEX}: '
               f'{len(result["producer_index"])} pts (Erzeugerpreisindex)')
     except Exception as e:
@@ -227,31 +296,42 @@ def _fetch_destatis_supplement() -> Dict[str, List[dict]]:
 
 
 def fetch() -> dict:
-    s = http.get_session()
-    r = s.get(URL, timeout=25, headers={'Accept': 'text/html,application/xhtml+xml'})
-    r.raise_for_status()
+    # Tecson is scraped, and a scrape is the least durable thing here: it had
+    # been failing since 2026-09-14 and took the whole source down with it,
+    # although the Destatis tables below need nothing from that page. The
+    # scrape is now best-effort, and Destatis carries the price when it fails.
+    html = ''
+    tecson_error: Optional[str] = None
+    ref_price: Optional[float] = None
+    changes: Dict[str, Optional[float]] = {}
+    notations: Dict[str, Optional[float]] = {}
+    quarterly: Dict[str, Optional[float]] = {}
 
-    html = _normalize(r.text)
-
-    ref_price = _extract_reference_price(html)
-    if ref_price is None:
-        raise RuntimeError('Tecson: could not extract reference price')
-
-    if not validators.in_range('heating_oil_eur_l', ref_price):
-        raise RuntimeError(
-            f'Tecson: reference price {ref_price:.4f} EUR/L outside allowed range'
-        )
-
-    changes   = _extract_change_table(html)
-    notations = _extract_oil_notations(html)
-    quarterly = _extract_quarterly(html)
+    try:
+        s = http.get_session()
+        r = s.get(URL, timeout=25, headers={'Accept': 'text/html,application/xhtml+xml'})
+        r.raise_for_status()
+        html = _normalize(r.text)
+        ref_price = _extract_reference_price(html)
+        if ref_price is None:
+            tecson_error = 'kein Referenzpreis im Seitenquelltext gefunden'
+            _log_price_diagnostics(html)
+        elif not validators.in_range('heating_oil_eur_l', ref_price):
+            tecson_error = f'Referenzpreis {ref_price:.4f} EUR/L außerhalb des Plausibilitätsbereichs'
+            ref_price = None
+        changes   = _extract_change_table(html)
+        notations = _extract_oil_notations(html)
+        quarterly = _extract_quarterly(html)
+    except Exception as e:
+        tecson_error = f'{type(e).__name__}: {e}'
+        print(f'  ! tecson: {tecson_error}')
 
     # FIX v5.3: removed broken q_count one-liner (iter(list, sentinel) crash).
     q_total  = sum(1 for k in quarterly if k.startswith('q'))
     yr_count = sum(1 for k in quarterly if k.startswith('y'))
 
     print(
-        f'    tecson: ref={ref_price} EUR/L'
+        f'    tecson: ref={ref_price if ref_price is not None else "—"} EUR/L'
         f', brent={notations.get("brent_usd_bbl")}'
         f', wti={notations.get("wti_usd_bbl")}'
         f', gasoil={notations.get("gasoil_eur_t")}'
@@ -259,18 +339,49 @@ def fetch() -> dict:
         f', annual={yr_count} years'
     )
 
+    destatis = _fetch_destatis_supplement()
+
+    # Fall back to the official consumer price when the scrape gives nothing.
+    # Destatis 43531-0005 reports EUR per 100 litres, monthly, with about two
+    # months' lag — older than Tecson's daily figure, but real, and better
+    # than a card frozen on a value from before the scraper broke.
+    price_source = 'tecson'
+    price_period: Optional[str] = None
+    if ref_price is None:
+        consumer = destatis.get('consumer_eur_100l') or []
+        if consumer:
+            latest = consumer[-1]
+            candidate = round(latest['v'] / 100.0, 4)
+            if validators.in_range('heating_oil_eur_l', candidate):
+                ref_price = candidate
+                price_source = 'destatis'
+                price_period = latest.get('period')
+                print(f'    heating_oil: Tecson lieferte nichts, nutze Destatis '
+                      f'{price_period} = {ref_price} EUR/L')
+
+    if ref_price is None:
+        raise RuntimeError(
+            'Heizölpreis aus keiner Quelle verfügbar — '
+            f'Tecson: {tecson_error or "unbekannt"}; '
+            f'Destatis-Verbraucherpreise: {len(destatis.get("consumer_eur_100l") or [])} Werte'
+        )
+
     history.record_history('heating_oil', {
         'ref_eur_l':     ref_price,
+        'price_source':  price_source,
         'brent_usd_bbl': notations.get('brent_usd_bbl'),
         'wti_usd_bbl':   notations.get('wti_usd_bbl'),
         'gasoil_eur_t':  notations.get('gasoil_eur_t'),
     })
 
-    destatis = _fetch_destatis_supplement()
-
     return {
         'data': {
             'reference_price_eur_l':  ref_price,
+            # Which source the headline price came from, so the dashboard can
+            # say "Destatis, August" instead of implying a daily Tecson quote.
+            'price_source':           price_source,
+            'price_period':           price_period,
+            'tecson_error':           tecson_error,
             'changes':                changes,
             'oil_notations':          notations,
             'quarterly_avg_eur_100l': quarterly,

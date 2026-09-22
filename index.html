@@ -2330,7 +2330,15 @@ function renderHeizoel() {
   const yoy=ch.year_pct;
   const wow=ch.week_pct;
   document.getElementById('kpi-heizoel').innerHTML=kpis([
-    {label:'Heizöl Ø DE',val:ref?fmtN(ref,3):'—',unit:'EUR/L · 3.000L · TECSON',color:'#f0883e',
+    // The headline price falls back to the official Destatis consumer price
+    // when the Tecson scrape yields nothing, and the tile must say so —
+    // a monthly Destatis figure labelled "TECSON" would claim a freshness
+    // and a basis it does not have.
+    {label:'Heizöl Ø DE', val:ref?fmtN(ref,3):'—',
+      unit: ho.price_source === 'destatis'
+              ? `EUR/L · Destatis${ho.price_period ? ' ' + ho.price_period : ''} · Monatswert`
+              : 'EUR/L · 3.000L · TECSON',
+      color:'#f0883e',
       delta:ch.yesterday_pct!=null?(ch.yesterday_pct>=0?'▲ +':'▼ ')+fmtN(ch.yesterday_pct,1)+' % vs gestern':''},
     {label:'vs vor 1 Woche',val:wow!=null?(wow>=0?'+':'')+fmtN(wow,1)+'%':'—',unit:ch.week_eur_l?fmtN(ch.week_eur_l,3)+' EUR/L':'',color:wow>0?'#f85149':'#3fb950'},
     {label:'vs vor 1 Jahr',val:yoy!=null?(yoy>=0?'+':'')+fmtN(yoy,1)+'%':'—',unit:ch.year_eur_l?fmtN(ch.year_eur_l,3)+' EUR/L':'',color:yoy>0?'#f85149':'#3fb950'},
@@ -2341,6 +2349,15 @@ function renderHeizoel() {
     {label:'Gasöl',val:not.gasoil_eur_t?fmtN(not.gasoil_eur_t,0):'—',unit:'EUR/Tonne',color:'#bc8cff',
       delta:not.gasoil_change!=null?(not.gasoil_change>=0?'▲ +':'▼ ')+fmtN(not.gasoil_change,0):''},
   ]);
+
+  // Say plainly which source the price came from, and why, if Tecson failed.
+  const hoNote = ho.price_source === 'destatis'
+    ? `Tecson-Abruf fehlgeschlagen (${ho.tecson_error || 'unbekannt'}) — Preis aus Destatis 43531-0005`
+    : (ho.tecson_error ? `Tecson-Teilfehler: ${ho.tecson_error}` : null);
+
+  ['chart-heatoil-hist','chart-heatoil-change','heatoil-notations'].forEach(id => {
+    if (document.getElementById(id)) stamp(id, 'heating_oil', hoNote);
+  });
 
   // Historical chart from quarterly_avg + yearly aggregates
   const q=ho.quarterly_avg_eur_100l||{};
