@@ -19,7 +19,12 @@ from core import http, validators, history
 
 URL = 'https://www.tecson.de/de/heizoelpreise.html'
 
-DESTATIS_TABLE_HEIZOIL_CONSUMER = '43531-0005'
+# Candidate tables for a consumer heating-oil price in EUR. The first is the
+# one this fetcher has always used; it is rejected by Destatis with status
+# 104 (no objects for the selection), so the others are tried after it and
+# whichever answers is recorded in the output.
+DESTATIS_TABLES_HEIZOIL_CONSUMER = ['43531-0005', '61241-0004', '61241-0002']
+DESTATIS_TABLE_HEIZOIL_CONSUMER = DESTATIS_TABLES_HEIZOIL_CONSUMER[0]
 DESTATIS_TABLE_HEIZOIL_INDEX    = '61241-0001'
 
 
@@ -262,24 +267,49 @@ def _fetch_destatis_supplement() -> Dict[str, List[dict]]:
             return bool(re.search(r'veränderung|vorjahr|%', k, re.IGNORECASE))
         candidates = [k for k in keys if not is_rate(k)] or keys
         wanted = [k for k in candidates if prefer.lower() in k.lower()]
-        chosen = max(wanted or candidates, key=lambda k: len(built[k]))
+        pool = wanted or candidates
+
+        # Guard on the values as well as the key. A key can be unhelpful, but
+        # a year-on-year rate and a rebased index never look alike: the rate
+        # goes negative and sits near zero, the index does not. Picking the
+        # rate and calling it an index is what produced 1.1, -1.0, 9.6, 29.8
+        # where 92.1, 91.2, 100.0, 129.8 belonged.
+        def looks_like_rate(key: str) -> bool:
+            vals = [p['v'] for p in built[key]]
+            if not vals:
+                return False
+            return any(v < 0 for v in vals) and max(abs(v) for v in vals) < 60
+
+        if prefer.lower() in ('index', 'preis'):
+            not_rates = [k for k in pool if not looks_like_rate(k)]
+            if not_rates:
+                pool = not_rates
+        chosen = max(pool, key=lambda k: len(built[k]))
         if len(keys) > 1:
             print(f'      table series: {keys} -> using {chosen!r}')
         return built[chosen]
 
-    try:
-        rows = dv._fetch_tablefile(
-            creds, DESTATIS_TABLE_HEIZOIL_CONSUMER,
-            startyear=2019, mode=auth_mode,
-        )
-        result['consumer_eur_100l'] = _series_from_table(rows, 'preis')
-        print(f'    destatis {DESTATIS_TABLE_HEIZOIL_CONSUMER}: '
-              f'{len(result["consumer_eur_100l"])} pts (Heizöl EUR/100L)')
-        if not result['consumer_eur_100l'] and rows:
-            print(f'      {len(rows)} rows but no series built; columns: '
-                  f'{list(rows[0].keys())[:20]}')
-    except Exception as e:
-        print(f'    destatis {DESTATIS_TABLE_HEIZOIL_CONSUMER}: {e}')
+    # 43531-0005 answers "status code 104: Es gibt keine Objekte zum
+    # angegebenen Selektionskriterium" — the table does not serve this
+    # selection, which is why the consumer series had always been empty. It
+    # stays first in case that changes; the alternatives are tried after it.
+    consumer_error: Optional[str] = None
+    for table in DESTATIS_TABLES_HEIZOIL_CONSUMER:
+        try:
+            rows = dv._fetch_tablefile(creds, table, startyear=2019, mode=auth_mode)
+            series = _series_from_table(rows, 'preis')
+            if series:
+                result['consumer_eur_100l'] = series
+                result['consumer_table'] = table
+                print(f'    destatis {table}: {len(series)} pts (Heizöl EUR/100L)')
+                break
+            print(f'    destatis {table}: {len(rows)} rows but no price series'
+                  + (f'; columns: {list(rows[0].keys())[:18]}' if rows else ''))
+        except Exception as e:
+            consumer_error = f'{table}: {str(e)[:120]}'
+            print(f'    destatis {table}: {str(e)[:150]}')
+    if not result['consumer_eur_100l']:
+        result['consumer_unavailable'] = consumer_error or 'keine der Tabellen lieferte Preise'
 
     try:
         rows = dv._fetch_tablefile(

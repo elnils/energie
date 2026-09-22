@@ -459,22 +459,38 @@ def _measure_of(row: dict) -> str:
     Which statistic the row reports, e.g. the index itself vs. its
     year-on-year change rate.
 
-    Destatis ships both in one table, one row each, sharing a period. Keying
-    only by category collapsed them into a single series that alternated
-    between an index around 120 and a rate around 2 — the sawtooth visible
-    in the VPI card and in heating oil's producer index.
+    Destatis ships both in one table, one row each, sharing a period, so the
+    two must end up in different series or one silently overwrites the other.
+    Keying on `value_variable_code` alone was not enough: in 61241-0001 both
+    rows carry the SAME code and differ only in unit and label, so they
+    collapsed into one series and the change rate — written last — won. The
+    producer index came out as 1.1, -1.0, 9.6, 29.8 where an index rebased on
+    2021=100 should read 92.1, 91.2, 100.0, 129.8.
+
+    Every field that could tell two measures apart is therefore part of the
+    key. Identical rows stay together; anything that differs splits.
     """
-    return ((row.get('value_variable_code') or '').strip().upper()
-            or (row.get('value_variable_label') or '').strip()
-            or 'VALUE')
+    parts = [
+        (row.get('value_variable_code') or '').strip().upper(),
+        (row.get('value_unit_code') or '').strip().upper(),
+        (row.get('value_unit_label') or '').strip(),
+        (row.get('value_variable_label') or '').strip(),
+    ]
+    key = '|'.join(p for p in parts if p)
+    return key or 'VALUE'
 
 
 def _measure_suffix(measure: str, label: str) -> str:
     """Human-readable suffix appended to a series key when a table has several measures."""
     text = f'{measure} {label}'.lower()
-    if 'veränderung' in text or 'vorjahr' in text or 'chg' in text or 'rate' in text:
+    if ('veränderung' in text or 'vorjahr' in text or 'chg' in text
+            or 'rate' in text or 'prozent' in text or '%' in text):
         return ' — Veränderung ggü. Vorjahr (%)'
-    return ' — Index'
+    if 'index' in text:
+        return ' — Index'
+    if 'eur' in text or 'euro' in text:
+        return ' — Preis'
+    return ' — Wert'
 
 
 def _build_series(rows: List[dict]) -> Dict[str, List[dict]]:
