@@ -109,17 +109,21 @@ main{padding:18px 20px 70px;max-width:1600px;margin:0 auto}
    old they are. Added because several cards drew a perfectly normal-looking
    line from a file that had not updated in months, with nothing on screen to
    say so. */
-.card-stamp{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px;padding-top:6px;border-top:1px solid var(--border);font-size:9px;color:var(--text3);line-height:1.5}
+.card-stamp{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:8px;padding-top:6px;border-top:1px solid var(--border);font-size:9px;color:var(--text3);line-height:1.5}
 .card-stamp .src{font-weight:600;color:var(--text2)}
 .card-stamp .age{display:inline-flex;align-items:center;gap:3px}
-.card-stamp.warn{color:var(--yellow)}
-.card-stamp.warn .src{color:var(--yellow)}
-.card-stamp.old{color:var(--red)}
-.card-stamp.old .src{color:var(--red)}
+.card-stamp .sep{color:var(--border-strong)}
+/* State is per source, not per line: a healthy source next to a failing one
+   must not be painted as if it were failing too. */
+.src-item{display:inline-flex;align-items:center;gap:4px}
+.src-item.src-warn,.src-item.src-warn .src{color:var(--yellow)}
+.src-item.src-old,.src-item.src-old .src{color:var(--red)}
 .stamp-dot{width:5px;height:5px;border-radius:50%;background:var(--green);flex-shrink:0}
-.card-stamp.warn .stamp-dot{background:var(--yellow)}
-.card-stamp.old .stamp-dot{background:var(--red)}
+.src-item.src-warn .stamp-dot{background:var(--yellow)}
+.src-item.src-old .stamp-dot{background:var(--red)}
 .stamp-note{opacity:.85}
+.stamp-note.src-warn{color:var(--yellow);opacity:1}
+.stamp-note.src-old{color:var(--red);opacity:1}
 .nodata .why{font-size:10px;color:var(--text3);max-width:34em;line-height:1.5}
 .nodata .why code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:9px;background:var(--bg);padding:1px 4px;border-radius:3px}
 
@@ -1091,21 +1095,36 @@ function stamp(anchorId, sources, note) {
   if (!card) return;
   const names = Array.isArray(sources) ? sources : [sources];
   const metas = names.map(sourceMeta);
-  const worst = metas.reduce((acc, m) =>
-    m.level === 'old' ? 'old' : (m.level === 'warn' && acc !== 'old') ? 'warn' : acc, 'ok');
 
-  const parts = metas.map(m =>
-    `<span class="src">${m.label}</span> <span class="age">${fmtAge(m.ageH)}</span>`);
-  let warning = '';
+  // Each source is coloured on its own state. Colouring the whole line by
+  // the worst of them told the reader that a healthy source was in trouble:
+  // on a card fed by Tankerkönig and TECSON, Tankerkönig — fetched an hour
+  // earlier without error — was rendered in the same warning colour as
+  // TECSON, which had been failing for days.
+  const parts = metas.map(m => {
+    const cls = m.level === 'ok' ? '' : ` src-${m.level}`;
+    const title = m.stale
+      ? `${m.label}: Abruf schlägt fehl, letzte guten Werte vom ${m.lastSuccess ? fmtDt(m.lastSuccess) : 'unbekannt'}`
+      : `${m.label}: Stand ${m.updatedIso ? fmtDt(m.updatedIso) : 'unbekannt'}`;
+    return `<span class="src-item${cls}" title="${title}">` +
+           `<span class="stamp-dot"></span>` +
+           `<span class="src">${m.label}</span> <span class="age">${fmtAge(m.ageH)}</span>` +
+           `</span>`;
+  });
+
+  // The note explains the failure and belongs to the source that has it.
   const staleMeta = metas.find(m => m.stale);
+  const oldMeta = metas.find(m => !m.stale && m.level === 'old');
+  let warning = '';
   if (staleMeta) {
-    warning = `· <span class="stamp-note">${staleMeta.label} meldet seit ${
+    warning = `<span class="stamp-note src-warn">${staleMeta.label} meldet seit ${
       staleMeta.lastSuccess ? fmtDt(staleMeta.lastSuccess) : 'unbekannt'
     } Fehler — gezeigt werden die letzten guten Werte</span>`;
-  } else if (worst === 'old') {
-    warning = '· <span class="stamp-note">seit längerem nicht aktualisiert</span>';
+  } else if (oldMeta) {
+    warning = `<span class="stamp-note src-old">${oldMeta.label} seit längerem nicht aktualisiert</span>`;
   }
   if (note) parts.push(`<span class="stamp-note">${note}</span>`);
+  if (warning) parts.push(warning);
 
   let box = card.querySelector('.card-stamp');
   if (!box) {
@@ -1113,8 +1132,9 @@ function stamp(anchorId, sources, note) {
     box.className = 'card-stamp';
     card.appendChild(box);
   }
-  box.className = 'card-stamp' + (worst === 'ok' ? '' : ' ' + worst);
-  box.innerHTML = `<span class="stamp-dot"></span>${parts.join(' · ')}${warning}`;
+  // The container stays neutral; state lives on the individual entries.
+  box.className = 'card-stamp';
+  box.innerHTML = parts.join('<span class="sep">·</span>');
 }
 
 // Replace a chart with an explanation. `why` should say what is missing and
