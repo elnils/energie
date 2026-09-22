@@ -16,6 +16,8 @@ import os
 import time
 from typing import Dict, List, Optional
 
+from datetime import datetime, timezone
+
 from core import http, validators, history
 
 
@@ -115,12 +117,22 @@ def fetch() -> dict:
     if not any(v.get('e5_avg') for k, v in cities_out.items() if k != '_national'):
         raise RuntimeError('tankerkoenig: no city returned valid E5 average')
 
-    # History: append national averages so the frontend can plot trends
+    # History: append national averages so the frontend can plot trends.
+    #
+    # The hour is recorded with them, and it matters for reading the chart.
+    # German station prices move several times a day by 10 cents or more, and
+    # this archive keeps ONE instantaneous reading per day — whichever run of
+    # that day wrote last, which is not the same hour every day. That alone
+    # produces day-to-day steps of 5 to 10 cents in the trend line
+    # (2026-09-16 sits at 2.54 EUR between neighbours at 2.43 and 2.46)
+    # without any single reading being wrong. With the hour stored, such a
+    # step can be checked instead of guessed at.
     history.record_history('fuel', {
         'e5_avg':     nat.get('e5_avg'),
         'e10_avg':    nat.get('e10_avg'),
         'diesel_avg': nat.get('diesel_avg'),
         'n_stations': nat.get('count'),
+        'snapshot_utc': datetime.now(timezone.utc).strftime('%H:%M'),
     })
 
     return {
