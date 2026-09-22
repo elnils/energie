@@ -77,7 +77,11 @@ EIA_SERIES: Dict[str, tuple] = {
     'eu_gas': (('NGEUIPRCNUS',),
                (r'title transfer facility', r'\bttf\b',
                 r'europe.*natural gas.*(price|spot)',
-                r'natural gas.*europe.*(price|spot)'),
+                r'natural gas.*europe.*(price|spot)',
+                r'(europe|eu|dutch|netherlands).*gas.*price',
+                r'gas price.*(europe|eu|dutch|netherlands)',
+                r'natural gas.*price.*(europe|eu\b|dutch|netherlands)',
+                r'import price.*natural gas'),
                (r'liquefied', r'lng')),
 }
 
@@ -98,9 +102,10 @@ IMF_BASE = 'https://www.imf.org/external/datamapper/api/v1'
 IMF_INDICATOR_LIST_URL = f'{IMF_BASE}/indicators'
 # key -> (preferred indicator ids, label patterns, label exclusions)
 IMF_INDICATORS: Dict[str, tuple] = {
-    'crude_oil': (('POILBREN', 'POILAPSP', 'POILBRE'),
+    'crude_oil': (('POILBREN', 'POILAPSP', 'POILBRE', 'POILAPSP_USD'),
                   (r'crude oil.*(brent|average)', r'\bcrude oil\b',
-                   r'petroleum.*spot', r'oil price'),
+                   r'petroleum.*spot', r'oil price', r'\boil\b.*\bprice',
+                   r'commodity.*oil'),
                   (r'\bgas\b',)),
     'eu_gas':    ((),
                   (r'natural gas.*(europe|eu)', r'\bnatural gas\b'),
@@ -179,6 +184,29 @@ def _fetch_eia_series(series_id: str) -> List[Dict[str, Any]]:
     return out
 
 
+def _log_near_misses(label: str, catalog: Dict[str, str], hints: tuple,
+                     limit: int = 12) -> None:
+    """
+    Print catalog entries containing any of `hints`, so a failed match is
+    diagnosable from the run log.
+
+    The September 2026 run loaded 1469 STEO series and 132 IMF indicators and
+    matched neither EU gas nor crude oil. That leaves two very different
+    conclusions — our patterns are too narrow, or these APIs simply do not
+    publish the series — and only the candidate list tells them apart.
+    """
+    if not catalog:
+        return
+    hits = [(cid, desc) for cid, desc in catalog.items()
+            if any(h.lower() in (desc or '').lower() for h in hints)]
+    if not hits:
+        print(f'    {label}: no catalog entry mentions any of {hints}')
+        return
+    print(f'    {label}: {len(hits)} catalog entries mention {hints}, showing {min(limit, len(hits))}:')
+    for cid, desc in hits[:limit]:
+        print(f'        {cid} = {desc[:88]}')
+
+
 def _match_catalog(catalog: Dict[str, str],
                    preferred: tuple,
                    patterns: tuple,
@@ -238,6 +266,9 @@ def _fetch_all_eia(errors: List[str]) -> Dict[str, List[Dict[str, Any]]]:
     catalog = _eia_steo_catalog()
     for key, (preferred, patterns, exclusions) in EIA_SERIES.items():
         series_id = _match_catalog(catalog, preferred, patterns, exclusions)
+        if series_id is None and catalog:
+            _log_near_misses(f'eia_steo/{key}', catalog,
+                             ('natural gas', 'gas price') if 'gas' in key else ('brent', 'crude', 'wti'))
         if series_id is None:
             # No catalog (request failed) — fall back to the hard-coded id so
             # a transient facet-endpoint failure doesn't disable a series
@@ -514,7 +545,10 @@ def _fetch_all_imf(errors: List[str]) -> Dict[str, List[Dict[str, Any]]]:
         if matched and matched not in candidates:
             candidates.append(matched)
         if not candidates:
-            msg = f'imf/{key}: no matching indicator in Datamapper catalog'
+            _log_near_misses(f'imf/{key}', catalog,
+                             ('oil', 'gas', 'commodity', 'price'))
+            msg = (f'imf/{key}: no matching indicator among '
+                   f'{len(catalog)} Datamapper indicators')
             print(f'  ! {msg}')
             errors.append(msg)
             continue

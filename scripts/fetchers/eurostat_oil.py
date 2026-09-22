@@ -78,9 +78,17 @@ BALANCES: Dict[str, Tuple[Tuple[str, ...], Tuple[str, ...], Tuple[str, ...]]] = 
     'imports':     (('IMP',), (r'^imports$', r'\bimports\b'), ()),
     'exports':     (('EXP',), (r'^exports$', r'\bexports\b'), ()),
     'production':  (('PPRD', 'PRD'), (r'primary production', r'^production$'), ()),
-    'stocks':      (('STK_CL', 'STK_CHG'),
-                    (r'closing stock', r'stock level', r'stock change'), ()),
-    'stock_change': (('STK_CHG',), (r'stock change',), ()),
+    # A level and a change are different quantities and must never fall back
+    # to one another. The first version of this table listed both under
+    # 'stocks', so jet fuel resolved to STK_CHG and the dashboard drew
+    # monthly stock CHANGES (65 of 138 values negative) under the heading
+    # "Lagerbestände", with a traffic light computing "percent of the
+    # five-year mean" from numbers that swing around zero.
+    'stock_level': (('STK_CL', 'STK_LVL'),
+                    (r'closing stock', r'stock level', r'stocks at end',
+                     r'^stocks$'),
+                    (r'change',)),
+    'stock_change': (('STK_CHG',), (r'stock change', r'change in stock'), ()),
     'deliveries':  (('GID_OBS', 'GID_CAL'),
                     (r'gross inland deliveries.*observ',
                      r'gross inland deliver', r'gross inland consumption'), ()),
@@ -99,16 +107,18 @@ BALANCES: Dict[str, Tuple[Tuple[str, ...], Tuple[str, ...], Tuple[str, ...]]] = 
 # them, and nothing is dropped from the file.
 # ──────────────────────────────────────────────────────────────────────
 SERIES: List[Tuple[str, str, str, str, str]] = [
-    ('oil_jet_fuel_stocks',      'nrg_cb_oilm', 'jet_fuel', 'stocks',       'Jet fuel stocks'),
+    ('oil_jet_fuel_stocks',      'nrg_cb_oilm', 'jet_fuel', 'stock_level',  'Jet fuel stocks'),
+    ('oil_jet_fuel_stock_change','nrg_cb_oilm', 'jet_fuel', 'stock_change', 'Jet fuel stock change'),
     ('oil_jet_fuel_supply',      'nrg_cb_oilm', 'jet_fuel', 'production',   'Jet fuel production/supply'),
     ('oil_jet_fuel_imports',     'nrg_cb_oilm', 'jet_fuel', 'imports',      'Jet fuel imports'),
     ('oil_jet_fuel_exports',     'nrg_cb_oilm', 'jet_fuel', 'exports',      'Jet fuel exports'),
     ('oil_jet_fuel_consumption', 'nrg_cb_oilm', 'jet_fuel', 'deliveries',   'Jet fuel gross inland deliveries'),
     ('oil_crude_imports',        'nrg_cb_oilm', 'crude',    'imports',      'Crude oil imports'),
     ('oil_crude_production',     'nrg_cb_oilm', 'crude',    'production',   'Crude oil production'),
-    ('oil_diesel_stocks',        'nrg_cb_oilm', 'diesel',   'stocks',       'Diesel/gasoil stocks'),
-    ('oil_motor_gasoline',       'nrg_cb_oilm', 'gasoline', 'stocks',       'Motor gasoline stocks'),
-    ('oil_heating_oil_stocks',   'nrg_cb_oilm', 'heating',  'stocks',       'Heating/fuel oil stocks'),
+    ('oil_diesel_stocks',        'nrg_cb_oilm', 'diesel',   'stock_level',  'Diesel/gasoil stocks'),
+    ('oil_motor_gasoline',       'nrg_cb_oilm', 'gasoline', 'stock_level',  'Motor gasoline stocks'),
+    ('oil_heating_oil_stocks',   'nrg_cb_oilm', 'heating',  'stock_level',  'Heating/fuel oil stocks'),
+    ('oil_diesel_stock_change',  'nrg_cb_oilm', 'diesel',   'stock_change', 'Diesel/gasoil stock change'),
 
     ('gas_production',           'nrg_cb_gasm', 'gas', 'production',   'Gas production'),
     ('gas_imports',              'nrg_cb_gasm', 'gas', 'imports',      'Gas imports'),
@@ -154,6 +164,15 @@ def fetch() -> dict:
         unit_label_by_dataset[dataset] = cat.get(code, code or '')
         print(f'    eurostat/{dataset}: unit -> {code} ({unit_label_by_dataset[dataset]})')
 
+    # Print each dataset's balance vocabulary once. Without it, "no code for
+    # nrg_bal" in the log gives no way to tell whether the concept is missing
+    # or our pattern is wrong.
+    for dataset in dict.fromkeys(d for _k, d, *_r in SERIES):
+        bal = _resolve_dataset(dataset).get('nrg_bal', {})
+        if bal:
+            print(f'    eurostat/{dataset}: nrg_bal codes = ' +
+                  ', '.join(f'{c}({l[:28]})' for c, l in list(bal.items())[:25]))
+
     for key, dataset, product_intent, balance_intent, desc in SERIES:
         catalog = _resolve_dataset(dataset)
         siec_codes, siec_patterns, siec_excl = PRODUCTS[product_intent]
@@ -194,6 +213,12 @@ def fetch() -> dict:
             'dataset': dataset,
             'product': siec,
             'flow': nrg_bal,
+            # 'level' is a quantity in store at a point in time, 'change' is
+            # a monthly delta that can be negative. Consumers must not treat
+            # them alike — the dashboard labels and charts them differently.
+            'measure': 'change' if balance_intent == 'stock_change' else (
+                       'level' if balance_intent == 'stock_level' else 'flow'),
+            'flow_label': (catalog.get('nrg_bal') or {}).get(nrg_bal, nrg_bal),
             'unit': unit_label_by_dataset.get(dataset) or unit or '',
             'unit_code': unit,
         }
