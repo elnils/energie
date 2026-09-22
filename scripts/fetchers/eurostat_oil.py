@@ -33,7 +33,13 @@ from typing import Dict, List, Optional, Tuple
 
 from . import _eurostat as eu
 
-GEO = ['EU27_2020', 'DE', 'FR', 'IT', 'ES', 'NL', 'PL', 'BE', 'AT', 'EA20']
+# Eurostat serves EU members plus EFTA and candidates, so this is as wide as
+# these datasets go — a G20 comparison needs a second provider (IEA or
+# national statistics); the US, China, India and Japan are simply not in
+# them. One request per country per series, so the list size drives the
+# run time that fetch_all.SCHEDULE budgets for.
+GEO = ['EU27_2020', 'EA20', 'DE', 'FR', 'IT', 'ES', 'NL', 'PL', 'BE', 'AT',
+       'CZ', 'DK', 'SE', 'FI', 'PT', 'GR', 'IE', 'NO']
 
 # Data starts here for monthly datasets. Annual ones ignore it and return
 # their full history, which is what the long-run import/export view wants.
@@ -168,10 +174,20 @@ def fetch() -> dict:
     # nrg_bal" in the log gives no way to tell whether the concept is missing
     # or our pattern is wrong.
     for dataset in dict.fromkeys(d for _k, d, *_r in SERIES):
-        bal = _resolve_dataset(dataset).get('nrg_bal', {})
+        cat = _resolve_dataset(dataset)
+        bal = cat.get('nrg_bal', {})
         if bal:
             print(f'    eurostat/{dataset}: nrg_bal codes = ' +
                   ', '.join(f'{c}({l[:28]})' for c, l in list(bal.items())[:25]))
+        # Same for the product dimension. Eight series still resolve to
+        # nothing — the per-source electricity ones (wind, solar, nuclear,
+        # hydro) and the production intents — and without seeing what siec
+        # codes a dataset offers there is no way to tell a wrong pattern
+        # from a breakdown the dataset does not carry.
+        siec = cat.get('siec', {})
+        if siec:
+            print(f'    eurostat/{dataset}: {len(siec)} siec codes, e.g. ' +
+                  ', '.join(f'{c}({l[:30]})' for c, l in list(siec.items())[:20]))
 
     for key, dataset, product_intent, balance_intent, desc in SERIES:
         catalog = _resolve_dataset(dataset)
