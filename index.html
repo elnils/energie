@@ -223,7 +223,8 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
 </header>
 
 <nav class="tabs">
-  <button class="tab active" data-tab="strom">Strom</button>
+  <button class="tab active" data-tab="ueberblick">Überblick</button>
+  <button class="tab" data-tab="strom">Strom</button>
   <button class="tab" data-tab="strompreise">Strompreise & Importe</button>
   <button class="tab" data-tab="markt">Marktpreise</button>
   <button class="tab" data-tab="gas">Gas</button>
@@ -239,8 +240,51 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
 
 <main>
 
+<!-- ÜBERBLICK — the front page -->
+<!-- Until now the dashboard opened straight into Strom, so the state of
+     everything else was only visible by clicking through eleven tabs. This
+     panel carries one headline figure per domain and the health of every
+     source feeding them. -->
+<div class="panel active" id="panel-ueberblick">
+  <div class="lage-hero" id="ueberblick-hero">
+    <div id="ueberblick-hero-content">
+      <div class="loading"><span class="spin"></span>Lage wird ermittelt…</div>
+    </div>
+  </div>
+  <div class="kpis" id="kpi-ueberblick"></div>
+  <div class="grid">
+    <div class="card g7" data-src="energy_charts">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">Strompreis Day-Ahead · 7 Tage</div>
+          <div class="card-sub">Energy-Charts · EUR/MWh · Details im Tab Strom</div>
+        </div>
+      </div>
+      <div class="chart-wrap" style="height:210px"><canvas id="chart-ueberblick-strom"></canvas></div>
+    </div>
+    <div class="card g5" data-src="smard">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">Woher der Strom gerade kommt</div>
+          <div class="card-sub">SMARD · aktuellster Viertelstundenwert</div>
+        </div>
+      </div>
+      <div id="ueberblick-mix"><div class="loading"><span class="spin"></span></div></div>
+    </div>
+    <div class="card g12">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">Quellen</div>
+          <div class="card-sub">Was dieses Dashboard speist, wie aktuell es ist und was es füllt</div>
+        </div>
+      </div>
+      <div id="ueberblick-quellen"><div class="loading"><span class="spin"></span></div></div>
+    </div>
+  </div>
+</div>
+
 <!-- STROM -->
-<div class="panel active" id="panel-strom">
+<div class="panel" id="panel-strom">
   <div class="range-bar" data-tab="strom"></div>
   <div class="kpis" id="kpi-strom"></div>
   <div class="grid">
@@ -790,7 +834,7 @@ const D = {}; // loaded data
 const CH = {}; // charts
 let fuelType = 'e5';
 let newsSource = 'alle';
-let activeTab = 'strom';
+let activeTab = 'ueberblick';
 
 // ══════════════════════════════════════════════
 // TIME RANGE — unified per-tab range selector
@@ -809,6 +853,7 @@ const RANGE_DEFS = {
 
 // Per-tab: which ranges are enabled (others rendered greyed out)
 const TAB_RANGES = {
+  ueberblick:  [],   // fixed windows per tile; nothing to choose
   strom:       ['24h','7d','30d'],
   // Eurostat publishes these half-yearly and annually, so anything under a
   // year would show a single point.
@@ -818,9 +863,9 @@ const TAB_RANGES = {
   rohstoffe:   ['30d','90d','1y','2y','max'],
   kraftstoff:  ['7d','30d','90d','1y','2y','5y','max'],  // road fuel + heating oil + jet
   erneuerbare: ['30d','90d','1y','2y','5y','max'],
-  wetter:      ['24h','7d'],
+  wetter:      ['24h','7d'],   // forward window: Open-Meteo sends 5 days
   fx:          ['30d','90d'],
-  futures:     ['1y','2y','5y'],
+  futures:     ['90d','1y','2y','5y','max'],
   lage:        ['90d','1y','2y','5y','max'],
   news:        [],  // no range
 };
@@ -887,8 +932,11 @@ function renderRangeBar(tab) {
   const enabled = TAB_RANGES[tab] || [];
   if (!enabled.length) { bar.style.display = 'none'; return; }
   const current = getRange(tab);
+  // Weather is the one tab whose data lies in the future, so its selector
+  // reads forward rather than back.
+  const label = tab === 'wetter' ? 'Vorschau' : 'Zeitraum';
   bar.innerHTML = `
-    <span class="range-bar-lbl">Zeitraum</span>
+    <span class="range-bar-lbl">${label}</span>
     <div class="range-opts">
       ${Object.keys(RANGE_DEFS).map(k => {
         const isEnabled = enabled.includes(k);
@@ -909,6 +957,10 @@ function renderRangeBar(tab) {
 }
 
 const TAB_FILES = {
+  // The front page pulls a headline number from most sources, so it loads
+  // broadly. Everything is optional — a missing file costs one tile.
+  ueberblick:  ['smard','energy_charts','gas_storage','commodities','fuel',
+                'heating_oil','eurostat_prices','destatis_vpi','entsoe','_state'],
   strom:       ['smard','energy_charts','entsoe'],
   strompreise: ['eurostat_prices','eurostat_oil'],
   markt:       ['energy_charts','commodities','fx','entsoe'],
@@ -2158,17 +2210,35 @@ function renderWetterCharts() {
   if(!w?.cities) return;
   const sc=w.cities[document.getElementById('solar-city')?.value||'Berlin'];
   const wc=w.cities[document.getElementById('wind-city')?.value||'Berlin'];
+
+  // The range selector on this tab used to do nothing. It also cannot mean
+  // what it means everywhere else: Open-Meteo returns a FORECAST — 120 hours
+  // running from today into the next five days — so a "last 24 hours" cutoff
+  // would keep the whole series. Here the range is a forward window: 24h
+  // shows the next day, 7d everything Open-Meteo sent.
+  const aheadMs = getRangeSeconds('wetter') * 1000;
+  const now = Date.now();
+  const windowOf = (h, key) => {
+    const t = h?.time || [], v = h?.[key] || [];
+    const all = t.map((ts, i) => ({ts, v: v[i], ms: Date.parse(ts)}));
+    const within = all.filter(x => !isFinite(x.ms) ||
+                                   (x.ms >= now - 3600000 && x.ms <= now + aheadMs));
+    return within.length ? within : all;
+  };
+
   if(sc?.hourly){
-    const h=sc.hourly,t=h.time||[];
-    mkChart('chart-solar','line',t.map(x=>x.substring(5)),[{
-      label:'W/m²',data:h.direct_radiation||[],borderColor:'#d29922',backgroundColor:'rgba(210,153,34,0.09)',fill:true
+    const pts = windowOf(sc.hourly, 'direct_radiation');
+    mkChart('chart-solar','line',pts.map(x=>x.ts.substring(5)),[{
+      label:'W/m²',data:pts.map(x=>x.v),borderColor:'#d29922',backgroundColor:'rgba(210,153,34,0.09)',fill:true
     }]);
+    stamp('chart-solar','weather',`Vorhersage, ${pts.length} Stundenwerte voraus`);
   }
   if(wc?.hourly){
-    const h=wc.hourly,t=h.time||[];
-    mkChart('chart-wind','line',t.map(x=>x.substring(5)),[{
-      label:'km/h',data:h.wind_speed_100m||[],borderColor:C.wind_on,backgroundColor:'rgba(88,166,255,0.09)',fill:true
+    const pts = windowOf(wc.hourly, 'wind_speed_100m');
+    mkChart('chart-wind','line',pts.map(x=>x.ts.substring(5)),[{
+      label:'km/h',data:pts.map(x=>x.v),borderColor:C.wind_on,backgroundColor:'rgba(88,166,255,0.09)',fill:true
     }]);
+    stamp('chart-wind','weather',`Vorhersage, ${pts.length} Stundenwerte voraus`);
   }
 }
 
@@ -2435,12 +2505,17 @@ function renderFx() {
 
   // Time-series chart
   const sel=document.getElementById('fx-currency')?.value||'USD';
-  const s=series90[sel]||[];
+  const coFx = rangeCutoffMs('fx');
+  const s=(series90[sel]||[]).filter(p => {
+    const ms = Date.parse(p.date);
+    return !isFinite(ms) || ms >= coFx;
+  });
   if(s.length){
     mkChart('chart-fx','line',s.map(p=>fmtDate(p.date)),[{
       label:`EUR / ${sel}`,data:s.map(p=>p.v),
       borderColor:'#39d353',backgroundColor:'rgba(57,211,83,0.07)',fill:true,
     }]);
+    stamp('chart-fx','fx',`${s.length} Handelstage im Zeitraum`);
   } else {
     const wrap=document.getElementById('chart-fx').parentElement;
     wrap.innerHTML='<div class="nodata">Keine 90-Tage-Historie für '+sel+'</div>';
@@ -3215,6 +3290,15 @@ function renderFutures() {
   if (spot.ttf_eur_mwh?.price)   kpiItems.push({label:'TTF Spot (approx)',val:fmtN(spot.ttf_eur_mwh.price,1),unit:'EUR/MWh',color:'#f0883e'});
   if (spot.wti_usd_bbl?.price)   kpiItems.push({label:'WTI Spot',val:fmtN(spot.wti_usd_bbl.price,1),unit:'USD/bbl',color:'#d97706'});
   if (spot.natgas_usd_mmbtu?.price) kpiItems.push({label:'Henry Hub',val:fmtN(spot.natgas_usd_mmbtu.price,2),unit:'USD/MMBtu',color:'#7e57c2'});
+  // energy_futures.spot only carries Brent and WTI, so the gas benchmarks
+  // come straight from commodities — otherwise this tab shows forecasts for
+  // TTF and Henry Hub with no actual price anywhere beside them.
+  const ttfNow = (D.commodities?.ttf_eu_proxy?.series || []).at(-1);
+  if (ttfNow) kpiItems.push({label:'TTF Spot', val:fmtN(ttfNow.v,1),
+    unit:`EUR/MWh · ${fmtDate(ttfNow.ts*1000)} · Yahoo`, color:'#f0883e'});
+  const hhNow = (D.commodities?.natgas_henry?.series || []).at(-1);
+  if (hhNow && !spot.natgas_usd_mmbtu?.price) kpiItems.push({label:'Henry Hub Spot',
+    val:fmtN(hhNow.v,2), unit:`USD/MMBtu · ${fmtDate(hhNow.ts*1000)} · Yahoo`, color:'#7e57c2'});
   const brentFc = (ft?.eia_steo?.brent||[]).filter(p=>p.type==='forecast').slice(11)[0];
   if (brentFc) kpiItems.push({label:'Brent 12M Fwd',val:fmtN(brentFc.v,1),unit:`USD/bbl · EIA ${brentFc.period}`,color:'#bc8cff'});
   document.getElementById('kpi-futures').innerHTML = kpis(kpiItems);
@@ -3265,41 +3349,120 @@ function _toDisp(v, type) {
   return type==='gas' && unit==='eur_mwh' ? +(v/3.41*0.92).toFixed(2) : v;
 }
 
+// The live spot price for a forecast chart, from commodities.json.
+//
+// EIA STEO publishes monthly, and its "actual" values stop at the last
+// completed month — on 22 September the newest actual was August and
+// September was already a forecast, so the chart's right-hand end showed a
+// prediction for a month nearly over while the real price was sitting
+// unused in commodities.json. These charts now carry today's close as a
+// separate point, which is also the only honest way to see whether a
+// forecast is tracking reality.
+function spotFor(type) {
+  const com = D.commodities || {};
+  if (type === 'oil') {
+    const s = com.brent_crude?.series || [];
+    return s.length ? {v: s.at(-1).v, ts: s.at(-1).ts, label: 'Brent Spot (Yahoo)',
+                       unit: 'USD/bbl'} : null;
+  }
+  // Gas: TTF in EUR/MWh. The chart may be displaying USD/MMBtu, so convert
+  // with the same factor _toDisp uses in reverse.
+  const s = com.ttf_eu_proxy?.series || [];
+  if (!s.length) return null;
+  const eurMwh = s.at(-1).v;
+  const wantEur = (document.getElementById('futures-gas-unit')?.value || 'eur_mwh') === 'eur_mwh';
+  return {v: wantEur ? eurMwh : +(eurMwh / 0.92 * 3.41).toFixed(2),
+          ts: s.at(-1).ts, label: 'TTF Spot (Yahoo)',
+          unit: wantEur ? 'EUR/MWh' : 'USD/MMBtu'};
+}
+
+// Range-aware x-axis bounds for the forecast charts. The selector on this
+// tab used to do nothing: the axis was hard-coded to "two years back" and
+// the actuals to "three years back", whatever was clicked.
+function futuresAxisMin() {
+  const sec = getRangeSeconds('futures');
+  if (sec === Infinity) return '2015-01-01';
+  return new Date(Date.now() - sec * 1000).toISOString().substring(0, 10);
+}
+
 function _renderSteoChart(canvasId, steo, prevSteo, type) {
   const wrap = document.getElementById(canvasId)?.parentElement;
   if (!wrap) return;
+  const spot = spotFor(type);
+
+  // No STEO series for this commodity — true for EU gas, whose benchmark
+  // STEO does not publish at all (its catalogue holds only US regional gas).
+  // Rather than leave the card empty, draw the real price history we do have.
   if (!steo.length) {
+    const hist = type === 'gas' ? (D.commodities?.ttf_eu_proxy?.series || []) : [];
+    const co = rangeCutoffSec('futures');
+    const pts = uniqTs(hist.filter(p => p.v != null && p.ts >= co));
+    if (pts.length) {
+      const wantEur = (document.getElementById('futures-gas-unit')?.value || 'eur_mwh') === 'eur_mwh';
+      const conv = v => wantEur ? v : +(v / 0.92 * 3.41).toFixed(2);
+      const unit = wantEur ? 'EUR/MWh' : 'USD/MMBtu';
+      mkChart(canvasId, 'line', pts.map(p => fmtDate(p.ts * 1000)), [{
+        label: `TTF tatsächlich (${unit})`, data: pts.map(p => conv(p.v)),
+        borderColor:'#f0883e', backgroundColor:'rgba(240,136,62,0.10)',
+        fill:true, borderWidth:2, pointRadius:0, tension:0.2,
+      }], {scales:{y:{title:{display:true,text:unit,color:'#8c98a8',font:{size:10}}},
+                   x:{ticks:{maxTicksLimit:10}}}});
+      stamp(canvasId, 'commodities',
+            'Keine Prognosequelle für EU-Gas verfügbar — gezeigt wird der tatsächliche ' +
+            'TTF-Verlauf (Front-Month-Future)');
+      return;
+    }
     const src = D.energy_futures?.sources?.eia_steo;
     noData(canvasId, `Keine EIA-STEO-Prognose für ${type==='gas'?'EU-Gas':'Brent'}`,
-      src?.reason ? `Die Quelle meldet: <code>${src.reason}</code>`
-                  : 'EIA STEO liefert diese Reihe derzeit nicht. Welche Series-ID ' +
-                    'zuletzt aufgelöst wurde, steht in <code>meta.resolved</code> ' +
-                    'in <code>data/energy_futures.json</code>.');
+      (type === 'gas'
+        ? 'EIA STEO veröffentlicht keinen europäischen Gas-Benchmark — sein Katalog ' +
+          'enthält nur US-Regionalreihen. Als Ersatz dient der TTF-Future aus ' +
+          '<code>commodities.json</code>, der hier ebenfalls fehlt.'
+        : (src?.reason ? `Die Quelle meldet: <code>${src.reason}</code>`
+                       : 'EIA STEO liefert diese Reihe derzeit nicht.')));
     return;
   }
-  const cutoff3y = (() => { const d=new Date(); d.setFullYear(d.getFullYear()-3); return d.toISOString().substring(0,7); })();
-  const actual   = steo.filter(p=>p.type==='actual'&&p.period>=cutoff3y);
+
+  const axisMin = futuresAxisMin();
+  const actual   = steo.filter(p=>p.type==='actual' && p.period >= axisMin.substring(0,7));
   const forecast = steo.filter(p=>p.type==='forecast');
   const prevFc   = prevSteo.filter(p=>p.type==='forecast');
   const {datasets} = alignedDatasets([
-    {label:'Historisch', points:actual,
+    {label:'Historisch (EIA, monatlich)', points:actual,
      style:{borderColor:'#8c98a8',backgroundColor:'transparent',borderWidth:1.8,pointRadius:0,tension:0.2}},
     {label:'EIA Prognose (aktuell)', points:forecast,
      style:{borderColor:'#0e6cb6',backgroundColor:'rgba(14,108,182,0.10)',fill:true,borderWidth:2.2,tension:0.2,pointRadius:2}},
     {label:'EIA Prognose (Vorwoche)', points:prevFc,
      style:{borderColor:'#94a3b8',backgroundColor:'transparent',borderWidth:1.2,borderDash:[5,4],pointRadius:0,tension:0.2}},
   ], v => _toDisp(v, type));
-  const yFt = ft => ft?.worldbank?.crude_oil||ft?.worldbank?.eu_gas||[];
+
+  // Today's real price, as a single marked point.
+  if (spot) {
+    datasets.push({
+      type:'scatter', label:`${spot.label} heute`,
+      data:[{x:new Date(spot.ts * 1000).toISOString().substring(0,10), y:spot.v}],
+      borderColor:'#c0392b', backgroundColor:'#c0392b',
+      pointRadius:7, pointStyle:'crossRot', borderWidth:3, showLine:false,
+    });
+  }
+
   const wb = type==='oil' ? D.energy_futures?.worldbank?.crude_oil : D.energy_futures?.worldbank?.eu_gas;
   const imf= type==='oil' ? D.energy_futures?.imf?.crude_oil : D.energy_futures?.imf?.eu_gas;
   const curYear = new Date().getFullYear();
   (wb||[]).filter(p=>p.year>=curYear).forEach(p=>datasets.push({type:'scatter',label:'World Bank',data:[{x:`${p.year}-07-01`,y:_toDisp(p.v,type)}],borderColor:'#bc8cff',backgroundColor:'rgba(188,140,255,0.7)',pointRadius:8,pointStyle:'rectRot',showLine:false}));
   (imf||[]).filter(p=>p.year>=curYear).forEach(p=>datasets.push({type:'scatter',label:'IMF',data:[{x:`${p.year}-07-01`,y:_toDisp(p.v,type)}],borderColor:'#d97706',backgroundColor:'rgba(217,119,6,0.7)',pointRadius:8,pointStyle:'rect',showLine:false}));
+
   if(CH[canvasId])CH[canvasId].destroy();
   const el=document.getElementById(canvasId);
   if(!el)return;
   const unit = type==='gas' ? (document.getElementById('futures-gas-unit')?.value==='eur_mwh'?'EUR/MWh':'USD/MMBtu') : 'USD/bbl';
-  CH[canvasId]=new Chart(el,{type:'line',data:{datasets},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},scales:{x:{type:'time',time:{unit:'month',displayFormats:{month:'MM/yy'}},min:(() => { const d=new Date(); d.setFullYear(d.getFullYear()-2); return d.toISOString().substring(0,10); })(),max:'2028-01-01',ticks:{maxTicksLimit:16,color:'#8c98a8',font:{size:10}},grid:{color:'#eef2f6'}},y:{grid:{color:'#eef2f6'},ticks:{color:'#8c98a8',font:{size:10},callback:v=>v.toFixed(1)+' '+unit},title:{display:true,text:unit,color:'#8c98a8',font:{size:10}}}},plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10},padding:8}}}}});
+  const lastFc = forecast.length ? forecast.at(-1).period : null;
+  CH[canvasId]=new Chart(el,{type:'line',data:{datasets},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},scales:{x:{type:'time',time:{unit:'month',displayFormats:{month:'MM/yy'}},min:axisMin,max:lastFc?lastFc+'-28':'2028-01-01',ticks:{maxTicksLimit:16,color:'#8c98a8',font:{size:10}},grid:{color:'#eef2f6'}},y:{grid:{color:'#eef2f6'},ticks:{color:'#8c98a8',font:{size:10},callback:v=>v.toFixed(1)+' '+unit},title:{display:true,text:unit,color:'#8c98a8',font:{size:10}}}},plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10},padding:8}}}}});
+
+  const lastActual = actual.length ? actual.at(-1).period : '—';
+  stamp(canvasId, spot ? ['energy_futures','commodities'] : 'energy_futures',
+        `EIA-Ist-Werte bis ${lastActual}, Prognose ab dem Folgemonat` +
+        (spot ? ` · roter Punkt = tatsächlicher Preis heute (${fmtN(spot.v,2)} ${spot.unit})` : ''));
 }
 
 function _renderSpreadChart() {
@@ -3338,7 +3501,7 @@ function _renderHHChart() {
   const ft=D.energy_futures; const wrap=document.getElementById('chart-futures-hh')?.parentElement; if(!wrap)return;
   const hh=ft?.eia_steo?.hh_gas||[];
   if(!hh.length){wrap.innerHTML='<div class="nodata">Henry Hub Daten werden geladen</div>';return;}
-  const cutoff=(() => { const d=new Date(); d.setFullYear(d.getFullYear()-3); return d.toISOString().substring(0,7); })();
+  const cutoff=futuresAxisMin().substring(0,7);
   const actual=hh.filter(p=>p.type==='actual'&&p.period>=cutoff),fcst=hh.filter(p=>p.type==='forecast');
   const prevHH=(ft?.previous_week?.eia_hh_gas||[]).filter(p=>p.type==='forecast');
   const {datasets:ds} = alignedDatasets([
@@ -3349,6 +3512,12 @@ function _renderHHChart() {
     {label:'Prognose Vorwoche', points:prevHH,
      style:{borderColor:'#94a3b8',backgroundColor:'transparent',borderWidth:1.2,borderDash:[5,4],pointRadius:0,tension:0.2}},
   ]);
+  // Today's real close, so the forecast can be read against the market.
+  const hhSpot = (D.commodities?.natgas_henry?.series || []).at(-1);
+  if (hhSpot) ds.push({type:'scatter', label:'Henry Hub heute (Yahoo)',
+    data:[{x:new Date(hhSpot.ts*1000).toISOString().substring(0,10), y:hhSpot.v}],
+    borderColor:'#c0392b', backgroundColor:'#c0392b', pointRadius:7,
+    pointStyle:'crossRot', borderWidth:3, showLine:false});
   if(CH['chart-futures-hh'])CH['chart-futures-hh'].destroy();
   const el=document.getElementById('chart-futures-hh');if(!el)return;
   CH['chart-futures-hh']=new Chart(el,{type:'line',data:{datasets:ds},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},scales:{x:{type:'time',time:{unit:'month',displayFormats:{month:'MM/yy'}},ticks:{maxTicksLimit:10,color:'#8c98a8',font:{size:10}},grid:{color:'#eef2f6'}},y:{grid:{color:'#eef2f6'},ticks:{color:'#8c98a8',font:{size:10},callback:v=>v.toFixed(2)+' $/MMBtu'}}},plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}}}});
@@ -3363,7 +3532,7 @@ function _renderLngSpreadChart() {
       `EU-Gas ${eu.length} Punkte, Henry Hub ${hh.length} Punkte.`);
     return;
   }
-  const cutoff=(() => { const d=new Date(); d.setFullYear(d.getFullYear()-4); return d.toISOString().substring(0,7); })();
+  const cutoff=futuresAxisMin().substring(0,7);
   const euMap={},hhMap={};
   eu.forEach(p=>{if(p.period>=cutoff)euMap[p.period]=p.v;});
   hh.forEach(p=>{if(p.period>=cutoff)hhMap[p.period]=p.v;});
@@ -3696,10 +3865,213 @@ function renderStrompreise() {
 }
 
 // ══════════════════════════════════════════════
+// ÜBERBLICK — one headline figure per domain
+// ══════════════════════════════════════════════
+// Each tile states its number, its unit, its source and which tab holds the
+// detail. Tiles whose source is missing are simply left out rather than
+// shown as a dash: an absent number and a zero must not look alike.
+
+// [file, label, what it feeds, which tab]
+const SOURCE_INVENTORY = [
+  ['smard',           'SMARD (Bundesnetzagentur)', 'Erzeugung, Last, CO₂-Intensität', 'strom'],
+  ['energy_charts',   'Energy-Charts (Fraunhofer)', 'Day-Ahead-Preise, EE-Anteil, installierte Leistung', 'strom'],
+  ['entsoe',          'ENTSO-E',                   'Grenzflüsse, Preise Nachbarländer', 'markt'],
+  ['entsog',          'ENTSOG',                    'Gasflüsse an den Grenzpunkten', 'gas'],
+  ['gas_storage',     'GIE AGSI+ / ALSI',          'Gas- und LNG-Speicherfüllstände', 'gas'],
+  ['commodities',     'Yahoo Finance',             'Brent, WTI, TTF, Henry Hub, Kohle, Metalle', 'rohstoffe'],
+  ['fuel',            'Tankerkönig',               'Tankstellenpreise E5, E10, Diesel', 'kraftstoff'],
+  ['heating_oil',     'TECSON + Destatis',         'Heizölpreis, Ölnotierungen', 'kraftstoff'],
+  ['fred_energy',     'FRED (St. Louis Fed)',      'US-Produktpreise, Zinsen, Dollar, VIX', 'kraftstoff'],
+  ['eia_petroleum',   'EIA',                       'US-Lagerbestände Rohöl und Produkte', 'kraftstoff'],
+  ['eurostat_oil',    'Eurostat (Mengen)',         'Öl-, Gas- und Strommengen, Import/Export', 'strompreise'],
+  ['eurostat_prices', 'Eurostat (Preise)',         'Endkundenpreise Strom und Gas', 'strompreise'],
+  ['destatis_vpi',    'Destatis',                  'Verbraucherpreisindex Energie', 'lage'],
+  ['energy_futures',  'EIA STEO / World Bank / IMF','Preisprognosen', 'futures'],
+  ['fx',              'EZB',                       'Wechselkurse', 'fx'],
+  ['weather',         'Open-Meteo',                'Wind- und Solarvorhersage', 'wetter'],
+  ['news',            'RSS-Quellen',               'Nachrichtenlage', 'news'],
+];
+
+function renderUeberblick() {
+  const ec = D.energy_charts, sm = D.smard, gs = D.gas_storage;
+  const com = D.commodities, ho = D.heating_oil, fu = D.fuel;
+
+  // ── headline situation, same classifier the Marktlage tab uses ──
+  const ttf = ttfSeries().points.at(-1)?.v;
+  const daNow = ec?.price_de?.price?.filter(v => v != null).at(-1);
+  const euPct = gs ? gasNode(gs,'eu')?.data?.filter(x => x.fill_pct != null).at(-1)?.fill_pct : null;
+  const cls = classifyLage(ttf, euPct, daNow);
+  const hero = document.getElementById('ueberblick-hero-content');
+  if (hero) {
+    hero.innerHTML = `
+      <div class="lage-hero-title">${cls.headline}</div>
+      <div class="lage-hero-sub">${cls.sub}
+        <div style="opacity:.7;font-size:11px;margin-top:6px">
+          Stand ${fmtDt(D.meta?.last_fetch)} · aus TTF, EU-Gasspeichern und Strom Day-Ahead
+        </div>
+      </div>
+      <span class="lage-status ${cls.level}">${
+        cls.level==='ok'?'● Stabil':cls.level==='warn'?'● Angespannt':'● Kritisch'}</span>`;
+  }
+
+  // ── one figure per domain ──
+  const kp = [];
+  const push = (label, val, unit, color, delta) => {
+    if (val == null) return;
+    kp.push({label, val, unit, color, delta: delta || ''});
+  };
+
+  if (daNow != null) {
+    const prices = (ec.price_de.price || []).filter(v => v != null);
+    const avg = prices.reduce((a,b)=>a+b,0) / prices.length;
+    push('Strom Day-Ahead', fmtN(daNow,0), 'EUR/MWh · jetzt', '#0e6cb6',
+         `Ø ${fmtN(avg,0)} über 7 Tage`);
+  }
+  if (ttf != null) push('Erdgas TTF', fmtN(ttf,1), 'EUR/MWh', '#f0883e');
+  if (euPct != null) push('EU-Gasspeicher', fmtN(euPct,1)+'%', 'AGSI+', euPct>=70?'#1f9d55':euPct>=50?'#c98a04':'#c0392b');
+
+  const brent = com?.brent_crude?.series?.at(-1)?.v;
+  if (brent != null) push('Brent Rohöl', fmtN(brent,1), 'USD/Barrel', '#dc6803');
+
+  const e5 = fu?.cities?._national?.e5_avg ?? fu?.cities?.Berlin?.e5_avg;
+  const diesel = fu?.cities?._national?.diesel_avg ?? fu?.cities?.Berlin?.diesel_avg;
+  if (e5 != null) push('Super E5', fmtN(e5,3), 'EUR/Liter · Bundesschnitt', '#1f9d55');
+  if (diesel != null) push('Diesel', fmtN(diesel,3), 'EUR/Liter · Bundesschnitt', '#7e57c2');
+
+  const heat = ho?.reference_price_eur_l;
+  if (heat != null) push('Heizöl', fmtN(heat,3),
+    `EUR/Liter · ${ho.price_source === 'destatis' ? 'Destatis' : 'TECSON'}`, '#d97706');
+
+  const hh = D.eurostat_prices?.electricity_household?.series_per_country?.DE;
+  if (hh?.length) push('Strom Haushalt', fmtN(hh.at(-1).v,4),
+    `EUR/kWh · ${fmtHalfYear(hh.at(-1).period)}`, '#c0392b');
+
+  const ren = ec?.ren_share_de?.ren_share?.filter(v => v != null);
+  if (ren?.length) push('EE-Anteil', fmtN(ren.at(-1),0)+'%', 'Prognose Energy-Charts', '#1f9d55');
+
+  document.getElementById('kpi-ueberblick').innerHTML = kp.length
+    ? kpis(kp)
+    : '<div class="nodata">Noch keine Daten geladen</div>';
+
+  // ── day-ahead, last 7 days ──
+  if (ec?.price_de?.unix_seconds?.length) {
+    const pts = ec.price_de.unix_seconds
+      .map((t,i) => ({ts:t, v:ec.price_de.price[i]}))
+      .filter(x => x.v != null);
+    mkChart('chart-ueberblick-strom','line', pts.map(p=>fmtTs(p.ts*1000)), [{
+      label:'EUR/MWh', data:pts.map(p=>p.v),
+      borderColor:'#0e6cb6', backgroundColor:'rgba(14,108,182,0.10)',
+      fill:true, borderWidth:2, pointRadius:0,
+    }], {scales:{x:{ticks:{maxTicksLimit:7}}}});
+  } else {
+    noData('chart-ueberblick-strom','Keine Day-Ahead-Preise',
+           'Energy-Charts liefert diese Reihe derzeit nicht.');
+  }
+
+  // ── current generation mix, as a share table ──
+  const mixEl = document.getElementById('ueberblick-mix');
+  if (mixEl) {
+    const series = sm?.series || {};
+    const latest = {};
+    Object.keys(LN).forEach(k => {
+      const arr = (series[k] || []).filter(p => p.v != null);
+      if (arr.length) latest[k] = arr.at(-1).v;
+    });
+    const total = Object.values(latest).reduce((a,b)=>a+Math.max(0,b),0);
+    if (total > 0) {
+      const rows = Object.entries(latest)
+        .filter(([,v]) => v > 0)
+        .sort((a,b) => b[1]-a[1])
+        .map(([k,v]) => {
+          const pct = v/total*100;
+          return `<tr>
+            <td><span class="leg-dot" style="display:inline-block;background:${C[k]||'#8c98a8'}"></span>
+                ${LN[k]}</td>
+            <td class="num">${fmtN(v/1000,1)} GW</td>
+            <td class="num">${fmtN(pct,1)}%</td></tr>`;
+        }).join('');
+      mixEl.innerHTML = `<div class="tbl-scroll"><table class="tbl">
+        <thead><tr><th>Quelle</th><th class="num">Leistung</th><th class="num">Anteil</th></tr></thead>
+        <tbody>${rows}</tbody></table></div>`;
+    } else {
+      mixEl.innerHTML = '<div class="nodata">Keine SMARD-Erzeugungsdaten</div>';
+    }
+  }
+
+  renderQuellen();
+}
+
+// The source inventory: what feeds this dashboard, how fresh it is, and
+// where to look at it. This is also where a source that quietly died
+// becomes visible without hunting through tabs.
+function renderQuellen() {
+  const wrap = document.getElementById('ueberblick-quellen');
+  if (!wrap) return;
+  // Status comes from meta.json, which the page always loads and which
+  // carries stale / last_success / last_error for EVERY source. Reading it
+  // here means the table reports all 17 without pulling 17 data files — a
+  // source that quietly died shows up whether or not its tab was opened.
+  const metaSources = D.meta?.sources || {};
+  let problems = 0;
+  const rows = SOURCE_INVENTORY.map(([file, label, feeds, tab]) => {
+    const loaded = !!D[file];
+    const ms = metaSources[file];
+    const m = loaded ? sourceMeta(file) : null;
+
+    let state;
+    if (ms?.stale) state = ['Fehler', 'var(--red)'];
+    else if (loaded && m.level === 'old') state = ['veraltet', 'var(--red)'];
+    else if (loaded && m.level === 'warn') state = ['verzögert', 'var(--yellow)'];
+    else if (ms) state = ['aktuell', 'var(--green)'];
+    else state = ['unbekannt', 'var(--text3)'];
+    if (state[0] === 'Fehler' || state[0] === 'veraltet') problems++;
+
+    // The age of the DATA: last_success for a failing source, otherwise the
+    // last write. Same rule the card stamps use. meta.json records no
+    // timestamp for a source that was skipped in the last run because its
+    // interval had not elapsed, so _state.json — which keeps a
+    // last_success per source across runs — fills those in.
+    const st = D._state?.[file];
+    const iso = ms?.stale ? (ms.last_success || st?.last_success_iso)
+              : (m?.updatedIso || ms?.last_success || st?.last_success_iso);
+    const ageH = iso ? (Date.now() - Date.parse(iso)) / 3600000 : null;
+    const err = ms?.last_error;
+
+    return `<tr>
+      <td><strong>${label}</strong>
+          <div style="font-size:9px;color:var(--text3)">${feeds}</div></td>
+      <td style="white-space:nowrap">
+        <span class="stamp-dot" style="background:${state[1]};display:inline-block"></span>
+        <span style="color:${state[1]};font-size:11px">${state[0]}</span></td>
+      <td style="font-size:10px;color:var(--text2);white-space:nowrap">${
+        ageH != null ? fmtAge(ageH) : '—'}</td>
+      <td style="font-size:10px">${
+        err ? `<span style="color:var(--red)">${String(err).slice(0,70)}</span>`
+            : `<a href="#" onclick="gotoTab('${tab}');return false" style="color:var(--accent)">ansehen →</a>`}</td>
+    </tr>`;
+  }).join('');
+  wrap.innerHTML = `<div class="tbl-scroll"><table class="tbl">
+      <thead><tr><th>Quelle</th><th>Status</th><th>Stand</th><th>Detail</th></tr></thead>
+      <tbody>${rows}</tbody></table></div>
+    <div style="font-size:9px;color:var(--text3);margin-top:6px;line-height:1.6">
+      ${SOURCE_INVENTORY.length} Quellen${problems ? ` · <span style="color:var(--red)">${problems} mit Problemen</span>` : ' · alle in Ordnung'} ·
+      Status aus <code>data/meta.json</code>, unabhängig davon, welcher Tab offen war.
+      Abrufintervalle und Zeitbudgets stehen in <code>scripts/fetch_all.py</code>;
+      eine neue Quelle kommt als Modul unter <code>scripts/fetchers/</code> dazu und wird
+      dort in <code>SCHEDULE</code> eingetragen.
+    </div>`;
+}
+
+function gotoTab(tab) {
+  const btn = document.querySelector(`.tab[data-tab="${tab}"]`);
+  if (btn) btn.click();
+}
+
+// ══════════════════════════════════════════════
 // TABS
 // ══════════════════════════════════════════════
 const RENDERS={
-  strom:renderStrom, strompreise:renderStrompreise, markt:renderMarkt, gas:renderGas,
+  ueberblick:renderUeberblick, strom:renderStrom, strompreise:renderStrompreise, markt:renderMarkt, gas:renderGas,
   rohstoffe:renderRohstoffe, kraftstoff:renderKraftstoffMerged,
   erneuerbare:renderErneuerbare,
   wetter:renderWetter, fx:renderFx,
