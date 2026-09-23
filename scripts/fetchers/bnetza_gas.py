@@ -1,11 +1,18 @@
 """
 Bundesnetzagentur — "Aktuelle Lage der Gasversorgung".
 
-The BNetzA publishes every chart on its gas-supply page as a CSV next to the
-SVG: imports, LNG, exports, domestic production, prices, storage, and
-consumption split into industry (RLM) and households/commerce (SLP), plus
-the temperature that drives it. Each CSV carries the full history behind the
-chart, so one fetch is a complete backfill.
+The BNetzA gas-supply pages (imports, LNG, exports, production, prices,
+storage, consumption RLM/SLP, temperature) draw their charts with Chart.js
+and inline the complete data in the page script:
+
+    const data_myChartId_870296 = { labels: ['01.01.2022', ...],
+                                    datasets: [{label: 'Norwegen', data: [...]}, ...] }
+
+No CSV is linked — the CSV names that circulate for these charts all answer
+404 (checked in the Actions runs of 2026-09-23). So this module reads the
+landing page and every `_svg/.../*.html` chart page it links, pulls each
+Chart.js data object out of the scripts, and turns it into series. HTML
+tables and linked CSV/XLSX files are still read if the site adds any.
 
 Why the parser is generic
 -------------------------
@@ -37,6 +44,7 @@ erase the history already committed here.
 import csv
 import io
 import re
+import time
 from datetime import date
 from typing import Dict, List, Optional, Tuple
 
@@ -434,11 +442,111 @@ def _log_structure(page: str, html: str) -> None:
         print(f'      script {len(sc)} B: {head}')
 
 
+def _js_values(body: str) -> List[object]:
+    """Items of a JS array literal body: quoted strings, numbers, null."""
+    out: List[object] = []
+    for m in re.finditer(r"""'((?:[^'\\]|\\.)*)'|"((?:[^"\\]|\\.)*)"|(-?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?)|\b(null|NaN|undefined)\b""", body):
+        if m.group(1) is not None: out.append(m.group(1))
+        elif m.group(2) is not None: out.append(m.group(2))
+        elif m.group(3) is not None: out.append(float(m.group(3)))
+        else: out.append(None)
+    return out
+
+
+def _balanced(text: str, start: int, open_ch: str, close_ch: str) -> int:
+    """Index just past the bracket matching text[start] (which is open_ch)."""
+    depth, i, q = 0, start, None
+    while i < len(text):
+        c = text[i]
+        if q:
+            if c == '\\':
+                i += 2
+                continue
+            if c == q:
+                q = None
+        elif c in '\'"`':
+            q = c
+        elif c == open_ch:
+            depth += 1
+        elif c == close_ch:
+            depth -= 1
+            if depth == 0:
+                return i + 1
+        i += 1
+    return len(text)
+
+
+def _charts_from_scripts(html: str) -> List[dict]:
+    """
+    The chart pages draw with Chart.js and inline the complete data:
+
+        const data_myChartId_870296 = { labels: ['01.01.2022', ...],
+                                        datasets: [{ label: 'Norwegen', data: [...] }, ...] }
+
+    Each such object becomes {id, title, labels, datasets}. The `_export`
+    twin of a chart carries the same series; the longer of the two wins.
+    """
+    charts: Dict[str, dict] = {}
+    for m in re.finditer(r'(?:const|var|let)\s+data_(myChartId_\w+?)(_export)?\s*=\s*\{', html):
+        cid = m.group(1)
+        obj_start = m.end() - 1
+        obj = html[obj_start:_balanced(html, obj_start, '{', '}')]
+        lm = re.search(r'labels\s*:\s*\[', obj)
+        dm = re.search(r'datasets\s*:\s*\[', obj)
+        if not lm or not dm:
+            continue
+        labels = _js_values(obj[lm.end():_balanced(obj, lm.end() - 1, '[', ']') - 1])
+        ds_body = obj[dm.end() - 1:_balanced(obj, dm.end() - 1, '[', ']')]
+        datasets = []
+        i = 0
+        while True:
+            j = ds_body.find('{', i)
+            if j < 0:
+                break
+            k = _balanced(ds_body, j, '{', '}')
+            part = ds_body[j:k]
+            i = k
+            lab = re.search(r"""label\s*:\s*(['"])(.*?)\1""", part)
+            dat = re.search(r'\bdata\s*:\s*\[', part)
+            if not dat:
+                continue
+            vals = _js_values(part[dat.end():_balanced(part, dat.end() - 1, '[', ']') - 1])
+            datasets.append({'label': lab.group(2) if lab else f'Reihe {len(datasets) + 1}',
+                             'data': vals})
+        if not datasets:
+            continue
+        # Title: the nearest heading before this chart's canvas.
+        pos = html.find(f'id="{cid}"')
+        pos = pos if pos >= 0 else m.start()
+        heads = re.findall(r'<h[1-4][^>]*>(.*?)</h[1-4]>', html[max(0, pos - 20000):pos], re.S)
+        title = re.sub(r'<[^>]+>|\s+', ' ', heads[-1]).strip() if heads else ''
+        npts = sum(len(d['data']) for d in datasets)
+        old = charts.get(cid)
+        if not old or npts > sum(len(d['data']) for d in old['datasets']):
+            charts[cid] = {'id': cid, 'title': title, 'labels': labels, 'datasets': datasets}
+    return list(charts.values())
+
+
+def _chart_to_csv(ch: dict) -> str:
+    """Chart.js arrays -> the semicolon text parse_csv understands."""
+    cols = [d['label'].replace(';', ',') for d in ch['datasets']]
+    lines = ['Datum;' + ';'.join(cols)]
+    for n, x in enumerate(ch['labels']):
+        cells = []
+        for d in ch['datasets']:
+            v = d['data'][n] if n < len(d['data']) else None
+            cells.append('' if v is None else (f'{v}' if isinstance(v, float) else str(v)))
+        lines.append(f'{str(x).replace(";", ",")};' + ';'.join(cells))
+    return '\n'.join(lines)
+
+
 def _chart_pages(html: str, page: str) -> List[str]:
     """Links to other gas-supply chart pages (_svg/...html), resolved the way
     the browser does: this site sets <base href>, so "DE/..." is from root."""
     base = re.search(r'<base[^>]+href="([^"]+)"', html, re.I)
     root = base.group(1) if base else _ORIGIN + '/'
+    if root.startswith('/'):
+        root = _ORIGIN + root          # the site sets <base href="/">
     out = []
     for h in re.findall(r'href="([^"]+)"', html):
         h = h.replace('&amp;', '&').split('#')[0]
@@ -450,7 +558,7 @@ def _chart_pages(html: str, page: str) -> List[str]:
             u = _ORIGIN + h
         else:
             u = root.rstrip('/') + '/' + h
-        u = u.split('?')[0]
+        u = u.split('?')[0].replace('http://', 'https://')
         if u not in out:
             out.append(u)
     return out
@@ -500,6 +608,10 @@ def _harvest_pages(prev: Dict[str, dict], out: Dict[str, dict], errors: Dict[str
         try:
             r = _get(page)
             if not r.ok:
+                # start.html answered 404 once and 200 a few seconds later.
+                time.sleep(2)
+                r = _get(page)
+            if not r.ok:
                 print(f'    page {page.replace(_ORIGIN, "")}: HTTP {r.status_code}')
                 continue
             html = r.text
@@ -507,7 +619,7 @@ def _harvest_pages(prev: Dict[str, dict], out: Dict[str, dict], errors: Dict[str
             print(f'    page {page.replace(_ORIGIN, "")}: {type(e).__name__}')
             continue
         tables = _tables_from_html(html)
-        new = [u for u in _chart_pages(html, page) if u not in seen]
+        new = [u for u in _chart_pages(html, page) if u not in seen and u != page]
         print(f'    page {page.replace(_ORIGIN, "")}: {len(html)} B, {len(tables)} tables, '
               f'{len(new)} new chart pages')
         if i < 3:
@@ -518,6 +630,28 @@ def _harvest_pages(prev: Dict[str, dict], out: Dict[str, dict], errors: Dict[str
             seen.add(u)
             pages.append(u)
         slug = _slug(page) if '_svg/' in page else 'start'
+        # Chart.js data inlined in the page scripts — where the numbers are.
+        for ch in _charts_from_scripts(html):
+            try:
+                parsed = parse_csv(_chart_to_csv(ch), delimiter=';')
+            except Exception as e:
+                print(f'      chart {ch["id"]}: parse failed {type(e).__name__}: {e}')
+                continue
+            npts = sum(len(v) for v in parsed['series'].values())
+            if npts < 5:
+                print(f'      chart {ch["id"]}: only {npts} values, labels[:3]={ch["labels"][:3]}')
+                continue
+            key = f'{slug}_{ch["id"].replace("myChartId_", "c")}'
+            title = ch['title'] or slug
+            node = _merge(prev.get(key), parsed)
+            node.update({'label': title[:90], 'group': _group_for(slug + ' ' + title.lower()),
+                         'unit': _unit_for(title), 'freq': _freq_for(slug, node['x_kind']),
+                         'url': page, 'ok': True, 'source_kind': 'chartjs'})
+            out[key] = node
+            found += 1
+            xs = [x for v in node['series'].values() for x, _ in v]
+            print(f'      chart {key}: "{title[:60]}" kind={node["x_kind"]} cols={node["columns"][:8]} '
+                  f'pts={npts} x={min(xs)}..{max(xs)}')
         for n, t in enumerate(tables, start=1):
             rows = t['rows']
             if len(rows) < 3:
