@@ -1083,7 +1083,7 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
       <div class="chart-wrap" style="height:300px"><canvas id="chart-bnetza"></canvas></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
         <button class="mod-chip" onclick="bnetzaZumSaisonvergleich()">↗ im Saisonvergleich zeigen</button>
-        <a class="mod-chip" id="bnetza-csv" href="#" target="_blank" rel="noopener">CSV der BNetzA</a>
+        <a class="mod-chip" id="bnetza-csv" href="#" target="_blank" rel="noopener">Originalseite der BNetzA ↗</a>
       </div>
     </div>
 
@@ -5572,24 +5572,51 @@ function taeglichZuSaisons(pts, fensterId) {
   return {years, keys, labels};
 }
 
-// A BNetzA file that already has one column per year.
+// A BNetzA chart that already has one line per year. Its columns are of
+// three kinds: seasons ("2025", "04/2025-03/2026"), reference periods
+// ("Minimum 2018-2021", "Durchschnittsverbrauch 2018-2021") and, in the
+// consumption charts, temperature lines on a second axis. Seasons become
+// selectable years; references are drawn as the BNetzA draws them, with
+// Minimum/Maximum as the grey band.
+function saisonSpalte(col) {
+  const c = String(col);
+  if (/temperatur/i.test(c)) return {kind: 'temp', label: c};
+  const gj = c.match(/^\s*\d{2}\/((?:19|20)\d\d)\s*-\s*\d{2}\/((?:19|20)\d\d)\s*$/);
+  if (gj) return {kind: 'season', label: `${gj[1]}/${gj[2].slice(2)}`};
+  if (/^\s*(19|20)\d\d\s*$/.test(c)) return {kind: 'season', label: c.trim()};
+  if (/minimum/i.test(c)) return {kind: 'min', label: c};
+  if (/maximum/i.test(c)) return {kind: 'max', label: c};
+  if (/(19|20)\d\d\s*-\s*(19|20)?\d\d/.test(c) || /durchschnitt|mittel/i.test(c)) return {kind: 'ref', label: c};
+  const y = c.match(/(19|20)\d\d/);
+  if (y) return {kind: 'season', label: y[0], full: c};
+  return {kind: 'ref', label: c};
+}
+
+function saisonKeyLabel(k, freq) {
+  if (/^\d\d-\d\d$/.test(k)) return `${k.slice(3)}.${k.slice(0,2)}.`;
+  if (freq === 'monthly' && /^\d\d$/.test(k)) return MONATE_KURZ[+k - 1] || k;
+  if (/^\d\d$/.test(k)) return `KW ${+k}`;
+  return k;
+}
+
 function jahresspaltenZuSaisons(ds) {
-  const years = {};
+  const years = {}, refs = [], temps = [];
   const all = new Set();
   Object.entries(ds.series || {}).forEach(([col, pts]) => {
-    const y = (col.match(/(19|20)\d\d/) || [])[0];
-    if (!y) return;
-    years[y] = years[y] || {};
-    pts.forEach(([x, v]) => { years[y][x] = v; all.add(x); });
+    const m = Object.fromEntries(pts);
+    pts.forEach(([x]) => all.add(x));
+    const t = saisonSpalte(col);
+    if (t.kind === 'season') {
+      // Two columns naming the same year (rare) must not overwrite.
+      const lbl = years[t.label] ? (t.full || col) : t.label;
+      years[lbl] = m;
+    } else if (t.kind === 'temp') temps.push({label: col, map: m});
+    else refs.push({label: col, kind: t.kind, map: m});
   });
-  const keys = [...all].sort();
-  const labels = keys.map(k => {
-    if (/^\d\d-\d\d$/.test(k)) return `${k.slice(3)}.${k.slice(0,2)}.`;
-    if (ds.freq === 'monthly' && /^\d\d$/.test(k)) return MONATE_KURZ[+k - 1] || k;
-    if (/^\d\d$/.test(k)) return `KW ${+k}`;
-    return k;
-  });
-  return {years, keys, labels};
+  // The page's own order: a gas year runs April to March.
+  const keys = (ds.x_order && ds.x_order.length) ? ds.x_order.filter(k => all.has(k)) : [...all].sort();
+  const labels = keys.map(k => saisonKeyLabel(k, ds.freq));
+  return {years, refs, temps, keys, labels};
 }
 
 function bnetzaDatasets() {
@@ -5752,7 +5779,25 @@ function renderSaison() {
   });
 
   const ds = [];
-  if (bandYears.length >= 2) {
+  // The BNetzA's own reference lines (min/max band, averages, temperature).
+  const refs = src.daily ? [] : (seasonal.refs || []);
+  const rMin = refs.find(r => r.kind === 'min'), rMax = refs.find(r => r.kind === 'max');
+  if (rMin && rMax) {
+    ds.push({label: rMax.label, data: seasonal.keys.map(k => rMax.map[k] ?? null), borderColor:'rgba(140,152,168,0.5)',
+             borderWidth:1, backgroundColor:'rgba(140,152,168,0.25)', fill:'+1', pointRadius:0, spanGaps:true});
+    ds.push({label: rMin.label, data: seasonal.keys.map(k => rMin.map[k] ?? null), borderColor:'rgba(140,152,168,0.5)',
+             borderWidth:1, fill:false, pointRadius:0, spanGaps:true});
+  }
+  refs.filter(r => r.kind === 'ref').forEach(r => ds.push({label: r.label,
+    data: seasonal.keys.map(k => r.map[k] ?? null), borderColor:'#56657a', borderDash:[5,4],
+    borderWidth:1.5, fill:false, pointRadius:0, spanGaps:true}));
+  (src.daily ? [] : (seasonal.temps || [])).forEach((t, i) => ds.push({label: t.label,
+    data: seasonal.keys.map(k => t.map[k] ?? null), borderColor: i ? 'rgba(8,145,178,0.45)' : '#0891b2',
+    borderDash:[2,3], borderWidth:1.3, fill:false, pointRadius:0, spanGaps:true, yAxisID:'y1'}));
+  const hatTemp = ds.some(d => d.yAxisID === 'y1');
+  // With the BNetzA's own band the reference-year menus have nothing to do.
+  vonSel.disabled = bisSel.disabled = !!(rMin && rMax);
+  if (bandYears.length >= 2 && !(rMin && rMax)) {
     ds.push({label:`Max ${von}–${bis}`, data:max, borderColor:'rgba(140,152,168,0.5)', borderWidth:1,
              backgroundColor:'rgba(140,152,168,0.25)', fill:'+1', pointRadius:0, spanGaps:true});
     ds.push({label:`Min ${von}–${bis}`, data:min, borderColor:'rgba(140,152,168,0.5)', borderWidth:1,
@@ -5763,13 +5808,17 @@ function renderSaison() {
   [...jahre].sort().forEach(y => {
     ds.push({label: y, data: seasonal.keys.map(k => seasonal.years[y][k] ?? null),
              borderColor: farbeFuer(y), backgroundColor: farbeFuer(y), borderWidth: y === latest ? 2.6 : 2,
-             fill:false, pointRadius: src.daily ? 0 : 2, spanGaps: false});
+             fill:false, pointRadius: (src.daily || seasonal.keys.length > 60) ? 0 : 2, spanGaps: false});
   });
 
+  const scales = {x:{ticks:{maxTicksLimit:10}},
+                  y:{title:{display:true, text:src.unit || '', color:'#8c98a8', font:{size:10}}}};
+  if (hatTemp) scales.y1 = {position:'right', grid:{drawOnChartArea:false},
+                            title:{display:true, text:'°C', color:'#0891b2', font:{size:10}},
+                            ticks:{color:'#0891b2', font:{size:10}}};
   mkChart('chart-saison', 'line', seasonal.labels, ds, {
     plugins:{legend:{display:true, labels:{color:'#56657a', boxWidth:10, font:{size:10}}}},
-    scales:{x:{ticks:{maxTicksLimit:10}},
-            y:{title:{display:true, text:src.unit || '', color:'#8c98a8', font:{size:10}}}},
+    scales,
   });
 
   const f = SAISON_FENSTER[saisonCfg.fenster];
@@ -5778,7 +5827,8 @@ function renderSaison() {
     src.daily ? `${f.label}` : 'Jahresvergleich wie von der BNetzA veröffentlicht',
     src.daily && n > 1 ? `${n}-Tage gleitender Durchschnitt` : null,
     src.unit,
-    bandYears.length >= 2 ? `graues Band: Minimum–Maximum ${von}–${bis}` : 'für ein Band mindestens zwei Referenzjahre wählen',
+    (rMin && rMax) ? `graues Band: ${rMin.label.replace(/^Minimum\s*/i, 'Minimum–Maximum ')} (BNetzA)`
+      : bandYears.length >= 2 ? `graues Band: Minimum–Maximum ${von}–${bis}` : 'für ein Band mindestens zwei Referenzjahre wählen',
   ].filter(Boolean).join(' · ');
   if (hint) hint.textContent = src.note || '';
   stamp('chart-saison', src.src, `${yearsAll.length} Jahre verfügbar (${yearsAll[0]}–${latest})`);
@@ -5838,26 +5888,42 @@ function renderBnetza() {
   }
 
   let labels, datasets, bnetzaAlt = false;
+  let y1 = false;
   if (ds.years_as_columns) {
     const s = jahresspaltenZuSaisons(ds);
     const ys = Object.keys(s.years).sort();
     labels = s.labels;
-    datasets = ys.map((y, i) => {
+    const line = (map) => s.keys.map(k => map[k] ?? null);
+    datasets = [];
+    const rMin = s.refs.find(r => r.kind === 'min'), rMax = s.refs.find(r => r.kind === 'max');
+    if (rMin && rMax) {
+      datasets.push({label:rMax.label, data:line(rMax.map), borderColor:'rgba(140,152,168,0.5)', borderWidth:1,
+                     backgroundColor:'rgba(140,152,168,0.25)', fill:'+1', pointRadius:0, spanGaps:true});
+      datasets.push({label:rMin.label, data:line(rMin.map), borderColor:'rgba(140,152,168,0.5)', borderWidth:1,
+                     fill:false, pointRadius:0, spanGaps:true});
+    }
+    s.refs.filter(r => r.kind === 'ref').forEach(r => datasets.push({label:r.label, data:line(r.map),
+      borderColor:'#56657a', borderDash:[5,4], borderWidth:1.5, pointRadius:0, fill:false, spanGaps:true}));
+    ys.forEach((y, i) => {
       const c = SAISON_FARBEN[(ys.length - 1 - i) % SAISON_FARBEN.length];
-      return {label:y, data:s.keys.map(k => s.years[y][k] ?? null), borderColor:c, backgroundColor:c,
-              borderWidth: i === ys.length - 1 ? 2.6 : 1.6, pointRadius:0, fill:false};
+      datasets.push({label:y, data:line(s.years[y]), borderColor:c, backgroundColor:c,
+              borderWidth: i === ys.length - 1 ? 2.6 : 1.6, pointRadius: s.keys.length <= 12 ? 2 : 0, fill:false});
     });
+    s.temps.forEach((t, i) => { y1 = true; datasets.push({label:t.label, data:line(t.map),
+      borderColor: i ? 'rgba(8,145,178,0.45)' : '#0891b2', borderDash:[2,3], borderWidth:1.3,
+      pointRadius:0, fill:false, spanGaps:true, yAxisID:'y1', hidden: i > 0}); });
   } else {
     const cut = ds.x_kind === 'date' ? (() => {
       const sec = getRangeSeconds('gas');
       return sec === Infinity ? '' : new Date(Date.now() - sec * 1000).toISOString().slice(0, 10);
     })() : '';
-    const allX = [...new Set(cols.flatMap(c => ds.series[c].map(p => p[0])))].sort();
+    const allSet = new Set(cols.flatMap(c => ds.series[c].map(p => p[0])));
+    const allX = (ds.x_order && ds.x_order.length) ? ds.x_order.filter(x => allSet.has(x)) : [...allSet].sort();
     let xs = allX.filter(x => x >= cut);
     // A file that has not been updated for a while would otherwise show
     // nothing at all; its last year is more useful, and it is labelled.
     if (!xs.length && allX.length) { xs = allX.slice(-365); bnetzaAlt = true; }
-    labels = xs.map(x => /^\d{4}-\d\d-\d\d$/.test(x) ? fmtIsoDate(x) : x);
+    labels = xs.map(x => /^\d{4}-\d\d-\d\d$/.test(x) ? fmtIsoDate(x) : saisonKeyLabel(x, ds.freq));
     datasets = cols.map((c, i) => {
       const m = Object.fromEntries(ds.series[c]);
       const col = SAISON_FARBEN[i % SAISON_FARBEN.length];
@@ -5869,10 +5935,18 @@ function renderBnetza() {
       return;
     }
   }
-  mkChart('chart-bnetza', 'line', labels, datasets, {
+  const bScales = {x:{ticks:{maxTicksLimit:10}},
+                   y:{title:{display:true, text:ds.unit || '', color:'#8c98a8', font:{size:10}}}};
+  if (y1) bScales.y1 = {position:'right', grid:{drawOnChartArea:false},
+                        title:{display:true, text:'°C', color:'#0891b2', font:{size:10}},
+                        ticks:{color:'#0891b2', font:{size:10}}};
+  // Index-type files without years (the change-in-percent charts) are bars.
+  const typ = !ds.years_as_columns && ds.x_kind !== 'date' ? 'bar' : 'line';
+  if (typ === 'bar') datasets.forEach(d => { d.backgroundColor = datasets.length === 1
+    ? d.data.map(v => v < 0 ? 'rgba(31,157,85,0.65)' : 'rgba(192,57,43,0.6)') : d.borderColor; });
+  mkChart('chart-bnetza', typ, labels, datasets, {
     plugins:{legend:{display:true, labels:{color:'#56657a', boxWidth:10, font:{size:10}}}},
-    scales:{x:{ticks:{maxTicksLimit:10}},
-            y:{title:{display:true, text:ds.unit || '', color:'#8c98a8', font:{size:10}}}},
+    scales: bScales,
   });
 
   // Latest value per column (daily files) — the current state at a glance.
