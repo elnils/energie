@@ -50,6 +50,18 @@ header{display:flex;align-items:center;justify-content:space-between;padding:0 2
 .logo span{color:#a8b8cd;font-weight:400;margin-left:2px}
 .hdr-right{display:flex;align-items:center;gap:14px;font-size:12px;color:#a8b8cd}
 .land-hint{font-size:10px;color:var(--text3);margin-top:4px}
+/* Export menu per card */
+.exp-wrap{position:relative;margin-left:auto;flex:0 0 auto}
+.exp-btn{background:var(--bg-alt);border:1px solid var(--border);border-radius:6px;color:var(--text2);
+  font:inherit;font-size:11px;padding:4px 9px;cursor:pointer;white-space:nowrap}
+.exp-btn:hover{border-color:var(--accent);color:var(--accent)}
+.exp-menu{position:absolute;right:0;top:calc(100% + 4px);z-index:30;background:var(--card);border:1px solid var(--border);
+  border-radius:8px;box-shadow:0 6px 20px rgba(26,35,50,.14);padding:5px;min-width:190px;display:none}
+.exp-menu.open{display:block}
+.exp-menu button{display:block;width:100%;text-align:left;background:none;border:none;border-radius:5px;
+  font:inherit;font-size:12px;color:var(--text);padding:7px 10px;cursor:pointer}
+.exp-menu button:hover{background:var(--accent-bg);color:var(--accent)}
+.exp-menu .exp-sep{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;padding:6px 10px 2px}
 /* Per-card controls: country, comparison country, period. */
 .card-ctl{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;margin:-2px 0 10px;
   padding:7px 10px;background:var(--bg-alt);border:1px solid var(--border);border-radius:7px;
@@ -300,6 +312,8 @@ header{padding-left:calc(20px + env(safe-area-inset-left));
   .card-hdr{flex-direction:column;align-items:stretch;gap:6px}
   .card-hdr select{width:100%}
   .card-ctl label{flex:1 1 45%}
+  .exp-btn{min-height:36px;padding:6px 12px}
+  .exp-menu button{padding:11px 12px;font-size:14px}
   .card-ctl select{flex:1;min-height:36px;font-size:13px}
 
   /* Charts get taller relative to width so a time series stays legible in
@@ -911,7 +925,7 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
       <div class="chart-wrap" style="height:220px"><canvas id="chart-gas"></canvas></div>
     </div>
     <div class="card g4" data-src="gas_storage">
-      <div class="card-hdr"><div><div class="card-title">Füllstände</div><div class="card-sub">Alle Länder aktuell</div></div></div>
+      <div class="card-hdr"><div><div class="card-title">Füllstände</div><div class="card-sub">Alle Länder aktuell und im Vorjahresvergleich</div></div></div>
       <div id="gas-table"><div class="loading"><span class="spin"></span></div></div>
     </div>
     <div class="card g12" data-src="gas_storage">
@@ -945,6 +959,7 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
           <option value="inj">Einspeichersaison 1.4.–1.11.</option>
           <option value="wd">Entnahmesaison 1.10.–1.4.</option>
           <option value="gj">Gaswirtschaftsjahr 1.10.–30.9.</option>
+          <option value="sj">Speicherjahr 1.4.–31.3.</option>
           <option value="kj">Kalenderjahr</option>
         </select></label>
         <label>Band von <select id="saison-band-von"></select></label>
@@ -1423,6 +1438,9 @@ function mkChart(id, type, labels, datasets, extra={}) {
   if(extra.indexAxis) opts.indexAxis = extra.indexAxis;
   if(extra.interaction) opts.interaction = extra.interaction;
   CH[id] = new Chart(el, {type, data:{labels,datasets}, options:opts});
+  // Charts redrawn by a card's own menus need their export entry too.
+  clearTimeout(mkChart._exp);
+  mkChart._exp = setTimeout(() => { try { addExportButtons(activeTab); } catch(e) {} }, 0);
 }
 
 // ══════════════════════════════════════════════
@@ -2554,15 +2572,71 @@ function gasTagesreihe(cc) {
   return Object.keys(byDate).sort().map(d => byDate[d]);
 }
 
+// Fill level by day of the year, one line per year: this year against the
+// last ones, over the grey minimum-maximum band of all earlier years.
+function renderGasJahresvergleich(c, name, gs) {
+  const pts = gasTagesreihe(c.land).filter(x => x.fill_pct != null).map(x => ({date:x.date, v:x.fill_pct}));
+  const s = taeglichZuSaisons(pts, c.ansicht);
+  const ys = Object.keys(s.years).filter(y => Object.keys(s.years[y]).length >= 20).sort();
+  if (!ys.length) { noData('chart-gas', `Keine Füllstände für ${name(c.land)}`); return; }
+  const zeigen = ys.slice(-4);
+  const band = ys.slice(0, -zeigen.length);   // the years before the lines shown
+  const line = y => s.keys.map(k => s.years[y][k] ?? null);
+  const ds = [];
+  if (band.length >= 2) {
+    const mn = [], mx = [];
+    s.keys.forEach(k => {
+      const v = band.map(y => s.years[y][k]).filter(x => x != null);
+      mn.push(v.length >= 2 ? Math.min(...v) : null); mx.push(v.length >= 2 ? Math.max(...v) : null);
+    });
+    ds.push({label:`Max ${band[0]}–${band.at(-1)}`, data:mx, borderColor:'rgba(140,152,168,0.5)', borderWidth:1,
+             backgroundColor:'rgba(140,152,168,0.25)', fill:'+1', pointRadius:0, spanGaps:true});
+    ds.push({label:`Min ${band[0]}–${band.at(-1)}`, data:mn, borderColor:'rgba(140,152,168,0.5)', borderWidth:1,
+             fill:false, pointRadius:0, spanGaps:true});
+  }
+  [...zeigen].reverse().forEach((y, i) => {
+    const col = SAISON_FARBEN[i % SAISON_FARBEN.length];
+    ds.push({label:y, data:line(y), borderColor:col, backgroundColor:col, borderWidth: i === 0 ? 2.6 : 1.6,
+             pointRadius:0, fill:false, spanGaps:false, borderDash: i >= 2 ? [4,3] : undefined});
+  });
+  mkChart('chart-gas', 'line', s.labels, ds, {
+    plugins:{legend:{display:true, labels:{color:'#56657a', boxWidth:10, font:{size:10}}}},
+    scales:{y:{min:0, max:100, ticks:{callback:v => v + '%'}}, x:{ticks:{maxTicksLimit:12}}}});
+  const last = zeigen.at(-1), prev = zeigen.at(-2);
+  const lastKey = s.keys.filter(k => s.years[last]?.[k] != null).at(-1);
+  const diff = (lastKey && prev && s.years[prev]?.[lastKey] != null)
+    ? s.years[last][lastKey] - s.years[prev][lastKey] : null;
+  stamp('chart-gas', D.gas_storage_history ? ['gas_storage','gas_storage_history'] : 'gas_storage',
+        `${name(c.land)} · ${SAISON_FENSTER[c.ansicht]?.label || ''}` +
+        (diff != null ? ` · ${last} ${diff >= 0 ? '+' : '−'}${fmtN(Math.abs(diff), 1)} Prozentpunkte ggü. ${prev} am selben Tag` : '') +
+        (band.length >= 2 ? ` · Band ${band[0]}–${band.at(-1)}` : ''));
+  // The flow chart keeps showing the last year as a time series.
+  const flow = gasTagesreihe(c.land).slice(-365).filter(x => (x.injection || 0) > 0 || (x.withdrawal || 0) > 0);
+  if (flow.length) mkChart('chart-gas-flow','bar', flow.map(x => fmtIsoDate(x.date)), [
+    {label:`Einspeisung ${name(c.land)} GWh/Tag`, data:flow.map(x=>x.injection||0), backgroundColor:'rgba(31,157,85,0.65)', borderRadius:2},
+    {label:`Entnahme ${name(c.land)} GWh/Tag`, data:flow.map(x=>-(x.withdrawal||0)), backgroundColor:'rgba(192,57,43,0.55)', borderRadius:2},
+  ],{plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}},scales:{x:{ticks:{maxTicksLimit:10}}}});
+}
+
 function renderGasChart() {
   const gs = D.gas_storage;
   if (!gs) return;
   const laender = Object.keys(gs.gas || gs).filter(k => gasNode(gs, k)?.data?.length)
     .map(k => [k, (gasNode(gs, k)?.name || k.toUpperCase()).replace(' (computed)', '')]);
-  const c = kartenSteuerung({id:'gas-speicher', anchor:'chart-gas', laender, land:'eu', vergleich:true,
-    zeiten:['tab','30d','90d','1y','2y','5y','max'], render:renderGasChart});
+  const ansicht = (kartenCfg['gas-speicher'] || {}).ansicht || 'zeit';
+  const jahre = ansicht !== 'zeit';
+  const c = kartenSteuerung({id:'gas-speicher', anchor:'chart-gas', laender, land:'eu',
+    vergleich:!jahre, zeiten: jahre ? null : ['tab','30d','90d','1y','2y','5y','max'],
+    extras:[{k:'ansicht', label:'Ansicht', def:'zeit', options:[
+      ['zeit','Zeitverlauf'], ['kj','Vorjahre: Kalenderjahr'], ['sj','Vorjahre: Speicherjahr 1.4.–31.3.']]}],
+    render:renderGasChart});
   const cutoff = new Date(karteCutoffMs(c, 'gas')).toISOString().slice(0, 10);
   const name = cc => (laender.find(x => x[0] === cc) || [cc, cc.toUpperCase()])[1];
+
+  if (jahre) {
+    renderGasJahresvergleich(c, name, gs);
+    return;
+  }
 
   const reihe = gasTagesreihe(c.land).filter(x => x.date >= cutoff);
   const data = reihe.filter(x => x.fill_pct != null);
@@ -2603,13 +2677,27 @@ function renderGas() {
     const d=gasNode(gs,k); const last=d?.data?.filter(x=>x.fill_pct!=null).at(-1);
     return {label:d?.name||k.toUpperCase(),val:last?.fill_pct!=null?fmtN(last.fill_pct,1):'—',unit:'% Füllstand',color:colors[i]};
   }));
+  // Same day one year earlier, from the multi-year archive where it exists.
+  const vorjahr = (k, date) => {
+    const d = new Date(date + 'T00:00:00Z'); d.setUTCFullYear(d.getUTCFullYear() - 1);
+    const iso = d.toISOString().slice(0, 10);
+    const r = gasTagesreihe(k).find(x => x.date === iso);
+    return r?.fill_pct ?? null;
+  };
   document.getElementById('gas-table').innerHTML=`<div class="tbl-scroll"><table class="tbl">
-    <thead><tr><th>Land</th><th>Füllstand</th><th>Datum</th></tr></thead>
+    <thead><tr><th>Land</th><th class="num">Füllstand</th><th class="num">Vorjahr</th><th class="num">Δ</th><th>Datum</th></tr></thead>
     <tbody>${list.map(k=>{
       const d=gasNode(gs,k);const l=d?.data?.filter(x=>x.fill_pct!=null).at(-1);
       const col=(l?.fill_pct||0)>=70?'var(--green)':(l?.fill_pct||0)>=40?'var(--yellow)':'var(--red)';
-      return`<tr><td>${d?.name||k.toUpperCase()}</td><td class="num" style="color:${col}">${l?.fill_pct!=null?fmtN(l.fill_pct,1)+'%':'—'}</td><td style="color:var(--text3)">${l?.date||'—'}</td></tr>`;
-    }).join('')}</tbody></table></div>`;
+      const vj = l ? vorjahr(k, l.date) : null;
+      const dl = (vj != null && l?.fill_pct != null) ? l.fill_pct - vj : null;
+      return`<tr><td>${(d?.name||k.toUpperCase()).replace(' (computed)','')}</td>
+        <td class="num" style="color:${col}">${l?.fill_pct!=null?fmtN(l.fill_pct,1)+'%':'—'}</td>
+        <td class="num" style="color:var(--text2)">${vj!=null?fmtN(vj,1)+'%':'—'}</td>
+        <td class="num" style="color:${dl==null?'var(--text3)':dl>=0?'var(--green)':'var(--red)'}">${dl!=null?(dl>=0?'+':'−')+fmtN(Math.abs(dl),1):'—'}</td>
+        <td style="color:var(--text3)">${l?fmtIsoDate(l.date):'—'}</td></tr>`;
+    }).join('')}</tbody></table></div>
+    <div style="font-size:9px;color:var(--text3);margin-top:6px">Vorjahr = derselbe Tag vor einem Jahr (AGSI-Archiv) · Δ in Prozentpunkten</div>`;
   renderGasChart();
   renderGasZusatz();
 }
@@ -5073,6 +5161,7 @@ const SAISON_FENSTER = {
   inj: {von:'04-01', bis:'11-01', label:'Einspeichersaison'},
   wd:  {von:'10-01', bis:'04-01', label:'Entnahmesaison'},
   gj:  {von:'10-01', bis:'09-30', label:'Gaswirtschaftsjahr'},
+  sj:  {von:'04-01', bis:'03-31', label:'Speicherjahr'},
   kj:  {von:'01-01', bis:'12-31', label:'Kalenderjahr'},
 };
 const AGSI_REIHEN = {
@@ -5629,6 +5718,161 @@ function renderG20Karten(tab) {
 }
 
 // ══════════════════════════════════════════════
+// EXPORT — Bild, CSV und Excel je Karte
+// ══════════════════════════════════════════════
+// Every card with a chart or a table gets an export menu. The picture is
+// the chart as drawn (PNG at twice the screen resolution, white
+// background); CSV and Excel carry the numbers behind it — every series,
+// including ones hidden in the legend. Excel is written as a real .xlsx by
+// SheetJS, which is only fetched when someone actually asks for it.
+
+function exportName(card, suffix) {
+  const t = card.querySelector('.card-title')?.textContent || 'energie';
+  const slug = t.toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60);
+  return `${slug}_${new Date().toISOString().slice(0, 10)}.${suffix}`;
+}
+
+function downloadBlob(blob, name) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+}
+
+// Rows of a Chart.js chart: first row is the header.
+function chartRows(id) {
+  const ch = CH[id];
+  if (!ch) return null;
+  const ds = ch.data.datasets || [];
+  const isXY = ds.some(d => d.data?.length && typeof d.data[0] === 'object' && d.data[0] !== null);
+  if (isXY) {
+    const rows = [['Reihe', 'Name', 'x', 'y']];
+    ds.forEach(d => d.data.forEach(p => rows.push([d.label || '', p?.name || p?.label || '', p?.x ?? null, p?.y ?? null])));
+    return rows;
+  }
+  const labels = ch.data.labels || [];
+  const rows = [[ch.options?.indexAxis === 'y' ? 'Kategorie' : 'Zeitpunkt', ...ds.map(d => d.label || '')]];
+  labels.forEach((l, i) => rows.push([Array.isArray(l) ? l.join(' ') : l, ...ds.map(d => d.data?.[i] ?? null)]));
+  return rows;
+}
+
+function tableRows(table) {
+  return [...table.querySelectorAll('tr')].map(tr => [...tr.querySelectorAll('th,td')].map(td => {
+    const t = td.textContent.replace(/\s+/g, ' ').trim();
+    // Only a German number becomes a number; a date like 21.09.2026 stays text.
+    if (!/^[+−-]?(\d{1,3}(\.\d{3})+|\d+)(,\d+)?\s*%?$/.test(t)) return t;
+    return +t.replace(/[%+\s]/g, '').replace(/\./g, '').replace(',', '.').replace('−', '-');
+  }));
+}
+
+function rowsToCsv(rows) {
+  // Semicolon and decimal comma: what German Excel expects on a double click.
+  const cell = v => {
+    if (v == null) return '';
+    if (typeof v === 'number') return String(v).replace('.', ',');
+    const t = String(v);
+    return /[;"\n]/.test(t) ? `"${t.replace(/"/g, '""')}"` : t;
+  };
+  return '﻿' + rows.map(r => r.map(cell).join(';')).join('\r\n');
+}
+
+let xlsxLoading = null;
+function loadXlsx() {
+  if (window.XLSX) return Promise.resolve(window.XLSX);
+  if (!xlsxLoading) xlsxLoading = new Promise((res, rej) => {
+    const sc = document.createElement('script');
+    sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    sc.onload = () => res(window.XLSX);
+    sc.onerror = () => { xlsxLoading = null; rej(new Error('SheetJS konnte nicht geladen werden')); };
+    document.head.appendChild(sc);
+  });
+  return xlsxLoading;
+}
+
+async function exportCard(card, what, target) {
+  const rows = target.canvasId ? chartRows(target.canvasId) : tableRows(target.table);
+  try {
+    if (what === 'png') {
+      // Redraw at (at least) twice the pixel density so the picture stays
+      // sharp in a slide, on a white background, then restore the chart.
+      const ch = CH[target.canvasId];
+      const oldDpr = ch.options.devicePixelRatio;
+      ch.options.devicePixelRatio = Math.max(2, window.devicePixelRatio || 1);
+      ch.resize(); ch.update('none');
+      const src = ch.canvas;
+      const out = document.createElement('canvas');
+      out.width = src.width; out.height = src.height;
+      const ctx = out.getContext('2d');
+      ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, out.width, out.height);
+      ctx.drawImage(src, 0, 0);
+      ch.options.devicePixelRatio = oldDpr;
+      ch.resize(); ch.update('none');
+      out.toBlob(b => downloadBlob(b, exportName(card, 'png')), 'image/png');
+    } else if (what === 'csv') {
+      downloadBlob(new Blob([rowsToCsv(rows)], {type: 'text/csv;charset=utf-8'}), exportName(card, 'csv'));
+    } else if (what === 'xlsx') {
+      const XLSX = await loadXlsx();
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+      ws['!cols'] = rows[0].map((_, i) => ({wch: Math.min(40, Math.max(10, ...rows.slice(0, 50).map(r => String(r[i] ?? '').length + 2)))}));
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Daten');
+      const title = card.querySelector('.card-title')?.textContent || '';
+      const meta = XLSX.utils.aoa_to_sheet([['Titel', title],
+        ['Beschreibung', card.querySelector('.card-sub')?.textContent || ''],
+        ['Quelle', card.querySelector('.card-stamp')?.textContent.replace(/\s+/g, ' ').trim() || ''],
+        ['Exportiert', new Date().toLocaleString('de-DE')], ['Seite', location.href.split('?')[0]]]);
+      XLSX.utils.book_append_sheet(wb, meta, 'Info');
+      XLSX.writeFile(wb, exportName(card, 'xlsx'));
+    }
+  } catch (e) {
+    console.error('export', e);
+    alert('Export fehlgeschlagen: ' + (e.message || e));
+  }
+}
+
+function addExportButtons(tab) {
+  const panel = document.getElementById('panel-' + tab);
+  if (!panel) return;
+  panel.querySelectorAll('.card').forEach(card => {
+    if (card.hasAttribute('data-nostamp')) return;
+    const hdr = card.querySelector('.card-hdr');
+    if (!hdr) return;
+    const canvases = [...card.querySelectorAll('canvas[id]')].filter(c => CH[c.id]);
+    const table = !canvases.length ? card.querySelector('table') : null;
+    let wrap = hdr.querySelector('.exp-wrap');
+    if (!canvases.length && !table) { if (wrap) wrap.remove(); return; }
+    if (!wrap) {
+      wrap = document.createElement('div');
+      wrap.className = 'exp-wrap';
+      wrap.innerHTML = `<button class="exp-btn" type="button" aria-haspopup="true">⤓ Export</button><div class="exp-menu" role="menu"></div>`;
+      hdr.appendChild(wrap);
+      wrap.querySelector('.exp-btn').addEventListener('click', ev => {
+        ev.stopPropagation();
+        const m = wrap.querySelector('.exp-menu');
+        document.querySelectorAll('.exp-menu.open').forEach(x => { if (x !== m) x.classList.remove('open'); });
+        m.classList.toggle('open');
+      });
+    }
+    const menu = wrap.querySelector('.exp-menu');
+    const targets = canvases.length ? canvases.map((c, i) => ({canvasId: c.id, n: canvases.length > 1 ? i + 1 : 0}))
+                                    : [{table, n: 0}];
+    menu.innerHTML = targets.map((t, i) =>
+      (t.n ? `<div class="exp-sep">Diagramm ${t.n}</div>` : '') +
+      (t.canvasId ? `<button data-i="${i}" data-w="png">🖼 Bild (PNG)</button>` : '') +
+      `<button data-i="${i}" data-w="csv">📄 Daten als CSV</button>` +
+      `<button data-i="${i}" data-w="xlsx">📊 Daten als Excel (.xlsx)</button>`).join('');
+    menu.querySelectorAll('button').forEach(b => b.addEventListener('click', ev => {
+      ev.stopPropagation();
+      menu.classList.remove('open');
+      exportCard(card, b.dataset.w, targets[+b.dataset.i]);
+    }));
+  });
+}
+document.addEventListener('click', () => document.querySelectorAll('.exp-menu.open').forEach(m => m.classList.remove('open')));
+
+// ══════════════════════════════════════════════
 // KARTEN-STEUERUNG — Land, Vergleichsland, Zeitraum je Karte
 // ══════════════════════════════════════════════
 // A card that compares countries gets its own small control row: which
@@ -5659,6 +5903,9 @@ function kartenSteuerung(spec) {
     vgl: '', zeit: spec.zeiten?.includes(stored.zeit) ? stored.zeit : (spec.zeit || 'tab'),
   };
   if (spec.vergleich && codes.includes(stored.vgl) && stored.vgl !== c.land) c.vgl = stored.vgl;
+  (spec.extras || []).forEach(x => {
+    c[x.k] = x.options.some(o => o[0] === stored[x.k]) ? stored[x.k] : x.def;
+  });
   const anchor = document.getElementById(spec.anchor) || document.querySelector(`[data-canvas-for="${spec.anchor}"]`);
   const card = anchor?.closest('.card');
   if (!card || !codes.length) return c;
@@ -5672,6 +5919,7 @@ function kartenSteuerung(spec) {
   const opts = (list, sel, blank) => (blank ? `<option value="">${blank}</option>` : '') +
     list.map(([v, l]) => `<option value="${v}" ${v === sel ? 'selected' : ''}>${l}</option>`).join('');
   bar.innerHTML =
+    (spec.extras || []).map(x => `<label>${x.label} <select data-k="${x.k}">${opts(x.options, c[x.k])}</select></label>`).join('') +
     `<label>Land <select data-k="land">${opts(spec.laender, c.land)}</select></label>` +
     (spec.vergleich ? `<label><span class="vgl-mark"></span> Vergleich <select data-k="vgl">${
       opts(spec.laender.filter(x => x[0] !== c.land), c.vgl, '— keins —')}</select></label>` : '') +
@@ -5842,6 +6090,7 @@ function renderTab(tab){
         panel.insertBefore(banner, panel.firstChild);
       }
     }
+    try { addExportButtons(tab); } catch(e) { console.error('export buttons', e); }
   }
 }
 
