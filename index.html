@@ -49,15 +49,28 @@ header{display:flex;align-items:center;justify-content:space-between;padding:0 2
 .logo{font-weight:700;font-size:15px;color:#fff;letter-spacing:-0.01em}
 .logo span{color:#a8b8cd;font-weight:400;margin-left:2px}
 .hdr-right{display:flex;align-items:center;gap:14px;font-size:12px;color:#a8b8cd}
+.hdr-land{display:flex;align-items:center;gap:6px}
+.hdr-land select{background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.25);border-radius:5px;padding:4px 6px;font-family:inherit;font-size:12px}
+.hdr-land select option{color:#1a2332}
+.land-hint{font-size:10px;color:var(--text3);margin-top:4px}
+.saison-ctrl{display:flex;flex-wrap:wrap;gap:8px 12px;margin-bottom:8px;font-size:11px;color:var(--text2)}
+.saison-ctrl label{display:flex;align-items:center;gap:5px}
+.saison-ctrl select{font-size:11px}
+.saison-jahre{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
+.saison-jahre .mod-chip{padding:4px 9px;font-size:11px}
+.saison-jahre .mod-chip .sw{width:10px;height:3px;border-radius:2px;display:inline-block}
+@media (max-width:760px){.saison-ctrl label{flex:1 1 45%}.saison-ctrl select{flex:1;width:100%}}
 .live{display:flex;align-items:center;gap:6px;color:#5cd29a;font-weight:600;font-size:11px}
 .pulse{width:7px;height:7px;border-radius:50%;background:#5cd29a;box-shadow:0 0 0 0 rgba(92,210,154,0.7);animation:pulse 2s infinite}
 @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(92,210,154,0.7)}70%{box-shadow:0 0 0 8px rgba(92,210,154,0)}100%{box-shadow:0 0 0 0 rgba(92,210,154,0)}}
 .btn{background:rgba(255,255,255,0.12);color:var(--text-on-dark);border:1px solid rgba(255,255,255,0.2);border-radius:5px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:500;transition:all .15s}
 .btn:hover{background:rgba(255,255,255,0.2);border-color:rgba(255,255,255,0.35)}
 
-.tabs{display:flex;padding:0 20px;background:var(--card);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;box-shadow:var(--shadow)}
+.tabs{display:flex;flex-direction:column;padding:0 20px;background:var(--card);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;box-shadow:var(--shadow)}
+.tab-row{display:flex;min-width:max-content}
+.tab-row+.tab-row{border-top:1px solid var(--border)}
 .tabs::-webkit-scrollbar{display:none}
-.tab{background:none;border:none;border-bottom:2px solid transparent;color:var(--text2);padding:12px 16px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:500;white-space:nowrap;transition:all .15s}
+.tab{background:none;border:none;border-bottom:2px solid transparent;color:var(--text2);padding:9px 14px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:500;white-space:nowrap;transition:all .15s}
 .tab:hover{color:var(--text)}
 .tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
 
@@ -219,6 +232,20 @@ main{padding:18px 20px 70px;max-width:1600px;margin:0 auto}
            font-size:11px;cursor:pointer;font-family:inherit;text-decoration:underline;
            padding:6px}
 .mod-reset:hover{color:var(--accent)}
+.mod-bar-sub{margin-top:-8px}
+.kachel{display:flex;flex-direction:column;gap:8px;cursor:pointer;transition:border-color .15s, box-shadow .15s}
+.kachel:hover{border-color:var(--accent)}
+.kachel-kopf{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.kachel-kat{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--text3)}
+.kachel-werte{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px}
+.kachel-wert .l{font-size:10px;color:var(--text3)}
+.kachel-wert .v{font-size:18px;font-weight:600;font-variant-numeric:tabular-nums}
+.kachel-wert .u{font-size:9px;color:var(--text3)}
+.kachel-leer{font-size:11px;color:var(--text3)}
+.kachel-link{font-size:11px;color:var(--accent);margin-top:auto}
+.quellen-fold{margin-top:6px}
+.quellen-fold summary{cursor:pointer;font-size:12px;color:var(--text2);padding:10px 2px;font-weight:600}
+.quellen-fold summary span{font-weight:400;color:var(--text3)}
 
 /* ══════════════════════════════════════════════
    PHONE LAYOUT
@@ -254,7 +281,7 @@ header{padding-left:calc(20px + env(safe-area-inset-left));
   .hdr-right{gap:10px;font-size:11px;flex-wrap:wrap}
 
   /* 44px is the minimum comfortable tap target on both iOS and Android. */
-  .tab{padding:13px 14px;font-size:14px;min-height:46px}
+  .tab{padding:10px 12px;font-size:13.5px;min-height:44px}
   .btn{padding:9px 14px;min-height:40px}
   .range-opt{min-height:38px;padding:8px 12px;font-size:12px}
   .fuel-tab{min-height:40px;padding:9px 14px;font-size:13px}
@@ -279,6 +306,18 @@ header{padding-left:calc(20px + env(safe-area-inset-left));
      portrait; the inline height attributes are overridden. */
   .chart-wrap{height:230px!important}
   .card.g12 .chart-wrap{height:250px!important}
+  /* Twenty G20 bars need the height; the seasonal chart its legend. */
+  .card[data-g20] .chart-wrap{height:470px!important}
+  #saison-card .chart-wrap{height:320px!important}
+  .kachel-wert .v{font-size:16px}
+  /* The category and module chips took a whole phone screen when wrapped;
+     one swipeable row each keeps the tiles in view. */
+  #ueberblick-kategorien, #ueberblick-module{flex-wrap:nowrap;overflow-x:auto;
+    scrollbar-width:none;-webkit-overflow-scrolling:touch;padding:8px 10px}
+  #ueberblick-kategorien::-webkit-scrollbar, #ueberblick-module::-webkit-scrollbar{display:none}
+  #ueberblick-kategorien .mod-chip, #ueberblick-module .mod-chip{white-space:nowrap;flex:0 0 auto;min-height:36px;padding:7px 12px}
+  #ueberblick-module .mod-reset{width:auto;flex:0 0 auto;white-space:nowrap}
+  .hdr-land select{max-width:150px;min-height:34px;font-size:13px}
 
   .kpis{grid-template-columns:repeat(2,1fr);gap:8px}
   .kpi{padding:10px}
@@ -292,7 +331,7 @@ header{padding-left:calc(20px + env(safe-area-inset-left));
 @media (max-width:420px){
   .kpis{grid-template-columns:1fr}     /* two columns get too cramped */
   .chart-wrap{height:210px!important}
-  .tab{padding:12px 11px;font-size:13px}
+  .tab{padding:10px 10px;font-size:13px}
 }
 
 /* Coarse pointers of any width: hover styling misfires on touch, where
@@ -347,27 +386,37 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
   <div class="logo">⚡ energie<span>dashboard</span></div>
   <div class="hdr-right">
     <div class="live"><span class="pulse"></span>LIVE</div>
+    <label class="hdr-land" title="Gilt für alle Karten, die dieses Land führen">Land
+      <select id="global-country" aria-label="Land für alle Karten"></select></label>
     <span>Stand: <b id="last-update">—</b></span>
     <button class="btn" onclick="forceRefresh()">↺ Refresh</button>
   </div>
 </header>
 
+<!-- Two rows instead of one strip: fifteen tabs in a single line ran far
+     past the screen edge on desktop as well as on a phone. The first row
+     holds prices and supply, the second climate, comparisons and context.
+     Both rows scroll together on narrow screens. -->
 <nav class="tabs">
-  <button class="tab active" data-tab="ueberblick">Überblick</button>
-  <button class="tab" data-tab="strom">Strom</button>
-  <button class="tab" data-tab="strompreise">Strompreise & Importe</button>
-  <button class="tab" data-tab="markt">Marktpreise</button>
-  <button class="tab" data-tab="gas">Gas</button>
-  <button class="tab" data-tab="rohstoffe">Rohstoffe</button>
-  <button class="tab" data-tab="kraftstoff">Kraftstoffe & Heizöl</button>
-  <button class="tab" data-tab="erneuerbare">Erneuerbare</button>
-  <button class="tab" data-tab="umwelt">Emissionen & Wärme</button>
-  <button class="tab" data-tab="g20">G20-Vergleich</button>
-  <button class="tab" data-tab="wetter">Wetter</button>
-  <button class="tab" data-tab="fx">Wechselkurse</button>
-  <button class="tab" data-tab="futures">Futures & Prognosen</button>
-  <button class="tab" data-tab="lage">Marktlage & Versorgung</button>
-  <button class="tab" data-tab="news">News</button>
+  <div class="tab-row">
+    <button class="tab active" data-tab="ueberblick">Überblick</button>
+    <button class="tab" data-tab="strom">Strom</button>
+    <button class="tab" data-tab="strompreise">Strompreise & Importe</button>
+    <button class="tab" data-tab="markt">Marktpreise</button>
+    <button class="tab" data-tab="gas">Gas</button>
+    <button class="tab" data-tab="rohstoffe">Rohstoffe</button>
+    <button class="tab" data-tab="kraftstoff">Kraftstoffe & Heizöl</button>
+    <button class="tab" data-tab="futures">Futures & Prognosen</button>
+  </div>
+  <div class="tab-row">
+    <button class="tab" data-tab="erneuerbare">Erneuerbare</button>
+    <button class="tab" data-tab="umwelt">Emissionen & Wärme</button>
+    <button class="tab" data-tab="g20">G20-Vergleich</button>
+    <button class="tab" data-tab="lage">Marktlage & Versorgung</button>
+    <button class="tab" data-tab="wetter">Wetter</button>
+    <button class="tab" data-tab="fx">Wechselkurse</button>
+    <button class="tab" data-tab="news">News</button>
+  </div>
 </nav>
 
 <main>
@@ -378,13 +427,16 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
      panel carries one headline figure per domain and the health of every
      source feeding them. -->
 <div class="panel active" id="panel-ueberblick">
-  <div class="mod-bar" id="ueberblick-module"></div>
+  <div class="mod-bar" id="ueberblick-kategorien"></div>
+  <div class="mod-bar mod-bar-sub" id="ueberblick-module"></div>
   <div class="lage-hero" id="ueberblick-hero" data-module="lage">
     <div id="ueberblick-hero-content">
       <div class="loading"><span class="spin"></span>Lage wird ermittelt…</div>
     </div>
   </div>
-  <div class="kpis" id="kpi-ueberblick"></div>
+  <!-- One tile per tab: its headline figures and a way in. Which tiles show
+       is chosen above, by category or one by one. -->
+  <div class="grid kachel-grid" id="ueberblick-kacheln"></div>
   <div class="grid">
     <div class="card g7" data-src="energy_charts" data-module="verlauf">
       <div class="card-hdr">
@@ -404,16 +456,15 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
       </div>
       <div id="ueberblick-mix"><div class="loading"><span class="spin"></span></div></div>
     </div>
-    <div class="card g12" data-module="quellen">
-      <div class="card-hdr">
-        <div>
-          <div class="card-title">Quellen</div>
-          <div class="card-sub">Was dieses Dashboard speist, wie aktuell es ist und was es füllt</div>
-        </div>
-      </div>
+  </div>
+  <!-- The source inventory is reference, not a module: always there, folded
+       away until wanted. -->
+  <details class="quellen-fold" id="quellen-fold">
+    <summary>Datenquellen und ihr Zustand <span id="quellen-zusammenfassung"></span></summary>
+    <div class="card" data-nostamp style="margin-top:10px">
       <div id="ueberblick-quellen"><div class="loading"><span class="spin"></span></div></div>
     </div>
-  </div>
+  </details>
 </div>
 
 <!-- STROM -->
@@ -440,6 +491,10 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
         </select>
       </div>
       <div class="chart-wrap" style="height:180px"><canvas id="chart-price"></canvas></div>
+    </div>
+    <div class="card g12" data-src="worldbank_g20" data-g20="elec_coal,elec_gas,elec_nuclear,renewable_electricity,elec_renew_ex_hydro,elec_hydro,electricity_per_capita">
+      <div class="card-hdr"><div><div class="card-title">G20: Strommix im Vergleich</div><div class="card-sub">Weltbank · letztes Berichtsjahr je Land</div></div></div>
+      <div class="chart-wrap" style="height:380px"><canvas id="chart-g20-strom"></canvas></div>
     </div>
   </div>
 </div>
@@ -539,6 +594,10 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
         </div>
       </div>
       <div class="chart-wrap" style="height:230px"><canvas id="chart-gaspreise"></canvas></div>
+    </div>
+    <div class="card g12" data-src="worldbank_g20" data-g20="electricity_per_capita,energy_imports,energy_use_per_capita">
+      <div class="card-hdr"><div><div class="card-title">G20: Verbrauch und Importabhängigkeit</div><div class="card-sub">Weltbank · letztes Berichtsjahr je Land</div></div></div>
+      <div class="chart-wrap" style="height:380px"><canvas id="chart-g20-strompreise"></canvas></div>
     </div>
   </div>
 </div>
@@ -790,6 +849,13 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
     </div>
   </div>
   </div>
+  <!-- Shown under every fuel view, not only under jet fuel. -->
+  <div class="grid">
+    <div class="card g12" data-src="worldbank_g20" data-g20="fossil_share,energy_imports,energy_use_per_capita">
+      <div class="card-hdr"><div><div class="card-title">G20: fossile Energie und Importe</div><div class="card-sub">Weltbank · letztes Berichtsjahr je Land</div></div></div>
+      <div class="chart-wrap" style="height:380px"><canvas id="chart-g20-kraftstoff"></canvas></div>
+    </div>
+  </div>
 </div>
 
 <!-- ERNEUERBARE -->
@@ -804,6 +870,10 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
     <div class="card g6" data-src="energy_charts">
       <div class="card-hdr"><div><div class="card-title">EE-Anteil am Strommix</div><div class="card-sub">Energy-Charts · letzte 30 Tage</div></div></div>
       <div class="chart-wrap" style="height:250px"><canvas id="chart-ren-share"></canvas></div>
+    </div>
+    <div class="card g12" data-src="worldbank_g20" data-g20="renewable_share,renewable_electricity,elec_renew_ex_hydro,elec_hydro">
+      <div class="card-hdr"><div><div class="card-title">G20: Erneuerbare im Vergleich</div><div class="card-sub">Weltbank · letztes Berichtsjahr je Land</div></div></div>
+      <div class="chart-wrap" style="height:380px"><canvas id="chart-g20-ee"></canvas></div>
     </div>
   </div>
 </div>
@@ -869,6 +939,10 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
         </div>
       </div>
       <div class="chart-wrap" style="height:250px"><canvas id="chart-waerme"></canvas></div>
+    </div>
+    <div class="card g12" data-src="worldbank_g20" data-g20="co2_per_capita,co2_total,co2_intensity_gdp">
+      <div class="card-hdr"><div><div class="card-title">G20: Emissionen im Vergleich</div><div class="card-sub">Weltbank · letztes Berichtsjahr je Land</div></div></div>
+      <div class="chart-wrap" style="height:380px"><canvas id="chart-g20-umwelt"></canvas></div>
     </div>
   </div>
 </div>
@@ -955,6 +1029,67 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
     <div class="card g12" data-src="gas_storage">
       <div class="card-hdr"><div><div class="card-title">Einspeisung vs. Entnahme</div><div class="card-sub">GIE AGSI+ · täglich</div></div></div>
       <div class="chart-wrap" style="height:170px"><canvas id="chart-gas-flow"></canvas></div>
+    </div>
+
+    <!-- Seasonal comparison: this year against last year and the range of a
+         reference period, as in the BNetzA/AGSI "Netto-Einspeicherung"
+         chart. Every part of it can be set: series, country, smoothing,
+         season window, the years drawn and the years forming the band. -->
+    <div class="card g12" data-src="gas_storage_history bnetza_gas" id="saison-card">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title" id="saison-titel">Saisonvergleich</div>
+          <div class="card-sub" id="saison-sub">Jahr gegen Vorjahr und Spanne eines Referenzzeitraums</div>
+        </div>
+      </div>
+      <div class="saison-ctrl">
+        <label>Reihe <select id="saison-reihe"></select></label>
+        <label>Land <select id="saison-land">
+          <option value="de">Deutschland</option><option value="eu">EU gesamt</option>
+          <option value="at">Österreich</option><option value="nl">Niederlande</option>
+          <option value="fr">Frankreich</option><option value="it">Italien</option>
+        </select></label>
+        <label>Glättung <select id="saison-glaettung">
+          <option value="1">keine</option><option value="7">7 Tage gleitend</option>
+          <option value="14">14 Tage gleitend</option><option value="30">30 Tage gleitend</option>
+        </select></label>
+        <label>Zeitfenster <select id="saison-fenster">
+          <option value="inj">Einspeichersaison 1.4.–1.11.</option>
+          <option value="wd">Entnahmesaison 1.10.–1.4.</option>
+          <option value="gj">Gaswirtschaftsjahr 1.10.–30.9.</option>
+          <option value="kj">Kalenderjahr</option>
+        </select></label>
+        <label>Band von <select id="saison-band-von"></select></label>
+        <label>bis <select id="saison-band-bis"></select></label>
+        <label class="saison-check"><input type="checkbox" id="saison-mittel"> Mittelwert</label>
+      </div>
+      <div class="saison-jahre" id="saison-jahre"></div>
+      <div class="chart-wrap" style="height:320px"><canvas id="chart-saison"></canvas></div>
+      <div class="land-hint" id="saison-hinweis"></div>
+    </div>
+
+    <!-- Everything the BNetzA gas-supply page offers in its menus: imports,
+         LNG, exports, production, prices, storage, consumption by customer
+         group and temperature. -->
+    <div class="card g12" data-src="bnetza_gas">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">Gasversorgung Deutschland — Bundesnetzagentur</div>
+          <div class="card-sub" id="bnetza-sub">Alle Datenreihen der BNetzA-Lageseite · volle Historie</div>
+        </div>
+        <select id="bnetza-reihe" onchange="renderBnetza()" style="font-size:11px"></select>
+      </div>
+      <div class="kpis" id="kpi-bnetza" style="margin-bottom:10px"></div>
+      <div class="chart-wrap" style="height:300px"><canvas id="chart-bnetza"></canvas></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+        <button class="mod-chip" onclick="bnetzaZumSaisonvergleich()">↗ im Saisonvergleich zeigen</button>
+        <a class="mod-chip" id="bnetza-csv" href="#" target="_blank" rel="noopener">CSV der BNetzA</a>
+      </div>
+    </div>
+
+    <div class="card g12" data-src="worldbank_g20" data-g20="elec_gas,energy_imports,fossil_share">
+      <div class="card-hdr"><div><div class="card-title">G20-Vergleich</div><div class="card-sub">Weltbank · letztes Berichtsjahr je Land</div></div></div>
+      <div class="chart-wrap" style="height:380px"><canvas id="chart-g20-gas"></canvas></div>
     </div>
   </div>
 </div>
@@ -1163,6 +1298,7 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
   <div class="st" id="st-fred"><span class="dot"></span>FRED</div>
   <div class="st" id="st-eia"><span class="dot"></span>EIA</div>
   <div class="st" id="st-eurostat"><span class="dot"></span>Eurostat</div>
+  <div class="st" id="st-bnetza"><span class="dot"></span>BNetzA Gas</div>
   <div class="st" id="st-news"><span class="dot"></span>News</div>
   <div style="margin-left:auto;white-space:nowrap">
     <a href="#" onclick="openConsent();return false" style="color:var(--text3)">Datenschutz</a>
@@ -1308,16 +1444,17 @@ const TAB_FILES = {
   // broadly. Everything is optional — a missing file costs one tile.
   ueberblick:  ['smard','energy_charts','gas_storage','commodities','fuel',
                 'heating_oil','eurostat_prices','destatis_vpi','entsoe',
-                'eurostat_env','_state'],
-  strom:       ['smard','energy_charts','entsoe'],
-  strompreise: ['eurostat_prices','eurostat_oil'],
+                'eurostat_env','worldbank_g20','fx','weather','news',
+                'energy_futures','_state'],
+  strom:       ['smard','energy_charts','entsoe','worldbank_g20'],
+  strompreise: ['eurostat_prices','eurostat_oil','worldbank_g20'],
   markt:       ['energy_charts','commodities','fx','entsoe'],
-  gas:         ['gas_storage','entsog'],
+  gas:         ['gas_storage','entsog','gas_storage_history','bnetza_gas','worldbank_g20'],
   rohstoffe:   ['commodities','fx'],
   // merged tab: road fuels + heating oil + jet fuel/supply
-  kraftstoff:  ['fuel','heating_oil','commodities','eurostat_oil','eia_petroleum','fred_energy'],
-  erneuerbare: ['energy_charts','smard'],
-  umwelt:      ['eurostat_env'],
+  kraftstoff:  ['fuel','heating_oil','commodities','eurostat_oil','eia_petroleum','fred_energy','worldbank_g20'],
+  erneuerbare: ['energy_charts','smard','worldbank_g20'],
+  umwelt:      ['eurostat_env','worldbank_g20'],
   g20:         ['worldbank_g20'],
   wetter:      ['weather'],
   fx:          ['fx'],
@@ -1373,14 +1510,27 @@ const BASE={
   elements:{point:{radius:0,hoverRadius:4},line:{tension:0.25,borderWidth:2}}
 };
 
+// A card that once showed "no data" has lost its canvas. Put it back when
+// there is something to draw again — switching country or range used to
+// leave such a card blank until a reload.
+function ensureCanvas(id) {
+  let el = document.getElementById(id);
+  if (el) return el;
+  const wrap = document.querySelector(`[data-canvas-for="${id}"]`);
+  if (!wrap) return null;
+  wrap.innerHTML = `<canvas id="${id}"></canvas>`;
+  return document.getElementById(id);
+}
+
 function mkChart(id, type, labels, datasets, extra={}) {
   if(CH[id]) CH[id].destroy();
-  const el = document.getElementById(id);
+  const el = ensureCanvas(id);
   if(!el) return;
   const opts = JSON.parse(JSON.stringify(BASE));
   if(extra.scales) opts.scales = Object.assign({}, opts.scales, extra.scales);
   if(extra.plugins) opts.plugins = Object.assign({}, opts.plugins||{}, extra.plugins);
   if(extra.indexAxis) opts.indexAxis = extra.indexAxis;
+  if(extra.interaction) opts.interaction = extra.interaction;
   CH[id] = new Chart(el, {type, data:{labels,datasets}, options:opts});
 }
 
@@ -1414,7 +1564,7 @@ const SOURCE_CADENCE_H = {
   smard:1, energy_charts:1, gas_storage:6, entsog:6, weather:3, commodities:3,
   fx:12, fuel:12, heating_oil:12, destatis_vpi:24, entsoe:6, fred_energy:12,
   eia_petroleum:12, energy_futures:6, eurostat_oil:24, eurostat_prices:24,
-  news:2, eurostat_env:24, worldbank_g20:24,
+  news:2, eurostat_env:24, worldbank_g20:24, bnetza_gas:6, gas_storage_history:6,
 };
 
 const SOURCE_LABEL = {
@@ -1426,6 +1576,7 @@ const SOURCE_LABEL = {
   energy_futures:'EIA STEO · World Bank · IMF', eurostat_oil:'Eurostat',
   eurostat_prices:'Eurostat', news:'RSS',
   eurostat_env:'Eurostat (Umwelt)', worldbank_g20:'Weltbank',
+  bnetza_gas:'Bundesnetzagentur', gas_storage_history:'GIE AGSI+ Historie',
 };
 
 // Files with no fetcher: one-off snapshots committed to the repo. They are
@@ -1550,6 +1701,9 @@ function noData(anchorId, headline, why) {
   if (CH[anchorId]) { CH[anchorId].destroy(); delete CH[anchorId]; }
   const card = el.closest('.card');
   if (card) card.querySelectorAll('.card-stamp').forEach(b => b.remove());
+  // Remember which canvas lived here, so the next render (another country,
+  // another range) can put it back instead of failing silently.
+  wrap.dataset.canvasFor = anchorId;
   wrap.innerHTML = `<div class="nodata"><div>${headline}</div>` +
     (why ? `<div class="why">${why}</div>` : '') + '</div>';
 }
@@ -1716,6 +1870,7 @@ function unwrap(name, raw) {
       last_success: raw.last_success || null,
       last_error: raw.last_error || null,
       updated: raw.updated || null,
+      meta: raw.meta || null,
     };
     return inner;
   }
@@ -1776,6 +1931,7 @@ function updateStatus() {
     'st-fred':        isOk('fred_energy',   () => (D.fred_energy?.DJFUELUSGULF?.series?.length||0)>0),
     'st-eia':         isOk('eia_petroleum', () => (D.eia_petroleum?.jet_fuel_us_gulf_weekly?.series?.length||0)>0),
     'st-eurostat':    isOk('eurostat_oil',  () => Object.keys(D.eurostat_oil?.oil_jet_fuel_stocks?.series_per_country||{}).length>0),
+    'st-bnetza':      isOk('bnetza_gas',    () => Object.keys(D.bnetza_gas?.datasets||{}).length>0),
     'st-news':        isOk('news',          () => (D.news?.articles?.length||0)>0),
   };
   Object.entries(chk).forEach(([id,ok])=>{
@@ -2510,7 +2666,8 @@ function renderGasChart() {
   const cc=document.getElementById('gas-country')?.value||'eu';
   const d=gasNode(gs, cc);
   if(!d?.data?.length){
-    document.getElementById('chart-gas').parentElement.innerHTML='<div class="nodata">Keine Gasdaten für '+cc+'</div>';
+    noData('chart-gas', 'Keine Gasdaten für '+cc.toUpperCase());
+    noData('chart-gas-flow', 'Keine Gasdaten für '+cc.toUpperCase());
     return;
   }
   // Range-aware filter via cutoff date
@@ -2519,7 +2676,7 @@ function renderGasChart() {
     : new Date(Date.now() - sec*1000).toISOString().substring(0,10);
   const data=d.data.filter(x=>x.fill_pct!=null && x.date >= cutoffDate);
   if(!data.length){
-    document.getElementById('chart-gas').parentElement.innerHTML='<div class="nodata">Keine Daten im gewählten Zeitraum</div>';
+    noData('chart-gas', 'Keine Daten im gewählten Zeitraum');
     return;
   }
   mkChart('chart-gas','line',data.map(x=>x.date),[{
@@ -2534,12 +2691,12 @@ function renderGasChart() {
     {label:'Entnahme TWh',data:flow.map(x=>-(x.withdrawal||0)),backgroundColor:'rgba(192,57,43,0.55)',borderRadius:2},
   ],{plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}},scales:{x:{ticks:{maxTicksLimit:10}}}});
   else
-    document.getElementById('chart-gas-flow').parentElement.innerHTML='<div class="nodata">Keine Einspeisung/Entnahme-Daten</div>';
+    noData('chart-gas-flow', 'Keine Einspeisung/Entnahme-Daten');
 }
 
 function renderGas() {
   const gs=D.gas_storage;
-  if(!gs){document.getElementById('kpi-gas').innerHTML='<div style="color:var(--text3);font-size:11px">Gasdaten fehlen</div>';return;}
+  if(!gs){document.getElementById('kpi-gas').innerHTML='<div style="color:var(--text3);font-size:11px">Gasdaten fehlen</div>';renderGasZusatz();return;}
   const list=['eu','de','at','fr','it','nl','pl'];
   const colors=['#39d353','#58a6ff','#3fb950','#f85149','#bc8cff','#d29922','#f0883e'];
   document.getElementById('kpi-gas').innerHTML=kpis(list.map((k,i)=>{
@@ -2554,6 +2711,14 @@ function renderGas() {
       return`<tr><td>${d?.name||k.toUpperCase()}</td><td class="num" style="color:${col}">${l?.fill_pct!=null?fmtN(l.fill_pct,1)+'%':'—'}</td><td style="color:var(--text3)">${l?.date||'—'}</td></tr>`;
     }).join('')}</tbody></table></div>`;
   renderGasChart();
+  renderGasZusatz();
+}
+
+// The seasonal and BNetzA cards must render even when the AGSI file is
+// missing, and one failing must not take the other down.
+function renderGasZusatz() {
+  try { renderSaison(); } catch(e) { console.error('renderSaison', e); }
+  try { renderBnetza(); } catch(e) { console.error('renderBnetza', e); }
 }
 
 // ══════════════════════════════════════════════
@@ -4399,26 +4564,48 @@ const SOURCE_INVENTORY = [
   ['fx',              'EZB',                       'Wechselkurse', 'fx'],
   ['weather',         'Open-Meteo',                'Wind- und Solarvorhersage', 'wetter'],
   ['eurostat_env',    'Eurostat (Umwelt)',         'Treibhausgase, Fernwärme', 'umwelt'],
-  ['worldbank_g20',   'Weltbank',                  'G20-Vergleich: Emissionen, Erneuerbare, Verbrauch', 'g20'],
+  ['worldbank_g20',   'Weltbank',                  'G20-Vergleich: Emissionen, Erneuerbare, Verbrauch, Strommix', 'g20'],
+  ['bnetza_gas',      'Bundesnetzagentur (Gaslage)','Gasimporte, LNG, Exporte, Förderung, Verbrauch RLM/SLP, Temperatur', 'gas'],
+  ['gas_storage_history','GIE AGSI+ (Historie)',   'Speicherdaten seit 2017 für den Saisonvergleich', 'gas'],
   ['news',            'RSS-Quellen',               'Nachrichtenlage', 'news'],
 ];
 
-// Which blocks the front page shows. Every entry can be switched off; the
-// choice is remembered per browser. Switching one off hides a block here and
-// changes nothing else — the numbers stay in their detail tabs, and nothing
-// is dropped from the data.
+// The front page: one tile per tab, grouped in categories. A tile carries
+// the headline figures of its tab and opens it on click. Tiles are chosen
+// by category (filter) or one by one; both choices persist per browser.
+// Hiding a tile hides it here only — every number stays in its tab and
+// nothing is dropped from the data.
+const UEBERBLICK_KATEGORIEN = [
+  ['strom',  'Strom'],
+  ['gas',    'Gas'],
+  ['oel',    'Öl & Kraftstoff'],
+  ['klima',  'Klima & Vergleich'],
+  ['maerkte','Märkte'],
+  ['kontext','Lage & Kontext'],
+];
+
+// [id, label, category, tab it opens]. The first three are the fixed blocks
+// of the page, the rest are tab tiles.
 const UEBERBLICK_MODULE = [
-  ['lage',       'Lage',            'Die zusammengefasste Versorgungslage'],
-  ['strom',      'Strom',           'Day-Ahead-Preis und Erneuerbaren-Anteil'],
-  ['gas',        'Gas',             'TTF-Preis und EU-Speicherstand'],
-  ['oel',        'Öl & Kraftstoff', 'Brent, Benzin, Diesel, Heizöl'],
-  ['preise',     'Endkundenpreise', 'Was Haushalte zahlen'],
-  ['emissionen', 'Emissionen',      'Treibhausgase, sobald abgerufen'],
-  ['verlauf',    'Preisverlauf',    'Day-Ahead der letzten 7 Tage'],
-  ['mix',        'Strommix',        'Woher der Strom gerade kommt'],
-  ['quellen',    'Quellen',         'Zustand aller Datenquellen'],
+  ['lage',        'Lage',                 'kontext', 'lage'],
+  ['verlauf',     'Preisverlauf 7 Tage',  'strom',   'strom'],
+  ['mix',         'Strommix',             'strom',   'strom'],
+  ['strom',       'Strom',                'strom',   'strom'],
+  ['strompreise', 'Strompreise & Importe','strom',   'strompreise'],
+  ['erneuerbare', 'Erneuerbare',          'strom',   'erneuerbare'],
+  ['gas',         'Gas',                  'gas',     'gas'],
+  ['kraftstoff',  'Kraftstoffe & Heizöl', 'oel',     'kraftstoff'],
+  ['rohstoffe',   'Rohstoffe',            'oel',     'rohstoffe'],
+  ['umwelt',      'Emissionen & Wärme',   'klima',   'umwelt'],
+  ['g20',         'G20-Vergleich',        'klima',   'g20'],
+  ['markt',       'Marktpreise',          'maerkte', 'markt'],
+  ['futures',     'Futures & Prognosen',  'maerkte', 'futures'],
+  ['fx',          'Wechselkurse',         'maerkte', 'fx'],
+  ['wetter',      'Wetter',               'kontext', 'wetter'],
+  ['news',        'News',                 'kontext', 'news'],
 ];
 const MODULE_STORAGE_KEY = 'energydash:ueberblickModule';
+const KATEGORIE_KEY = 'energydash:ueberblickKategorie';
 
 function loadModuleChoice() {
   // Default: everything on. A stored choice may predate a new module, so
@@ -4430,44 +4617,237 @@ function loadModuleChoice() {
   UEBERBLICK_MODULE.forEach(([id]) => { out[id] = stored[id] !== false; });
   return out;
 }
-
 function saveModuleChoice(choice) {
   try { localStorage.setItem(MODULE_STORAGE_KEY, JSON.stringify(choice)); } catch(e) {}
 }
-
 let moduleChoice = loadModuleChoice();
+let kategorieFilter = (() => { try { return localStorage.getItem(KATEGORIE_KEY) || 'alle'; } catch(e) { return 'alle'; } })();
 
+function setKategorie(k) {
+  kategorieFilter = k;
+  try { localStorage.setItem(KATEGORIE_KEY, k); } catch(e) {}
+  renderUeberblick();
+}
 function toggleModule(id) {
   moduleChoice[id] = !moduleChoice[id];
   saveModuleChoice(moduleChoice);
   renderUeberblick();
 }
-
 function resetModules() {
   moduleChoice = {};
   UEBERBLICK_MODULE.forEach(([id]) => { moduleChoice[id] = true; });
   saveModuleChoice(moduleChoice);
+  kategorieFilter = 'alle';
+  try { localStorage.setItem(KATEGORIE_KEY, 'alle'); } catch(e) {}
   renderUeberblick();
 }
 
+// Visible = switched on AND in the chosen category.
+function moduleSichtbar(id) {
+  const m = UEBERBLICK_MODULE.find(x => x[0] === id);
+  if (!m || moduleChoice[id] === false) return false;
+  return kategorieFilter === 'alle' || m[2] === kategorieFilter;
+}
+
 function renderModuleBar() {
+  const kat = document.getElementById('ueberblick-kategorien');
+  if (kat) {
+    kat.innerHTML = `<span class="mod-bar-lbl">Kategorie</span>` +
+      [['alle','Alle'], ...UEBERBLICK_KATEGORIEN].map(([k, l]) =>
+        `<button class="mod-chip ${kategorieFilter === k ? 'on' : ''}" onclick="setKategorie('${k}')">${l}</button>`).join('');
+  }
   const bar = document.getElementById('ueberblick-module');
   if (!bar) return;
   const hidden = UEBERBLICK_MODULE.filter(([id]) => !moduleChoice[id]).length;
-  bar.innerHTML = `<span class="mod-bar-lbl">Anzeigen</span>` +
-    UEBERBLICK_MODULE.map(([id, label, title]) =>
-      `<button class="mod-chip ${moduleChoice[id] ? 'on' : ''}" title="${title}"
-               onclick="toggleModule('${id}')">
+  const inKat = UEBERBLICK_MODULE.filter(m => kategorieFilter === 'alle' || m[2] === kategorieFilter);
+  bar.innerHTML = `<span class="mod-bar-lbl">Module</span>` +
+    inKat.map(([id, label]) =>
+      `<button class="mod-chip ${moduleChoice[id] ? 'on' : ''}" onclick="toggleModule('${id}')">
          <span class="mark">${moduleChoice[id] ? '✓' : '＋'}</span>${label}
        </button>`).join('') +
-    (hidden ? `<button class="mod-reset" onclick="resetModules()">alle wieder einblenden (${hidden} aus)</button>` : '');
+    ((hidden || kategorieFilter !== 'alle')
+      ? `<button class="mod-reset" onclick="resetModules()">alles zeigen${hidden ? ` (${hidden} aus)` : ''}</button>` : '');
+}
+
+// Latest non-null value of a {ts,v} / {period,v} list.
+const lastV = arr => (arr || []).filter(p => p && p.v != null).at(-1) || null;
+
+// Figures per tile. Each returns [{l, v, u, c}] — label, value, unit, colour.
+// A figure whose source is missing is simply left out: an absent number and
+// a zero must not look alike.
+function kachelWerte(id) {
+  const ec = D.energy_charts, sm = D.smard, gs = D.gas_storage, com = D.commodities;
+  const land = typeof landAktiv !== 'undefined' ? landAktiv : 'DE';
+  const geo = eurostatCodec.from(land);
+  const out = [];
+  const add = (l, v, u, c) => { if (v != null && v !== '—') out.push({l, v, u, c}); };
+  switch (id) {
+    case 'strom': {
+      const p = ec?.price_de?.price?.filter(v => v != null) || [];
+      if (p.length) {
+        add('Day-Ahead jetzt', fmtN(p.at(-1), 0), 'EUR/MWh', '#0e6cb6');
+        add('Ø 7 Tage', fmtN(p.reduce((a, b) => a + b, 0) / p.length, 0), 'EUR/MWh', '#56657a');
+      }
+      const series = sm?.series || {};
+      let top = null, total = 0;
+      Object.keys(LN).forEach(k => {
+        const v = lastV(series[k])?.v;
+        if (v > 0) { total += v; if (!top || v > top[1]) top = [k, v]; }
+      });
+      if (top && total) add('Größte Quelle', LN[top[0]], `${fmtN(top[1] / total * 100, 0)}% · SMARD`, C[top[0]]);
+      break;
+    }
+    case 'strompreise': {
+      const hh = lastV(D.eurostat_prices?.electricity_household?.series_per_country?.[geo]);
+      const ind = lastV(D.eurostat_prices?.electricity_industry?.series_per_country?.[geo]);
+      if (hh) add(`Haushalt ${landName(land)}`, fmtN(hh.v, 4), `EUR/kWh · ${fmtHalfYear(hh.period)}`, '#c0392b');
+      if (ind) add('Industrie', fmtN(ind.v, 4), `EUR/kWh · ${fmtHalfYear(ind.period)}`, '#d97706');
+      const gh = lastV(D.eurostat_prices?.gas_household?.series_per_country?.[geo]);
+      if (gh) add('Gas Haushalt', fmtN(gh.v, 4), `EUR/kWh · ${fmtHalfYear(gh.period)}`, '#dc6803');
+      break;
+    }
+    case 'erneuerbare': {
+      const ren = ec?.ren_share_de?.ren_share?.filter(v => v != null);
+      if (ren?.length) add('EE-Anteil', fmtN(ren.at(-1), 0) + '%', 'Energy-Charts', '#1f9d55');
+      const s = sm?.series || {};
+      const wind = (lastV(s.wind_onshore)?.v || 0) + (lastV(s.wind_offshore)?.v || 0);
+      const sol = lastV(s.solar)?.v;
+      if (wind) add('Wind jetzt', fmtN(wind / 1000, 1), 'GW · SMARD', '#0e6cb6');
+      if (sol != null) add('Solar jetzt', fmtN(sol / 1000, 1), 'GW · SMARD', '#d97706');
+      break;
+    }
+    case 'gas': {
+      const ttf = ttfSeries().points.at(-1)?.v;
+      if (ttf != null) add('Erdgas TTF', fmtN(ttf, 1), 'EUR/MWh', '#f0883e');
+      ['eu', land.toLowerCase(), 'de'].filter((c, i, a) => a.indexOf(c) === i).slice(0, 2).forEach(cc => {
+        const n = gasNode(gs, cc);
+        const l = n?.data?.filter(x => x.fill_pct != null).at(-1);
+        if (l) add(`Speicher ${n.name || cc.toUpperCase()}`, fmtN(l.fill_pct, 1) + '%', fmtIsoDate(l.date),
+                   l.fill_pct >= 70 ? '#1f9d55' : l.fill_pct >= 50 ? '#c98a04' : '#c0392b');
+      });
+      break;
+    }
+    case 'kraftstoff': {
+      const fu = D.fuel?.cities;
+      const e5 = fu?._national?.e5_avg ?? fu?.Berlin?.e5_avg;
+      const di = fu?._national?.diesel_avg ?? fu?.Berlin?.diesel_avg;
+      if (e5 != null) add('Super E5', fmtN(e5, 3), 'EUR/Liter · Bundesschnitt', '#1f9d55');
+      if (di != null) add('Diesel', fmtN(di, 3), 'EUR/Liter · Bundesschnitt', '#7e57c2');
+      const ho = D.heating_oil;
+      if (ho?.reference_price_eur_l != null) add('Heizöl', fmtN(ho.reference_price_eur_l, 3),
+        `EUR/Liter · ${ho.price_source === 'destatis' ? 'Destatis' : 'TECSON'}`, '#d97706');
+      break;
+    }
+    case 'rohstoffe': {
+      const b = lastV(com?.brent_crude?.series), w = lastV(com?.wti_crude?.series);
+      const hh = lastV(com?.natgas_henry?.series), co = lastV(com?.coal_atw?.series);
+      if (b) add('Brent', fmtN(b.v, 1), 'USD/Barrel', '#dc6803');
+      if (w) add('WTI', fmtN(w.v, 1), 'USD/Barrel', '#d97706');
+      if (hh) add('Henry Hub', fmtN(hh.v, 2), com.natgas_henry.unit || 'USD/MMBtu', '#0891b2');
+      if (co) add('Kohle', fmtN(co.v, 1), com.coal_atw.unit || '', '#4a5568');
+      break;
+    }
+    case 'umwelt': {
+      const thg = D.eurostat_env?.ghg_total?.series_per_country?.[geo];
+      if (thg?.length) {
+        const base = thg.find(p => p.period === '1990');
+        const d = base ? (thg.at(-1).v - base.v) / base.v * 100 : null;
+        add(`THG ${landName(land)}`, fmtN(thg.at(-1).v / 1000, 0), `Mio. t CO₂-Äq. · ${thg.at(-1).period}`, '#c0392b');
+        if (d != null) add('ggü. 1990', `${d >= 0 ? '+' : '−'}${fmtN(Math.abs(d), 1)}%`, 'Eurostat', d < 0 ? '#1f9d55' : '#c0392b');
+      }
+      break;
+    }
+    case 'g20': {
+      const wb = D.worldbank_g20;
+      if (wb) {
+        const iso = g20Fokus();
+        const p = g20Latest('co2_per_capita', iso);
+        if (p) add(`CO₂ pro Kopf ${wb.countries?.[iso] || ''}`, fmtN(p.v, 1), `t · ${p.period}`, '#c0392b');
+        const r = g20Latest('renewable_electricity', iso);
+        if (r) add('EE am Strom', fmtN(r.v, 0) + '%', r.period, '#1f9d55');
+      }
+      break;
+    }
+    case 'markt': {
+      const co2 = co2Series();
+      const c = co2.points.at(-1)?.v;
+      if (c != null) add(co2.isProxy ? 'CO₂ (ETF-Näherung)' : 'CO₂ EU ETS', fmtN(c, 1), co2.unit, '#4a5568');
+      const ttf = ttfSeries().points.at(-1)?.v;
+      if (ttf != null) add('TTF', fmtN(ttf, 1), 'EUR/MWh', '#f0883e');
+      break;
+    }
+    case 'futures': {
+      const sp = D.energy_futures?.spot;
+      if (sp?.brent_usd_bbl?.price != null) add('Brent aktuell', fmtN(sp.brent_usd_bbl.price, 1), 'USD/Barrel', '#dc6803');
+      const f = (D.energy_futures?.eia_steo?.brent || []).filter(p => p.type && p.type !== 'actual');
+      const next = f.find(p => p.period >= new Date().toISOString().slice(0, 7));
+      if (next) add(`EIA-Prognose ${next.period}`, fmtN(next.v, 1), 'USD/Barrel', '#7e57c2');
+      break;
+    }
+    case 'fx': {
+      const r = D.fx?.current?.rates || {};
+      if (r.USD) add('EUR/USD', fmtN(r.USD, 4), D.fx.current.date || '', '#0e6cb6');
+      if (r.GBP) add('EUR/GBP', fmtN(r.GBP, 4), '', '#56657a');
+      if (r.CHF) add('EUR/CHF', fmtN(r.CHF, 4), '', '#56657a');
+      break;
+    }
+    case 'wetter': {
+      const w = D.weather?.cities?.Berlin?.current;
+      if (w) {
+        add('Berlin', fmtN(w.temperature_2m, 1) + ' °C', 'jetzt', '#0891b2');
+        add('Wind', fmtN(w.wind_speed_10m, 0), 'km/h', '#0e6cb6');
+      }
+      break;
+    }
+    case 'news': {
+      const a = D.news?.articles || [];
+      if (a.length) add('Meldungen', String(a.length), `aus ${(D.news.sources || []).length || 'mehreren'} Quellen`, '#56657a');
+      break;
+    }
+  }
+  return out;
+}
+
+function kachelZusatz(id) {
+  // A one-line text under the figures, where a number alone says little.
+  if (id === 'news') {
+    const a = (D.news?.articles || [])[0];
+    return a ? `Neu: ${a.title}` : '';
+  }
+  if (id === 'gas' && D.bnetza_gas) return 'Mit Saisonvergleich und allen Reihen der Bundesnetzagentur';
+  if (id === 'gas') return 'Saisonvergleich und BNetzA-Reihen im Tab';
+  return '';
+}
+
+function renderKacheln() {
+  const wrap = document.getElementById('ueberblick-kacheln');
+  if (!wrap) return;
+  const kat = Object.fromEntries(UEBERBLICK_KATEGORIEN);
+  const tiles = UEBERBLICK_MODULE.filter(m => !['lage','verlauf','mix'].includes(m[0]) && moduleSichtbar(m[0]));
+  if (!tiles.length) {
+    wrap.innerHTML = `<div class="card g12"><div class="nodata">Keine Kachel in dieser Auswahl — oben eine Kategorie oder ein Modul einschalten.</div></div>`;
+    return;
+  }
+  wrap.innerHTML = tiles.map(([id, label, k, tab]) => {
+    const werte = kachelWerte(id);
+    const zusatz = kachelZusatz(id);
+    return `<div class="card g4 kachel" role="button" tabindex="0" onclick="gotoTab('${tab}')"
+                 onkeydown="if(event.key==='Enter')gotoTab('${tab}')">
+      <div class="kachel-kopf"><div class="card-title">${label}</div><span class="kachel-kat">${kat[k] || ''}</span></div>
+      ${werte.length ? `<div class="kachel-werte">${werte.map(w => `
+        <div class="kachel-wert"><div class="l">${w.l}</div>
+          <div class="v" style="color:${w.c || 'var(--text)'}">${w.v}</div>
+          <div class="u">${w.u || ''}</div></div>`).join('')}</div>`
+        : `<div class="kachel-leer">Noch keine Kennzahl geladen — im Tab ansehen</div>`}
+      ${zusatz ? `<div class="kachel-leer">${zusatz}</div>` : ''}
+      <div class="kachel-link">${label} öffnen →</div>
+    </div>`;
+  }).join('');
 }
 
 function renderUeberblick() {
   const ec = D.energy_charts, sm = D.smard, gs = D.gas_storage;
-  const com = D.commodities, ho = D.heating_oil, fu = D.fuel;
 
-  // ── headline situation, same classifier the Marktlage tab uses ──
   const ttf = ttfSeries().points.at(-1)?.v;
   const daNow = ec?.price_de?.price?.filter(v => v != null).at(-1);
   const euPct = gs ? gasNode(gs,'eu')?.data?.filter(x => x.fill_pct != null).at(-1)?.fill_pct : null;
@@ -4475,12 +4855,12 @@ function renderUeberblick() {
 
   // Blocks marked with data-module follow the switches above.
   document.querySelectorAll('#panel-ueberblick [data-module]').forEach(el => {
-    el.style.display = moduleChoice[el.dataset.module] === false ? 'none' : '';
+    el.style.display = moduleSichtbar(el.dataset.module) ? '' : 'none';
   });
 
   const cls = classifyLage(ttf, euPct, daNow);
   const hero = document.getElementById('ueberblick-hero-content');
-  if (hero && moduleChoice.lage) {
+  if (hero && moduleSichtbar('lage')) {
     hero.innerHTML = `
       <div class="lage-hero-title">${cls.headline}</div>
       <div class="lage-hero-sub">${cls.sub}
@@ -4492,61 +4872,10 @@ function renderUeberblick() {
         cls.level==='ok'?'● Stabil':cls.level==='warn'?'● Angespannt':'● Kritisch'}</span>`;
   }
 
-  // ── one figure per domain ──
-  const kp = [];
-  const push = (mod, label, val, unit, color, delta) => {
-    if (val == null || moduleChoice[mod] === false) return;
-    kp.push({label, val, unit, color, delta: delta || ''});
-  };
-
-  if (daNow != null) {
-    const prices = (ec.price_de.price || []).filter(v => v != null);
-    const avg = prices.reduce((a,b)=>a+b,0) / prices.length;
-    push('strom', 'Strom Day-Ahead', fmtN(daNow,0), 'EUR/MWh · jetzt', '#0e6cb6',
-         `Ø ${fmtN(avg,0)} über 7 Tage`);
-  }
-  if (ttf != null) push('gas', 'Erdgas TTF', fmtN(ttf,1), 'EUR/MWh', '#f0883e');
-  if (euPct != null) push('gas', 'EU-Gasspeicher', fmtN(euPct,1)+'%', 'AGSI+', euPct>=70?'#1f9d55':euPct>=50?'#c98a04':'#c0392b');
-
-  const brent = com?.brent_crude?.series?.at(-1)?.v;
-  if (brent != null) push('oel', 'Brent Rohöl', fmtN(brent,1), 'USD/Barrel', '#dc6803');
-
-  const e5 = fu?.cities?._national?.e5_avg ?? fu?.cities?.Berlin?.e5_avg;
-  const diesel = fu?.cities?._national?.diesel_avg ?? fu?.cities?.Berlin?.diesel_avg;
-  if (e5 != null) push('oel', 'Super E5', fmtN(e5,3), 'EUR/Liter · Bundesschnitt', '#1f9d55');
-  if (diesel != null) push('oel', 'Diesel', fmtN(diesel,3), 'EUR/Liter · Bundesschnitt', '#7e57c2');
-
-  const heat = ho?.reference_price_eur_l;
-  if (heat != null) push('oel', 'Heizöl', fmtN(heat,3),
-    `EUR/Liter · ${ho.price_source === 'destatis' ? 'Destatis' : 'TECSON'}`, '#d97706');
-
-  const hh = D.eurostat_prices?.electricity_household?.series_per_country?.DE;
-  if (hh?.length) push('preise', 'Strom Haushalt', fmtN(hh.at(-1).v,4),
-    `EUR/kWh · ${fmtHalfYear(hh.at(-1).period)}`, '#c0392b');
-
-  const ren = ec?.ren_share_de?.ren_share?.filter(v => v != null);
-  if (ren?.length) push('strom', 'EE-Anteil', fmtN(ren.at(-1),0)+'%', 'Prognose Energy-Charts', '#1f9d55');
-
-  // Emissions land here once the daily run has produced them.
-  const thg = D.eurostat_env?.ghg_total?.series_per_country?.DE;
-  if (thg?.length) {
-    const base = thg.find(p => p.period === '1990');
-    const d = base ? (thg.at(-1).v - base.v) / base.v * 100 : null;
-    push('emissionen', 'Treibhausgase DE', fmtN(thg.at(-1).v/1000,0),
-         `Mio. t CO₂-Äq. · ${thg.at(-1).period}`, '#c0392b',
-         d != null ? `${d>=0?'▲ +':'▼ '}${fmtN(Math.abs(d),1)}% ggü. 1990` : '');
-  }
-
-  const anyKpiModule = ['strom','gas','oel','preise','emissionen']
-    .some(m => moduleChoice[m] !== false);
-  document.getElementById('kpi-ueberblick').innerHTML = kp.length
-    ? kpis(kp)
-    : `<div class="nodata">${anyKpiModule
-        ? 'Noch keine Daten geladen'
-        : 'Alle Kennzahlen ausgeblendet — oben wieder einschalten'}</div>`;
+  renderKacheln();
 
   // ── day-ahead, last 7 days ──
-  if (moduleChoice.verlauf === false) { /* hidden */ }
+  if (!moduleSichtbar('verlauf')) { /* hidden */ }
   else if (ec?.price_de?.unix_seconds?.length) {
     const pts = ec.price_de.unix_seconds
       .map((t,i) => ({ts:t, v:ec.price_de.price[i]}))
@@ -4563,7 +4892,7 @@ function renderUeberblick() {
 
   // ── current generation mix, as a share table ──
   const mixEl = document.getElementById('ueberblick-mix');
-  if (mixEl && moduleChoice.mix !== false) {
+  if (mixEl && moduleSichtbar('mix')) {
     const series = sm?.series || {};
     const latest = {};
     Object.keys(LN).forEach(k => {
@@ -4591,7 +4920,7 @@ function renderUeberblick() {
     }
   }
 
-  if (moduleChoice.quellen !== false) renderQuellen();
+  renderQuellen();
 }
 
 // The source inventory: what feeds this dashboard, how fresh it is, and
@@ -4643,6 +4972,9 @@ function renderQuellen() {
             : `<a href="#" onclick="gotoTab('${tab}');return false" style="color:var(--accent)">ansehen →</a>`}</td>
     </tr>`;
   }).join('');
+  const sum = document.getElementById('quellen-zusammenfassung');
+  if (sum) sum.innerHTML = `· ${SOURCE_INVENTORY.length} Quellen · ` +
+    (problems ? `<span style="color:var(--red)">${problems} mit Problemen</span>` : 'alle in Ordnung');
   wrap.innerHTML = `<div class="tbl-scroll"><table class="tbl">
       <thead><tr><th>Quelle</th><th>Status</th><th>Stand</th><th>Detail</th></tr></thead>
       <tbody>${rows}</tbody></table></div>
@@ -4671,7 +5003,7 @@ const UMWELT_LAENDER = {
   DE:'Deutschland', EU27_2020:'EU27', FR:'Frankreich', IT:'Italien',
   ES:'Spanien', NL:'Niederlande', PL:'Polen', AT:'Österreich',
   SE:'Schweden', DK:'Dänemark', CZ:'Tschechien', FI:'Finnland',
-  PT:'Portugal', GR:'Griechenland', IE:'Irland', BE:'Belgien', NO:'Norwegen',
+  PT:'Portugal', EL:'Griechenland', IE:'Irland', BE:'Belgien', NO:'Norwegen',
 };
 
 // The CRF classification nests: "Energy" (CRF1) CONTAINS transport (CRF1A3)
@@ -4952,6 +5284,14 @@ const g20Color = iso => {
   return G20_FARBEN[i % G20_FARBEN.length];
 };
 
+// The G20 member the page-wide country menu points at; Germany when that
+// menu is on a country outside the G20 (Austria, say).
+function g20Fokus() {
+  const c = typeof landAktiv !== 'undefined' ? landAktiv : 'DE';
+  const iso = ISO2_ZU_3[c];
+  return iso && D.worldbank_g20?.countries?.[iso] ? iso : 'DEU';
+}
+
 function g20Node(key) {
   return D.worldbank_g20?.[key] || null;
 }
@@ -4990,7 +5330,8 @@ function renderG20() {
     // "Higher is better" flips the colour meaning: a big renewable share is
     // good news, a big emission total is not.
     const hib = node?.higher_is_better;
-    const farbe = x => x.iso === 'DEU' ? 'rgba(14,108,182,0.95)'
+    const fokus = g20Fokus();
+    const farbe = x => x.iso === fokus ? 'rgba(14,108,182,0.95)'
       : hib === true  ? 'rgba(31,157,85,0.62)'
       : hib === false ? 'rgba(192,57,43,0.55)'
       : 'rgba(86,101,122,0.55)';
@@ -5007,12 +5348,12 @@ function renderG20() {
           (jahre.length > 1 ? ' (je Land der letzte verfügbare Wert)' : '') +
           (node?.indicator ? ` · Indikator ${node.indicator}` : ''));
 
-    // KPIs: Germany against the extremes of the same indicator.
-    const de = werte.find(x => x.iso === 'DEU');
+    // KPIs: the chosen country (Germany by default) against the extremes.
+    const de = werte.find(x => x.iso === fokus);
     const kp = [];
     if (de) {
       const rang = werte.indexOf(de) + 1;
-      kp.push({label:`Deutschland · ${node?.label || key}`, val:fmtN(de.p.v, 2),
+      kp.push({label:`${de.name} · ${node?.label || key}`, val:fmtN(de.p.v, 2),
                unit:`${node?.unit || ''} · ${de.p.period}`, color:'#0e6cb6',
                delta:`Platz ${rang} von ${werte.length}`});
     }
@@ -5086,8 +5427,8 @@ function renderG20() {
     mkChart('chart-g20-streu','scatter', null, [{
       label:'CO₂ pro Kopf über BIP pro Kopf',
       data: punkte.map(p => ({x:p.x, y:p.y, name:p.name, jahr:p.jahr})),
-      backgroundColor: punkte.map(p => p.iso === 'DEU' ? '#0e6cb6' : 'rgba(86,101,122,0.6)'),
-      pointRadius: punkte.map(p => p.iso === 'DEU' ? 8 : 5),
+      backgroundColor: punkte.map(p => p.iso === g20Fokus() ? '#0e6cb6' : 'rgba(86,101,122,0.6)'),
+      pointRadius: punkte.map(p => p.iso === g20Fokus() ? 8 : 5),
     }], {
       plugins:{legend:{display:false},
                tooltip:{callbacks:{label: ctx =>
@@ -5145,6 +5486,645 @@ function renderG20Tabelle() {
     </div>`;
 }
 
+
+// ══════════════════════════════════════════════
+// SAISONVERGLEICH — this year against earlier ones
+// ══════════════════════════════════════════════
+// The shape of the BNetzA/AGSI chart "Netto-Einspeicherung der deutschen
+// Gasspeicher": each season drawn on the same day axis, a grey band for
+// the minimum-maximum of a reference period, and the years of interest on
+// top. Unlike the static original, every part is a setting — the series
+// (AGSI or any BNetzA reihe), the country, smoothing, the season window,
+// which years are drawn and which years form the band. Choices persist per
+// browser.
+
+const SAISON_KEY = 'energydash:saison';
+const SAISON_FENSTER = {
+  inj: {von:'04-01', bis:'11-01', label:'Einspeichersaison'},
+  wd:  {von:'10-01', bis:'04-01', label:'Entnahmesaison'},
+  gj:  {von:'10-01', bis:'09-30', label:'Gaswirtschaftsjahr'},
+  kj:  {von:'01-01', bis:'12-31', label:'Kalenderjahr'},
+};
+const AGSI_REIHEN = {
+  net:  {label:'Netto-Einspeicherung', unit:'GWh/Tag', col: r => (r[2]==null && r[3]==null) ? null : (r[2]||0) - (r[3]||0)},
+  fill: {label:'Füllstand', unit:'%', col: r => r[1]},
+  inj:  {label:'Einspeicherung', unit:'GWh/Tag', col: r => r[2]},
+  wd:   {label:'Ausspeicherung', unit:'GWh/Tag', col: r => r[3]},
+  twh:  {label:'Speicherinhalt', unit:'TWh', col: r => r[4]},
+};
+// Newest first: the latest season is blue, the one before red, as in the
+// BNetzA original. Twelve colours so ten years never repeat one.
+const SAISON_FARBEN = ['#0e6cb6','#c0392b','#1f9d55','#d97706','#7e57c2','#0891b2',
+                       '#c98a04','#4a5568','#d63384','#795548','#00897b','#5c6bc0'];
+const MONATE_KURZ = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+
+let saisonCfg = (() => {
+  const def = {reihe:'agsi:net', glaettung:'7', fenster:'inj', von:null, bis:null, mittel:false, jahre:null};
+  try { return Object.assign(def, JSON.parse(localStorage.getItem(SAISON_KEY) || '{}')); }
+  catch(e) { return def; }
+})();
+function saveSaison() { try { localStorage.setItem(SAISON_KEY, JSON.stringify(saisonCfg)); } catch(e) {} }
+
+const dayNo = iso => Math.round(Date.parse(iso + 'T00:00:00Z') / 86400000);
+
+// Trailing moving average over calendar days; a window needs at least half
+// its days present, so gaps do not produce spikes from one lonely value.
+function movingAvg(pts, n) {
+  if (n <= 1) return pts;
+  const out = [];
+  let q = [], sum = 0;
+  for (const p of pts) {
+    const d = dayNo(p.date);
+    q.push({d, v: p.v}); sum += p.v;
+    while (q.length && q[0].d <= d - n) { sum -= q[0].v; q.shift(); }
+    if (q.length >= Math.ceil(n / 2)) out.push({date: p.date, v: sum / q.length});
+  }
+  return out;
+}
+
+// Day keys (MM-DD) of a window, from a non-leap reference year.
+function fensterKeys(f) {
+  const keys = [];
+  const start = new Date(Date.UTC(2001, +f.von.slice(0,2) - 1, +f.von.slice(3)));
+  const crosses = f.bis < f.von;
+  const end = new Date(Date.UTC(crosses ? 2002 : 2001, +f.bis.slice(0,2) - 1, +f.bis.slice(3)));
+  for (let d = start; d <= end; d = new Date(d.getTime() + 86400000)) {
+    keys.push(d.toISOString().slice(5,10));
+  }
+  return {keys, crosses};
+}
+
+// Daily points -> {season label: {MM-DD: value}}
+function taeglichZuSaisons(pts, fensterId) {
+  const f = SAISON_FENSTER[fensterId] || SAISON_FENSTER.inj;
+  const {keys, crosses} = fensterKeys(f);
+  const inWin = new Set(keys);
+  const years = {};
+  for (const p of pts) {
+    const k = p.date.slice(5,10);
+    if (!inWin.has(k)) continue;
+    let y = +p.date.slice(0,4);
+    if (crosses && k < f.von) y -= 1;
+    const lbl = crosses ? `${y}/${String((y+1) % 100).padStart(2,'0')}` : String(y);
+    (years[lbl] = years[lbl] || {})[k] = p.v;
+  }
+  const labels = keys.map(k => `${k.slice(3)}.${k.slice(0,2)}.`);
+  return {years, keys, labels};
+}
+
+// A BNetzA file that already has one column per year.
+function jahresspaltenZuSaisons(ds) {
+  const years = {};
+  const all = new Set();
+  Object.entries(ds.series || {}).forEach(([col, pts]) => {
+    const y = (col.match(/(19|20)\d\d/) || [])[0];
+    if (!y) return;
+    years[y] = years[y] || {};
+    pts.forEach(([x, v]) => { years[y][x] = v; all.add(x); });
+  });
+  const keys = [...all].sort();
+  const labels = keys.map(k => {
+    if (/^\d\d-\d\d$/.test(k)) return `${k.slice(3)}.${k.slice(0,2)}.`;
+    if (ds.freq === 'monthly' && /^\d\d$/.test(k)) return MONATE_KURZ[+k - 1] || k;
+    if (/^\d\d$/.test(k)) return `KW ${+k}`;
+    return k;
+  });
+  return {years, keys, labels};
+}
+
+function bnetzaDatasets() {
+  return D.bnetza_gas?.datasets || {};
+}
+
+function bnetzaHatSumme(ds) {
+  const cols = Object.keys(ds.series || {});
+  return cols.length > 1 && !cols.some(c => /gesamt|summe|total/i.test(c));
+}
+
+// Options for the series menu: AGSI, every daily BNetzA column, and every
+// BNetzA file with year columns.
+function saisonOptionen() {
+  const groups = [['GIE AGSI+ (Speicher, je Land)',
+    Object.entries(AGSI_REIHEN).map(([k, r]) => [`agsi:${k}`, `${r.label} (${r.unit})`])]];
+  const byGroup = {};
+  Object.entries(bnetzaDatasets()).forEach(([key, ds]) => {
+    const cols = Object.keys(ds.series || {});
+    if (!cols.length) return;
+    const g = byGroup[`BNetzA · ${ds.group || 'Weitere'}`] = byGroup[`BNetzA · ${ds.group || 'Weitere'}`] || [];
+    if (ds.years_as_columns) {
+      g.push([`bny:${key}`, `${ds.label} (Jahresvergleich der BNetzA)`]);
+    } else if (ds.x_kind === 'date') {
+      if (bnetzaHatSumme(ds)) g.push([`bn:${key}:__sum`, `${ds.label} · Summe aller Spalten`]);
+      cols.forEach(c => g.push([`bn:${key}:${c}`, `${ds.label} · ${c}`]));
+    }
+  });
+  Object.entries(byGroup).forEach(e => groups.push(e));
+  return groups;
+}
+
+function saisonDaten(cc) {
+  const [kind, key, ...rest] = saisonCfg.reihe.split(':');
+  const col = rest.join(':');
+  if (kind === 'agsi') {
+    const r = AGSI_REIHEN[key] || AGSI_REIHEN.net;
+    let rows = D.gas_storage_history?.countries?.[cc]?.rows;
+    let src = 'gas_storage_history', note = '';
+    if (!rows?.length) {
+      // Until the archive has been fetched once, the 300 days of the
+      // regular file still give this season.
+      rows = (gasNode(D.gas_storage, cc)?.data || [])
+        .map(x => [x.date, x.fill_pct, x.injection, x.withdrawal, x.gas_in_storage_twh]);
+      src = 'gas_storage';
+      note = 'Die Mehrjahres-Historie wird gerade aufgebaut — bis dahin nur die letzten ~300 Tage.';
+    } else if (rows[0][0] > '2017-01-10') {
+      note = `Historie liegt ab ${fmtIsoDate(rows[0][0])} vor; die täglichen Läufe laden die Jahre bis 2017 nach.`;
+    }
+    const pts = rows.map(x => ({date: x[0], v: r.col(x)})).filter(p => p.v != null && isFinite(p.v))
+      .sort((a, b) => a.date < b.date ? -1 : 1);
+    const cname = D.gas_storage_history?.countries?.[cc]?.name || gasNode(D.gas_storage, cc)?.name || cc.toUpperCase();
+    return {pts, label: r.label, unit: r.unit, src, note, where: cname, daily: true, landRelevant: true};
+  }
+  const ds = bnetzaDatasets()[key];
+  if (!ds) return null;
+  if (kind === 'bny') {
+    return {seasonal: jahresspaltenZuSaisons(ds), label: ds.label, unit: ds.unit, src: 'bnetza_gas',
+            where: 'Deutschland', daily: false, note: ''};
+  }
+  let pts;
+  if (col === '__sum') {
+    const sum = {};
+    Object.values(ds.series).forEach(arr => arr.forEach(([x, v]) => { sum[x] = (sum[x] || 0) + v; }));
+    pts = Object.entries(sum).map(([date, v]) => ({date, v}));
+  } else {
+    pts = (ds.series[col] || []).map(([date, v]) => ({date, v}));
+  }
+  pts.sort((a, b) => a.date < b.date ? -1 : 1);
+  return {pts, label: `${ds.label} · ${col === '__sum' ? 'Summe' : col}`, unit: ds.unit, src: 'bnetza_gas',
+          where: 'Deutschland', daily: true, note: ''};
+}
+
+const fmtIsoDate = iso => iso ? `${iso.slice(8,10)}.${iso.slice(5,7)}.${iso.slice(0,4)}` : '—';
+
+function toggleSaisonJahr(y) {
+  const cur = saisonCfg.jahre || [];
+  saisonCfg.jahre = cur.includes(y) ? cur.filter(x => x !== y) : [...cur, y];
+  saveSaison();
+  renderSaison();
+}
+
+function renderSaison() {
+  const reiheSel = document.getElementById('saison-reihe');
+  if (!reiheSel) return;
+  const groups = saisonOptionen();
+  reiheSel.innerHTML = groups.map(([g, opts]) =>
+    `<optgroup label="${g}">${opts.map(([v, l]) => `<option value="${v}">${l}</option>`).join('')}</optgroup>`).join('');
+  if (![...reiheSel.options].some(o => o.value === saisonCfg.reihe)) saisonCfg.reihe = 'agsi:net';
+  reiheSel.value = saisonCfg.reihe;
+  ['glaettung','fenster'].forEach(k => {
+    const el = document.getElementById('saison-' + k);
+    if (el) el.value = saisonCfg[k];
+  });
+  document.getElementById('saison-mittel').checked = !!saisonCfg.mittel;
+
+  const landSel = document.getElementById('saison-land');
+  const cc = landSel?.value || 'de';
+  const src = saisonDaten(cc);
+  const hint = document.getElementById('saison-hinweis');
+  if (landSel) landSel.disabled = !src?.landRelevant;
+  ['glaettung','fenster'].forEach(k => {
+    const el = document.getElementById('saison-' + k);
+    if (el) el.disabled = src ? !src.daily : false;
+  });
+  if (!src || (src.daily && !src.pts.length) || (!src.daily && !Object.keys(src.seasonal.years).length)) {
+    noData('chart-saison', 'Für diese Reihe liegen noch keine Werte vor',
+      'AGSI-Historie und BNetzA-Dateien werden von GitHub Actions abgerufen; nach dem nächsten Lauf erscheinen sie hier.');
+    document.getElementById('saison-jahre').innerHTML = '';
+    if (hint) hint.textContent = src?.note || '';
+    return;
+  }
+
+  const n = +saisonCfg.glaettung || 1;
+  const seasonal = src.daily
+    ? taeglichZuSaisons(movingAvg(src.pts, n), saisonCfg.fenster)
+    : src.seasonal;
+  const yearsAll = Object.keys(seasonal.years)
+    .filter(y => Object.keys(seasonal.years[y]).length >= 3).sort();
+  if (!yearsAll.length) {
+    noData('chart-saison', 'Zu wenige Werte in diesem Zeitfenster');
+    return;
+  }
+
+  // Band range menus
+  const vonSel = document.getElementById('saison-band-von');
+  const bisSel = document.getElementById('saison-band-bis');
+  const opts = yearsAll.map(y => `<option value="${y}">${y}</option>`).join('');
+  vonSel.innerHTML = opts; bisSel.innerHTML = opts;
+  const byStart = y => +String(y).slice(0,4);
+  const latest = yearsAll.at(-1);
+  let von = yearsAll.includes(saisonCfg.von) ? saisonCfg.von
+          : (yearsAll.find(y => byStart(y) >= 2017) || yearsAll[0]);
+  let bis = yearsAll.includes(saisonCfg.bis) ? saisonCfg.bis
+          : ([...yearsAll].reverse().find(y => byStart(y) <= 2023 && byStart(y) <= byStart(latest) - 2) || yearsAll[0]);
+  if (von > bis) [von, bis] = [bis, von];
+  vonSel.value = von; bisSel.value = bis;
+
+  // Highlighted years: stored choice filtered to what exists; default the
+  // latest two, like the original chart.
+  let jahre = (saisonCfg.jahre || []).filter(y => yearsAll.includes(y));
+  if (!jahre.length) jahre = yearsAll.slice(-2);
+  const farbeFuer = y => {
+    const idx = [...yearsAll].reverse().indexOf(y);
+    return SAISON_FARBEN[idx % SAISON_FARBEN.length];
+  };
+  document.getElementById('saison-jahre').innerHTML =
+    `<span class="mod-bar-lbl">Jahre</span>` +
+    yearsAll.map(y => `<button class="mod-chip ${jahre.includes(y) ? 'on' : ''}" onclick="toggleSaisonJahr('${y}')">
+      <span class="sw" style="background:${farbeFuer(y)}"></span>${y}</button>`).join('');
+
+  const bandYears = yearsAll.filter(y => y >= von && y <= bis);
+  const min = [], max = [], mean = [];
+  seasonal.keys.forEach(k => {
+    const vals = bandYears.map(y => seasonal.years[y][k]).filter(v => v != null);
+    if (vals.length >= 2) {
+      min.push(Math.min(...vals)); max.push(Math.max(...vals));
+      mean.push(vals.reduce((a, b) => a + b, 0) / vals.length);
+    } else { min.push(null); max.push(null); mean.push(null); }
+  });
+
+  const ds = [];
+  if (bandYears.length >= 2) {
+    ds.push({label:`Max ${von}–${bis}`, data:max, borderColor:'rgba(140,152,168,0.5)', borderWidth:1,
+             backgroundColor:'rgba(140,152,168,0.25)', fill:'+1', pointRadius:0, spanGaps:true});
+    ds.push({label:`Min ${von}–${bis}`, data:min, borderColor:'rgba(140,152,168,0.5)', borderWidth:1,
+             fill:false, pointRadius:0, spanGaps:true});
+    if (saisonCfg.mittel) ds.push({label:`Mittel ${von}–${bis}`, data:mean, borderColor:'#56657a',
+             borderDash:[5,4], borderWidth:1.5, fill:false, pointRadius:0, spanGaps:true});
+  }
+  [...jahre].sort().forEach(y => {
+    ds.push({label: y, data: seasonal.keys.map(k => seasonal.years[y][k] ?? null),
+             borderColor: farbeFuer(y), backgroundColor: farbeFuer(y), borderWidth: y === latest ? 2.6 : 2,
+             fill:false, pointRadius: src.daily ? 0 : 2, spanGaps: false});
+  });
+
+  mkChart('chart-saison', 'line', seasonal.labels, ds, {
+    plugins:{legend:{display:true, labels:{color:'#56657a', boxWidth:10, font:{size:10}}}},
+    scales:{x:{ticks:{maxTicksLimit:10}},
+            y:{title:{display:true, text:src.unit || '', color:'#8c98a8', font:{size:10}}}},
+  });
+
+  const f = SAISON_FENSTER[saisonCfg.fenster];
+  document.getElementById('saison-titel').textContent = `${src.label} — ${src.where}`;
+  document.getElementById('saison-sub').textContent = [
+    src.daily ? `${f.label}` : 'Jahresvergleich wie von der BNetzA veröffentlicht',
+    src.daily && n > 1 ? `${n}-Tage gleitender Durchschnitt` : null,
+    src.unit,
+    bandYears.length >= 2 ? `graues Band: Minimum–Maximum ${von}–${bis}` : 'für ein Band mindestens zwei Referenzjahre wählen',
+  ].filter(Boolean).join(' · ');
+  if (hint) hint.textContent = src.note || '';
+  stamp('chart-saison', src.src, `${yearsAll.length} Jahre verfügbar (${yearsAll[0]}–${latest})`);
+}
+
+// One delegated listener for all settings of the card.
+document.addEventListener('change', e => {
+  const id = e.target?.id || '';
+  if (!id.startsWith('saison-')) return;
+  const map = {'saison-reihe':'reihe','saison-glaettung':'glaettung','saison-fenster':'fenster',
+               'saison-band-von':'von','saison-band-bis':'bis'};
+  if (map[id]) {
+    saisonCfg[map[id]] = e.target.value;
+    // Year labels differ between windows (2025 vs 2025/26) and between
+    // series; a choice that no longer exists falls back to the default.
+    if (id === 'saison-fenster' || id === 'saison-reihe') saisonCfg.jahre = null;
+  }
+  if (id === 'saison-mittel') saisonCfg.mittel = e.target.checked;
+  saveSaison();
+  renderSaison();
+});
+
+// ══════════════════════════════════════════════
+// BNETZA — every reihe of the gas-supply page
+// ══════════════════════════════════════════════
+function renderBnetza() {
+  const sel = document.getElementById('bnetza-reihe');
+  if (!sel) return;
+  const all = bnetzaDatasets();
+  const keys = Object.keys(all);
+  if (!keys.length) {
+    sel.innerHTML = '';
+    noData('chart-bnetza', 'BNetzA-Daten noch nicht abgerufen',
+      'Die Quelle <code>bnetza_gas</code> läuft alle sechs Stunden in GitHub Actions; nach dem nächsten Lauf sind hier alle Reihen der Lageseite.');
+    document.getElementById('kpi-bnetza').innerHTML = '';
+    return;
+  }
+  const keep = sel.value;
+  const groups = {};
+  keys.forEach(k => { const g = all[k].group || 'Weitere'; (groups[g] = groups[g] || []).push(k); });
+  sel.innerHTML = Object.entries(groups).map(([g, ks]) =>
+    `<optgroup label="${g}">${ks.map(k => {
+      const d = all[k]; const n = Object.keys(d.series || {}).length;
+      return `<option value="${k}" ${n ? '' : 'disabled'}>${d.label}${n ? '' : ' (nicht abrufbar)'}</option>`;
+    }).join('')}</optgroup>`).join('');
+  const firstOk = keys.find(k => Object.keys(all[k].series || {}).length);
+  sel.value = keep && all[keep] && Object.keys(all[keep].series || {}).length ? keep : (firstOk || keys[0]);
+  const ds = all[sel.value];
+  const csv = document.getElementById('bnetza-csv');
+  if (csv) csv.href = ds?.url || '#';
+
+  const cols = Object.keys(ds?.series || {});
+  if (!cols.length) {
+    noData('chart-bnetza', 'Diese Reihe konnte nicht gelesen werden', ds?.error ? `<code>${ds.error}</code>` : '');
+    document.getElementById('kpi-bnetza').innerHTML = '';
+    return;
+  }
+
+  let labels, datasets, bnetzaAlt = false;
+  if (ds.years_as_columns) {
+    const s = jahresspaltenZuSaisons(ds);
+    const ys = Object.keys(s.years).sort();
+    labels = s.labels;
+    datasets = ys.map((y, i) => {
+      const c = SAISON_FARBEN[(ys.length - 1 - i) % SAISON_FARBEN.length];
+      return {label:y, data:s.keys.map(k => s.years[y][k] ?? null), borderColor:c, backgroundColor:c,
+              borderWidth: i === ys.length - 1 ? 2.6 : 1.6, pointRadius:0, fill:false};
+    });
+  } else {
+    const cut = ds.x_kind === 'date' ? (() => {
+      const sec = getRangeSeconds('gas');
+      return sec === Infinity ? '' : new Date(Date.now() - sec * 1000).toISOString().slice(0, 10);
+    })() : '';
+    const allX = [...new Set(cols.flatMap(c => ds.series[c].map(p => p[0])))].sort();
+    let xs = allX.filter(x => x >= cut);
+    // A file that has not been updated for a while would otherwise show
+    // nothing at all; its last year is more useful, and it is labelled.
+    if (!xs.length && allX.length) { xs = allX.slice(-365); bnetzaAlt = true; }
+    labels = xs.map(x => /^\d{4}-\d\d-\d\d$/.test(x) ? fmtIsoDate(x) : x);
+    datasets = cols.map((c, i) => {
+      const m = Object.fromEntries(ds.series[c]);
+      const col = SAISON_FARBEN[i % SAISON_FARBEN.length];
+      return {label:c, data:xs.map(x => m[x] ?? null), borderColor:col, backgroundColor:col,
+              borderWidth:1.6, pointRadius:0, fill:false, hidden: i >= 8};
+    });
+    if (!xs.length) {
+      noData('chart-bnetza', 'Keine Werte im gewählten Zeitraum', 'Oben einen längeren Zeitraum wählen.');
+      return;
+    }
+  }
+  mkChart('chart-bnetza', 'line', labels, datasets, {
+    plugins:{legend:{display:true, labels:{color:'#56657a', boxWidth:10, font:{size:10}}}},
+    scales:{x:{ticks:{maxTicksLimit:10}},
+            y:{title:{display:true, text:ds.unit || '', color:'#8c98a8', font:{size:10}}}},
+  });
+
+  // Latest value per column (daily files) — the current state at a glance.
+  const kp = [];
+  if (!ds.years_as_columns) {
+    cols.map(c => ({c, p: ds.series[c].at(-1)}))
+      .filter(x => x.p).sort((a, b) => Math.abs(b.p[1]) - Math.abs(a.p[1])).slice(0, 6)
+      .forEach((x, i) => kp.push({label:x.c, val:fmtN(x.p[1], Math.abs(x.p[1]) < 10 ? 2 : 0),
+        unit:`${ds.unit || ''} · ${/^\d{4}-/.test(x.p[0]) ? fmtIsoDate(x.p[0]) : x.p[0]}`,
+        color:SAISON_FARBEN[cols.indexOf(x.c) % SAISON_FARBEN.length]}));
+  }
+  document.getElementById('kpi-bnetza').innerHTML = kp.length ? kpis(kp) : '';
+  const npts = cols.reduce((a, c) => a + ds.series[c].length, 0);
+  document.getElementById('bnetza-sub').textContent =
+    `${ds.label} · ${ds.unit || ''} · ${cols.length} Reihen · ${npts.toLocaleString('de-DE')} Werte` +
+    (ds.years_as_columns ? ' · ein Strich je Jahr' : ' · Zeitraum-Schalter oben') +
+    (hidden => hidden ? ` · ${hidden} weitere Reihen per Klick in der Legende` : '')(Math.max(0, cols.length - 8) && !ds.years_as_columns ? cols.length - 8 : 0) +
+    (bnetzaAlt ? ' · im gewählten Zeitraum keine Werte, gezeigt werden die letzten verfügbaren' : '');
+  stamp('chart-bnetza', 'bnetza_gas', ds.ok === false ? `letzter Abruf fehlgeschlagen: ${ds.error || ''} — gezeigt wird der gespeicherte Stand` : '');
+}
+
+function bnetzaZumSaisonvergleich() {
+  const key = document.getElementById('bnetza-reihe')?.value;
+  const ds = bnetzaDatasets()[key];
+  if (!ds) return;
+  if (ds.years_as_columns) saisonCfg.reihe = `bny:${key}`;
+  else if (ds.x_kind === 'date') {
+    const cols = Object.keys(ds.series || {});
+    saisonCfg.reihe = bnetzaHatSumme(ds) ? `bn:${key}:__sum` : `bn:${key}:${cols[0]}`;
+  } else return;
+  saisonCfg.jahre = null;
+  saveSaison();
+  renderSaison();
+  document.getElementById('saison-card')?.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+// ══════════════════════════════════════════════
+// G20-KARTEN IN DEN FACH-TABS
+// ══════════════════════════════════════════════
+// The G20 tab compares everything; these cards bring the comparison that
+// matters for a tab into that tab — coal and gas in the power mix on Strom,
+// renewables on Erneuerbare, emissions on Umwelt. A card declares its
+// indicators in data-g20; the menu and ranking are built here. The chosen
+// country (header menu) is the highlighted bar.
+
+const G20_KARTEN_WAHL_KEY = 'energydash:g20karten';
+let g20KartenWahl = (() => { try { return JSON.parse(localStorage.getItem(G20_KARTEN_WAHL_KEY) || '{}'); } catch(e) { return {}; } })();
+
+function renderG20Karten(tab) {
+  const panel = document.getElementById('panel-' + tab);
+  if (!panel) return;
+  panel.querySelectorAll('.card[data-g20]').forEach(card => {
+    const canvas = card.querySelector('canvas[id]') || card.querySelector('[data-canvas-for]');
+    const id = canvas?.id || canvas?.dataset.canvasFor;
+    if (!id) return;
+    const keys = card.dataset.g20.split(',').map(s => s.trim()).filter(Boolean);
+    const wb = D.worldbank_g20;
+    const hdr = card.querySelector('.card-hdr');
+    let sel = card.querySelector('select.g20-wahl');
+    if (!sel && hdr) {
+      sel = document.createElement('select');
+      sel.className = 'g20-wahl';
+      sel.style.fontSize = '11px';
+      sel.addEventListener('change', () => {
+        g20KartenWahl[id] = sel.value;
+        try { localStorage.setItem(G20_KARTEN_WAHL_KEY, JSON.stringify(g20KartenWahl)); } catch(e) {}
+        renderG20Karten(tab);
+      });
+      hdr.appendChild(sel);
+    }
+    if (!wb) {
+      noData(id, 'G20-Daten noch nicht geladen', 'Die Weltbank-Quelle läuft einmal täglich.');
+      return;
+    }
+    const avail = keys.filter(k => wb[k]);
+    sel.innerHTML = avail.map(k => `<option value="${k}">${wb[k].label}</option>`).join('');
+    const key = avail.includes(g20KartenWahl[id]) ? g20KartenWahl[id] : avail[0];
+    if (!key) { noData(id, 'Diese Kennzahlen liefert die Weltbank noch nicht'); return; }
+    sel.value = key;
+    const node = wb[key];
+    const laender = wb.countries || {};
+    const werte = Object.keys(laender)
+      .map(iso => ({iso, name: laender[iso], p: g20Latest(key, iso)}))
+      .filter(x => x.p).sort((a, b) => b.p.v - a.p.v);
+    if (!werte.length) {
+      noData(id, `Keine Werte für ${node.label}`,
+        node.unavailable_reason ? `Die Weltbank meldet: <code>${node.unavailable_reason}</code>` : '');
+      return;
+    }
+    const fokus = g20Fokus();
+    const hib = node.higher_is_better;
+    mkChart(id, 'bar', werte.map(x => `${x.name} (${x.p.period})`), [{
+      label: `${node.label} in ${node.unit || ''}`, data: werte.map(x => x.p.v),
+      backgroundColor: werte.map(x => x.iso === fokus ? 'rgba(14,108,182,0.95)'
+        : x.iso === 'EUU' ? 'rgba(126,87,194,0.7)'
+        : hib === true ? 'rgba(31,157,85,0.55)' : hib === false ? 'rgba(192,57,43,0.5)'
+        : 'rgba(86,101,122,0.5)'),
+      borderRadius: 2,
+    }], {indexAxis:'y', scales:{x:{title:{display:true, text:node.unit || '', color:'#8c98a8', font:{size:10}}},
+                                 y:{ticks:{autoSkip:false, font:{size:9}}}}});
+    const f = werte.find(x => x.iso === fokus);
+    stamp(id, 'worldbank_g20', f
+      ? `${f.name}: Platz ${werte.indexOf(f) + 1} von ${werte.length} · Indikator ${node.indicator || key}`
+      : `Indikator ${node.indicator || key}`);
+    const sub = card.querySelector('.card-sub');
+    if (sub) sub.textContent = `Weltbank · ${node.label} · je Land der letzte verfügbare Wert · hervorgehoben: ${laender[fokus] || 'Deutschland'}`;
+  });
+}
+
+// ══════════════════════════════════════════════
+// LAND — one country choice for the whole page
+// ══════════════════════════════════════════════
+// Each card had its own country menu, with its own spelling (DE, de,
+// price_de, DEU, EU27_2020, eu…). Picking France in one left every other
+// card on Germany. Now every menu speaks a common code; changing any of
+// them — or the header menu — moves all the others that offer that country.
+// A card without that country keeps its choice and says so.
+
+const LAND_NAMEN = {
+  DE:'Deutschland', EU:'EU27', EA:'Eurozone (EA20)', AT:'Österreich', BE:'Belgien',
+  CH:'Schweiz', CZ:'Tschechien', DK:'Dänemark', EL:'Griechenland', ES:'Spanien',
+  FI:'Finnland', FR:'Frankreich', HU:'Ungarn', IE:'Irland', IT:'Italien',
+  NL:'Niederlande', NO:'Norwegen', PL:'Polen', PT:'Portugal', SE:'Schweden',
+  SK:'Slowakei', UA:'Ukraine',
+  AR:'Argentinien', AU:'Australien', BR:'Brasilien', CA:'Kanada', CN:'China',
+  GB:'Vereinigtes Königreich', ID:'Indonesien', IN:'Indien', JP:'Japan',
+  KR:'Südkorea', MX:'Mexiko', RU:'Russland', SA:'Saudi-Arabien', TR:'Türkei',
+  US:'USA', ZA:'Südafrika',
+};
+const ISO3_ZU_2 = {
+  DEU:'DE', FRA:'FR', ITA:'IT', GBR:'GB', USA:'US', CHN:'CN', IND:'IN', JPN:'JP',
+  CAN:'CA', AUS:'AU', BRA:'BR', KOR:'KR', MEX:'MX', RUS:'RU', SAU:'SA', TUR:'TR',
+  ZAF:'ZA', ARG:'AR', IDN:'ID', EUU:'EU',
+};
+const ISO2_ZU_3 = Object.fromEntries(Object.entries(ISO3_ZU_2).map(([a,b]) => [b,a]));
+
+// The Eurostat countries every Eurostat card can offer (fetchers' GEO list).
+const EUROSTAT_GEO = ['DE','EU27_2020','EA20','AT','BE','CZ','DK','EL','ES','FI',
+                      'FR','IE','IT','NL','NO','PL','PT','SE'];
+
+// select id -> how its option values map to the common code.
+const eurostatCodec = {
+  to:   v => v === 'EU27_2020' ? 'EU' : v === 'EA20' ? 'EA' : v === 'GR' ? 'EL' : v,
+  from: c => c === 'EU' ? 'EU27_2020' : c === 'EA' ? 'EA20' : c,
+};
+const LAND_SELECTS = {
+  'strompreise-geo': eurostatCodec,
+  'strom-flow-geo':  eurostatCodec,
+  'verbrauch-geo':   eurostatCodec,
+  'treibstoff-geo':  eurostatCodec,
+  'mineraloel-geo':  eurostatCodec,
+  'umwelt-geo':      eurostatCodec,
+  'gas-country':     {to: v => v.toUpperCase(), from: c => c.toLowerCase()},
+  'saison-land':     {to: v => v.toUpperCase(), from: c => c.toLowerCase()},
+  'price-country':   {to: v => v.replace('price_','').toUpperCase(),
+                      from: c => 'price_' + c.toLowerCase()},
+};
+// Eurostat menus that list every fetched country rather than a hand-picked few.
+const EUROSTAT_SELECTS = ['strompreise-geo','strom-flow-geo','verbrauch-geo',
+                          'treibstoff-geo','mineraloel-geo','umwelt-geo'];
+
+const LAND_KEY = 'energydash:land';
+let landAktiv = (() => { try { return localStorage.getItem(LAND_KEY) || 'DE'; } catch(e) { return 'DE'; } })();
+
+function landName(c) { return LAND_NAMEN[c] || c; }
+
+function fillEurostatSelects() {
+  EUROSTAT_SELECTS.forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel || sel.dataset.filled) return;
+    const keep = sel.value;
+    const withEA = id === 'treibstoff-geo' || [...sel.options].some(o => o.value === 'EA20');
+    sel.innerHTML = EUROSTAT_GEO
+      .filter(g => g !== 'EA20' || withEA)
+      .map(g => `<option value="${g}">${landName(eurostatCodec.to(g))}</option>`).join('');
+    sel.value = keep;
+    sel.dataset.filled = '1';
+  });
+}
+
+function fillGlobalSelect() {
+  const sel = document.getElementById('global-country');
+  if (!sel) return;
+  const eu = ['DE','EU','EA','AT','BE','CH','CZ','DK','EL','ES','FI','FR','HU','IE','IT',
+              'NL','NO','PL','PT','SE','SK','UA'];
+  const g20 = ['AR','AU','BR','CA','CN','GB','ID','IN','JP','KR','MX','RU','SA','TR','US','ZA'];
+  const opt = c => `<option value="${c}">${landName(c)}</option>`;
+  sel.innerHTML = `<optgroup label="Europa">${eu.map(opt).join('')}</optgroup>` +
+                  `<optgroup label="Weitere G20">${g20.map(opt).join('')}</optgroup>`;
+  sel.value = landAktiv;
+}
+
+// Move every menu to `code` where it can; mark the ones that cannot.
+function applyLand(code, exceptId) {
+  Object.entries(LAND_SELECTS).forEach(([id, codec]) => {
+    if (id === exceptId) return;
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const want = codec.from(code);
+    const ok = [...sel.options].some(o => o.value === want);
+    if (ok) sel.value = want;
+    let hint = sel.parentElement.querySelector('.land-hint');
+    if (!ok) {
+      if (!hint) {
+        hint = document.createElement('div');
+        hint.className = 'land-hint';
+        sel.insertAdjacentElement('afterend', hint);
+      }
+      hint.textContent = `${landName(code)} hier nicht verfügbar`;
+    } else if (hint) hint.remove();
+  });
+  const g = document.getElementById('global-country');
+  if (g && exceptId !== 'global-country') g.value = code;
+  // The G20 cards highlight the chosen country; a G20 member also joins the
+  // time-series selection so it is actually drawn.
+  const iso3 = ISO2_ZU_3[code];
+  if (iso3 && typeof g20Selected !== 'undefined' && !g20Selected.includes(iso3)) {
+    g20Selected = [...g20Selected, iso3];
+    try { localStorage.setItem('energydash:g20', JSON.stringify(g20Selected)); } catch(e) {}
+  }
+}
+
+function setLand(code, fromId) {
+  if (!code) return;
+  landAktiv = code;
+  try { localStorage.setItem(LAND_KEY, code); } catch(e) {}
+  applyLand(code, fromId);
+}
+
+// Capture phase: runs before the menu's own inline onchange, so by the time
+// that handler renders, the sibling menus on the same tab already moved.
+document.addEventListener('change', e => {
+  const id = e.target?.id;
+  if (id === 'global-country') {
+    setLand(e.target.value, id);
+    renderTab(activeTab);
+    return;
+  }
+  const codec = LAND_SELECTS[id];
+  if (!codec) return;
+  setLand(codec.to(e.target.value), id);
+  // Cards on this tab driven by other renderers (the G20 card, for one)
+  // follow after the menu's own handler has run.
+  setTimeout(() => renderTab(activeTab), 0);
+}, true);
+
+function initLand() {
+  fillEurostatSelects();
+  fillGlobalSelect();
+  applyLand(landAktiv);
+}
+
 // ══════════════════════════════════════════════
 // TABS
 // ══════════════════════════════════════════════
@@ -5168,6 +6148,8 @@ function autoStamp(tab) {
   if (!sources.length) return;
   panel.querySelectorAll('.card').forEach(card => {
     if (card.querySelector('.card-stamp')) return;
+    // The source table reports on every source itself.
+    if (card.hasAttribute('data-nostamp')) return;
     // Only cards that actually show something — a card reduced to a "no data"
     // note already explains itself and does not need an age line.
     const hasContent = card.querySelector('canvas, table, .news-card');
@@ -5192,6 +6174,9 @@ function renderTab(tab){
   // Main render is wrapped — a single crash must never sabotage other tabs
   const fn = RENDERS[tab];
   if (fn) {
+    // The G20 cards are independent of the tab's own renderer and must
+    // appear even if that one crashes.
+    try { renderG20Karten(tab); } catch(e) { console.error('renderG20Karten', e); }
     try { fn(); autoStamp(tab); }
     catch(e) {
       console.error('render failed for tab', tab, e);
@@ -5326,6 +6311,7 @@ function trackTab(tab) {
 // INIT
 // ══════════════════════════════════════════════
 loadRangePersistence();
+initLand();
 initConsent();
 init();
 setInterval(async()=>{Object.keys(D).forEach(k=>delete D[k]);await init();},15*60*1000);

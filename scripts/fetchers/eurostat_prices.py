@@ -43,7 +43,7 @@ from . import _eurostat as eu
 # Same reach as eurostat_oil. Each country costs one request per series and
 # tax level, which the per-source budget in fetch_all.SCHEDULE allows for.
 GEO = ['EU27_2020', 'EA20', 'DE', 'FR', 'IT', 'ES', 'NL', 'PL', 'BE', 'AT',
-       'CZ', 'DK', 'SE', 'FI', 'PT', 'GR', 'IE', 'NO']
+       'CZ', 'DK', 'SE', 'FI', 'PT', 'EL', 'IE', 'NO']
 
 # Tax level intents. The order here is the order they are drawn in.
 TAX_LEVELS: List[Tuple[str, Tuple[str, ...], Tuple[str, ...], Tuple[str, ...]]] = [

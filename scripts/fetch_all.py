@@ -38,6 +38,7 @@ from fetchers import (
     commodities, news, fx_ecb, heating_oil, destatis_vpi,
     entsog, entsoe, eia_petroleum, fred_energy, eurostat_oil,
     energy_futures, eurostat_prices, eurostat_env, worldbank_g20,
+    bnetza_gas, gas_storage_history,
 )
 
 
@@ -77,8 +78,14 @@ SCHEDULE = [
     # already far more often than it can change. 204 requests.
     ('Eurostat Umwelt',  'eurostat_env',    eurostat_env.fetch,     1440,  300),
     # Annual World Bank series, one request per indicator covering every
-    # country — the whole source is 8 calls.
-    ('World Bank G20',   'worldbank_g20',   worldbank_g20.fetch,    1440,  120),
+    # country — the whole source is 15 calls.
+    ('World Bank G20',   'worldbank_g20',   worldbank_g20.fetch,    1440,  180),
+    # Bundesnetzagentur gas-supply page: ~20 CSVs, each carrying its full
+    # history. Daily data, published once a working day.
+    ('BNetzA Gas',       'bnetza_gas',      bnetza_gas.fetch,       360,   240),
+    # Multi-year AGSI archive for the seasonal comparison. Resumable backfill
+    # capped at 90 requests per run, then only the recent weeks are re-read.
+    ('AGSI Historie',    'gas_storage_history', gas_storage_history.fetch, 360, 240),
     ('News RSS',         'news',            news.fetch,             120,   90),
 ]
 
@@ -135,6 +142,24 @@ def run_source(label: str, name: str, fetch_fn: Callable, budget_s: int,
 
 
 def write_meta(results: Dict[str, dict]) -> None:
+    # A run only knows about the sources it touched. With --only (or a source
+    # added since the last full run) the others would vanish from meta.json
+    # and the dashboard would report them as "unknown", so every source this
+    # run did not see keeps its previous entry.
+    prev = (store.read_json('meta') or {}).get('sources', {}) or {}
+    sources = dict(prev)
+    for name, r in results.items():
+        if r.get('_skipped') and name in prev:
+            entry = dict(prev[name])
+            entry['skipped'] = True
+            sources[name] = entry
+            continue
+        sources[name] = {
+            'stale':        r.get('stale', False),
+            'last_success': r.get('last_success'),
+            'last_error':   r.get('last_error'),
+            'skipped':      r.get('_skipped', False),
+        }
     fresh   = sum(1 for r in results.values() if not r.get('stale') and not r.get('_skipped'))
     stale   = sum(1 for r in results.values() if r.get('stale'))
     skipped = sum(1 for r in results.values() if r.get('_skipped'))
@@ -144,14 +169,7 @@ def write_meta(results: Dict[str, dict]) -> None:
         'fresh': fresh,
         'stale': stale,
         'skipped': skipped,
-        'sources': {
-            name: {
-                'stale':        r.get('stale', False),
-                'last_success': r.get('last_success'),
-                'last_error':   r.get('last_error'),
-                'skipped':      r.get('_skipped', False),
-            } for name, r in results.items()
-        },
+        'sources': sources,
     }
     store.write_atomic('meta', payload)
 

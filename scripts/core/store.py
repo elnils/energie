@@ -60,6 +60,8 @@ EXPECTED_KEYS: Dict[str, Set[str]] = {
     'eurostat_env':  {'ghg_total', 'ghg_energy', 'heat_production',
                       'heat_consumption'},
     'worldbank_g20': {'co2_total', 'co2_per_capita', 'renewable_share'},
+    'bnetza_gas':    {'datasets'},
+    'gas_storage_history': {'countries'},
 }
 
 FORBIDDEN_KEYS: Dict[str, Set[str]] = {
@@ -81,6 +83,8 @@ FORBIDDEN_KEYS: Dict[str, Set[str]] = {
     'eurostat_prices': {'gas', 'points', 'articles', 'cities'},
     'eurostat_env':  {'gas', 'points', 'articles', 'cities'},
     'worldbank_g20': {'gas', 'points', 'articles', 'cities'},
+    'bnetza_gas':    {'gas', 'points', 'articles', 'cities'},
+    'gas_storage_history': {'gas', 'points', 'articles', 'cities'},
 }
 
 

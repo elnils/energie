@@ -74,6 +74,19 @@ INDICATORS: Dict[str, Tuple[Tuple[str, ...], str, str, Optional[bool]]] = {
     'gdp_per_capita': (
         ('NY.GDP.PCAP.KD', 'NY.GDP.PCAP.CD'),
         'BIP pro Kopf', 'USD (konstant)', None),
+    # Electricity mix and import dependency, for the G20 cards on the Strom,
+    # Gas and Erneuerbare tabs. Some of these are archived by the World Bank
+    # and stop in 2015; the chart names the year it shows.
+    'elec_coal': (('EG.ELC.COAL.ZS',), 'Kohle an der Stromerzeugung', '%', False),
+    'elec_gas': (('EG.ELC.NGAS.ZS',), 'Erdgas an der Stromerzeugung', '%', None),
+    'elec_nuclear': (('EG.ELC.NUCL.ZS',), 'Kernkraft an der Stromerzeugung', '%', None),
+    'elec_hydro': (('EG.ELC.HYRO.ZS',), 'Wasserkraft an der Stromerzeugung', '%', True),
+    'elec_renew_ex_hydro': (('EG.ELC.RNWX.ZS',),
+        'Wind, Solar & Co. an der Stromerzeugung', '%', True),
+    'energy_imports': (('EG.IMP.CONS.ZS',),
+        'Energieimporte netto (Anteil am Verbrauch)', '%', False),
+    'co2_intensity_gdp': (('EN.GHG.CO2.RT.GDP.PP.KD', 'EN.ATM.CO2E.PP.GD.KD'),
+        'CO₂ je BIP (Kaufkraft)', 'kg je USD', False),
 }
 
 
