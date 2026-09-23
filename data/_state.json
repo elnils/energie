@@ -1,17 +1,17 @@
 {
   "bnetza_gas": {
-    "last_attempt_epoch": 1790161099,
-    "last_attempt_iso": "2026-09-23T10:58:19Z",
+    "last_attempt_epoch": 1790194126,
+    "last_attempt_iso": "2026-09-23T20:08:46Z",
     "last_error_epoch": 1790159494,
     "last_error_message": "RuntimeError: no BNetzA CSV could be read: [('import_gesamt', 'RuntimeError: HTTP 404'), ('import_lng', 'RuntimeError: HTTP 404'), ('export_gesamt', 'RuntimeError: HTTP 404')] | at File \"/home/runner/work/energie/energie/scripts/fetchers/bnetza_gas.py\", line 628, in fetch",
-    "last_success_epoch": 1790161121,
-    "last_success_iso": "2026-09-23T10:58:41Z"
+    "last_success_epoch": 1790194137,
+    "last_success_iso": "2026-09-23T20:08:57Z"
   },
   "commodities": {
-    "last_attempt_epoch": 1790182082,
-    "last_attempt_iso": "2026-09-23T16:48:02Z",
-    "last_success_epoch": 1790182091,
-    "last_success_iso": "2026-09-23T16:48:11Z"
+    "last_attempt_epoch": 1790194116,
+    "last_attempt_iso": "2026-09-23T20:08:36Z",
+    "last_success_epoch": 1790194126,
+    "last_success_iso": "2026-09-23T20:08:46Z"
   },
   "destatis_vpi": {
     "last_attempt_epoch": 1790122582,
@@ -30,12 +30,12 @@
     "last_success_iso": "2026-09-23T10:04:52Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1790181415,
-    "last_attempt_iso": "2026-09-23T16:36:55Z",
+    "last_attempt_epoch": 1790193949,
+    "last_attempt_iso": "2026-09-23T20:05:49Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1790181610,
-    "last_success_iso": "2026-09-23T16:40:10Z"
+    "last_success_epoch": 1790194115,
+    "last_success_iso": "2026-09-23T20:08:35Z"
   },
   "energy_futures": {
     "last_attempt_epoch": 1790182128,
@@ -120,26 +120,26 @@
     "last_success_iso": "2026-09-23T10:03:55Z"
   },
   "news": {
-    "last_attempt_epoch": 1790182193,
-    "last_attempt_iso": "2026-09-23T16:49:53Z",
-    "last_success_epoch": 1790182216,
-    "last_success_iso": "2026-09-23T16:50:16Z"
+    "last_attempt_epoch": 1790194137,
+    "last_attempt_iso": "2026-09-23T20:08:57Z",
+    "last_success_epoch": 1790194160,
+    "last_success_iso": "2026-09-23T20:09:20Z"
   },
   "smard": {
-    "last_attempt_epoch": 1790181409,
-    "last_attempt_iso": "2026-09-23T16:36:49Z",
+    "last_attempt_epoch": 1790193942,
+    "last_attempt_iso": "2026-09-23T20:05:42Z",
     "last_error_epoch": 1784702205,
     "last_error_message": "RuntimeError: SMARD: all filters returned empty | at File \"/home/runner/work/energie/energie/scripts/fetchers/smard.py\", line 109, in fetch",
-    "last_success_epoch": 1790181415,
-    "last_success_iso": "2026-09-23T16:36:55Z"
+    "last_success_epoch": 1790193949,
+    "last_success_iso": "2026-09-23T20:05:49Z"
   },
   "weather": {
-    "last_attempt_epoch": 1790181642,
-    "last_attempt_iso": "2026-09-23T16:40:42Z",
+    "last_attempt_epoch": 1790194115,
+    "last_attempt_iso": "2026-09-23T20:08:35Z",
     "last_error_epoch": 1788409115,
     "last_error_message": "RuntimeError: Open-Meteo: zero cities returned data | at File \"/home/runner/work/energie/energie/scripts/fetchers/weather.py\", line 45, in fetch",
-    "last_success_epoch": 1790182082,
-    "last_success_iso": "2026-09-23T16:48:02Z"
+    "last_success_epoch": 1790194116,
+    "last_success_iso": "2026-09-23T20:08:36Z"
   },
   "worldbank_g20": {
     "last_attempt_epoch": 1790159457,
