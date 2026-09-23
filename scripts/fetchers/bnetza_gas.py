@@ -223,8 +223,10 @@ def parse_csv(text: str, delimiter: Optional[str] = None) -> dict:
             if v is not None:
                 series[col][x] = v
     x_kind = max(kinds, key=kinds.get) if kinds else 'label'
-    years_as_columns = bool(columns) and sum(
-        bool(_YEAR_RE.match(re.sub(r'\D', '', c)[:4] if c else '')) for c in columns
+    # One line per year (or gas year "04/2025-03/2026", or a reference
+    # period "Minimum 2018-2021"): the page's own seasonal comparison.
+    years_as_columns = x_kind != 'date' and bool(columns) and sum(
+        bool(re.search(r'(19|20)\d\d', c or '')) for c in columns
     ) >= max(2, len(columns) * 0.6)
 
     return {
@@ -487,8 +489,13 @@ def _charts_from_scripts(html: str) -> List[dict]:
     twin of a chart carries the same series; the longer of the two wins.
     """
     charts: Dict[str, dict] = {}
-    for m in re.finditer(r'(?:const|var|let)\s+data_(myChartId_\w+?)(_export)?\s*=\s*\{', html):
+    for m in re.finditer(r'(?:const|var|let)\s+data_(myChartId_\w+?)(_export|_single)?\s*=\s*\{', html):
         cid = m.group(1)
+        if m.group(2) == '_single':
+            # A one-series view of the same chart for its dropdown; the full
+            # chart already carries every series, and its headings sit
+            # elsewhere on the page, which mislabelled it.
+            continue
         obj_start = m.end() - 1
         obj = html[obj_start:_balanced(html, obj_start, '{', '}')]
         lm = re.search(r'labels\s*:\s*\[', obj)
@@ -572,7 +579,7 @@ def _slug(u: str) -> str:
 
 _GROUP_HINTS = [
     ('lng', 'Importe & Exporte'), ('import', 'Importe & Exporte'), ('export', 'Importe & Exporte'),
-    ('foerder', 'Förderung & Preise'), ('preis', 'Förderung & Preise'),
+    ('foerder', 'Förderung & Preise'), ('förder', 'Förderung & Preise'), ('preis', 'Förderung & Preise'),
     ('speicher', 'Speicher'), ('rlm', 'Industrie (RLM)'), ('industrie', 'Industrie (RLM)'),
     ('slp', 'Haushalte & Gewerbe (SLP)'), ('haushalt', 'Haushalte & Gewerbe (SLP)'),
     ('verbrauch', 'Verbrauch gesamt'), ('temp', 'Temperatur'),
@@ -587,13 +594,22 @@ def _group_for(slug: str) -> str:
 
 
 def _unit_for(text: str) -> str:
-    m = re.search(r'(GWh/(?:Tag|d)|TWh|EUR/MWh|€/MWh|°C|%-Punkte|Prozent|%)', text or '')
-    return m.group(1).replace('€', 'EUR') if m else ''
+    t = text or ''
+    if re.search(r'Prozentpunkt', t): return '%-Punkte'
+    if re.search(r'Veränderung', t) and 'Speicher' not in t: return '%'
+    m = re.search(r'(GWh/(?:Tag|d)|TWh|EUR/MWh|€/MWh|°C|%-Punkte|Prozent|%)', t)
+    if m:
+        u = m.group(1).replace('€', 'EUR')
+        return '%' if u == 'Prozent' else u
+    # The consumption charts name no unit; the BNetzA reports them in GWh/Tag.
+    if re.search(r'verbrauch', t, re.I): return 'GWh/Tag'
+    return ''
 
 
-def _freq_for(slug: str, x_kind: str) -> str:
-    if 'woch' in slug: return 'weekly'
-    if 'monat' in slug: return 'monthly'
+def _freq_for(text: str, x_kind: str) -> str:
+    t = (text or '').lower()
+    if 'woch' in t or 'wöch' in t: return 'weekly'
+    if 'monat' in t: return 'monthly'
     return 'daily' if x_kind == 'date' else ''
 
 
@@ -641,12 +657,30 @@ def _harvest_pages(prev: Dict[str, dict], out: Dict[str, dict], errors: Dict[str
             if npts < 5:
                 print(f'      chart {ch["id"]}: only {npts} values, labels[:3]={ch["labels"][:3]}')
                 continue
-            key = f'{slug}_{ch["id"].replace("myChartId_", "c")}'
+            # One dataset per chart id: the landing page and the chart's own
+            # page carry the same chart, and the longer copy wins.
+            cid = ch['id'].replace('myChartId_', 'c')
+            key = f'bnetza_{cid}'
+            if key in out and sum(len(v) for v in out[key]['series'].values()) >= npts:
+                continue
             title = ch['title'] or slug
-            node = _merge(prev.get(key), parsed)
+            base = prev.get(key)
+            for old_key, old in prev.items():       # data stored under the
+                if old_key.endswith('_' + cid) and old_key != key:   # first run's keys
+                    base = _merge(old, base) if base else old
+            node = _merge(base, parsed)
             node.update({'label': title[:90], 'group': _group_for(slug + ' ' + title.lower()),
-                         'unit': _unit_for(title), 'freq': _freq_for(slug, node['x_kind']),
-                         'url': page, 'ok': True, 'source_kind': 'chartjs'})
+                         'unit': _unit_for(title), 'freq': _freq_for(slug + ' ' + title, node['x_kind']),
+                         'url': page, 'ok': True, 'source_kind': 'chartjs', 'chart_id': cid})
+            # Keep the page's own x order: a gas-year chart runs April to
+            # March, which sorting by "MM-DD" would scramble.
+            order = []
+            for lbl in ch['labels']:
+                k2 = _parse_x(str(lbl))[1]
+                if k2 is not None and k2 not in order:
+                    order.append(k2)
+            if node['x_kind'] != 'date':
+                node['x_order'] = order
             out[key] = node
             found += 1
             xs = [x for v in node['series'].values() for x, _ in v]
@@ -750,8 +784,14 @@ def fetch() -> dict:
                 out[key] = {'label': label, 'group': group, 'unit': unit, 'freq': freq,
                             'url': url, 'ok': False, 'error': msg, 'series': {}, 'columns': []}
 
-    # A table that did not turn up this run keeps its stored history.
+    # A table that did not turn up this run keeps its stored history —
+    # except first-run keys whose chart now lives under its chart-id key.
+    live_ids = {n.get('chart_id') for n in out.values() if n.get('chart_id')}
     for k, node in prev.items():
+        if re.search(r'_(c\d+)(_single)?$', k) and not k.startswith('bnetza_'):
+            cid = re.search(r'_(c\d+)', k).group(1)
+            if cid in live_ids or k.endswith('_single'):
+                continue
         if k not in out and node.get('series'):
             kept = dict(node)
             kept['ok'] = False
