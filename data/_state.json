@@ -6,12 +6,12 @@
     "last_success_iso": "2026-09-22T22:00:13Z"
   },
   "destatis_vpi": {
-    "last_attempt_epoch": 1790032261,
-    "last_attempt_iso": "2026-09-21T23:11:01Z",
+    "last_attempt_epoch": 1790122582,
+    "last_attempt_iso": "2026-09-23T00:16:22Z",
     "last_error_epoch": 1788686422,
     "last_error_message": "RuntimeError: Destatis auth: BOTH modes failed. header: header-auth exception: source exceeded wallclock budget; body: HTTPSConnectionPool(host='genesis.destatis.de', port=443): Max retries exceeded with url: /genesisWS/rest/2020/helloworld/logincheck (Caused by ReadTimeoutError(\"HTTPSConnectionPool(host='genesis.destatis.de', port=443): Read timed out. (read timeout=30)\")) | at File \"/home/runner/work/energie/energie/scripts/fetchers/destatis_vpi.py\", line 199, in _check_login",
-    "last_success_epoch": 1790032280,
-    "last_success_iso": "2026-09-21T23:11:20Z"
+    "last_success_epoch": 1790122603,
+    "last_success_iso": "2026-09-23T00:16:43Z"
   },
   "eia_petroleum": {
     "last_attempt_epoch": 1790102754,
@@ -22,12 +22,12 @@
     "last_success_iso": "2026-09-22T18:45:59Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1790114128,
-    "last_attempt_iso": "2026-09-22T21:55:28Z",
+    "last_attempt_epoch": 1790122419,
+    "last_attempt_iso": "2026-09-23T00:13:39Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1790114324,
-    "last_success_iso": "2026-09-22T21:58:44Z"
+    "last_success_epoch": 1790122582,
+    "last_success_iso": "2026-09-23T00:16:22Z"
   },
   "energy_futures": {
     "last_attempt_epoch": 1790114615,
@@ -58,12 +58,12 @@
     "last_success_iso": "2026-09-22T09:44:45Z"
   },
   "eurostat_oil": {
-    "last_attempt_epoch": 1790032322,
-    "last_attempt_iso": "2026-09-21T23:12:02Z",
+    "last_attempt_epoch": 1790122603,
+    "last_attempt_iso": "2026-09-23T00:16:43Z",
     "last_error_epoch": 1788596786,
     "last_error_message": "RuntimeError: Eurostat: alle Serien fehlgeschlagen — API nicht erreichbar oder alle Produkt-/Flow-Kombinationen leer. Letzter Datensatz wird als stale beibehalten. | at File \"/home/runner/work/energie/energie/scripts/fetchers/eurostat_oil.py\", line 350, in fetch",
-    "last_success_epoch": 1790032363,
-    "last_success_iso": "2026-09-21T23:12:43Z"
+    "last_success_epoch": 1790122720,
+    "last_success_iso": "2026-09-23T00:18:40Z"
   },
   "eurostat_prices": {
     "last_attempt_epoch": 1790114653,
@@ -106,18 +106,18 @@
     "last_success_iso": "2026-09-22T18:45:29Z"
   },
   "news": {
-    "last_attempt_epoch": 1790114742,
-    "last_attempt_iso": "2026-09-22T22:05:42Z",
-    "last_success_epoch": 1790114765,
-    "last_success_iso": "2026-09-22T22:06:05Z"
+    "last_attempt_epoch": 1790122720,
+    "last_attempt_iso": "2026-09-23T00:18:40Z",
+    "last_success_epoch": 1790122744,
+    "last_success_iso": "2026-09-23T00:19:04Z"
   },
   "smard": {
-    "last_attempt_epoch": 1790114122,
-    "last_attempt_iso": "2026-09-22T21:55:22Z",
+    "last_attempt_epoch": 1790122411,
+    "last_attempt_iso": "2026-09-23T00:13:31Z",
     "last_error_epoch": 1784702205,
     "last_error_message": "RuntimeError: SMARD: all filters returned empty | at File \"/home/runner/work/energie/energie/scripts/fetchers/smard.py\", line 109, in fetch",
-    "last_success_epoch": 1790114128,
-    "last_success_iso": "2026-09-22T21:55:28Z"
+    "last_success_epoch": 1790122419,
+    "last_success_iso": "2026-09-23T00:13:39Z"
   },
   "weather": {
     "last_attempt_epoch": 1790114393,
