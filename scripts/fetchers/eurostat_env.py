@@ -30,7 +30,7 @@ from . import _eurostat as eu
 # candidates. Emissions are a smaller request count than the oil series
 # (two datasets, few series) so the list can stay wide.
 GEO = ['EU27_2020', 'DE', 'FR', 'IT', 'ES', 'NL', 'PL', 'BE', 'AT',
-       'CZ', 'DK', 'SE', 'FI', 'PT', 'GR', 'IE', 'NO']
+       'CZ', 'DK', 'SE', 'FI', 'PT', 'EL', 'IE', 'NO']
 
 SINCE = '1990'
 

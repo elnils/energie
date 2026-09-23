@@ -39,7 +39,7 @@ from . import _eurostat as eu
 # them. One request per country per series, so the list size drives the
 # run time that fetch_all.SCHEDULE budgets for.
 GEO = ['EU27_2020', 'EA20', 'DE', 'FR', 'IT', 'ES', 'NL', 'PL', 'BE', 'AT',
-       'CZ', 'DK', 'SE', 'FI', 'PT', 'GR', 'IE', 'NO']
+       'CZ', 'DK', 'SE', 'FI', 'PT', 'EL', 'IE', 'NO']
 
 # Data starts here for monthly datasets. Annual ones ignore it and return
 # their full history, which is what the long-run import/export view wants.
