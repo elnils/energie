@@ -49,10 +49,19 @@ header{display:flex;align-items:center;justify-content:space-between;padding:0 2
 .logo{font-weight:700;font-size:15px;color:#fff;letter-spacing:-0.01em}
 .logo span{color:#a8b8cd;font-weight:400;margin-left:2px}
 .hdr-right{display:flex;align-items:center;gap:14px;font-size:12px;color:#a8b8cd}
-.hdr-land{display:flex;align-items:center;gap:6px}
-.hdr-land select{background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.25);border-radius:5px;padding:4px 6px;font-family:inherit;font-size:12px}
-.hdr-land select option{color:#1a2332}
 .land-hint{font-size:10px;color:var(--text3);margin-top:4px}
+/* Per-card controls: country, comparison country, period. */
+.card-ctl{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;margin:-2px 0 10px;
+  padding:7px 10px;background:var(--bg-alt);border:1px solid var(--border);border-radius:7px;
+  font-size:11px;color:var(--text2)}
+.card-ctl label{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.card-ctl select{font-size:11px;padding:3px 6px;border-radius:5px}
+.card-ctl .vgl-mark{display:inline-block;width:16px;border-top:2px dashed var(--text2);vertical-align:middle}
+/* Cards in one row share a height and the chart takes the free space, so
+   a row of two or three cards lines up on desktop. */
+.card{display:flex;flex-direction:column}
+.card > .chart-wrap{flex:1 1 auto}
+.card-hdr{min-height:38px}
 .saison-ctrl{display:flex;flex-wrap:wrap;gap:8px 12px;margin-bottom:8px;font-size:11px;color:var(--text2)}
 .saison-ctrl label{display:flex;align-items:center;gap:5px}
 .saison-ctrl select{font-size:11px}
@@ -232,17 +241,6 @@ main{padding:18px 20px 70px;max-width:1600px;margin:0 auto}
            font-size:11px;cursor:pointer;font-family:inherit;text-decoration:underline;
            padding:6px}
 .mod-reset:hover{color:var(--accent)}
-.mod-bar-sub{margin-top:-8px}
-.kachel{display:flex;flex-direction:column;gap:8px;cursor:pointer;transition:border-color .15s, box-shadow .15s}
-.kachel:hover{border-color:var(--accent)}
-.kachel-kopf{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
-.kachel-kat{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--text3)}
-.kachel-werte{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px}
-.kachel-wert .l{font-size:10px;color:var(--text3)}
-.kachel-wert .v{font-size:18px;font-weight:600;font-variant-numeric:tabular-nums}
-.kachel-wert .u{font-size:9px;color:var(--text3)}
-.kachel-leer{font-size:11px;color:var(--text3)}
-.kachel-link{font-size:11px;color:var(--accent);margin-top:auto}
 .quellen-fold{margin-top:6px}
 .quellen-fold summary{cursor:pointer;font-size:12px;color:var(--text2);padding:10px 2px;font-weight:600}
 .quellen-fold summary span{font-weight:400;color:var(--text3)}
@@ -301,6 +299,8 @@ header{padding-left:calc(20px + env(safe-area-inset-left));
   .card{padding:12px}
   .card-hdr{flex-direction:column;align-items:stretch;gap:6px}
   .card-hdr select{width:100%}
+  .card-ctl label{flex:1 1 45%}
+  .card-ctl select{flex:1;min-height:36px;font-size:13px}
 
   /* Charts get taller relative to width so a time series stays legible in
      portrait; the inline height attributes are overridden. */
@@ -309,16 +309,7 @@ header{padding-left:calc(20px + env(safe-area-inset-left));
   /* Twenty G20 bars need the height; the seasonal chart its legend. */
   .card[data-g20] .chart-wrap{height:470px!important}
   #saison-card .chart-wrap{height:320px!important}
-  .kachel-wert .v{font-size:16px}
-  /* The category and module chips took a whole phone screen when wrapped;
-     one swipeable row each keeps the tiles in view. */
-  #ueberblick-kategorien, #ueberblick-module{flex-wrap:nowrap;overflow-x:auto;
-    scrollbar-width:none;-webkit-overflow-scrolling:touch;padding:8px 10px}
-  #ueberblick-kategorien::-webkit-scrollbar, #ueberblick-module::-webkit-scrollbar{display:none}
-  #ueberblick-kategorien .mod-chip, #ueberblick-module .mod-chip{white-space:nowrap;flex:0 0 auto;min-height:36px;padding:7px 12px}
-  #ueberblick-module .mod-reset{width:auto;flex:0 0 auto;white-space:nowrap}
-  .hdr-land select{max-width:150px;min-height:34px;font-size:13px}
-
+  
   .kpis{grid-template-columns:repeat(2,1fr);gap:8px}
   .kpi{padding:10px}
   .kpi-val{font-size:20px}
@@ -386,8 +377,6 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
   <div class="logo">⚡ energie<span>dashboard</span></div>
   <div class="hdr-right">
     <div class="live"><span class="pulse"></span>LIVE</div>
-    <label class="hdr-land" title="Gilt für alle Karten, die dieses Land führen">Land
-      <select id="global-country" aria-label="Land für alle Karten"></select></label>
     <span>Stand: <b id="last-update">—</b></span>
     <button class="btn" onclick="forceRefresh()">↺ Refresh</button>
   </div>
@@ -399,8 +388,7 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
      Both rows scroll together on narrow screens. -->
 <nav class="tabs">
   <div class="tab-row">
-    <button class="tab active" data-tab="ueberblick">Überblick</button>
-    <button class="tab" data-tab="strom">Strom</button>
+    <button class="tab active" data-tab="strom">Stromerzeugung</button>
     <button class="tab" data-tab="strompreise">Strompreise & Importe</button>
     <button class="tab" data-tab="markt">Marktpreise</button>
     <button class="tab" data-tab="gas">Gas</button>
@@ -421,54 +409,8 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
 
 <main>
 
-<!-- ÜBERBLICK — the front page -->
-<!-- Until now the dashboard opened straight into Strom, so the state of
-     everything else was only visible by clicking through eleven tabs. This
-     panel carries one headline figure per domain and the health of every
-     source feeding them. -->
-<div class="panel active" id="panel-ueberblick">
-  <div class="mod-bar" id="ueberblick-kategorien"></div>
-  <div class="mod-bar mod-bar-sub" id="ueberblick-module"></div>
-  <div class="lage-hero" id="ueberblick-hero" data-module="lage">
-    <div id="ueberblick-hero-content">
-      <div class="loading"><span class="spin"></span>Lage wird ermittelt…</div>
-    </div>
-  </div>
-  <!-- One tile per tab: its headline figures and a way in. Which tiles show
-       is chosen above, by category or one by one. -->
-  <div class="grid kachel-grid" id="ueberblick-kacheln"></div>
-  <div class="grid">
-    <div class="card g7" data-src="energy_charts" data-module="verlauf">
-      <div class="card-hdr">
-        <div>
-          <div class="card-title">Strompreis Day-Ahead · 7 Tage</div>
-          <div class="card-sub">Energy-Charts · EUR/MWh · Details im Tab Strom</div>
-        </div>
-      </div>
-      <div class="chart-wrap" style="height:210px"><canvas id="chart-ueberblick-strom"></canvas></div>
-    </div>
-    <div class="card g5" data-src="smard" data-module="mix">
-      <div class="card-hdr">
-        <div>
-          <div class="card-title">Woher der Strom gerade kommt</div>
-          <div class="card-sub">SMARD · aktuellster Viertelstundenwert</div>
-        </div>
-      </div>
-      <div id="ueberblick-mix"><div class="loading"><span class="spin"></span></div></div>
-    </div>
-  </div>
-  <!-- The source inventory is reference, not a module: always there, folded
-       away until wanted. -->
-  <details class="quellen-fold" id="quellen-fold">
-    <summary>Datenquellen und ihr Zustand <span id="quellen-zusammenfassung"></span></summary>
-    <div class="card" data-nostamp style="margin-top:10px">
-      <div id="ueberblick-quellen"><div class="loading"><span class="spin"></span></div></div>
-    </div>
-  </details>
-</div>
-
 <!-- STROM -->
-<div class="panel" id="panel-strom">
+<div class="panel active" id="panel-strom">
   <div class="range-bar" data-tab="strom"></div>
   <div class="kpis" id="kpi-strom"></div>
   <div class="grid">
@@ -485,15 +427,11 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
     <div class="card g12" data-src="energy_charts">
       <div class="card-hdr">
         <div><div class="card-title">Day-Ahead Strompreis</div><div class="card-sub">Energy-Charts · Fraunhofer ISE · stündlich</div></div>
-        <select id="price-country" onchange="renderPriceChart()">
-          <option value="price_de">DE-LU</option><option value="price_at">AT</option>
-          <option value="price_fr">FR</option><option value="price_pl">PL</option><option value="price_ch">CH</option>
-        </select>
       </div>
       <div class="chart-wrap" style="height:180px"><canvas id="chart-price"></canvas></div>
     </div>
-    <div class="card g12" data-src="worldbank_g20" data-g20="elec_coal,elec_gas,elec_nuclear,renewable_electricity,elec_renew_ex_hydro,elec_hydro,electricity_per_capita">
-      <div class="card-hdr"><div><div class="card-title">G20: Strommix im Vergleich</div><div class="card-sub">Weltbank · letztes Berichtsjahr je Land</div></div></div>
+    <div class="card g12" data-src="worldbank_g20" data-g20="elec_coal,elec_gas,elec_nuclear,elec_renew_ex_hydro,elec_hydro,renewable_electricity,electricity_per_capita">
+      <div class="card-hdr"><div><div class="card-title">G20: Stromerzeugung im Vergleich</div><div class="card-sub">Weltbank · letztes Berichtsjahr je Land</div></div></div>
       <div class="chart-wrap" style="height:380px"><canvas id="chart-g20-strom"></canvas></div>
     </div>
   </div>
@@ -513,19 +451,6 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
           <div class="card-title">Endkundenpreise Strom — Haushalt vs. Industrie</div>
           <div class="card-sub">Eurostat · Halbjahreswerte · Haushalt 2 500–4 999 kWh/Jahr · Industrie 500–1 999 MWh/Jahr</div>
         </div>
-        <select id="strompreise-geo" onchange="renderStrompreise()" style="font-size:11px">
-          <option value="DE">Deutschland</option>
-          <option value="EU27_2020">EU27</option>
-          <option value="FR">Frankreich</option>
-          <option value="IT">Italien</option>
-          <option value="ES">Spanien</option>
-          <option value="NL">Niederlande</option>
-          <option value="PL">Polen</option>
-          <option value="AT">Österreich</option>
-          <option value="BE">Belgien</option>
-          <option value="DK">Dänemark</option>
-          <option value="SE">Schweden</option>
-        </select>
       </div>
       <div class="chart-wrap" style="height:270px"><canvas id="chart-strompreise"></canvas></div>
     </div>
@@ -541,19 +466,9 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
     <div class="card g6" data-src="eurostat_oil">
       <div class="card-hdr">
         <div>
-          <div class="card-title">Strom-Import und -Export Deutschland</div>
+          <div class="card-title">Strom-Import und -Export</div>
           <div class="card-sub">Eurostat · Jahreswerte · GWh · Saldo = Import − Export</div>
         </div>
-        <select id="strom-flow-geo" onchange="renderStrompreise()" style="font-size:11px">
-          <option value="DE">Deutschland</option>
-          <option value="EU27_2020">EU27</option>
-          <option value="FR">Frankreich</option>
-          <option value="IT">Italien</option>
-          <option value="ES">Spanien</option>
-          <option value="NL">Niederlande</option>
-          <option value="PL">Polen</option>
-          <option value="AT">Österreich</option>
-        </select>
       </div>
       <div class="chart-wrap" style="height:240px"><canvas id="chart-strom-flows"></canvas></div>
     </div>
@@ -572,16 +487,6 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
           <div class="card-title">Stromverbrauch und -erzeugung im Ländervergleich</div>
           <div class="card-sub">Eurostat · Jahreswerte · GWh · Endverbrauch gegen Bruttoerzeugung — die Differenz deckt Netzverluste, Eigenverbrauch und den Außenhandel ab</div>
         </div>
-        <select id="verbrauch-geo" onchange="renderStrompreise()" style="font-size:11px">
-          <option value="DE">Deutschland</option>
-          <option value="EU27_2020">EU27</option>
-          <option value="FR">Frankreich</option>
-          <option value="IT">Italien</option>
-          <option value="ES">Spanien</option>
-          <option value="NL">Niederlande</option>
-          <option value="PL">Polen</option>
-          <option value="AT">Österreich</option>
-        </select>
       </div>
       <div class="chart-wrap" style="height:240px"><canvas id="chart-verbrauch"></canvas></div>
     </div>
@@ -594,10 +499,6 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
         </div>
       </div>
       <div class="chart-wrap" style="height:230px"><canvas id="chart-gaspreise"></canvas></div>
-    </div>
-    <div class="card g12" data-src="worldbank_g20" data-g20="electricity_per_capita,energy_imports,energy_use_per_capita">
-      <div class="card-hdr"><div><div class="card-title">G20: Verbrauch und Importabhängigkeit</div><div class="card-sub">Weltbank · letztes Berichtsjahr je Land</div></div></div>
-      <div class="chart-wrap" style="height:380px"><canvas id="chart-g20-strompreise"></canvas></div>
     </div>
   </div>
 </div>
@@ -849,13 +750,6 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
     </div>
   </div>
   </div>
-  <!-- Shown under every fuel view, not only under jet fuel. -->
-  <div class="grid">
-    <div class="card g12" data-src="worldbank_g20" data-g20="fossil_share,energy_imports,energy_use_per_capita">
-      <div class="card-hdr"><div><div class="card-title">G20: fossile Energie und Importe</div><div class="card-sub">Weltbank · letztes Berichtsjahr je Land</div></div></div>
-      <div class="chart-wrap" style="height:380px"><canvas id="chart-g20-kraftstoff"></canvas></div>
-    </div>
-  </div>
 </div>
 
 <!-- ERNEUERBARE -->
@@ -1013,12 +907,6 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
     <div class="card g8" data-src="gas_storage">
       <div class="card-hdr">
         <div><div class="card-title">Gasspeicher-Füllstände</div><div class="card-sub">GIE AGSI+ · täglich</div></div>
-        <select id="gas-country" onchange="renderGasChart()">
-          <option value="eu">EU gesamt</option><option value="de">Deutschland</option>
-          <option value="at">Österreich</option><option value="fr">Frankreich</option>
-          <option value="it">Italien</option><option value="nl">Niederlande</option>
-          <option value="pl">Polen</option>
-        </select>
       </div>
       <div class="chart-wrap" style="height:220px"><canvas id="chart-gas"></canvas></div>
     </div>
@@ -1087,8 +975,8 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
       </div>
     </div>
 
-    <div class="card g12" data-src="worldbank_g20" data-g20="elec_gas,energy_imports,fossil_share">
-      <div class="card-hdr"><div><div class="card-title">G20-Vergleich</div><div class="card-sub">Weltbank · letztes Berichtsjahr je Land</div></div></div>
+    <div class="card g12" data-src="worldbank_g20" data-g20="elec_gas">
+      <div class="card-hdr"><div><div class="card-title">G20: Erdgas in der Stromerzeugung</div><div class="card-sub">Weltbank · letztes Berichtsjahr je Land</div></div></div>
       <div class="chart-wrap" style="height:380px"><canvas id="chart-g20-gas"></canvas></div>
     </div>
   </div>
@@ -1207,6 +1095,14 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
       <div class="chart-wrap" style="height:230px"><canvas id="chart-lage-oil"></canvas></div>
     </div>
   </div>
+  <!-- The state of every data source: reference, folded away until wanted.
+       It lived on the removed overview page. -->
+  <details class="quellen-fold" id="quellen-fold">
+    <summary>Datenquellen und ihr Zustand <span id="quellen-zusammenfassung"></span></summary>
+    <div class="card" data-nostamp style="margin-top:10px">
+      <div id="lage-quellen"><div class="loading"><span class="spin"></span></div></div>
+    </div>
+  </details>
 </div>
 
 <!-- FUTURES & PROGNOSEN -->
@@ -1314,7 +1210,7 @@ const D = {}; // loaded data
 const CH = {}; // charts
 let fuelType = 'e5';
 let newsSource = 'alle';
-let activeTab = 'ueberblick';
+let activeTab = 'strom';
 
 // ══════════════════════════════════════════════
 // TIME RANGE — unified per-tab range selector
@@ -1333,7 +1229,6 @@ const RANGE_DEFS = {
 
 // Per-tab: which ranges are enabled (others rendered greyed out)
 const TAB_RANGES = {
-  ueberblick:  [],   // fixed windows per tile; nothing to choose
   strom:       ['24h','7d','30d'],
   // Eurostat publishes these half-yearly and annually, so anything under a
   // year would show a single point.
@@ -1442,24 +1337,20 @@ function renderRangeBar(tab) {
 const TAB_FILES = {
   // The front page pulls a headline number from most sources, so it loads
   // broadly. Everything is optional — a missing file costs one tile.
-  ueberblick:  ['smard','energy_charts','gas_storage','commodities','fuel',
-                'heating_oil','eurostat_prices','destatis_vpi','entsoe',
-                'eurostat_env','worldbank_g20','fx','weather','news',
-                'energy_futures','_state'],
   strom:       ['smard','energy_charts','entsoe','worldbank_g20'],
-  strompreise: ['eurostat_prices','eurostat_oil','worldbank_g20'],
+  strompreise: ['eurostat_prices','eurostat_oil'],
   markt:       ['energy_charts','commodities','fx','entsoe'],
   gas:         ['gas_storage','entsog','gas_storage_history','bnetza_gas','worldbank_g20'],
   rohstoffe:   ['commodities','fx'],
   // merged tab: road fuels + heating oil + jet fuel/supply
-  kraftstoff:  ['fuel','heating_oil','commodities','eurostat_oil','eia_petroleum','fred_energy','worldbank_g20'],
+  kraftstoff:  ['fuel','heating_oil','commodities','eurostat_oil','eia_petroleum','fred_energy'],
   erneuerbare: ['energy_charts','smard','worldbank_g20'],
   umwelt:      ['eurostat_env','worldbank_g20'],
   g20:         ['worldbank_g20'],
   wetter:      ['weather'],
   fx:          ['fx'],
   futures:     ['energy_futures','commodities'],
-  lage:        ['energy_charts','gas_storage','heating_oil','commodities','destatis_vpi','smard','entsoe'],
+  lage:        ['energy_charts','gas_storage','heating_oil','commodities','destatis_vpi','smard','entsoe','_state'],
   news:        ['news'],
 };
 
@@ -2005,44 +1896,35 @@ function renderGenChart(s) {
   });
 }
 
+// Day-ahead price per bidding zone, with an optional second zone.
 function renderPriceChart() {
   const ec = D.energy_charts;
-  const wrap = document.getElementById('chart-price')?.parentElement;
-  if (!wrap) return;
-  if (!ec) {
-    wrap.innerHTML = '<div class="nodata">Energy-Charts noch nicht geladen</div>';
-    return;
-  }
-  const key = document.getElementById('price-country')?.value || 'price_de';
-  const d = ec[key] || ec.price_de;
-  if (!d?.unix_seconds?.length || !d?.price?.length) {
-    wrap.innerHTML = `<div class="nodata">Keine Day-Ahead-Daten für ${key.replace('price_','').toUpperCase()}</div>`;
-    return;
-  }
-  const co = rangeCutoffSec('strom');
-  const all = d.unix_seconds.map((t,i) => ({t, p: d.price[i]})).filter(x => x.p != null);
+  if (!ec) { noData('chart-price', 'Energy-Charts noch nicht geladen'); return; }
+  const ZONEN = {price_de:'DE-LU', price_at:'Österreich', price_fr:'Frankreich', price_pl:'Polen',
+                 price_ch:'Schweiz', price_nl:'Niederlande', price_be:'Belgien', price_dk1:'Dänemark West',
+                 price_it:'Italien', price_cz:'Tschechien'};
+  const laender = Object.keys(ec).filter(k => /^price_/.test(k) && ec[k]?.unix_seconds?.length)
+    .map(k => [k, ZONEN[k] || k.replace('price_', '').toUpperCase()]);
+  const c = kartenSteuerung({id:'strom-da', anchor:'chart-price', laender, land:'price_de', vergleich:true,
+    zeiten:['tab','24h','7d','30d','max'], render:renderPriceChart});
+  const co = karteCutoffMs(c, 'strom') / 1000;
+  const reihe = k => { const d = ec[k]; return d?.unix_seconds ? d.unix_seconds.map((t,i) => ({t, p:d.price[i]})).filter(x => x.p != null) : []; };
+  const all = reihe(c.land);
   let f = all.filter(x => x.t >= co);
-  // If range is empty but data exists, fall back to last 50 points + show banner
-  let usedFallback = false;
-  if (!f.length && all.length) {
-    f = all.slice(-50);
-    usedFallback = true;
-  }
-  if (!f.length) {
-    wrap.innerHTML = '<div class="nodata">Keine Preisdaten verfügbar</div>';
-    return;
-  }
-  mkChart('chart-price', 'line', f.map(x => fmtTs(x.t * 1000)), [{
-    label: 'EUR/MWh', data: f.map(x => x.p),
-    borderColor: '#d97706', backgroundColor: 'rgba(217,119,6,0.10)', fill: true
-  }]);
-  // If fallback was used, append a discreet warning under the chart
-  if (usedFallback) {
-    const warn = document.createElement('div');
-    warn.style.cssText = 'font-size:10px;color:var(--orange);margin-top:4px;text-align:right';
-    warn.textContent = `Daten älter als gewählter Zeitraum — zeige letzte ${f.length} verfügbare Werte`;
-    wrap.appendChild(warn);
-  }
+  let fallback = false;
+  if (!f.length && all.length) { f = all.slice(-50); fallback = true; }
+  if (!f.length) { noData('chart-price', `Keine Day-Ahead-Daten für ${laender.find(x=>x[0]===c.land)?.[1] || c.land}`); return; }
+  const g = c.vgl ? reihe(c.vgl).filter(x => x.t >= f[0].t) : [];
+  const ts = Array.from(new Set([...f, ...g].map(x => x.t))).sort((a,b) => a - b);
+  const m1 = Object.fromEntries(f.map(x => [x.t, x.p])), m2 = Object.fromEntries(g.map(x => [x.t, x.p]));
+  const n = k => laender.find(x => x[0] === k)?.[1] || k;
+  const ds = [{label:`${n(c.land)} EUR/MWh`, data:ts.map(t => m1[t] ?? null), spanGaps:true,
+    borderColor:'#d97706', backgroundColor:'rgba(217,119,6,0.10)', fill:!c.vgl}];
+  if (c.vgl) ds.push({label:`${n(c.vgl)} EUR/MWh`, data:ts.map(t => m2[t] ?? null), spanGaps:true, ...vglStyle('#0e6cb6')});
+  mkChart('chart-price', 'line', ts.map(t => fmtTs(t * 1000)), ds,
+    {plugins:{legend:{display:!!c.vgl, labels:{color:'#56657a',boxWidth:8,font:{size:10}}}}});
+  stamp('chart-price', 'energy_charts', (c.vgl ? `${n(c.land)} gegen ${n(c.vgl)} (gestrichelt)` : n(c.land)) +
+        (fallback ? ` · im gewählten Zeitraum keine Werte, gezeigt werden die letzten ${f.length}` : ''));
 }
 
 function renderMixDonut({wOn,wOff,sol,bio,hyd,nuc,lig,coal,gas}) {
@@ -2660,38 +2542,56 @@ function gasNode(gs, cc) {
   return gs[cc] || null;
 }
 
-function renderGasChart() {
-  const gs=D.gas_storage;
-  if(!gs) return;
-  const cc=document.getElementById('gas-country')?.value||'eu';
-  const d=gasNode(gs, cc);
-  if(!d?.data?.length){
-    noData('chart-gas', 'Keine Gasdaten für '+cc.toUpperCase());
-    noData('chart-gas-flow', 'Keine Gasdaten für '+cc.toUpperCase());
-    return;
-  }
-  // Range-aware filter via cutoff date
-  const sec = getRangeSeconds('gas');
-  const cutoffDate = sec === Infinity ? '0000-00-00'
-    : new Date(Date.now() - sec*1000).toISOString().substring(0,10);
-  const data=d.data.filter(x=>x.fill_pct!=null && x.date >= cutoffDate);
-  if(!data.length){
-    noData('chart-gas', 'Keine Daten im gewählten Zeitraum');
-    return;
-  }
-  mkChart('chart-gas','line',data.map(x=>x.date),[{
-    label:'Füllstand %',data:data.map(x=>x.fill_pct),
-    borderColor:'#1f9d55',backgroundColor:'rgba(31,157,85,0.10)',fill:true
-  }],{scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%'}}}});
+// Fill level and flows per country. The regular AGSI file holds ~300 days;
+// for longer periods the multi-year archive (gas_storage_history) is joined
+// in, so "5 Jahre" really shows five years.
+function gasTagesreihe(cc) {
+  const byDate = {};
+  (D.gas_storage_history?.countries?.[cc]?.rows || []).forEach(r => {
+    byDate[r[0]] = {date:r[0], fill_pct:r[1], injection:r[2], withdrawal:r[3]};
+  });
+  (gasNode(D.gas_storage, cc)?.data || []).forEach(x => { byDate[x.date] = x; });
+  return Object.keys(byDate).sort().map(d => byDate[d]);
+}
 
-  // Einspeisung / Entnahme — same range
-  const flow=d.data.filter(x=>x.date >= cutoffDate && ((x.injection||0)>0 || (x.withdrawal||0)>0));
-  if(flow.length) mkChart('chart-gas-flow','bar',flow.map(x=>x.date),[
-    {label:'Einspeisung TWh',data:flow.map(x=>x.injection||0),backgroundColor:'rgba(31,157,85,0.65)',borderRadius:2},
-    {label:'Entnahme TWh',data:flow.map(x=>-(x.withdrawal||0)),backgroundColor:'rgba(192,57,43,0.55)',borderRadius:2},
-  ],{plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}},scales:{x:{ticks:{maxTicksLimit:10}}}});
-  else
+function renderGasChart() {
+  const gs = D.gas_storage;
+  if (!gs) return;
+  const laender = Object.keys(gs.gas || gs).filter(k => gasNode(gs, k)?.data?.length)
+    .map(k => [k, (gasNode(gs, k)?.name || k.toUpperCase()).replace(' (computed)', '')]);
+  const c = kartenSteuerung({id:'gas-speicher', anchor:'chart-gas', laender, land:'eu', vergleich:true,
+    zeiten:['tab','30d','90d','1y','2y','5y','max'], render:renderGasChart});
+  const cutoff = new Date(karteCutoffMs(c, 'gas')).toISOString().slice(0, 10);
+  const name = cc => (laender.find(x => x[0] === cc) || [cc, cc.toUpperCase()])[1];
+
+  const reihe = gasTagesreihe(c.land).filter(x => x.date >= cutoff);
+  const data = reihe.filter(x => x.fill_pct != null);
+  if (!data.length) {
+    noData('chart-gas', `Keine Füllstände für ${name(c.land)} im gewählten Zeitraum`);
     noData('chart-gas-flow', 'Keine Einspeisung/Entnahme-Daten');
+    return;
+  }
+  const vgl = c.vgl ? gasTagesreihe(c.vgl).filter(x => x.date >= cutoff && x.fill_pct != null) : [];
+  const dates = Array.from(new Set([...data, ...vgl].map(x => x.date))).sort();
+  const m1 = Object.fromEntries(data.map(x => [x.date, x.fill_pct]));
+  const m2 = Object.fromEntries(vgl.map(x => [x.date, x.fill_pct]));
+  const ds = [{label:`Füllstand ${name(c.land)}`, data:dates.map(d => m1[d] ?? null), spanGaps:true,
+    borderColor:'#1f9d55', backgroundColor:'rgba(31,157,85,0.10)', fill:!c.vgl}];
+  if (c.vgl) ds.push({label:`Füllstand ${name(c.vgl)}`, data:dates.map(d => m2[d] ?? null), spanGaps:true,
+    ...vglStyle('#0e6cb6')});
+  mkChart('chart-gas','line', dates.map(fmtIsoDate), ds, {
+    plugins:{legend:{display:!!c.vgl, labels:{color:'#56657a',boxWidth:8,font:{size:10}}}},
+    scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%'}}, x:{ticks:{maxTicksLimit:10}}}});
+  stamp('chart-gas', dates[0] < (gasNode(gs, c.land)?.data?.[0]?.date || '') ? ['gas_storage','gas_storage_history'] : 'gas_storage',
+        `${name(c.land)}${c.vgl ? ' gegen ' + name(c.vgl) + ' (gestrichelt)' : ''} · ${fmtIsoDate(dates[0])}–${fmtIsoDate(dates.at(-1))}`);
+
+  // Einspeisung / Entnahme — main country, same period
+  const flow = reihe.filter(x => (x.injection || 0) > 0 || (x.withdrawal || 0) > 0);
+  if (flow.length) mkChart('chart-gas-flow','bar', flow.map(x => fmtIsoDate(x.date)), [
+    {label:`Einspeisung ${name(c.land)} GWh/Tag`, data:flow.map(x=>x.injection||0), backgroundColor:'rgba(31,157,85,0.65)', borderRadius:2},
+    {label:`Entnahme ${name(c.land)} GWh/Tag`, data:flow.map(x=>-(x.withdrawal||0)), backgroundColor:'rgba(192,57,43,0.55)', borderRadius:2},
+  ],{plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}},scales:{x:{ticks:{maxTicksLimit:10}}}});
+  else noData('chart-gas-flow', 'Keine Einspeisung/Entnahme-Daten');
 }
 
 function renderGas() {
@@ -3505,6 +3405,7 @@ function renderMineraloel() {
 }
 
 function renderLage() {
+  try { renderQuellen(); } catch(e) { console.error('renderQuellen', e); }
   const ho = D.heating_oil;
   const ec = D.energy_charts;
   const gs = D.gas_storage;
@@ -4307,10 +4208,6 @@ function periodCutoff(tab) {
 
 function renderStrompreise() {
   const ep = D.eurostat_prices;
-  const geo = document.getElementById('strompreise-geo')?.value || 'DE';
-  const flowGeo = document.getElementById('strom-flow-geo')?.value || 'DE';
-  const minYear = periodCutoff('strompreise');
-  const inRange = p => String(p.period).slice(0,4) >= minYear;
 
   if (!ep) {
     ['chart-strompreise','chart-strompreise-anteile','chart-strom-flows',
@@ -4319,170 +4216,198 @@ function renderStrompreise() {
              'Die Quelle <code>eurostat_prices</code> läuft einmal täglich. ' +
              'Nach dem nächsten GitHub-Actions-Lauf ist sie hier.'));
     document.getElementById('kpi-strompreise').innerHTML = '';
+    renderVerbrauch();
     return;
   }
+  const ZEITEN = ['tab','5y','10y','20y','max'];
+  const map = pts => { const m = {}; pts.forEach(p => m[p.period] = p.v); return m; };
+  const legend = {display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}};
 
-  // ── KPIs: what each consumer group pays, and the tax share ──
+  // ── Card: household vs industry over time ──
+  const cP = kartenSteuerung({id:'sp-preise', anchor:'chart-strompreise',
+    laender: geoListe(ep.electricity_household, ep.electricity_industry), land:'DE',
+    vergleich:true, zeiten:ZEITEN, render:renderStrompreise});
+  const geo = cP.land;
+  const inP = p => String(p.period).slice(0,4) >= karteMinYear(cP, 'strompreise');
+
+  // KPIs follow the country of the main price card.
   const kp = [];
   const hh = priceSeries('electricity_household', geo).points;
   const ind = priceSeries('electricity_industry', geo).points;
   const share = priceSeries('electricity_household_tax_share_pct', geo).points;
   const gasHh = priceSeries('gas_household', geo).points;
-
   const pctChange = pts => {
     if (pts.length < 3) return '';
-    // Same half-year one year earlier, i.e. two publications back.
-    const cur = pts.at(-1).v, prev = pts.at(-3).v;
+    const cur = pts.at(-1).v, prev = pts.at(-3).v;   // same half-year a year earlier
     if (prev == null || !prev) return '';
     const d = (cur - prev) / prev * 100;
     return (d >= 0 ? '▲ +' : '▼ ') + fmtN(Math.abs(d),1) + '% ggü. Vorjahr';
   };
-
-  if (hh.length) kp.push({label:'Strom Haushalt', val:fmtN(hh.at(-1).v,4),
+  const nm = geoName(geo);
+  if (hh.length) kp.push({label:`Strom Haushalt · ${nm}`, val:fmtN(hh.at(-1).v,4),
     unit:`EUR/kWh · ${fmtHalfYear(hh.at(-1).period)}`, delta:pctChange(hh), color:'#0e6cb6'});
   if (ind.length) kp.push({label:'Strom Industrie', val:fmtN(ind.at(-1).v,4),
     unit:`EUR/kWh · ${fmtHalfYear(ind.at(-1).period)}`, delta:pctChange(ind), color:'#7e57c2'});
-  if (hh.length && ind.length) {
-    const gap = hh.at(-1).v / ind.at(-1).v;
-    kp.push({label:'Haushalt zahlt', val:fmtN(gap,2)+'×', unit:'so viel wie die Industrie',
-             color:'#d97706'});
-  }
+  if (hh.length && ind.length) kp.push({label:'Haushalt zahlt', val:fmtN(hh.at(-1).v / ind.at(-1).v,2)+'×',
+    unit:'so viel wie die Industrie', color:'#d97706'});
   if (share.length) kp.push({label:'Steuern & Abgaben', val:fmtN(share.at(-1).v,1)+'%',
     unit:'Anteil am Haushaltspreis', color:'#c0392b'});
   if (gasHh.length) kp.push({label:'Gas Haushalt', val:fmtN(gasHh.at(-1).v,4),
     unit:`EUR/kWh · ${fmtHalfYear(gasHh.at(-1).period)}`, color:'#dc6803'});
+  if (cP.vgl) {
+    const v = priceSeries('electricity_household', cP.vgl).points;
+    if (v.length && hh.length) kp.push({label:`Haushalt ${geoName(cP.vgl)}`, val:fmtN(v.at(-1).v,4),
+      unit:`EUR/kWh · ${fmtHalfYear(v.at(-1).period)}`, color:'#56657a',
+      delta:`${nm} ${hh.at(-1).v >= v.at(-1).v ? 'teurer' : 'günstiger'} um ${fmtN(Math.abs(hh.at(-1).v / v.at(-1).v - 1) * 100, 0)}%`});
+  }
   document.getElementById('kpi-strompreise').innerHTML = kpis(kp);
 
-  // ── Chart: household vs industry over time, with the wholesale price for
-  //    scale. The gap between them is grid fees, levies and taxes.
-  const hhR = hh.filter(inRange), indR = ind.filter(inRange);
+  const hhR = hh.filter(inP), indR = ind.filter(inP);
+  const vHh = cP.vgl ? priceSeries('electricity_household', cP.vgl).points.filter(inP) : [];
+  const vInd = cP.vgl ? priceSeries('electricity_industry', cP.vgl).points.filter(inP) : [];
   if (hhR.length || indR.length) {
-    const periods = Array.from(new Set([...hhR, ...indR].map(p => p.period))).sort();
-    const map = pts => { const m = {}; pts.forEach(p => m[p.period] = p.v); return m; };
+    const periods = Array.from(new Set([...hhR, ...indR, ...vHh, ...vInd].map(p => p.period))).sort();
     const hhM = map(hhR), indM = map(indR);
     const datasets = [];
-    if (hhR.length) datasets.push({label:'Haushalt (inkl. Steuern)', data:periods.map(p=>hhM[p]??null),
-      borderColor:'#0e6cb6', backgroundColor:'rgba(14,108,182,0.10)', fill:true, spanGaps:true, borderWidth:2});
-    if (indR.length) datasets.push({label:'Industrie', data:periods.map(p=>indM[p]??null),
+    if (hhR.length) datasets.push({label:`Haushalt ${nm}`, data:periods.map(p=>hhM[p]??null),
+      borderColor:'#0e6cb6', backgroundColor:'rgba(14,108,182,0.10)', fill:!cP.vgl, spanGaps:true, borderWidth:2});
+    if (indR.length) datasets.push({label:`Industrie ${nm}`, data:periods.map(p=>indM[p]??null),
       borderColor:'#7e57c2', backgroundColor:'transparent', spanGaps:true, borderWidth:2});
-    const exTax = priceSeries('electricity_household', geo, 'excl_taxes').points.filter(inRange);
-    if (exTax.length) {
-      const exM = map(exTax);
-      datasets.push({label:'Haushalt ohne Steuern & Abgaben', data:periods.map(p=>exM[p]??null),
-        borderColor:'#8c98a8', backgroundColor:'transparent', borderDash:[4,4],
-        spanGaps:true, borderWidth:1.5, pointRadius:0});
+    if (!cP.vgl) {
+      const exTax = priceSeries('electricity_household', geo, 'excl_taxes').points.filter(inP);
+      if (exTax.length) {
+        const exM = map(exTax);
+        datasets.push({label:'Haushalt ohne Steuern & Abgaben', data:periods.map(p=>exM[p]??null),
+          borderColor:'#8c98a8', backgroundColor:'transparent', borderDash:[4,4],
+          spanGaps:true, borderWidth:1.5, pointRadius:0});
+      }
+    } else {
+      const a = map(vHh), b = map(vInd), vn = geoName(cP.vgl);
+      if (vHh.length) datasets.push({label:`Haushalt ${vn}`, data:periods.map(p=>a[p]??null), spanGaps:true, ...vglStyle('#0e6cb6')});
+      if (vInd.length) datasets.push({label:`Industrie ${vn}`, data:periods.map(p=>b[p]??null), spanGaps:true, ...vglStyle('#7e57c2')});
     }
     mkChart('chart-strompreise','line', periods.map(fmtHalfYear), datasets, {
-      plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}},
-      scales:{y:{title:{display:true,text:'EUR/kWh',color:'#8c98a8',font:{size:10}}},
-              x:{ticks:{maxTicksLimit:12}}},
+      plugins:{legend},
+      scales:{y:{title:{display:true,text:'EUR/kWh',color:'#8c98a8',font:{size:10}}}, x:{ticks:{maxTicksLimit:12}}},
     });
-    stamp('chart-strompreise', 'eurostat_prices', STROMPREIS_COUNTRIES[geo] || geo);
+    stamp('chart-strompreise', 'eurostat_prices', cP.vgl ? `${nm} gegen ${geoName(cP.vgl)} (gestrichelt)` : nm);
   } else {
-    noData('chart-strompreise', `Keine Preisdaten für ${STROMPREIS_COUNTRIES[geo]||geo}`,
+    noData('chart-strompreise', `Keine Preisdaten für ${nm}`,
            ep.electricity_household?.unavailable_reason
              ? `<code>${ep.electricity_household.unavailable_reason}</code>`
              : 'Eurostat veröffentlicht Halbjahreswerte etwa fünf Monate nach Periodenende.');
   }
 
-  // ── Chart: price composition, stacked ──
-  const inclAll = priceSeries('electricity_household', geo, 'incl_all_taxes').points.filter(inRange);
-  const exclAll = priceSeries('electricity_household', geo, 'excl_taxes').points.filter(inRange);
+  // ── Card: price composition, stacked ──
+  const cA = kartenSteuerung({id:'sp-anteile', anchor:'chart-strompreise-anteile',
+    laender: geoListe(ep.electricity_household), land:'DE', zeiten:ZEITEN, render:renderStrompreise});
+  const inA = p => String(p.period).slice(0,4) >= karteMinYear(cA, 'strompreise');
+  const inclAll = priceSeries('electricity_household', cA.land, 'incl_all_taxes').points.filter(inA);
+  const exclAll = priceSeries('electricity_household', cA.land, 'excl_taxes').points.filter(inA);
   if (inclAll.length && exclAll.length) {
-    const exM = {}; exclAll.forEach(p => exM[p.period] = p.v);
+    const exM = map(exclAll);
     const periods = inclAll.map(p => p.period).filter(p => exM[p] != null);
     mkChart('chart-strompreise-anteile','bar', periods.map(fmtHalfYear), [
-      {label:'Energie & Netz', data:periods.map(p => exM[p]),
-       backgroundColor:'rgba(14,108,182,0.75)', stack:'p'},
+      {label:'Energie & Netz', data:periods.map(p => exM[p]), backgroundColor:'rgba(14,108,182,0.75)', stack:'p'},
       {label:'Steuern & Abgaben',
-       data:periods.map(p => +( (inclAll.find(x=>x.period===p)?.v || 0) - exM[p] ).toFixed(4)),
+       data:periods.map(p => +((inclAll.find(x=>x.period===p)?.v || 0) - exM[p]).toFixed(4)),
        backgroundColor:'rgba(192,57,43,0.70)', stack:'p'},
     ], {
-      plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}},
+      plugins:{legend},
       scales:{x:{stacked:true,ticks:{maxTicksLimit:8}},
               y:{stacked:true,title:{display:true,text:'EUR/kWh',color:'#8c98a8',font:{size:10}}}},
     });
     stamp('chart-strompreise-anteile', 'eurostat_prices',
-          'Differenz der Steuerstufen „inkl. aller Steuern“ und „ohne Steuern“');
+          `${geoName(cA.land)} · Differenz der Steuerstufen „inkl. aller Steuern“ und „ohne Steuern“`);
   } else {
-    noData('chart-strompreise-anteile', 'Steueranteil nicht berechenbar',
+    noData('chart-strompreise-anteile', `Steueranteil für ${geoName(cA.land)} nicht berechenbar`,
            'Dafür braucht es denselben Zeitraum in beiden Steuerstufen ' +
            '(<code>incl_all_taxes</code> und <code>excl_taxes</code>).');
   }
 
-  // ── Chart: physical import/export balance ──
-  // This data has been fetched all along and was never shown anywhere.
+  // ── Card: physical import/export balance ──
   const imp = eurostatSeries('elec_imports');
   const exp = eurostatSeries('elec_exports');
-  const impS = uniqPeriod(imp.byCountry[flowGeo] || []).filter(inRange);
-  const expS = uniqPeriod(exp.byCountry[flowGeo] || []).filter(inRange);
-  if (impS.length || expS.length) {
-    const periods = Array.from(new Set([...impS, ...expS].map(p => p.period))).sort();
-    const impM = {}; impS.forEach(p => impM[p.period] = p.v);
-    const expM = {}; expS.forEach(p => expM[p.period] = p.v);
-    mkChart('chart-strom-flows','bar', periods, [
-      {label:'Import', data:periods.map(p => impM[p] ?? null),
-       backgroundColor:'rgba(14,108,182,0.70)'},
-      {label:'Export', data:periods.map(p => expM[p] != null ? -expM[p] : null),
-       backgroundColor:'rgba(31,157,85,0.70)'},
-      {label:'Saldo', type:'line', data:periods.map(p =>
-         (impM[p] != null && expM[p] != null) ? +(impM[p] - expM[p]).toFixed(1) : null),
-       borderColor:'#c0392b', backgroundColor:'transparent', borderWidth:2,
-       spanGaps:true, pointRadius:2},
-    ], {
-      plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}},
-      scales:{y:{title:{display:true,text:imp.info?.unit || 'GWh',color:'#8c98a8',font:{size:10}}},
-              x:{ticks:{maxTicksLimit:12}}},
+  const cF = kartenSteuerung({id:'sp-flows', anchor:'chart-strom-flows',
+    laender: geoListe(imp, exp), land:'DE', vergleich:true, zeiten:ZEITEN, render:renderStrompreise});
+  const inF = p => String(p.period).slice(0,4) >= karteMinYear(cF, 'strompreise');
+  const flowsOf = g => ({imp: uniqPeriod(imp.byCountry[g] || []).filter(inF),
+                         exp: uniqPeriod(exp.byCountry[g] || []).filter(inF)});
+  const f1 = flowsOf(cF.land), f2 = cF.vgl ? flowsOf(cF.vgl) : {imp:[], exp:[]};
+  if (f1.imp.length || f1.exp.length) {
+    const periods = Array.from(new Set([...f1.imp, ...f1.exp, ...f2.imp, ...f2.exp].map(p => p.period))).sort();
+    const impM = map(f1.imp), expM = map(f1.exp);
+    const saldo = (a, b) => periods.map(p => (a[p] != null && b[p] != null) ? +(a[p] - b[p]).toFixed(1) : null);
+    const ds = [
+      {label:`Import ${geoName(cF.land)}`, data:periods.map(p => impM[p] ?? null), backgroundColor:'rgba(14,108,182,0.70)'},
+      {label:`Export ${geoName(cF.land)}`, data:periods.map(p => expM[p] != null ? -expM[p] : null), backgroundColor:'rgba(31,157,85,0.70)'},
+      {label:`Saldo ${geoName(cF.land)}`, type:'line', data:saldo(impM, expM),
+       borderColor:'#c0392b', backgroundColor:'transparent', borderWidth:2, spanGaps:true, pointRadius:2},
+    ];
+    if (cF.vgl) ds.push({label:`Saldo ${geoName(cF.vgl)}`, type:'line', data:saldo(map(f2.imp), map(f2.exp)),
+                         spanGaps:true, ...vglStyle('#c0392b')});
+    mkChart('chart-strom-flows','bar', periods, ds, {
+      plugins:{legend},
+      scales:{y:{title:{display:true,text:imp.info?.unit || 'GWh',color:'#8c98a8',font:{size:10}}}, x:{ticks:{maxTicksLimit:12}}},
     });
     stamp('chart-strom-flows', 'eurostat_oil',
-          `${STROMPREIS_COUNTRIES[flowGeo]||flowGeo} · Export negativ dargestellt`);
+          `${geoName(cF.land)}${cF.vgl ? ` · Saldo ${geoName(cF.vgl)} gestrichelt` : ''} · Export negativ dargestellt`);
   } else {
-    noData('chart-strom-flows', `Keine Import/Export-Daten für ${STROMPREIS_COUNTRIES[flowGeo]||flowGeo}`,
-           eurostatWhy(imp.info));
+    noData('chart-strom-flows', `Keine Import/Export-Daten für ${geoName(cF.land)}`, eurostatWhy(imp.info));
   }
 
-  // ── Chart: country comparison at the latest common period ──
+  // ── Card: country ranking, latest half-year ──
   const latest = [];
-  Object.keys(STROMPREIS_COUNTRIES).forEach(code => {
+  EUROSTAT_GEO.filter(g => g !== 'EA20').forEach(code => {
     const pts = priceSeries('electricity_household', code).points;
     if (pts.length) latest.push({code, v:pts.at(-1).v, period:pts.at(-1).period});
   });
   if (latest.length) {
     latest.sort((a,b) => b.v - a.v);
-    mkChart('chart-strompreise-laender','bar',
-      latest.map(x => STROMPREIS_COUNTRIES[x.code] || x.code),
+    mkChart('chart-strompreise-laender','bar', latest.map(x => geoName(x.code)),
       [{label:'EUR/kWh', data:latest.map(x => x.v),
-        backgroundColor:latest.map(x => x.code === 'DE' ? 'rgba(192,57,43,0.80)' : 'rgba(14,108,182,0.60)'),
+        backgroundColor:latest.map(x => x.code === geo ? 'rgba(192,57,43,0.85)'
+          : x.code === cP.vgl ? 'rgba(86,101,122,0.85)' : 'rgba(14,108,182,0.55)'),
         borderRadius:2}],
-      {indexAxis:'y', scales:{x:{title:{display:true,text:'EUR/kWh',color:'#8c98a8',font:{size:10}}}}});
+      {indexAxis:'y', scales:{x:{title:{display:true,text:'EUR/kWh',color:'#8c98a8',font:{size:10}}},
+                              y:{ticks:{autoSkip:false,font:{size:9}}}}});
     stamp('chart-strompreise-laender', 'eurostat_prices',
-          `Stand ${fmtHalfYear(latest[0].period)} · Deutschland hervorgehoben`);
+          `Stand ${fmtHalfYear(latest[0].period)} · hervorgehoben: ${nm}${cP.vgl ? ' und ' + geoName(cP.vgl) : ''}`);
   } else {
     noData('chart-strompreise-laender', 'Kein Ländervergleich möglich',
            'Für keines der abgefragten Länder liegen Haushaltspreise vor.');
   }
 
-  // ── Chart: gas retail prices ──
-  const gHh = priceSeries('gas_household', geo).points.filter(inRange);
-  const gInd = priceSeries('gas_industry', geo).points.filter(inRange);
-  if (gHh.length || gInd.length) {
-    const periods = Array.from(new Set([...gHh, ...gInd].map(p => p.period))).sort();
-    const m1 = {}; gHh.forEach(p => m1[p.period] = p.v);
-    const m2 = {}; gInd.forEach(p => m2[p.period] = p.v);
-    mkChart('chart-gaspreise','line', periods.map(fmtHalfYear), [
-      {label:'Gas Haushalt (inkl. Steuern)', data:periods.map(p => m1[p] ?? null),
-       borderColor:'#dc6803', backgroundColor:'rgba(220,104,3,0.10)', fill:true,
-       spanGaps:true, borderWidth:2},
-      {label:'Gas Industrie', data:periods.map(p => m2[p] ?? null),
-       borderColor:'#7c5e2a', backgroundColor:'transparent', spanGaps:true, borderWidth:2},
-    ], {
-      plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}},
-      scales:{y:{title:{display:true,text:'EUR/kWh',color:'#8c98a8',font:{size:10}}},
-              x:{ticks:{maxTicksLimit:12}}},
+  // ── Card: gas retail prices ──
+  const cG = kartenSteuerung({id:'sp-gas', anchor:'chart-gaspreise',
+    laender: geoListe(ep.gas_household, ep.gas_industry), land:'DE', vergleich:true, zeiten:ZEITEN,
+    render:renderStrompreise});
+  const inG = p => String(p.period).slice(0,4) >= karteMinYear(cG, 'strompreise');
+  const g1h = priceSeries('gas_household', cG.land).points.filter(inG);
+  const g1i = priceSeries('gas_industry', cG.land).points.filter(inG);
+  const g2h = cG.vgl ? priceSeries('gas_household', cG.vgl).points.filter(inG) : [];
+  const g2i = cG.vgl ? priceSeries('gas_industry', cG.vgl).points.filter(inG) : [];
+  if (g1h.length || g1i.length) {
+    const periods = Array.from(new Set([...g1h, ...g1i, ...g2h, ...g2i].map(p => p.period))).sort();
+    const line = pts => { const m = map(pts); return periods.map(p => m[p] ?? null); };
+    const gn = geoName(cG.land);
+    const ds = [
+      {label:`Gas Haushalt ${gn}`, data:line(g1h), borderColor:'#dc6803',
+       backgroundColor:'rgba(220,104,3,0.10)', fill:!cG.vgl, spanGaps:true, borderWidth:2},
+      {label:`Gas Industrie ${gn}`, data:line(g1i), borderColor:'#7c5e2a', backgroundColor:'transparent', spanGaps:true, borderWidth:2},
+    ];
+    if (cG.vgl) {
+      const vn = geoName(cG.vgl);
+      if (g2h.length) ds.push({label:`Gas Haushalt ${vn}`, data:line(g2h), spanGaps:true, ...vglStyle('#dc6803')});
+      if (g2i.length) ds.push({label:`Gas Industrie ${vn}`, data:line(g2i), spanGaps:true, ...vglStyle('#7c5e2a')});
+    }
+    mkChart('chart-gaspreise','line', periods.map(fmtHalfYear), ds, {
+      plugins:{legend},
+      scales:{y:{title:{display:true,text:'EUR/kWh',color:'#8c98a8',font:{size:10}}}, x:{ticks:{maxTicksLimit:12}}},
     });
-    stamp('chart-gaspreise', 'eurostat_prices', STROMPREIS_COUNTRIES[geo] || geo);
+    stamp('chart-gaspreise', 'eurostat_prices', cG.vgl ? `${gn} gegen ${geoName(cG.vgl)} (gestrichelt)` : gn);
   } else {
-    noData('chart-gaspreise', `Keine Gaspreise für ${STROMPREIS_COUNTRIES[geo]||geo}`,
+    noData('chart-gaspreise', `Keine Gaspreise für ${geoName(cG.land)}`,
            ep.gas_household?.unavailable_reason
              ? `<code>${ep.gas_household.unavailable_reason}</code>`
              : 'Eurostat veröffentlicht Halbjahreswerte mit rund fünf Monaten Verzug.');
@@ -4491,59 +4416,60 @@ function renderStrompreise() {
   renderVerbrauch();
 }
 
-// Consumption against generation. Both series have been fetched since the
-// Eurostat rewrite and were never drawn; they are annual, so the half-year
-// cutoff used above would throw most of them away.
+// Consumption against generation, annual. With a comparison country its
+// generation and consumption are drawn dashed; the trade bars stay for the
+// main country only, or the chart turns into noise.
 function renderVerbrauch() {
-  const geo = document.getElementById('verbrauch-geo')?.value || 'DE';
   const gen = eurostatSeries('elec_generation');
   const con = eurostatSeries('elec_consumption');
   const imp = eurostatSeries('elec_imports');
   const exp = eurostatSeries('elec_exports');
+  const c = kartenSteuerung({id:'sp-verbrauch', anchor:'chart-verbrauch',
+    laender: geoListe(gen, con), land:'DE', vergleich:true,
+    zeiten:['tab','5y','10y','20y','max'], zeit:'max', render:renderVerbrauch});
+  const minY = karteMinYear(c, 'strompreise');
+  const geo = c.land;
 
-  const series = [
+  const pick = (g, list) => list.map(([label, node, color, kind]) => ({
+    label: `${label} ${geoName(g)}`, color, kind, info: node.info,
+    pts: uniqPeriod(node.byCountry[g] || []).filter(p => String(p.period).slice(0,4) >= minY),
+  })).filter(x => x.pts.length);
+  const series = pick(geo, [
     ['Bruttoerzeugung', gen, '#0e6cb6', 'line'],
     ['Endverbrauch',    con, '#c0392b', 'line'],
     ['Import',          imp, '#1f9d55', 'bar'],
     ['Export',          exp, '#d97706', 'bar'],
-  ].map(([label, node, color, kind]) => ({
-    label, color, kind, info: node.info,
-    pts: uniqPeriod(node.byCountry[geo] || []),
-  })).filter(x => x.pts.length);
+  ]);
+  const vgl = c.vgl ? pick(c.vgl, [['Bruttoerzeugung', gen, '#0e6cb6', 'line'],
+                                   ['Endverbrauch', con, '#c0392b', 'line']]) : [];
 
   if (!series.length) {
-    noData('chart-verbrauch', `Keine Verbrauchsdaten für ${STROMPREIS_COUNTRIES[geo]||geo}`,
-           eurostatWhy(gen.info));
+    noData('chart-verbrauch', `Keine Verbrauchsdaten für ${geoName(geo)}`, eurostatWhy(gen.info));
     return;
   }
-  const periods = Array.from(new Set(series.flatMap(x => x.pts.map(p => p.period)))).sort();
-  const datasets = series.map(x => {
-    const m = {}; x.pts.forEach(p => m[p.period] = p.v);
-    return {
-      label: x.label, type: x.kind,
-      data: periods.map(p => m[p] ?? null),
-      borderColor: x.color,
-      backgroundColor: x.kind === 'bar' ? x.color + '99' : 'transparent',
-      borderWidth: x.kind === 'bar' ? 0 : 2,
-      pointRadius: 0, spanGaps: true, tension: 0.2,
-      order: x.kind === 'bar' ? 2 : 1,
-    };
-  });
+  const periods = Array.from(new Set([...series, ...vgl].flatMap(x => x.pts.map(p => p.period)))).sort();
+  const toData = x => { const m = {}; x.pts.forEach(p => m[p.period] = p.v); return periods.map(p => m[p] ?? null); };
+  const datasets = series.map(x => ({
+    label: x.label, type: x.kind, data: toData(x),
+    borderColor: x.color,
+    backgroundColor: x.kind === 'bar' ? x.color + '99' : 'transparent',
+    borderWidth: x.kind === 'bar' ? 0 : 2,
+    pointRadius: 0, spanGaps: true, tension: 0.2,
+    order: x.kind === 'bar' ? 2 : 1,
+  })).concat(vgl.map(x => ({label: x.label, type: 'line', data: toData(x), spanGaps: true,
+                            tension: 0.2, order: 1, ...vglStyle(x.color)})));
   mkChart('chart-verbrauch','bar', periods, datasets, {
     plugins:{legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}}},
     scales:{x:{ticks:{maxTicksLimit:12}},
             y:{title:{display:true,text:gen.info?.unit || 'GWh',color:'#8c98a8',font:{size:10}}}},
   });
   stamp('chart-verbrauch','eurostat_oil',
-        `${STROMPREIS_COUNTRIES[geo]||geo} · ${periods[0]}–${periods.at(-1)} · Jahreswerte`);
+        `${geoName(geo)}${c.vgl ? ' gegen ' + geoName(c.vgl) + ' (gestrichelt)' : ''} · ${periods[0]}–${periods.at(-1)} · Jahreswerte`);
 }
 
 // ══════════════════════════════════════════════
-// ÜBERBLICK — one headline figure per domain
+// DATENQUELLEN — state of every source (shown in the Marktlage tab)
 // ══════════════════════════════════════════════
-// Each tile states its number, its unit, its source and which tab holds the
-// detail. Tiles whose source is missing are simply left out rather than
-// shown as a dash: an absent number and a zero must not look alike.
 
 // [file, label, what it feeds, which tab]
 const SOURCE_INVENTORY = [
@@ -4570,364 +4496,11 @@ const SOURCE_INVENTORY = [
   ['news',            'RSS-Quellen',               'Nachrichtenlage', 'news'],
 ];
 
-// The front page: one tile per tab, grouped in categories. A tile carries
-// the headline figures of its tab and opens it on click. Tiles are chosen
-// by category (filter) or one by one; both choices persist per browser.
-// Hiding a tile hides it here only — every number stays in its tab and
-// nothing is dropped from the data.
-const UEBERBLICK_KATEGORIEN = [
-  ['strom',  'Strom'],
-  ['gas',    'Gas'],
-  ['oel',    'Öl & Kraftstoff'],
-  ['klima',  'Klima & Vergleich'],
-  ['maerkte','Märkte'],
-  ['kontext','Lage & Kontext'],
-];
-
-// [id, label, category, tab it opens]. The first three are the fixed blocks
-// of the page, the rest are tab tiles.
-const UEBERBLICK_MODULE = [
-  ['lage',        'Lage',                 'kontext', 'lage'],
-  ['verlauf',     'Preisverlauf 7 Tage',  'strom',   'strom'],
-  ['mix',         'Strommix',             'strom',   'strom'],
-  ['strom',       'Strom',                'strom',   'strom'],
-  ['strompreise', 'Strompreise & Importe','strom',   'strompreise'],
-  ['erneuerbare', 'Erneuerbare',          'strom',   'erneuerbare'],
-  ['gas',         'Gas',                  'gas',     'gas'],
-  ['kraftstoff',  'Kraftstoffe & Heizöl', 'oel',     'kraftstoff'],
-  ['rohstoffe',   'Rohstoffe',            'oel',     'rohstoffe'],
-  ['umwelt',      'Emissionen & Wärme',   'klima',   'umwelt'],
-  ['g20',         'G20-Vergleich',        'klima',   'g20'],
-  ['markt',       'Marktpreise',          'maerkte', 'markt'],
-  ['futures',     'Futures & Prognosen',  'maerkte', 'futures'],
-  ['fx',          'Wechselkurse',         'maerkte', 'fx'],
-  ['wetter',      'Wetter',               'kontext', 'wetter'],
-  ['news',        'News',                 'kontext', 'news'],
-];
-const MODULE_STORAGE_KEY = 'energydash:ueberblickModule';
-const KATEGORIE_KEY = 'energydash:ueberblickKategorie';
-
-function loadModuleChoice() {
-  // Default: everything on. A stored choice may predate a new module, so
-  // unknown ids fall back to visible rather than hiding something the user
-  // never switched off.
-  let stored = {};
-  try { stored = JSON.parse(localStorage.getItem(MODULE_STORAGE_KEY) || '{}'); } catch(e) {}
-  const out = {};
-  UEBERBLICK_MODULE.forEach(([id]) => { out[id] = stored[id] !== false; });
-  return out;
-}
-function saveModuleChoice(choice) {
-  try { localStorage.setItem(MODULE_STORAGE_KEY, JSON.stringify(choice)); } catch(e) {}
-}
-let moduleChoice = loadModuleChoice();
-let kategorieFilter = (() => { try { return localStorage.getItem(KATEGORIE_KEY) || 'alle'; } catch(e) { return 'alle'; } })();
-
-function setKategorie(k) {
-  kategorieFilter = k;
-  try { localStorage.setItem(KATEGORIE_KEY, k); } catch(e) {}
-  renderUeberblick();
-}
-function toggleModule(id) {
-  moduleChoice[id] = !moduleChoice[id];
-  saveModuleChoice(moduleChoice);
-  renderUeberblick();
-}
-function resetModules() {
-  moduleChoice = {};
-  UEBERBLICK_MODULE.forEach(([id]) => { moduleChoice[id] = true; });
-  saveModuleChoice(moduleChoice);
-  kategorieFilter = 'alle';
-  try { localStorage.setItem(KATEGORIE_KEY, 'alle'); } catch(e) {}
-  renderUeberblick();
-}
-
-// Visible = switched on AND in the chosen category.
-function moduleSichtbar(id) {
-  const m = UEBERBLICK_MODULE.find(x => x[0] === id);
-  if (!m || moduleChoice[id] === false) return false;
-  return kategorieFilter === 'alle' || m[2] === kategorieFilter;
-}
-
-function renderModuleBar() {
-  const kat = document.getElementById('ueberblick-kategorien');
-  if (kat) {
-    kat.innerHTML = `<span class="mod-bar-lbl">Kategorie</span>` +
-      [['alle','Alle'], ...UEBERBLICK_KATEGORIEN].map(([k, l]) =>
-        `<button class="mod-chip ${kategorieFilter === k ? 'on' : ''}" onclick="setKategorie('${k}')">${l}</button>`).join('');
-  }
-  const bar = document.getElementById('ueberblick-module');
-  if (!bar) return;
-  const hidden = UEBERBLICK_MODULE.filter(([id]) => !moduleChoice[id]).length;
-  const inKat = UEBERBLICK_MODULE.filter(m => kategorieFilter === 'alle' || m[2] === kategorieFilter);
-  bar.innerHTML = `<span class="mod-bar-lbl">Module</span>` +
-    inKat.map(([id, label]) =>
-      `<button class="mod-chip ${moduleChoice[id] ? 'on' : ''}" onclick="toggleModule('${id}')">
-         <span class="mark">${moduleChoice[id] ? '✓' : '＋'}</span>${label}
-       </button>`).join('') +
-    ((hidden || kategorieFilter !== 'alle')
-      ? `<button class="mod-reset" onclick="resetModules()">alles zeigen${hidden ? ` (${hidden} aus)` : ''}</button>` : '');
-}
-
-// Latest non-null value of a {ts,v} / {period,v} list.
-const lastV = arr => (arr || []).filter(p => p && p.v != null).at(-1) || null;
-
-// Figures per tile. Each returns [{l, v, u, c}] — label, value, unit, colour.
-// A figure whose source is missing is simply left out: an absent number and
-// a zero must not look alike.
-function kachelWerte(id) {
-  const ec = D.energy_charts, sm = D.smard, gs = D.gas_storage, com = D.commodities;
-  const land = typeof landAktiv !== 'undefined' ? landAktiv : 'DE';
-  const geo = eurostatCodec.from(land);
-  const out = [];
-  const add = (l, v, u, c) => { if (v != null && v !== '—') out.push({l, v, u, c}); };
-  switch (id) {
-    case 'strom': {
-      const p = ec?.price_de?.price?.filter(v => v != null) || [];
-      if (p.length) {
-        add('Day-Ahead jetzt', fmtN(p.at(-1), 0), 'EUR/MWh', '#0e6cb6');
-        add('Ø 7 Tage', fmtN(p.reduce((a, b) => a + b, 0) / p.length, 0), 'EUR/MWh', '#56657a');
-      }
-      const series = sm?.series || {};
-      let top = null, total = 0;
-      Object.keys(LN).forEach(k => {
-        const v = lastV(series[k])?.v;
-        if (v > 0) { total += v; if (!top || v > top[1]) top = [k, v]; }
-      });
-      if (top && total) add('Größte Quelle', LN[top[0]], `${fmtN(top[1] / total * 100, 0)}% · SMARD`, C[top[0]]);
-      break;
-    }
-    case 'strompreise': {
-      const hh = lastV(D.eurostat_prices?.electricity_household?.series_per_country?.[geo]);
-      const ind = lastV(D.eurostat_prices?.electricity_industry?.series_per_country?.[geo]);
-      if (hh) add(`Haushalt ${landName(land)}`, fmtN(hh.v, 4), `EUR/kWh · ${fmtHalfYear(hh.period)}`, '#c0392b');
-      if (ind) add('Industrie', fmtN(ind.v, 4), `EUR/kWh · ${fmtHalfYear(ind.period)}`, '#d97706');
-      const gh = lastV(D.eurostat_prices?.gas_household?.series_per_country?.[geo]);
-      if (gh) add('Gas Haushalt', fmtN(gh.v, 4), `EUR/kWh · ${fmtHalfYear(gh.period)}`, '#dc6803');
-      break;
-    }
-    case 'erneuerbare': {
-      const ren = ec?.ren_share_de?.ren_share?.filter(v => v != null);
-      if (ren?.length) add('EE-Anteil', fmtN(ren.at(-1), 0) + '%', 'Energy-Charts', '#1f9d55');
-      const s = sm?.series || {};
-      const wind = (lastV(s.wind_onshore)?.v || 0) + (lastV(s.wind_offshore)?.v || 0);
-      const sol = lastV(s.solar)?.v;
-      if (wind) add('Wind jetzt', fmtN(wind / 1000, 1), 'GW · SMARD', '#0e6cb6');
-      if (sol != null) add('Solar jetzt', fmtN(sol / 1000, 1), 'GW · SMARD', '#d97706');
-      break;
-    }
-    case 'gas': {
-      const ttf = ttfSeries().points.at(-1)?.v;
-      if (ttf != null) add('Erdgas TTF', fmtN(ttf, 1), 'EUR/MWh', '#f0883e');
-      ['eu', land.toLowerCase(), 'de'].filter((c, i, a) => a.indexOf(c) === i).slice(0, 2).forEach(cc => {
-        const n = gasNode(gs, cc);
-        const l = n?.data?.filter(x => x.fill_pct != null).at(-1);
-        if (l) add(`Speicher ${n.name || cc.toUpperCase()}`, fmtN(l.fill_pct, 1) + '%', fmtIsoDate(l.date),
-                   l.fill_pct >= 70 ? '#1f9d55' : l.fill_pct >= 50 ? '#c98a04' : '#c0392b');
-      });
-      break;
-    }
-    case 'kraftstoff': {
-      const fu = D.fuel?.cities;
-      const e5 = fu?._national?.e5_avg ?? fu?.Berlin?.e5_avg;
-      const di = fu?._national?.diesel_avg ?? fu?.Berlin?.diesel_avg;
-      if (e5 != null) add('Super E5', fmtN(e5, 3), 'EUR/Liter · Bundesschnitt', '#1f9d55');
-      if (di != null) add('Diesel', fmtN(di, 3), 'EUR/Liter · Bundesschnitt', '#7e57c2');
-      const ho = D.heating_oil;
-      if (ho?.reference_price_eur_l != null) add('Heizöl', fmtN(ho.reference_price_eur_l, 3),
-        `EUR/Liter · ${ho.price_source === 'destatis' ? 'Destatis' : 'TECSON'}`, '#d97706');
-      break;
-    }
-    case 'rohstoffe': {
-      const b = lastV(com?.brent_crude?.series), w = lastV(com?.wti_crude?.series);
-      const hh = lastV(com?.natgas_henry?.series), co = lastV(com?.coal_atw?.series);
-      if (b) add('Brent', fmtN(b.v, 1), 'USD/Barrel', '#dc6803');
-      if (w) add('WTI', fmtN(w.v, 1), 'USD/Barrel', '#d97706');
-      if (hh) add('Henry Hub', fmtN(hh.v, 2), com.natgas_henry.unit || 'USD/MMBtu', '#0891b2');
-      if (co) add('Kohle', fmtN(co.v, 1), com.coal_atw.unit || '', '#4a5568');
-      break;
-    }
-    case 'umwelt': {
-      const thg = D.eurostat_env?.ghg_total?.series_per_country?.[geo];
-      if (thg?.length) {
-        const base = thg.find(p => p.period === '1990');
-        const d = base ? (thg.at(-1).v - base.v) / base.v * 100 : null;
-        add(`THG ${landName(land)}`, fmtN(thg.at(-1).v / 1000, 0), `Mio. t CO₂-Äq. · ${thg.at(-1).period}`, '#c0392b');
-        if (d != null) add('ggü. 1990', `${d >= 0 ? '+' : '−'}${fmtN(Math.abs(d), 1)}%`, 'Eurostat', d < 0 ? '#1f9d55' : '#c0392b');
-      }
-      break;
-    }
-    case 'g20': {
-      const wb = D.worldbank_g20;
-      if (wb) {
-        const iso = g20Fokus();
-        const p = g20Latest('co2_per_capita', iso);
-        if (p) add(`CO₂ pro Kopf ${wb.countries?.[iso] || ''}`, fmtN(p.v, 1), `t · ${p.period}`, '#c0392b');
-        const r = g20Latest('renewable_electricity', iso);
-        if (r) add('EE am Strom', fmtN(r.v, 0) + '%', r.period, '#1f9d55');
-      }
-      break;
-    }
-    case 'markt': {
-      const co2 = co2Series();
-      const c = co2.points.at(-1)?.v;
-      if (c != null) add(co2.isProxy ? 'CO₂ (ETF-Näherung)' : 'CO₂ EU ETS', fmtN(c, 1), co2.unit, '#4a5568');
-      const ttf = ttfSeries().points.at(-1)?.v;
-      if (ttf != null) add('TTF', fmtN(ttf, 1), 'EUR/MWh', '#f0883e');
-      break;
-    }
-    case 'futures': {
-      const sp = D.energy_futures?.spot;
-      if (sp?.brent_usd_bbl?.price != null) add('Brent aktuell', fmtN(sp.brent_usd_bbl.price, 1), 'USD/Barrel', '#dc6803');
-      const f = (D.energy_futures?.eia_steo?.brent || []).filter(p => p.type && p.type !== 'actual');
-      const next = f.find(p => p.period >= new Date().toISOString().slice(0, 7));
-      if (next) add(`EIA-Prognose ${next.period}`, fmtN(next.v, 1), 'USD/Barrel', '#7e57c2');
-      break;
-    }
-    case 'fx': {
-      const r = D.fx?.current?.rates || {};
-      if (r.USD) add('EUR/USD', fmtN(r.USD, 4), D.fx.current.date || '', '#0e6cb6');
-      if (r.GBP) add('EUR/GBP', fmtN(r.GBP, 4), '', '#56657a');
-      if (r.CHF) add('EUR/CHF', fmtN(r.CHF, 4), '', '#56657a');
-      break;
-    }
-    case 'wetter': {
-      const w = D.weather?.cities?.Berlin?.current;
-      if (w) {
-        add('Berlin', fmtN(w.temperature_2m, 1) + ' °C', 'jetzt', '#0891b2');
-        add('Wind', fmtN(w.wind_speed_10m, 0), 'km/h', '#0e6cb6');
-      }
-      break;
-    }
-    case 'news': {
-      const a = D.news?.articles || [];
-      if (a.length) add('Meldungen', String(a.length), `aus ${(D.news.sources || []).length || 'mehreren'} Quellen`, '#56657a');
-      break;
-    }
-  }
-  return out;
-}
-
-function kachelZusatz(id) {
-  // A one-line text under the figures, where a number alone says little.
-  if (id === 'news') {
-    const a = (D.news?.articles || [])[0];
-    return a ? `Neu: ${a.title}` : '';
-  }
-  if (id === 'gas' && D.bnetza_gas) return 'Mit Saisonvergleich und allen Reihen der Bundesnetzagentur';
-  if (id === 'gas') return 'Saisonvergleich und BNetzA-Reihen im Tab';
-  return '';
-}
-
-function renderKacheln() {
-  const wrap = document.getElementById('ueberblick-kacheln');
-  if (!wrap) return;
-  const kat = Object.fromEntries(UEBERBLICK_KATEGORIEN);
-  const tiles = UEBERBLICK_MODULE.filter(m => !['lage','verlauf','mix'].includes(m[0]) && moduleSichtbar(m[0]));
-  if (!tiles.length) {
-    wrap.innerHTML = `<div class="card g12"><div class="nodata">Keine Kachel in dieser Auswahl — oben eine Kategorie oder ein Modul einschalten.</div></div>`;
-    return;
-  }
-  wrap.innerHTML = tiles.map(([id, label, k, tab]) => {
-    const werte = kachelWerte(id);
-    const zusatz = kachelZusatz(id);
-    return `<div class="card g4 kachel" role="button" tabindex="0" onclick="gotoTab('${tab}')"
-                 onkeydown="if(event.key==='Enter')gotoTab('${tab}')">
-      <div class="kachel-kopf"><div class="card-title">${label}</div><span class="kachel-kat">${kat[k] || ''}</span></div>
-      ${werte.length ? `<div class="kachel-werte">${werte.map(w => `
-        <div class="kachel-wert"><div class="l">${w.l}</div>
-          <div class="v" style="color:${w.c || 'var(--text)'}">${w.v}</div>
-          <div class="u">${w.u || ''}</div></div>`).join('')}</div>`
-        : `<div class="kachel-leer">Noch keine Kennzahl geladen — im Tab ansehen</div>`}
-      ${zusatz ? `<div class="kachel-leer">${zusatz}</div>` : ''}
-      <div class="kachel-link">${label} öffnen →</div>
-    </div>`;
-  }).join('');
-}
-
-function renderUeberblick() {
-  const ec = D.energy_charts, sm = D.smard, gs = D.gas_storage;
-
-  const ttf = ttfSeries().points.at(-1)?.v;
-  const daNow = ec?.price_de?.price?.filter(v => v != null).at(-1);
-  const euPct = gs ? gasNode(gs,'eu')?.data?.filter(x => x.fill_pct != null).at(-1)?.fill_pct : null;
-  renderModuleBar();
-
-  // Blocks marked with data-module follow the switches above.
-  document.querySelectorAll('#panel-ueberblick [data-module]').forEach(el => {
-    el.style.display = moduleSichtbar(el.dataset.module) ? '' : 'none';
-  });
-
-  const cls = classifyLage(ttf, euPct, daNow);
-  const hero = document.getElementById('ueberblick-hero-content');
-  if (hero && moduleSichtbar('lage')) {
-    hero.innerHTML = `
-      <div class="lage-hero-title">${cls.headline}</div>
-      <div class="lage-hero-sub">${cls.sub}
-        <div style="opacity:.7;font-size:11px;margin-top:6px">
-          Stand ${fmtDt(D.meta?.last_fetch)} · aus TTF, EU-Gasspeichern und Strom Day-Ahead
-        </div>
-      </div>
-      <span class="lage-status ${cls.level}">${
-        cls.level==='ok'?'● Stabil':cls.level==='warn'?'● Angespannt':'● Kritisch'}</span>`;
-  }
-
-  renderKacheln();
-
-  // ── day-ahead, last 7 days ──
-  if (!moduleSichtbar('verlauf')) { /* hidden */ }
-  else if (ec?.price_de?.unix_seconds?.length) {
-    const pts = ec.price_de.unix_seconds
-      .map((t,i) => ({ts:t, v:ec.price_de.price[i]}))
-      .filter(x => x.v != null);
-    mkChart('chart-ueberblick-strom','line', pts.map(p=>fmtTs(p.ts*1000)), [{
-      label:'EUR/MWh', data:pts.map(p=>p.v),
-      borderColor:'#0e6cb6', backgroundColor:'rgba(14,108,182,0.10)',
-      fill:true, borderWidth:2, pointRadius:0,
-    }], {scales:{x:{ticks:{maxTicksLimit:7}}}});
-  } else {
-    noData('chart-ueberblick-strom','Keine Day-Ahead-Preise',
-           'Energy-Charts liefert diese Reihe derzeit nicht.');
-  }
-
-  // ── current generation mix, as a share table ──
-  const mixEl = document.getElementById('ueberblick-mix');
-  if (mixEl && moduleSichtbar('mix')) {
-    const series = sm?.series || {};
-    const latest = {};
-    Object.keys(LN).forEach(k => {
-      const arr = (series[k] || []).filter(p => p.v != null);
-      if (arr.length) latest[k] = arr.at(-1).v;
-    });
-    const total = Object.values(latest).reduce((a,b)=>a+Math.max(0,b),0);
-    if (total > 0) {
-      const rows = Object.entries(latest)
-        .filter(([,v]) => v > 0)
-        .sort((a,b) => b[1]-a[1])
-        .map(([k,v]) => {
-          const pct = v/total*100;
-          return `<tr>
-            <td><span class="leg-dot" style="display:inline-block;background:${C[k]||'#8c98a8'}"></span>
-                ${LN[k]}</td>
-            <td class="num">${fmtN(v/1000,1)} GW</td>
-            <td class="num">${fmtN(pct,1)}%</td></tr>`;
-        }).join('');
-      mixEl.innerHTML = `<div class="tbl-scroll"><table class="tbl">
-        <thead><tr><th>Quelle</th><th class="num">Leistung</th><th class="num">Anteil</th></tr></thead>
-        <tbody>${rows}</tbody></table></div>`;
-    } else {
-      mixEl.innerHTML = '<div class="nodata">Keine SMARD-Erzeugungsdaten</div>';
-    }
-  }
-
-  renderQuellen();
-}
-
 // The source inventory: what feeds this dashboard, how fresh it is, and
 // where to look at it. This is also where a source that quietly died
 // becomes visible without hunting through tabs.
 function renderQuellen() {
-  const wrap = document.getElementById('ueberblick-quellen');
+  const wrap = document.getElementById('lage-quellen');
   if (!wrap) return;
   // Status comes from meta.json, which the page always loads and which
   // carries stale / last_success / last_error for EVERY source. Reading it
@@ -5284,12 +4857,9 @@ const g20Color = iso => {
   return G20_FARBEN[i % G20_FARBEN.length];
 };
 
-// The G20 member the page-wide country menu points at; Germany when that
-// menu is on a country outside the G20 (Austria, say).
+// The highlighted G20 member.
 function g20Fokus() {
-  const c = typeof landAktiv !== 'undefined' ? landAktiv : 'DE';
-  const iso = ISO2_ZU_3[c];
-  return iso && D.worldbank_g20?.countries?.[iso] ? iso : 'DEU';
+  return 'DEU';
 }
 
 function g20Node(key) {
@@ -6023,6 +5593,8 @@ function renderG20Karten(tab) {
     }
     const avail = keys.filter(k => wb[k]);
     sel.innerHTML = avail.map(k => `<option value="${k}">${wb[k].label}</option>`).join('');
+    // One indicator needs no menu.
+    sel.style.display = avail.length > 1 ? '' : 'none';
     const key = avail.includes(g20KartenWahl[id]) ? g20KartenWahl[id] : avail[0];
     if (!key) { noData(id, 'Diese Kennzahlen liefert die Weltbank noch nicht'); return; }
     sel.value = key;
@@ -6057,13 +5629,99 @@ function renderG20Karten(tab) {
 }
 
 // ══════════════════════════════════════════════
+// KARTEN-STEUERUNG — Land, Vergleichsland, Zeitraum je Karte
+// ══════════════════════════════════════════════
+// A card that compares countries gets its own small control row: which
+// country, optionally a second one drawn dashed on top, and a period that
+// overrides the tab's range selector for this card only. Choices are kept
+// per card and per browser.
+
+const KARTEN_KEY = 'energydash:karten';
+let kartenCfg = (() => { try { return JSON.parse(localStorage.getItem(KARTEN_KEY) || '{}'); } catch(e) { return {}; } })();
+
+const ZEIT_LABEL = {tab:'wie oben', '24h':'24 Stunden', '7d':'7 Tage', '30d':'30 Tage', '90d':'90 Tage',
+  '1y':'1 Jahr', '2y':'2 Jahre', '5y':'5 Jahre', '10y':'10 Jahre', '20y':'20 Jahre', max:'alles'};
+const ZEIT_SEC = {'24h':86400, '7d':7*86400, '30d':30*86400, '90d':90*86400, '1y':365*86400,
+  '2y':730*86400, '5y':5*365*86400, '10y':10*365*86400, '20y':20*365*86400, max:Infinity};
+
+function setKarte(id, patch) {
+  kartenCfg[id] = Object.assign({}, kartenCfg[id] || {}, patch);
+  try { localStorage.setItem(KARTEN_KEY, JSON.stringify(kartenCfg)); } catch(e) {}
+}
+
+// spec: {id, anchor (canvas id), laender: [[code, name]], land, vergleich,
+//        zeiten: [keys], zeit, render}. Returns {land, vgl, zeit}.
+function kartenSteuerung(spec) {
+  const stored = kartenCfg[spec.id] || {};
+  const codes = spec.laender.map(x => x[0]);
+  const c = {
+    land: codes.includes(stored.land) ? stored.land : (codes.includes(spec.land) ? spec.land : codes[0]),
+    vgl: '', zeit: spec.zeiten?.includes(stored.zeit) ? stored.zeit : (spec.zeit || 'tab'),
+  };
+  if (spec.vergleich && codes.includes(stored.vgl) && stored.vgl !== c.land) c.vgl = stored.vgl;
+  const anchor = document.getElementById(spec.anchor) || document.querySelector(`[data-canvas-for="${spec.anchor}"]`);
+  const card = anchor?.closest('.card');
+  if (!card || !codes.length) return c;
+  let bar = card.querySelector(`.card-ctl[data-ctl="${spec.id}"]`);
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.className = 'card-ctl';
+    bar.dataset.ctl = spec.id;
+    card.querySelector('.card-hdr')?.insertAdjacentElement('afterend', bar);
+  }
+  const opts = (list, sel, blank) => (blank ? `<option value="">${blank}</option>` : '') +
+    list.map(([v, l]) => `<option value="${v}" ${v === sel ? 'selected' : ''}>${l}</option>`).join('');
+  bar.innerHTML =
+    `<label>Land <select data-k="land">${opts(spec.laender, c.land)}</select></label>` +
+    (spec.vergleich ? `<label><span class="vgl-mark"></span> Vergleich <select data-k="vgl">${
+      opts(spec.laender.filter(x => x[0] !== c.land), c.vgl, '— keins —')}</select></label>` : '') +
+    (spec.zeiten ? `<label>Zeitraum <select data-k="zeit">${
+      opts(spec.zeiten.map(z => [z, ZEIT_LABEL[z] || z]), c.zeit)}</select></label>` : '');
+  bar.querySelectorAll('select').forEach(sel => sel.addEventListener('change', () => {
+    setKarte(spec.id, {[sel.dataset.k]: sel.value});
+    try { spec.render(); } catch(e) { console.error('karte', spec.id, e); }
+  }));
+  return c;
+}
+
+// First year to show for period-based (Eurostat) series.
+function karteMinYear(c, tab) {
+  if (!c.zeit || c.zeit === 'tab') return periodCutoff(tab);
+  const sec = ZEIT_SEC[c.zeit];
+  return sec === Infinity ? '' : String(new Date(Date.now() - sec * 1000).getFullYear());
+}
+// Cutoff in ms for timestamped series.
+function karteCutoffMs(c, tab) {
+  if (!c.zeit || c.zeit === 'tab') return rangeCutoffMs(tab);
+  const sec = ZEIT_SEC[c.zeit];
+  return sec === Infinity ? 0 : Date.now() - sec * 1000;
+}
+
+// Eurostat countries that actually hold data for a node, in list order.
+function geoListe(...nodes) {
+  const have = new Set();
+  nodes.forEach(n => Object.keys(n?.series_per_country || n?.byCountry || {}).forEach(k => {
+    const arr = (n.series_per_country || n.byCountry)[k];
+    if (arr?.length) have.add(k);
+  }));
+  const order = EUROSTAT_GEO.filter(g => have.has(g));
+  [...have].filter(g => !order.includes(g)).sort().forEach(g => order.push(g));
+  return order.map(g => [g, geoName(g)]);
+}
+
+// A lighter, dashed twin of a series colour for the comparison country.
+function vglStyle(color) {
+  return {borderColor: color, borderDash: [6, 4], borderWidth: 1.8, backgroundColor: 'transparent',
+          fill: false, pointRadius: 0};
+}
+
+// ══════════════════════════════════════════════
 // LAND — one country choice for the whole page
 // ══════════════════════════════════════════════
-// Each card had its own country menu, with its own spelling (DE, de,
-// price_de, DEU, EU27_2020, eu…). Picking France in one left every other
-// card on Germany. Now every menu speaks a common code; changing any of
-// them — or the header menu — moves all the others that offer that country.
-// A card without that country keeps its choice and says so.
+// Country names and codes shared by the card menus. Every card chooses its
+// own country (and optionally a second one to compare with); a page-wide
+// choice was tried and dropped, because most sources cover different
+// countries and the cards kept falling back to "not available".
 
 const LAND_NAMEN = {
   DE:'Deutschland', EU:'EU27', EA:'Eurozone (EA20)', AT:'Österreich', BE:'Belgien',
@@ -6087,31 +5745,16 @@ const ISO2_ZU_3 = Object.fromEntries(Object.entries(ISO3_ZU_2).map(([a,b]) => [b
 const EUROSTAT_GEO = ['DE','EU27_2020','EA20','AT','BE','CZ','DK','EL','ES','FI',
                       'FR','IE','IT','NL','NO','PL','PT','SE'];
 
-// select id -> how its option values map to the common code.
 const eurostatCodec = {
   to:   v => v === 'EU27_2020' ? 'EU' : v === 'EA20' ? 'EA' : v === 'GR' ? 'EL' : v,
   from: c => c === 'EU' ? 'EU27_2020' : c === 'EA' ? 'EA20' : c,
 };
-const LAND_SELECTS = {
-  'strompreise-geo': eurostatCodec,
-  'strom-flow-geo':  eurostatCodec,
-  'verbrauch-geo':   eurostatCodec,
-  'treibstoff-geo':  eurostatCodec,
-  'mineraloel-geo':  eurostatCodec,
-  'umwelt-geo':      eurostatCodec,
-  'gas-country':     {to: v => v.toUpperCase(), from: c => c.toLowerCase()},
-  'saison-land':     {to: v => v.toUpperCase(), from: c => c.toLowerCase()},
-  'price-country':   {to: v => v.replace('price_','').toUpperCase(),
-                      from: c => 'price_' + c.toLowerCase()},
-};
 // Eurostat menus that list every fetched country rather than a hand-picked few.
-const EUROSTAT_SELECTS = ['strompreise-geo','strom-flow-geo','verbrauch-geo',
-                          'treibstoff-geo','mineraloel-geo','umwelt-geo'];
-
-const LAND_KEY = 'energydash:land';
-let landAktiv = (() => { try { return localStorage.getItem(LAND_KEY) || 'DE'; } catch(e) { return 'DE'; } })();
+const EUROSTAT_SELECTS = ['treibstoff-geo','mineraloel-geo','umwelt-geo'];
 
 function landName(c) { return LAND_NAMEN[c] || c; }
+// Eurostat code (DE, EU27_2020, EL) -> German name.
+function geoName(g) { return landName(eurostatCodec.to(g)); }
 
 function fillEurostatSelects() {
   EUROSTAT_SELECTS.forEach(id => {
@@ -6121,89 +5764,21 @@ function fillEurostatSelects() {
     const withEA = id === 'treibstoff-geo' || [...sel.options].some(o => o.value === 'EA20');
     sel.innerHTML = EUROSTAT_GEO
       .filter(g => g !== 'EA20' || withEA)
-      .map(g => `<option value="${g}">${landName(eurostatCodec.to(g))}</option>`).join('');
+      .map(g => `<option value="${g}">${geoName(g)}</option>`).join('');
     sel.value = keep;
     sel.dataset.filled = '1';
   });
 }
 
-function fillGlobalSelect() {
-  const sel = document.getElementById('global-country');
-  if (!sel) return;
-  const eu = ['DE','EU','EA','AT','BE','CH','CZ','DK','EL','ES','FI','FR','HU','IE','IT',
-              'NL','NO','PL','PT','SE','SK','UA'];
-  const g20 = ['AR','AU','BR','CA','CN','GB','ID','IN','JP','KR','MX','RU','SA','TR','US','ZA'];
-  const opt = c => `<option value="${c}">${landName(c)}</option>`;
-  sel.innerHTML = `<optgroup label="Europa">${eu.map(opt).join('')}</optgroup>` +
-                  `<optgroup label="Weitere G20">${g20.map(opt).join('')}</optgroup>`;
-  sel.value = landAktiv;
-}
-
-// Move every menu to `code` where it can; mark the ones that cannot.
-function applyLand(code, exceptId) {
-  Object.entries(LAND_SELECTS).forEach(([id, codec]) => {
-    if (id === exceptId) return;
-    const sel = document.getElementById(id);
-    if (!sel) return;
-    const want = codec.from(code);
-    const ok = [...sel.options].some(o => o.value === want);
-    if (ok) sel.value = want;
-    let hint = sel.parentElement.querySelector('.land-hint');
-    if (!ok) {
-      if (!hint) {
-        hint = document.createElement('div');
-        hint.className = 'land-hint';
-        sel.insertAdjacentElement('afterend', hint);
-      }
-      hint.textContent = `${landName(code)} hier nicht verfügbar`;
-    } else if (hint) hint.remove();
-  });
-  const g = document.getElementById('global-country');
-  if (g && exceptId !== 'global-country') g.value = code;
-  // The G20 cards highlight the chosen country; a G20 member also joins the
-  // time-series selection so it is actually drawn.
-  const iso3 = ISO2_ZU_3[code];
-  if (iso3 && typeof g20Selected !== 'undefined' && !g20Selected.includes(iso3)) {
-    g20Selected = [...g20Selected, iso3];
-    try { localStorage.setItem('energydash:g20', JSON.stringify(g20Selected)); } catch(e) {}
-  }
-}
-
-function setLand(code, fromId) {
-  if (!code) return;
-  landAktiv = code;
-  try { localStorage.setItem(LAND_KEY, code); } catch(e) {}
-  applyLand(code, fromId);
-}
-
-// Capture phase: runs before the menu's own inline onchange, so by the time
-// that handler renders, the sibling menus on the same tab already moved.
-document.addEventListener('change', e => {
-  const id = e.target?.id;
-  if (id === 'global-country') {
-    setLand(e.target.value, id);
-    renderTab(activeTab);
-    return;
-  }
-  const codec = LAND_SELECTS[id];
-  if (!codec) return;
-  setLand(codec.to(e.target.value), id);
-  // Cards on this tab driven by other renderers (the G20 card, for one)
-  // follow after the menu's own handler has run.
-  setTimeout(() => renderTab(activeTab), 0);
-}, true);
-
 function initLand() {
   fillEurostatSelects();
-  fillGlobalSelect();
-  applyLand(landAktiv);
 }
 
 // ══════════════════════════════════════════════
 // TABS
 // ══════════════════════════════════════════════
 const RENDERS={
-  ueberblick:renderUeberblick, strom:renderStrom, strompreise:renderStrompreise, markt:renderMarkt, gas:renderGas,
+  strom:renderStrom, strompreise:renderStrompreise, markt:renderMarkt, gas:renderGas,
   rohstoffe:renderRohstoffe, kraftstoff:renderKraftstoffMerged,
   erneuerbare:renderErneuerbare, umwelt:renderUmwelt, g20:renderG20,
   wetter:renderWetter, fx:renderFx,
