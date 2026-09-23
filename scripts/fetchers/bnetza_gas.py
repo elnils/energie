@@ -254,37 +254,82 @@ def _get(url: str):
     return r
 
 
+_QUOTED_RE = re.compile(r'(?:href|src|data|data-src|data-url|content)\s*=\s*["\']([^"\'<>\s]+)["\']', re.I)
+_DATA_EXT_RE = re.compile(r'\.(csv|xlsx?|json|txt|zip)(\?|$)', re.I)
+_ORIGIN = 'https://www.bundesnetzagentur.de'
+
+
+def _abs(href: str, page: str) -> str:
+    href = href.replace('&amp;', '&')
+    if href.startswith('//'):
+        return 'https:' + href
+    if href.startswith('/'):
+        return _ORIGIN + href
+    if href.startswith('http'):
+        return href
+    return page.split('?')[0].rsplit('/', 1)[0] + '/' + href
+
+
 def _discover(seed_dirs: List[str]) -> Dict[str, str]:
-    """Scan the landing page and each chart page for CSV links."""
+    """
+    Walk the landing page and every gas-supply chart page it links, and
+    collect links to data files (csv, xlsx, json, txt).
+
+    The chart pages are followed by the hrefs the site itself uses — the
+    first version guessed `<Dir>/<Dir>.html` and got 404 for most of them.
+    Everything found is logged, so the next Actions run shows how the site
+    actually links its data even when no CSV turns up.
+    """
     found: Dict[str, str] = {}
-    pages = [LANDING] + [f'{BASE}{d}/{d}.html' for d in seed_dirs]
-    dirs_seen = set(seed_dirs)
+    pages = [LANDING, BASE + 'Gasimporte/Gasimporte.html']
+    seen = set(pages)
+    svgs: List[str] = []
     for i, page in enumerate(pages):      # the list grows while we walk it
-        if i >= 60:
+        if i >= 45:
             break
         try:
             r = _get(page)
             if not r.ok:
-                print(f'    discover {page.split("/")[-1]}: HTTP {r.status_code}')
+                print(f'    discover {page.replace(_ORIGIN, "")}: HTTP {r.status_code}')
                 continue
             html = r.text
         except Exception as e:
-            print(f'    discover {page.split("/")[-1]}: {type(e).__name__}')
+            print(f'    discover {page.replace(_ORIGIN, "")}: {type(e).__name__}')
             continue
-        for href in _CSV_LINK_RE.findall(html):
-            href = href.replace('&amp;', '&')
-            if href.startswith('/'):
-                href = 'https://www.bundesnetzagentur.de' + href
-            elif not href.startswith('http'):
-                href = page.rsplit('/', 1)[0] + '/' + href
-            # Keyed by path; the value keeps the query, because the BNetzA
-            # CMS serves downloads as ...csv?__blob=publicationFile.
-            found[href.split('?')[0]] = href
-        if page == LANDING:
-            for d in _SVG_DIR_RE.findall(html):
-                if d not in dirs_seen:
-                    dirs_seen.add(d)
-                    pages.append(f'{BASE}{d}/{d}.html')
+        links = [_abs(h, page) for h in _QUOTED_RE.findall(html)]
+        data = [u for u in links if _DATA_EXT_RE.search(u) or '__blob=publicationFile' in u and 'csv' in u.lower()]
+        subpages = [u for u in links
+                    if 'aktuelle_gasversorgung' in u and re.search(r'\.html(\?|#|$)', u)
+                    and u.split('#')[0] not in seen]
+        page_svgs = [u for u in links if re.search(r'\.svg(\?|$)', u, re.I)]
+        print(f'    discover {page.replace(_ORIGIN, "")}: {len(html)} B, {len(links)} links, '
+              f'{len(data)} data, {len(subpages)} new pages, {len(page_svgs)} svg')
+        for u in data[:20]:
+            print(f'      data: {u}')
+        if i < 2:
+            for u in subpages[:40]:
+                print(f'      page: {u}')
+            # How does the page mention the chart data at all?
+            for m in list(re.finditer(r'csv|download|daten', html, re.I))[:6]:
+                snippet = re.sub(r'\s+', ' ', html[max(0, m.start() - 90):m.end() + 90])
+                print(f'      ctx: …{snippet}…')
+        for u in data:
+            found[u.split('?')[0]] = u
+        for u in subpages:
+            u = u.split('#')[0]
+            if u not in seen:
+                seen.add(u)
+                pages.append(u)
+        svgs += [u for u in page_svgs if u not in svgs]
+    # The charts are SVGs; if they carry their numbers inline, the head of
+    # one tells us.
+    for u in svgs[:2]:
+        try:
+            r = _get(u)
+            head = re.sub(r'\s+', ' ', r.text[:300])
+            print(f'      svg {u.replace(_ORIGIN, "")}: HTTP {r.status_code}, {len(r.text)} B, head: {head}')
+        except Exception as e:
+            print(f'      svg {u}: {type(e).__name__}')
     return found
 
 
