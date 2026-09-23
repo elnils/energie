@@ -172,11 +172,11 @@ def _parse_x(cell: str) -> Tuple[str, Optional[str]]:
     return 'label', s
 
 
-def parse_csv(text: str) -> dict:
+def parse_csv(text: str, delimiter: Optional[str] = None) -> dict:
     """Generic BNetzA CSV -> {x_kind, columns, years_as_columns, series}."""
     sample = text[:4000]
     try:
-        delim = csv.Sniffer().sniff(sample, delimiters=';,\t').delimiter
+        delim = delimiter or csv.Sniffer().sniff(sample, delimiters=';,\t').delimiter
     except csv.Error:
         delim = ';'
     rows = [r for r in csv.reader(io.StringIO(text), delimiter=delim)]
@@ -339,13 +339,225 @@ def _key_for(url: str) -> str:
     return 'x_' + re.sub(r'[^a-z0-9]+', '_', name.lower()).strip('_')
 
 
+
+# ── HTML pages: tables and inline charts ────────────────────────────────
+# The first live runs showed that the gas-supply pages link no CSV at all:
+# start.html is 1.3 MB and Gasimporte.html 670 KB, with every chart drawn
+# as inline SVG. The numbers therefore sit in the page itself — as data
+# tables next to the charts and/or inside the SVG. This part reads both.
+
+from html.parser import HTMLParser
+
+
+class _TableGrab(HTMLParser):
+    """Collect every <table> as rows of cell text, with a nearby title."""
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.tables: List[dict] = []
+        self._stack: List[dict] = []
+        self._cell: Optional[List[str]] = None
+        self._row: Optional[List[str]] = None
+        self._heading: Optional[List[str]] = None
+        self.last_heading = ''
+        self._caption: Optional[List[str]] = None
+
+    def handle_starttag(self, tag, attrs):
+        if tag == 'table':
+            self._stack.append({'rows': [], 'title': self.last_heading, 'caption': ''})
+        elif tag == 'tr' and self._stack:
+            self._row = []
+        elif tag in ('td', 'th') and self._row is not None:
+            self._cell = []
+        elif tag == 'caption' and self._stack:
+            self._caption = []
+        elif tag in ('h1', 'h2', 'h3', 'h4'):
+            self._heading = []
+
+    def handle_endtag(self, tag):
+        if tag in ('td', 'th') and self._cell is not None and self._row is not None:
+            self._row.append(re.sub(r'\s+', ' ', ''.join(self._cell)).strip())
+            self._cell = None
+        elif tag == 'tr' and self._row is not None and self._stack:
+            if any(self._row):
+                self._stack[-1]['rows'].append(self._row)
+            self._row = None
+        elif tag == 'caption' and self._caption is not None and self._stack:
+            self._stack[-1]['caption'] = re.sub(r'\s+', ' ', ''.join(self._caption)).strip()
+            self._caption = None
+        elif tag == 'table' and self._stack:
+            self.tables.append(self._stack.pop())
+        elif tag in ('h1', 'h2', 'h3', 'h4') and self._heading is not None:
+            self.last_heading = re.sub(r'\s+', ' ', ''.join(self._heading)).strip()
+            self._heading = None
+
+    def handle_data(self, data):
+        if self._cell is not None:
+            self._cell.append(data)
+        if self._caption is not None:
+            self._caption.append(data)
+        if self._heading is not None:
+            self._heading.append(data)
+
+
+def _tables_from_html(html: str) -> List[dict]:
+    g = _TableGrab()
+    try:
+        g.feed(html)
+    except Exception as e:
+        print(f'      table parse error: {type(e).__name__}: {e}')
+    return g.tables
+
+
+def _log_structure(page: str, html: str) -> None:
+    """One compact look at how a page carries its chart data."""
+    low = html.lower()
+    counts = {t: low.count('<' + t) for t in ('svg', 'table', 'script', 'iframe', 'object', 'canvas')}
+    base = re.search(r'<base[^>]+href="([^"]+)"', html, re.I)
+    print(f'      structure: {counts} base={base.group(1) if base else None}')
+    # The biggest inline <svg> is a chart, not a logo.
+    svgs = [(m.start(), html.find('</svg>', m.start())) for m in re.finditer(r'<svg\b', html, re.I)]
+    svgs = sorted([(e - b, b) for b, e in svgs if e > b], reverse=True)[:2]
+    for size, b in svgs:
+        chunk = re.sub(r'\s+', ' ', html[b:b + 700])
+        texts = re.findall(r'<text[^>]*>([^<]{1,40})</text>', html[b:b + size])[:25]
+        titles = re.findall(r'<title>([^<]{1,80})</title>', html[b:b + size])[:8]
+        datas = re.findall(r'data-[a-z-]+="[^"]{0,60}"', html[b:b + size])[:8]
+        print(f'      svg {size} B: {chunk[:500]}')
+        print(f'        texts: {texts}')
+        if titles: print(f'        titles: {titles}')
+        if datas: print(f'        data-attrs: {datas}')
+    scripts = [m.group(1) for m in re.finditer(r'<script[^>]*>(.*?)</script>', html, re.I | re.S)]
+    scripts = sorted(scripts, key=len, reverse=True)[:2]
+    for sc in scripts:
+        head = re.sub(r'\s+', ' ', sc[:300])
+        print(f'      script {len(sc)} B: {head}')
+
+
+def _chart_pages(html: str, page: str) -> List[str]:
+    """Links to other gas-supply chart pages (_svg/...html), resolved the way
+    the browser does: this site sets <base href>, so "DE/..." is from root."""
+    base = re.search(r'<base[^>]+href="([^"]+)"', html, re.I)
+    root = base.group(1) if base else _ORIGIN + '/'
+    out = []
+    for h in re.findall(r'href="([^"]+)"', html):
+        h = h.replace('&amp;', '&').split('#')[0]
+        if '_svg/' not in h or not re.search(r'\.html(\?|$)', h):
+            continue
+        if h.startswith('http'):
+            u = h
+        elif h.startswith('/'):
+            u = _ORIGIN + h
+        else:
+            u = root.rstrip('/') + '/' + h
+        u = u.split('?')[0]
+        if u not in out:
+            out.append(u)
+    return out
+
+
+def _slug(u: str) -> str:
+    m = re.search(r'_svg/([^/]+)/', u)
+    name = m.group(1) if m else u.rsplit('/', 1)[-1].split('.')[0]
+    return re.sub(r'[^a-z0-9]+', '_', name.lower()).strip('_')
+
+
+_GROUP_HINTS = [
+    ('lng', 'Importe & Exporte'), ('import', 'Importe & Exporte'), ('export', 'Importe & Exporte'),
+    ('foerder', 'Förderung & Preise'), ('preis', 'Förderung & Preise'),
+    ('speicher', 'Speicher'), ('rlm', 'Industrie (RLM)'), ('industrie', 'Industrie (RLM)'),
+    ('slp', 'Haushalte & Gewerbe (SLP)'), ('haushalt', 'Haushalte & Gewerbe (SLP)'),
+    ('verbrauch', 'Verbrauch gesamt'), ('temp', 'Temperatur'),
+]
+
+
+def _group_for(slug: str) -> str:
+    for hint, g in _GROUP_HINTS:
+        if hint in slug:
+            return g
+    return 'Weitere'
+
+
+def _unit_for(text: str) -> str:
+    m = re.search(r'(GWh/(?:Tag|d)|TWh|EUR/MWh|€/MWh|°C|%-Punkte|Prozent|%)', text or '')
+    return m.group(1).replace('€', 'EUR') if m else ''
+
+
+def _freq_for(slug: str, x_kind: str) -> str:
+    if 'woch' in slug: return 'weekly'
+    if 'monat' in slug: return 'monthly'
+    return 'daily' if x_kind == 'date' else ''
+
+
+def _harvest_pages(prev: Dict[str, dict], out: Dict[str, dict], errors: Dict[str, str]) -> int:
+    """Read every chart page; turn each data table into a dataset."""
+    pages = [LANDING, BASE + 'Gasimporte/Gasimporte.html']
+    seen = set(pages)
+    found = 0
+    for i, page in enumerate(pages):
+        if i >= 40:
+            break
+        try:
+            r = _get(page)
+            if not r.ok:
+                print(f'    page {page.replace(_ORIGIN, "")}: HTTP {r.status_code}')
+                continue
+            html = r.text
+        except Exception as e:
+            print(f'    page {page.replace(_ORIGIN, "")}: {type(e).__name__}')
+            continue
+        tables = _tables_from_html(html)
+        new = [u for u in _chart_pages(html, page) if u not in seen]
+        print(f'    page {page.replace(_ORIGIN, "")}: {len(html)} B, {len(tables)} tables, '
+              f'{len(new)} new chart pages')
+        if i < 3:
+            _log_structure(page, html)
+            for u in new[:30]:
+                print(f'      chart page: {u.replace(_ORIGIN, "")}')
+        for u in new:
+            seen.add(u)
+            pages.append(u)
+        slug = _slug(page) if '_svg/' in page else 'start'
+        for n, t in enumerate(tables, start=1):
+            rows = t['rows']
+            if len(rows) < 3:
+                continue
+            text = '\n'.join(';'.join(c.replace(';', ',') for c in r_) for r_ in rows)
+            try:
+                # Cells hold German decimals ("1.234,5"), so never sniff a comma.
+                parsed = parse_csv(text, delimiter=';')
+            except Exception:
+                continue
+            npts = sum(len(v) for v in parsed['series'].values())
+            if npts < 5:
+                continue
+            key = f'{slug}_t{n}'
+            title = t['caption'] or t['title'] or slug
+            node = _merge(prev.get(key), parsed)
+            node.update({'label': title[:90], 'group': _group_for(slug + ' ' + title.lower()),
+                         'unit': _unit_for(title + ' ' + ' '.join(rows[0])),
+                         'freq': _freq_for(slug, node['x_kind']),
+                         'url': page, 'ok': True, 'source_kind': 'html_table'})
+            out[key] = node
+            found += 1
+            xs = [x for v in node['series'].values() for x, _ in v]
+            print(f'      table {key}: "{title[:60]}" kind={node["x_kind"]} '
+                  f'cols={len(node["columns"])} pts={npts} x={min(xs)}..{max(xs)} head={rows[0][:6]}')
+    return found
+
+
 def fetch() -> dict:
     prev = (store.read_json('bnetza_gas') or {}).get('data', {}).get('datasets', {})
     out: Dict[str, dict] = {}
     errors: Dict[str, str] = {}
 
+    # 1. Tables on the chart pages — where the data actually is.
+    n_tables = _harvest_pages(prev, out, errors)
+    print(f'    {n_tables} data tables read from the chart pages')
+
+    # 2. CSV files, in case the site links any (it did not in the first runs).
     seed_dirs = sorted({p.split('/')[0] for p, *_ in DATASETS.values()})
-    discovered = _discover(seed_dirs)
+    discovered = _discover(seed_dirs) if not n_tables else {}
     known_urls = {BASE + p for p, *_ in DATASETS.values()}
     extra = {u: full for u, full in discovered.items() if u not in known_urls}
     print(f'    discovered {len(discovered)} CSV links, {len(extra)} not in the known list')
@@ -360,6 +572,10 @@ def fetch() -> dict:
     for u in list(extra)[:25]:
         jobs.append((_key_for(u), extra[u], u.rsplit('/', 1)[-1], 'Weitere', '', ''))
 
+    if n_tables:
+        # The guessed CSV names all answered 404; with tables available they
+        # are not worth 38 requests per run.
+        jobs = [j for j in jobs if j[0] in prev and prev[j[0]].get('series')]
     for key, url, label, group, unit, freq in jobs:
         try:
             r = _get(url)
@@ -399,6 +615,14 @@ def fetch() -> dict:
             else:
                 out[key] = {'label': label, 'group': group, 'unit': unit, 'freq': freq,
                             'url': url, 'ok': False, 'error': msg, 'series': {}, 'columns': []}
+
+    # A table that did not turn up this run keeps its stored history.
+    for k, node in prev.items():
+        if k not in out and node.get('series'):
+            kept = dict(node)
+            kept['ok'] = False
+            kept['error'] = 'in diesem Lauf nicht gefunden — gespeicherter Stand'
+            out[k] = kept
 
     if not any(n.get('ok') for n in out.values()) and not any(n.get('series') for n in out.values()):
         raise RuntimeError(f'no BNetzA CSV could be read: {list(errors.items())[:3]}')
