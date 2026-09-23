@@ -1,11 +1,11 @@
 {
   "bnetza_gas": {
-    "last_attempt_epoch": 1790159985,
-    "last_attempt_iso": "2026-09-23T10:39:45Z",
+    "last_attempt_epoch": 1790161099,
+    "last_attempt_iso": "2026-09-23T10:58:19Z",
     "last_error_epoch": 1790159494,
     "last_error_message": "RuntimeError: no BNetzA CSV could be read: [('import_gesamt', 'RuntimeError: HTTP 404'), ('import_lng', 'RuntimeError: HTTP 404'), ('export_gesamt', 'RuntimeError: HTTP 404')] | at File \"/home/runner/work/energie/energie/scripts/fetchers/bnetza_gas.py\", line 628, in fetch",
-    "last_success_epoch": 1790159994,
-    "last_success_iso": "2026-09-23T10:39:54Z"
+    "last_success_epoch": 1790161121,
+    "last_success_iso": "2026-09-23T10:58:41Z"
   },
   "commodities": {
     "last_attempt_epoch": 1790157759,
