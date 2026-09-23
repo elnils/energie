@@ -1,0 +1,1 @@
+{"updated":"2026-09-23T10:06:58+00:00","stale":true,"last_success":null,"last_error":"RuntimeError: no BNetzA CSV could be read: [('import_gesamt', 'RuntimeError: HTTP 404'), ('import_lng', 'RuntimeError: HTTP 404'), ('export_gesamt', 'RuntimeError: HTTP 404')] | at File \"/home/runner/work/energie/energie/scripts/fetchers/bnetza_gas.py\", line 359, in fetch","data":{}}
