@@ -1,9 +1,9 @@
 {
   "bnetza_gas": {
-    "last_attempt_epoch": 1790158565,
-    "last_attempt_iso": "2026-09-23T10:16:05Z",
-    "last_error_epoch": 1790158588,
-    "last_error_message": "RuntimeError: no BNetzA CSV could be read: [('import_gesamt', 'RuntimeError: HTTP 404'), ('import_lng', 'RuntimeError: HTTP 404'), ('export_gesamt', 'RuntimeError: HTTP 404')] | at File \"/home/runner/work/energie/energie/scripts/fetchers/bnetza_gas.py\", line 404, in fetch"
+    "last_attempt_epoch": 1790159464,
+    "last_attempt_iso": "2026-09-23T10:31:04Z",
+    "last_error_epoch": 1790159494,
+    "last_error_message": "RuntimeError: no BNetzA CSV could be read: [('import_gesamt', 'RuntimeError: HTTP 404'), ('import_lng', 'RuntimeError: HTTP 404'), ('export_gesamt', 'RuntimeError: HTTP 404')] | at File \"/home/runner/work/energie/energie/scripts/fetchers/bnetza_gas.py\", line 628, in fetch"
   },
   "commodities": {
     "last_attempt_epoch": 1790157759,
@@ -140,9 +140,9 @@
     "last_success_iso": "2026-09-23T10:02:39Z"
   },
   "worldbank_g20": {
-    "last_attempt_epoch": 1790072819,
-    "last_attempt_iso": "2026-09-22T10:26:59Z",
-    "last_success_epoch": 1790072824,
-    "last_success_iso": "2026-09-22T10:27:04Z"
+    "last_attempt_epoch": 1790159457,
+    "last_attempt_iso": "2026-09-23T10:30:57Z",
+    "last_success_epoch": 1790159464,
+    "last_success_iso": "2026-09-23T10:31:04Z"
   }
 }
