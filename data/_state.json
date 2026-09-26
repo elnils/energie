@@ -30,12 +30,12 @@
     "last_success_iso": "2026-09-26T12:59:34Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1790442014,
-    "last_attempt_iso": "2026-09-26T17:00:14Z",
+    "last_attempt_epoch": 1790451956,
+    "last_attempt_iso": "2026-09-26T19:45:56Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1790442208,
-    "last_success_iso": "2026-09-26T17:03:28Z"
+    "last_success_epoch": 1790452152,
+    "last_success_iso": "2026-09-26T19:49:12Z"
   },
   "energy_futures": {
     "last_attempt_epoch": 1790442354,
@@ -60,10 +60,10 @@
     "last_success_iso": "2026-09-26T17:04:31Z"
   },
   "eurostat_env": {
-    "last_attempt_epoch": 1790360918,
-    "last_attempt_iso": "2026-09-25T18:28:38Z",
-    "last_success_epoch": 1790361016,
-    "last_success_iso": "2026-09-25T18:30:16Z"
+    "last_attempt_epoch": 1790452152,
+    "last_attempt_iso": "2026-09-26T19:49:12Z",
+    "last_success_epoch": 1790452234,
+    "last_success_iso": "2026-09-26T19:50:34Z"
   },
   "eurostat_oil": {
     "last_attempt_epoch": 1790427574,
@@ -120,18 +120,18 @@
     "last_success_iso": "2026-09-26T12:59:06Z"
   },
   "news": {
-    "last_attempt_epoch": 1790442437,
-    "last_attempt_iso": "2026-09-26T17:07:17Z",
-    "last_success_epoch": 1790442460,
-    "last_success_iso": "2026-09-26T17:07:40Z"
+    "last_attempt_epoch": 1790452341,
+    "last_attempt_iso": "2026-09-26T19:52:21Z",
+    "last_success_epoch": 1790452364,
+    "last_success_iso": "2026-09-26T19:52:44Z"
   },
   "smard": {
-    "last_attempt_epoch": 1790442005,
-    "last_attempt_iso": "2026-09-26T17:00:05Z",
+    "last_attempt_epoch": 1790451950,
+    "last_attempt_iso": "2026-09-26T19:45:50Z",
     "last_error_epoch": 1784702205,
     "last_error_message": "RuntimeError: SMARD: all filters returned empty | at File \"/home/runner/work/energie/energie/scripts/fetchers/smard.py\", line 109, in fetch",
-    "last_success_epoch": 1790442014,
-    "last_success_iso": "2026-09-26T17:00:14Z"
+    "last_success_epoch": 1790451956,
+    "last_success_iso": "2026-09-26T19:45:56Z"
   },
   "weather": {
     "last_attempt_epoch": 1790442271,
@@ -142,9 +142,9 @@
     "last_success_iso": "2026-09-26T17:04:33Z"
   },
   "worldbank_g20": {
-    "last_attempt_epoch": 1790361016,
-    "last_attempt_iso": "2026-09-25T18:30:16Z",
-    "last_success_epoch": 1790361028,
-    "last_success_iso": "2026-09-25T18:30:28Z"
+    "last_attempt_epoch": 1790452234,
+    "last_attempt_iso": "2026-09-26T19:50:34Z",
+    "last_success_epoch": 1790452341,
+    "last_success_iso": "2026-09-26T19:52:21Z"
   }
 }
