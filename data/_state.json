@@ -1,17 +1,17 @@
 {
   "bnetza_gas": {
-    "last_attempt_epoch": 1791148456,
-    "last_attempt_iso": "2026-10-04T21:14:16Z",
+    "last_attempt_epoch": 1791182985,
+    "last_attempt_iso": "2026-10-05T06:49:45Z",
     "last_error_epoch": 1790159494,
     "last_error_message": "RuntimeError: no BNetzA CSV could be read: [('import_gesamt', 'RuntimeError: HTTP 404'), ('import_lng', 'RuntimeError: HTTP 404'), ('export_gesamt', 'RuntimeError: HTTP 404')] | at File \"/home/runner/work/energie/energie/scripts/fetchers/bnetza_gas.py\", line 628, in fetch",
-    "last_success_epoch": 1791148465,
-    "last_success_iso": "2026-10-04T21:14:25Z"
+    "last_success_epoch": 1791182991,
+    "last_success_iso": "2026-10-05T06:49:51Z"
   },
   "commodities": {
-    "last_attempt_epoch": 1791160881,
-    "last_attempt_iso": "2026-10-05T00:41:21Z",
-    "last_success_epoch": 1791160890,
-    "last_success_iso": "2026-10-05T00:41:30Z"
+    "last_attempt_epoch": 1791182913,
+    "last_attempt_iso": "2026-10-05T06:48:33Z",
+    "last_success_epoch": 1791182921,
+    "last_success_iso": "2026-10-05T06:48:41Z"
   },
   "destatis_vpi": {
     "last_attempt_epoch": 1791134873,
@@ -30,34 +30,34 @@
     "last_success_iso": "2026-10-05T00:42:46Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1791160733,
-    "last_attempt_iso": "2026-10-05T00:38:53Z",
+    "last_attempt_epoch": 1791182733,
+    "last_attempt_iso": "2026-10-05T06:45:33Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1791160879,
-    "last_success_iso": "2026-10-05T00:41:19Z"
+    "last_success_epoch": 1791182880,
+    "last_success_iso": "2026-10-05T06:48:00Z"
   },
   "energy_futures": {
-    "last_attempt_epoch": 1791148425,
-    "last_attempt_iso": "2026-10-04T21:13:45Z",
+    "last_attempt_epoch": 1791182970,
+    "last_attempt_iso": "2026-10-05T06:49:30Z",
     "last_error_epoch": 1786328617,
     "last_error_message": "RuntimeError: energy_futures: ALL external APIs failed. Errors: eia_steo/brent (BREPUUS): 403 Client Error: Forbidden for url: https://api.eia.gov/v2/steo/data/?api_key=irVUjduslyh4dIFImK49hHGQtvzZgUergFPQDNQ9&frequency=monthly&data%5B0%5D=value&facets%5BseriesId%5D%5B%5D=BREPUUS&sort%5B0%5D%5Bcolumn%5D=period&sort%5B0%5D%5Bdirection%5D=asc&offset=0&length=5000; eia_steo/wti (WTIPUUS): 403 Client Error: Forbidden for url: https://api.eia.gov/v2/steo/data/?api_key=irVUjduslyh4dIFImK49hHGQtvzZgUer",
-    "last_success_epoch": 1791148456,
-    "last_success_iso": "2026-10-04T21:14:16Z"
+    "last_success_epoch": 1791182985,
+    "last_success_iso": "2026-10-05T06:49:45Z"
   },
   "entsoe": {
-    "last_attempt_epoch": 1791148395,
-    "last_attempt_iso": "2026-10-04T21:13:15Z",
+    "last_attempt_epoch": 1791182921,
+    "last_attempt_iso": "2026-10-05T06:48:41Z",
     "last_error_epoch": 1778568129,
     "last_error_message": "ValueError: fetcher entsoe did not return dict with \"data\" key",
-    "last_success_epoch": 1791148425,
-    "last_success_iso": "2026-10-04T21:13:45Z"
+    "last_success_epoch": 1791182970,
+    "last_success_iso": "2026-10-05T06:49:30Z"
   },
   "entsog": {
-    "last_attempt_epoch": 1791148356,
-    "last_attempt_iso": "2026-10-04T21:12:36Z",
-    "last_success_epoch": 1791148384,
-    "last_success_iso": "2026-10-04T21:13:04Z"
+    "last_attempt_epoch": 1791182899,
+    "last_attempt_iso": "2026-10-05T06:48:19Z",
+    "last_success_epoch": 1791182911,
+    "last_success_iso": "2026-10-05T06:48:31Z"
   },
   "eurostat_env": {
     "last_attempt_epoch": 1791135034,
@@ -100,16 +100,16 @@
     "last_success_iso": "2026-10-05T00:41:31Z"
   },
   "gas_storage": {
-    "last_attempt_epoch": 1791148320,
-    "last_attempt_iso": "2026-10-04T21:12:00Z",
-    "last_success_epoch": 1791148356,
-    "last_success_iso": "2026-10-04T21:12:36Z"
+    "last_attempt_epoch": 1791182880,
+    "last_attempt_iso": "2026-10-05T06:48:00Z",
+    "last_success_epoch": 1791182899,
+    "last_success_iso": "2026-10-05T06:48:19Z"
   },
   "gas_storage_history": {
-    "last_attempt_epoch": 1791148465,
-    "last_attempt_iso": "2026-10-04T21:14:25Z",
-    "last_success_epoch": 1791148467,
-    "last_success_iso": "2026-10-04T21:14:27Z"
+    "last_attempt_epoch": 1791182991,
+    "last_attempt_iso": "2026-10-05T06:49:51Z",
+    "last_success_epoch": 1791182993,
+    "last_success_iso": "2026-10-05T06:49:53Z"
   },
   "heating_oil": {
     "last_attempt_epoch": 1791160942,
@@ -120,26 +120,26 @@
     "last_success_iso": "2026-10-05T00:42:36Z"
   },
   "news": {
-    "last_attempt_epoch": 1791160966,
-    "last_attempt_iso": "2026-10-05T00:42:46Z",
-    "last_success_epoch": 1791160988,
-    "last_success_iso": "2026-10-05T00:43:08Z"
+    "last_attempt_epoch": 1791182993,
+    "last_attempt_iso": "2026-10-05T06:49:53Z",
+    "last_success_epoch": 1791183014,
+    "last_success_iso": "2026-10-05T06:50:14Z"
   },
   "smard": {
-    "last_attempt_epoch": 1791160727,
-    "last_attempt_iso": "2026-10-05T00:38:47Z",
+    "last_attempt_epoch": 1791182728,
+    "last_attempt_iso": "2026-10-05T06:45:28Z",
     "last_error_epoch": 1784702205,
     "last_error_message": "RuntimeError: SMARD: all filters returned empty | at File \"/home/runner/work/energie/energie/scripts/fetchers/smard.py\", line 109, in fetch",
-    "last_success_epoch": 1791160733,
-    "last_success_iso": "2026-10-05T00:38:53Z"
+    "last_success_epoch": 1791182733,
+    "last_success_iso": "2026-10-05T06:45:33Z"
   },
   "weather": {
-    "last_attempt_epoch": 1791160879,
-    "last_attempt_iso": "2026-10-05T00:41:19Z",
+    "last_attempt_epoch": 1791182911,
+    "last_attempt_iso": "2026-10-05T06:48:31Z",
     "last_error_epoch": 1788409115,
     "last_error_message": "RuntimeError: Open-Meteo: zero cities returned data | at File \"/home/runner/work/energie/energie/scripts/fetchers/weather.py\", line 45, in fetch",
-    "last_success_epoch": 1791160881,
-    "last_success_iso": "2026-10-05T00:41:21Z"
+    "last_success_epoch": 1791182913,
+    "last_success_iso": "2026-10-05T06:48:33Z"
   },
   "worldbank_g20": {
     "last_attempt_epoch": 1791135129,
