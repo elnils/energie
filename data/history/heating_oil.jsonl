@@ -121,3 +121,4 @@
 {"ref_eur_l":1.693,"price_source":"tecson","brent_usd_bbl":109.8,"wti_usd_bbl":101.4,"gasoil_eur_t":1257.0,"date":"2026-10-18"}
 {"ref_eur_l":1.743,"price_source":"tecson","brent_usd_bbl":107.8,"wti_usd_bbl":99.8,"gasoil_eur_t":1264.0,"date":"2026-10-19"}
 {"ref_eur_l":1.773,"price_source":"tecson","brent_usd_bbl":110.6,"wti_usd_bbl":104.1,"gasoil_eur_t":1317.0,"date":"2026-10-20"}
+{"ref_eur_l":1.277,"price_source":"destatis","brent_usd_bbl":null,"wti_usd_bbl":null,"gasoil_eur_t":null,"date":"2026-10-21"}
