@@ -30,12 +30,12 @@
     "last_success_iso": "2026-10-24T12:37:12Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1792859392,
-    "last_attempt_iso": "2026-10-24T16:29:52Z",
+    "last_attempt_epoch": 1792869672,
+    "last_attempt_iso": "2026-10-24T19:21:12Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1792859582,
-    "last_success_iso": "2026-10-24T16:33:02Z"
+    "last_success_epoch": 1792869800,
+    "last_success_iso": "2026-10-24T19:23:20Z"
   },
   "energy_futures": {
     "last_attempt_epoch": 1792859684,
@@ -80,12 +80,12 @@
     "last_success_iso": "2026-10-24T01:33:50Z"
   },
   "fred_energy": {
-    "last_attempt_epoch": 1792825861,
-    "last_attempt_iso": "2026-10-24T07:11:01Z",
+    "last_attempt_epoch": 1792869800,
+    "last_attempt_iso": "2026-10-24T19:23:20Z",
     "last_error_epoch": 1792642756,
     "last_error_message": "RuntimeError: FRED: all series failed — check FRED_API_KEY | at File \"/home/runner/work/energie/energie/scripts/fetchers/fred_energy.py\", line 91, in fetch",
-    "last_success_epoch": 1792825867,
-    "last_success_iso": "2026-10-24T07:11:07Z"
+    "last_success_epoch": 1792869806,
+    "last_success_iso": "2026-10-24T19:23:26Z"
   },
   "fuel": {
     "last_attempt_epoch": 1792845363,
@@ -122,18 +122,18 @@
     "last_success_iso": "2026-10-24T12:37:09Z"
   },
   "news": {
-    "last_attempt_epoch": 1792859785,
-    "last_attempt_iso": "2026-10-24T16:36:25Z",
-    "last_success_epoch": 1792859807,
-    "last_success_iso": "2026-10-24T16:36:47Z"
+    "last_attempt_epoch": 1792869806,
+    "last_attempt_iso": "2026-10-24T19:23:26Z",
+    "last_success_epoch": 1792869829,
+    "last_success_iso": "2026-10-24T19:23:49Z"
   },
   "smard": {
-    "last_attempt_epoch": 1792859386,
-    "last_attempt_iso": "2026-10-24T16:29:46Z",
+    "last_attempt_epoch": 1792869666,
+    "last_attempt_iso": "2026-10-24T19:21:06Z",
     "last_error_epoch": 1784702205,
     "last_error_message": "RuntimeError: SMARD: all filters returned empty | at File \"/home/runner/work/energie/energie/scripts/fetchers/smard.py\", line 109, in fetch",
-    "last_success_epoch": 1792859392,
-    "last_success_iso": "2026-10-24T16:29:52Z"
+    "last_success_epoch": 1792869672,
+    "last_success_iso": "2026-10-24T19:21:12Z"
   },
   "weather": {
     "last_attempt_epoch": 1792859613,
