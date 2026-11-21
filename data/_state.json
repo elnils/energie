@@ -8,18 +8,18 @@
     "last_success_iso": "2026-11-20T20:00:06Z"
   },
   "commodities": {
-    "last_attempt_epoch": 1795204540,
-    "last_attempt_iso": "2026-11-20T19:55:40Z",
-    "last_success_epoch": 1795204551,
-    "last_success_iso": "2026-11-20T19:55:51Z"
+    "last_attempt_epoch": 1795223999,
+    "last_attempt_iso": "2026-11-21T01:19:59Z",
+    "last_success_epoch": 1795224008,
+    "last_success_iso": "2026-11-21T01:20:08Z"
   },
   "destatis_vpi": {
-    "last_attempt_epoch": 1795123341,
-    "last_attempt_iso": "2026-11-19T21:22:21Z",
+    "last_attempt_epoch": 1795224008,
+    "last_attempt_iso": "2026-11-21T01:20:08Z",
     "last_error_epoch": 1788686422,
     "last_error_message": "RuntimeError: Destatis auth: BOTH modes failed. header: header-auth exception: source exceeded wallclock budget; body: HTTPSConnectionPool(host='genesis.destatis.de', port=443): Max retries exceeded with url: /genesisWS/rest/2020/helloworld/logincheck (Caused by ReadTimeoutError(\"HTTPSConnectionPool(host='genesis.destatis.de', port=443): Read timed out. (read timeout=30)\")) | at File \"/home/runner/work/energie/energie/scripts/fetchers/destatis_vpi.py\", line 199, in _check_login",
-    "last_success_epoch": 1795123360,
-    "last_success_iso": "2026-11-19T21:22:40Z"
+    "last_success_epoch": 1795224029,
+    "last_success_iso": "2026-11-21T01:20:29Z"
   },
   "eia_petroleum": {
     "last_attempt_epoch": 1795204788,
@@ -30,12 +30,12 @@
     "last_success_iso": "2026-11-20T19:59:51Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1795204343,
-    "last_attempt_iso": "2026-11-20T19:52:23Z",
+    "last_attempt_epoch": 1795223810,
+    "last_attempt_iso": "2026-11-21T01:16:50Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1795204509,
-    "last_success_iso": "2026-11-20T19:55:09Z"
+    "last_success_epoch": 1795223946,
+    "last_success_iso": "2026-11-21T01:19:06Z"
   },
   "energy_futures": {
     "last_attempt_epoch": 1795204791,
@@ -60,24 +60,24 @@
     "last_success_iso": "2026-11-20T19:55:38Z"
   },
   "eurostat_env": {
-    "last_attempt_epoch": 1795123709,
-    "last_attempt_iso": "2026-11-19T21:28:29Z",
-    "last_success_epoch": 1795123819,
-    "last_success_iso": "2026-11-19T21:30:19Z"
+    "last_attempt_epoch": 1795224291,
+    "last_attempt_iso": "2026-11-21T01:24:51Z",
+    "last_success_epoch": 1795224386,
+    "last_success_iso": "2026-11-21T01:26:26Z"
   },
   "eurostat_oil": {
-    "last_attempt_epoch": 1795123566,
-    "last_attempt_iso": "2026-11-19T21:26:06Z",
+    "last_attempt_epoch": 1795224029,
+    "last_attempt_iso": "2026-11-21T01:20:29Z",
     "last_error_epoch": 1788596786,
     "last_error_message": "RuntimeError: Eurostat: alle Serien fehlgeschlagen — API nicht erreichbar oder alle Produkt-/Flow-Kombinationen leer. Letzter Datensatz wird als stale beibehalten. | at File \"/home/runner/work/energie/energie/scripts/fetchers/eurostat_oil.py\", line 350, in fetch",
-    "last_success_epoch": 1795123641,
-    "last_success_iso": "2026-11-19T21:27:21Z"
+    "last_success_epoch": 1795224223,
+    "last_success_iso": "2026-11-21T01:23:43Z"
   },
   "eurostat_prices": {
-    "last_attempt_epoch": 1795123641,
-    "last_attempt_iso": "2026-11-19T21:27:21Z",
-    "last_success_epoch": 1795123709,
-    "last_success_iso": "2026-11-19T21:28:29Z"
+    "last_attempt_epoch": 1795224223,
+    "last_attempt_iso": "2026-11-21T01:23:43Z",
+    "last_success_epoch": 1795224291,
+    "last_success_iso": "2026-11-21T01:24:51Z"
   },
   "fred_energy": {
     "last_attempt_epoch": 1795204781,
@@ -122,33 +122,33 @@
     "last_success_iso": "2026-11-20T19:56:59Z"
   },
   "news": {
-    "last_attempt_epoch": 1795204817,
-    "last_attempt_iso": "2026-11-20T20:00:17Z",
-    "last_success_epoch": 1795204838,
-    "last_success_iso": "2026-11-20T20:00:38Z"
+    "last_attempt_epoch": 1795224396,
+    "last_attempt_iso": "2026-11-21T01:26:36Z",
+    "last_success_epoch": 1795224417,
+    "last_success_iso": "2026-11-21T01:26:57Z"
   },
   "smard": {
-    "last_attempt_epoch": 1795204336,
-    "last_attempt_iso": "2026-11-20T19:52:16Z",
+    "last_attempt_epoch": 1795223802,
+    "last_attempt_iso": "2026-11-21T01:16:42Z",
     "last_error_epoch": 1784702205,
     "last_error_message": "RuntimeError: SMARD: all filters returned empty | at File \"/home/runner/work/energie/energie/scripts/fetchers/smard.py\", line 109, in fetch",
-    "last_success_epoch": 1795204343,
-    "last_success_iso": "2026-11-20T19:52:23Z"
+    "last_success_epoch": 1795223810,
+    "last_success_iso": "2026-11-21T01:16:50Z"
   },
   "weather": {
-    "last_attempt_epoch": 1795204538,
-    "last_attempt_iso": "2026-11-20T19:55:38Z",
+    "last_attempt_epoch": 1795223946,
+    "last_attempt_iso": "2026-11-21T01:19:06Z",
     "last_error_epoch": 1788409115,
     "last_error_message": "RuntimeError: Open-Meteo: zero cities returned data | at File \"/home/runner/work/energie/energie/scripts/fetchers/weather.py\", line 45, in fetch",
-    "last_success_epoch": 1795204540,
-    "last_success_iso": "2026-11-20T19:55:40Z"
+    "last_success_epoch": 1795223999,
+    "last_success_iso": "2026-11-21T01:19:59Z"
   },
   "worldbank_g20": {
-    "last_attempt_epoch": 1795123819,
-    "last_attempt_iso": "2026-11-19T21:30:19Z",
+    "last_attempt_epoch": 1795224386,
+    "last_attempt_iso": "2026-11-21T01:26:26Z",
     "last_error_epoch": 1794476866,
     "last_error_message": "RuntimeError: World Bank: kein Indikator lieferte Daten — worldbank/co2_total: kein Kandidat lieferte Daten (RetryError: HTTPSConnectionPool(host='api.worldbank.org', port=443): Max retries exceeded with url: /v2/country/ARG;AUS;BRA;CAN;CHN;); worldbank/co2_per_capita: kein Kandidat lieferte Daten (RetryError: HTTPSConnectionPool(host='api.worldbank.org', port=443): Max retries exceeded with url: /v2/country/ARG;AUS;BRA;CAN;CHN;); worldbank/renewable_share: kein Kandidat lieferte Daten (RetryErr",
-    "last_success_epoch": 1795123827,
-    "last_success_iso": "2026-11-19T21:30:27Z"
+    "last_success_epoch": 1795224396,
+    "last_success_iso": "2026-11-21T01:26:36Z"
   }
 }
