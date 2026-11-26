@@ -441,6 +441,45 @@ main{padding-top:22px}
 .statusbar{background:rgba(255,255,255,.88);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
 .lage-hero{border-radius:var(--radius)}
 
+
+/* Favoriten */
+.fav-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;margin-bottom:14px}
+.fav{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px 12px;
+  box-shadow:var(--shadow);display:flex;flex-direction:column;gap:4px;cursor:pointer;transition:box-shadow .15s,transform .15s;position:relative}
+.fav:hover{box-shadow:var(--shadow-md);transform:translateY(-1px)}
+.fav-top{display:flex;align-items:center;gap:8px}
+.fav-ico{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;flex:none}
+.fav-lbl{font-size:13px;font-weight:650;line-height:1.25}
+.fav-star{margin-left:auto;background:none;border:none;font-size:17px;color:#f5b301;cursor:pointer;padding:2px 4px;border-radius:6px}
+.fav-star:hover{background:var(--bg-alt)}
+.fav-val{font-size:30px;font-weight:750;letter-spacing:-.03em;font-variant-numeric:tabular-nums;margin-top:4px}
+.fav-val small{font-size:13px;font-weight:500;color:var(--text3);margin-left:4px;letter-spacing:0}
+.fav-meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:11px;color:var(--text3)}
+.fav-chip{border-radius:999px;padding:1px 8px;font-weight:600;font-size:11px}
+.fav-chip.up{color:var(--red);background:var(--red-bg)}
+.fav-chip.dn{color:var(--green);background:var(--green-bg)}
+.fav-chip.neutral{color:var(--text2);background:var(--bg-alt)}
+.fav-spark{height:42px;margin:4px 0 2px}
+.fav-spark svg{width:100%;height:42px;display:block}
+.fav-why{font-size:11.5px;color:var(--text2);line-height:1.45;border-top:1px dashed var(--border);padding-top:7px;margin-top:2px}
+.fav-edit{background:var(--card);border:1px solid var(--border);border-radius:999px;padding:8px 14px;font:inherit;font-weight:600;cursor:pointer;color:var(--text)}
+.fav-edit:hover{border-color:var(--accent);color:var(--accent)}
+.fav-picker{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:14px;box-shadow:var(--shadow)}
+.fav-picker h4{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin:8px 0 6px}
+.fav-picker .chips{display:flex;flex-wrap:wrap;gap:6px}
+.fav-foot{font-size:10.5px;color:var(--text3);line-height:1.6}
+/* Karten */
+.map-wrap{position:relative}
+.map-wrap svg{width:100%;height:auto;display:block}
+.map-wrap path{stroke:#fff;stroke-width:.7;transition:opacity .12s}
+.map-wrap path.leer{fill:#e7ebf1}
+.map-wrap path:hover{opacity:.8;stroke:#0f2540;stroke-width:1.2}
+.map-wrap text{font:600 9px Inter,sans-serif;fill:#1a2332;paint-order:stroke;stroke:#fff;stroke-width:2.5px;pointer-events:none}
+.map-wrap circle{stroke:#fff;stroke-width:1.5}
+.map-tip{position:absolute;pointer-events:none;background:#0f2540;color:#fff;font-size:11.5px;padding:6px 9px;border-radius:8px;
+  white-space:nowrap;transform:translate(-50%,-115%);box-shadow:0 6px 16px rgba(0,0,0,.2);display:none;z-index:5}
+.map-legend{display:flex;align-items:center;gap:8px;font-size:10.5px;color:var(--text2);margin-top:8px;flex-wrap:wrap}
+.map-legend .bar{height:8px;flex:1;min-width:120px;border-radius:99px}
 /* Grid-Kinder dürfen schmaler als ihr Inhalt werden, sonst schiebt eine
    breite Tabelle die ganze Seite auf dem Handy nach rechts. */
 .grid > *{min-width:0}
@@ -515,7 +554,9 @@ body.consent-offen{overflow:hidden}
      Both rows scroll together on narrow screens. -->
 <nav class="tabs">
   <div class="tab-row">
-    <button class="tab active" data-tab="strom">Stromerzeugung</button>
+    <button class="tab active" data-tab="fav">★ Favoriten</button>
+    <button class="tab" data-tab="karte">Karte DE/EU</button>
+    <button class="tab" data-tab="strom">Stromerzeugung</button>
     <button class="tab" data-tab="jahr">Jahreskennzahlen</button>
     <button class="tab" data-tab="strompreise">Strompreise & Importe</button>
     <button class="tab" data-tab="markt">Marktpreise</button>
@@ -539,7 +580,7 @@ body.consent-offen{overflow:hidden}
 <main>
 
 <!-- STROM -->
-<div class="panel active" id="panel-strom">
+<div class="panel" id="panel-strom">
   <div class="range-bar" data-tab="strom"></div>
   <div class="kpis" id="kpi-strom"></div>
   <div class="grid">
@@ -909,6 +950,54 @@ body.consent-offen{overflow:hidden}
     <div class="card g12" data-src="worldbank_g20" data-g20="renewable_share,renewable_electricity,elec_renew_ex_hydro,elec_hydro">
       <div class="card-hdr"><div><div class="card-title">G20: Erneuerbare im Vergleich</div><div class="card-sub">Weltbank · letztes Berichtsjahr je Land</div></div></div>
       <div class="chart-wrap" style="height:380px"><canvas id="chart-g20-ee"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- FAVORITEN: frei wählbare Kennzahlen als Startseite -->
+<div class="panel active" id="panel-fav">
+  <div class="jahr-head">
+    <div>
+      <div class="jahr-title">Meine Favoriten</div>
+      <div class="jahr-sub">Die Zahlen, über die politisch gerade gestritten wird – Sprit, Heizen, Strom, Gas. Auswahl wird nur in diesem Browser gespeichert.</div>
+    </div>
+    <button class="fav-edit" id="fav-edit-btn" onclick="favBearbeiten()">✎ Auswahl ändern</button>
+  </div>
+  <div class="fav-picker" id="fav-picker" hidden></div>
+  <div class="fav-grid" id="fav-grid"><div class="loading"><span class="spin"></span>Lädt…</div></div>
+  <div class="fav-foot" id="fav-foot"></div>
+</div>
+
+<!-- KARTE DE/EU -->
+<div class="panel" id="panel-karte">
+  <div class="grid">
+    <div class="card g7" data-src="energy_charts gas_storage eurostat_prices">
+      <div class="card-hdr">
+        <div><div class="card-title">Europa</div><div class="card-sub" id="map-eu-sub">—</div></div>
+        <select id="map-eu-layer" onchange="renderKarteEU()">
+          <option value="da">Strom Day-Ahead (Tagesmittel)</option>
+          <option value="gas">Gasspeicher Füllstand</option>
+          <option value="strom_hh">Strompreis Haushalte</option>
+          <option value="gas_hh">Gaspreis Haushalte</option>
+          <option value="strom_ind">Strompreis Industrie</option>
+        </select>
+      </div>
+      <div class="map-wrap" id="map-eu"><div class="loading"><span class="spin"></span>Lädt…</div></div>
+      <div class="map-legend" id="map-eu-legend"></div>
+    </div>
+    <div class="card g5" data-src="fuel expansion">
+      <div class="card-hdr">
+        <div><div class="card-title">Deutschland</div><div class="card-sub" id="map-de-sub">—</div></div>
+        <select id="map-de-layer" onchange="renderKarteDE()">
+          <option value="e5">Super E5 je Stadt</option>
+          <option value="e10">Super E10 je Stadt</option>
+          <option value="diesel">Diesel je Stadt</option>
+          <option value="wind">Windleistung je Land (Schätzung)</option>
+          <option value="solar">Solarleistung je Land (Schätzung)</option>
+        </select>
+      </div>
+      <div class="map-wrap" id="map-de"><div class="loading"><span class="spin"></span>Lädt…</div></div>
+      <div class="map-legend" id="map-de-legend"></div>
     </div>
   </div>
 </div>
@@ -1425,7 +1514,7 @@ const D = {}; // loaded data
 const CH = {}; // charts
 let fuelType = 'e5';
 let newsSource = 'alle';
-let activeTab = 'strom';
+let activeTab = 'fav';
 
 // ══════════════════════════════════════════════
 // TIME RANGE — unified per-tab range selector
@@ -1462,6 +1551,8 @@ const TAB_RANGES = {
   lage:        ['90d','1y','2y','5y','max'],
   news:        [],  // no range
   jahr:        [],  // eigener Umschalter (10 Jahre / Gesamt)
+  fav:         [],
+  karte:       [],
   makro:       ['2y','5y','max'],
 };
 
@@ -1570,6 +1661,8 @@ const TAB_FILES = {
   lage:        ['energy_charts','gas_storage','heating_oil','commodities','destatis_vpi','smard','entsoe','_state'],
   news:        ['news'],
   jahr:        ['kennzahlen'],
+  fav:         ['fuel','heating_oil','energy_charts','gas_storage','commodities','macrowolf','eurostat_prices','kennzahlen'],
+  karte:       ['energy_charts','gas_storage','eurostat_prices','fuel','expansion'],
   makro:       ['macrowolf'],
 };
 
@@ -6244,7 +6337,7 @@ const RENDERS={
   erneuerbare:renderErneuerbare, umwelt:renderUmwelt, g20:renderG20,
   wetter:renderWetter, fx:renderFx,
   futures:renderFutures, lage:renderLage, news:renderNews,
-  jahr:renderJahr, makro:renderMakro,
+  jahr:renderJahr, makro:renderMakro, fav:renderFav, karte:renderKarte,
 };
 
 // Blanket provenance: after a tab renders, every card that shows data and
@@ -6635,6 +6728,307 @@ function renderMakro() {
     ['#e0a100', '#0e6cb6', '#56657a', '#7e57c2']);
   mwLinien('chart-mw-fuel', ['de_fuel_e95', 'de_fuel_diesel', 'de_fuel_heating'], ['#d97706', '#4a5568', '#c0392b'], {}, ab);
   mwLinien('chart-mw-stimmung', ['de_pexp_ind', 'de_pexp_cons', 'de_conf_industry'], ['#c0392b', '#7e57c2', '#0e6cb6'], {}, ab);
+}
+
+
+// ══════════════════════════════════════════════
+// FAVORITEN
+// ══════════════════════════════════════════════
+// Frei wählbare Kennzahlen als Startseite. Jede Kachel: aktueller Wert,
+// Veränderung, Verlauf und ein Satz, warum die Zahl politisch zählt. Die
+// Auswahl liegt nur im localStorage dieses Browsers.
+const FAV_KEY = 'energydash:fav';
+const FAV_DEFAULT = ['e5','diesel','heizoel','strom_hh','strom_da','gasspeicher_de','ttf','vpi_energie'];
+
+// Hilfen: Verlauf aus history/*.jsonl, aus Makrowolf, aus Eurostat
+const favHist = (src, feld) => async () => (await loadHistory(src))
+  .filter(r => r[feld] != null).map(r => [r.date, +r[feld]]);
+const favMw = id => async () => (D.macrowolf?.series?.[id]?.series || []).map(p => [p.date, p.v]);
+const favEurostat = (teil, land = 'DE', f = 100) => async () =>
+  (D.eurostat_prices?.[teil]?.series_per_country?.[land] || []).filter(p => p.v != null)
+    .map(p => [String(p.period).replace('-S1', '-03-31').replace('-S2', '-09-30'), p.v * f]);
+
+const FAV_KATALOG = [
+  {id:'e5', g:'Verbraucher', lbl:'Super E5', ico:'⛽', col:'#d97706', unit:'€/l', dec:3, tab:'kraftstoff', gut:'tief',
+   reihe:favHist('fuel','e5_avg'), why:'Spritpreise treffen Pendler direkt; CO₂-Preis und Energiesteuer sind feste Bestandteile.'},
+  {id:'e10', g:'Verbraucher', lbl:'Super E10', ico:'⛽', col:'#e0a100', unit:'€/l', dec:3, tab:'kraftstoff', gut:'tief',
+   reihe:favHist('fuel','e10_avg'), why:'Günstigere Sorte mit Bioethanol-Anteil; Abstand zu E5 zeigt die Beimischungspolitik.'},
+  {id:'diesel', g:'Verbraucher', lbl:'Diesel', ico:'🚚', col:'#4a5568', unit:'€/l', dec:3, tab:'kraftstoff', gut:'tief',
+   reihe:favHist('fuel','diesel_avg'), why:'Treibstoff für Güterverkehr und Landwirtschaft – die Kosten wirken auf viele Preise weiter.'},
+  {id:'heizoel', g:'Verbraucher', lbl:'Heizöl', ico:'🛢️', col:'#c0392b', unit:'€/l', dec:3, tab:'kraftstoff', gut:'tief',
+   reihe:favHist('heating_oil','ref_eur_l'), why:'Viele Haushalte heizen noch mit Öl; der Preis folgt Gasöl und Dollar.'},
+  {id:'strom_hh', g:'Verbraucher', lbl:'Strompreis Haushalte', ico:'💡', col:'#0e6cb6', unit:'ct/kWh', dec:1, tab:'strompreise', gut:'tief',
+   reihe:favEurostat('electricity_household'), why:'Was Haushalte je kWh zahlen – inklusive Steuern, Umlagen und Netzentgelten (Eurostat, halbjährlich).'},
+  {id:'gas_hh', g:'Verbraucher', lbl:'Gaspreis Haushalte', ico:'🔥', col:'#dc6803', unit:'ct/kWh', dec:1, tab:'strompreise', gut:'tief',
+   reihe:favEurostat('gas_household'), why:'Heizkosten der meisten Haushalte; Mehrwertsteuer und CO₂-Preis sind Stellschrauben der Politik.'},
+  {id:'vpi_energie', g:'Verbraucher', lbl:'Verbraucherpreise Energie', ico:'📈', col:'#c0392b', unit:'% ggü. Vorjahr', dec:1, tab:'makro', gut:'tief', monat:true,
+   reihe:favMw('de_vpi_energy_yoy'), why:'Wie stark Energie die Inflation antreibt.'},
+  {id:'inflation', g:'Verbraucher', lbl:'Inflation gesamt', ico:'🛒', col:'#7e57c2', unit:'% ggü. Vorjahr', dec:1, tab:'makro', gut:'tief', monat:true,
+   reihe:favMw('de_cpi_yoy'), why:'Verbraucherpreisindex insgesamt – Maßstab für Löhne, Renten und Geldpolitik.'},
+  {id:'strom_da', g:'Großhandel', lbl:'Strom Day-Ahead', ico:'⚡', col:'#d97706', unit:'€/MWh', dec:1, tab:'strom', gut:'tief',
+   reihe:favHist('spot_price','de_avg'), why:'Tagesmittel an der Börse – Grundlage dynamischer Tarife und der Industriestrom-Debatte.'},
+  {id:'strom_monat', g:'Großhandel', lbl:'Strom Großhandel (Monat)', ico:'📊', col:'#d97706', unit:'€/MWh', dec:1, tab:'makro', gut:'tief', monat:true,
+   reihe:favMw('de_power_price'), why:'Monatsmittel seit 2015 – zeigt Krise und Normalisierung im langen Vergleich.'},
+  {id:'ttf', g:'Großhandel', lbl:'Erdgas TTF', ico:'🔥', col:'#dc6803', unit:'€/MWh', dec:1, tab:'gas', gut:'tief',
+   reihe:favHist('commodities','ttf_eur_mwh'), why:'Europäischer Gaspreis; bestimmt Heizkosten und oft den Strompreis.'},
+  {id:'brent', g:'Großhandel', lbl:'Rohöl Brent', ico:'🛢️', col:'#4a5568', unit:'$/Barrel', dec:1, tab:'rohstoffe', gut:'tief',
+   reihe:favHist('commodities','brent_usd_bbl'), why:'Weltmarktpreis für Rohöl; Basis für Sprit und Heizöl, abhängig von OPEC+ und Konflikten.'},
+  {id:'gasspeicher_de', g:'Versorgung', lbl:'Gasspeicher Deutschland', ico:'🏭', col:'#1f9d55', unit:'% gefüllt', dec:1, tab:'gas', gut:'hoch',
+   reihe:favHist('gas_storage','de_pct'), why:'Maßstab für die Versorgungssicherheit im Winter; es gelten gesetzliche Füllstandsvorgaben.'},
+  {id:'gasspeicher_eu', g:'Versorgung', lbl:'Gasspeicher EU', ico:'🇪🇺', col:'#1f9d55', unit:'% gefüllt', dec:1, tab:'gas', gut:'hoch',
+   reihe:favHist('gas_storage','eu_pct'), why:'Europäische Reserve – Engpässe in Nachbarländern wirken auf Deutschland zurück.'},
+  {id:'ee_anteil', g:'Versorgung', lbl:'Erneuerbare im Strommix', ico:'🌬️', col:'#1f9d55', unit:'%', dec:1, tab:'erneuerbare', gut:'hoch',
+   reihe:favHist('smard_mix','renewable_share_pct'), why:'Tagesanteil von Wind, Sonne, Wasser und Biomasse – Fortschritt der Energiewende.'},
+  {id:'neg_stunden', g:'Versorgung', lbl:'Negative Strompreise', ico:'➖', col:'#0891b2', unit:'Stunden im Jahr', dec:0, tab:'jahr', gut:null, jahr:true,
+   reihe:async () => (D.kennzahlen?.years || []).map(y => [`${y.year}-12-31`, y.neg_hours]),
+   why:'Mehr negative Preise heißt mehr Überschussstrom – Thema bei EEG-Förderung, Speichern und Netzausbau.'},
+];
+
+function favLesen() {
+  try { const v = JSON.parse(localStorage.getItem(FAV_KEY)); if (Array.isArray(v)) return v.filter(id => FAV_KATALOG.some(k => k.id === id)); } catch(e) {}
+  return FAV_DEFAULT.slice();
+}
+function favSchreiben(ids) { try { localStorage.setItem(FAV_KEY, JSON.stringify(ids)); } catch(e) {} }
+
+function favUmschalten(id, ev) {
+  if (ev) ev.stopPropagation();
+  const ids = favLesen();
+  const i = ids.indexOf(id);
+  if (i >= 0) ids.splice(i, 1); else ids.push(id);
+  favSchreiben(ids);
+  renderFav();
+}
+
+function favBearbeiten() {
+  const el = document.getElementById('fav-picker');
+  el.hidden = !el.hidden;
+  document.getElementById('fav-edit-btn').textContent = el.hidden ? '✎ Auswahl ändern' : '✓ Fertig';
+  renderFavPicker();
+}
+
+function renderFavPicker() {
+  const el = document.getElementById('fav-picker');
+  if (!el || el.hidden) return;
+  const ids = favLesen();
+  const gruppen = [...new Set(FAV_KATALOG.map(k => k.g))];
+  el.innerHTML = gruppen.map(g => `<h4>${g}</h4><div class="chips">` +
+    FAV_KATALOG.filter(k => k.g === g).map(k =>
+      `<button class="mod-chip${ids.includes(k.id) ? ' on' : ''}" onclick="favUmschalten('${k.id}')">${ids.includes(k.id) ? '★' : '☆'} ${k.lbl}</button>`).join('') +
+    '</div>').join('') +
+    `<div style="margin-top:10px"><button class="mod-reset" style="margin:0" onclick="favSchreiben(FAV_DEFAULT.slice());renderFav()">Standardauswahl wiederherstellen</button></div>`;
+}
+
+// Wert vor etwa `tage` Tagen (nächster Punkt davor, höchstens 40 % Toleranz)
+function favVorher(reihe, tage) {
+  if (reihe.length < 2) return null;
+  const ziel = Date.parse(reihe.at(-1)[0]) - tage * 86400e3;
+  for (let i = reihe.length - 2; i >= 0; i--) {
+    const t = Date.parse(reihe[i][0]);
+    if (t <= ziel) return (ziel - t) <= tage * 0.4 * 86400e3 + 4 * 86400e3 ? reihe[i] : null;
+  }
+  return null;
+}
+
+function favSpark(reihe, col) {
+  const r = reihe.slice(-120);
+  if (r.length < 2) return '';
+  const ys = r.map(p => p[1]), mn = Math.min(...ys), mx = Math.max(...ys), sp = (mx - mn) || 1;
+  const pts = r.map((p, i) => `${(i / (r.length - 1) * 100).toFixed(2)},${(38 - (p[1] - mn) / sp * 34).toFixed(2)}`);
+  return `<svg viewBox="0 0 100 42" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M0,42 L${pts.join(' L')} L100,42 Z" fill="${col}18"/>
+    <polyline points="${pts.join(' ')}" fill="none" stroke="${col}" stroke-width="1.6" vector-effect="non-scaling-stroke"/></svg>`;
+}
+
+function favChip(akt, alt, k, txt) {
+  if (!alt) return '';
+  const d = akt[1] - alt[1];
+  const proz = /%/.test(k.unit) ? null : (alt[1] ? d / Math.abs(alt[1]) * 100 : null);
+  const cls = Math.abs(d) < 1e-9 || !k.gut ? 'neutral' : ((d > 0) === (k.gut === 'tief') ? 'up' : 'dn');
+  const wert = proz != null ? `${proz >= 0 ? '+' : '−'}${fmtN(Math.abs(proz), 1)} %` : `${d >= 0 ? '+' : '−'}${fmtN(Math.abs(d), 1)} Pkt.`;
+  return `<span class="fav-chip ${cls}" title="Veränderung ${txt}">${wert} ${txt}</span>`;
+}
+
+async function renderFav() {
+  const grid = document.getElementById('fav-grid');
+  renderFavPicker();
+  const ids = favLesen();
+  if (!ids.length) {
+    grid.innerHTML = `<div class="nodata" style="grid-column:1/-1">Noch keine Favoriten. Über „Auswahl ändern“ hinzufügen.</div>`;
+    return;
+  }
+  const items = ids.map(id => FAV_KATALOG.find(k => k.id === id)).filter(Boolean);
+  const reihen = await Promise.all(items.map(k => k.reihe().catch(() => [])));
+  grid.innerHTML = items.map((k, i) => {
+    const r = (reihen[i] || []).filter(p => p[0] && p[1] != null && !isNaN(p[1])).sort((a, b) => a[0].localeCompare(b[0]));
+    const akt = r.at(-1);
+    const datum = akt ? (k.jahr ? akt[0].slice(0, 4) + (D.kennzahlen?.years?.at(-1)?.partial ? ' bisher' : '')
+                         : k.monat ? akt[0].slice(5, 7) + '/' + akt[0].slice(0, 4)
+                         : new Date(akt[0]).toLocaleDateString('de-DE')) : '';
+    const chips = akt ? (k.jahr ? favChip(akt, r.at(-2), k, 'ggü. Vorjahr')
+      : k.monat ? favChip(akt, favVorher(r, 30), k, 'ggü. Vormonat') + favChip(akt, favVorher(r, 365), k, 'ggü. Vorjahr')
+      : favChip(akt, favVorher(r, 7), k, '7 Tage') + favChip(akt, favVorher(r, 365), k, '1 Jahr')) : '';
+    return `<div class="fav" onclick="gotoTab('${k.tab}')" title="Details im Reiter öffnen">
+      <div class="fav-top"><span class="fav-ico" style="background:${k.col}1f">${k.ico}</span>
+        <span class="fav-lbl">${k.lbl}</span>
+        <button class="fav-star" onclick="favUmschalten('${k.id}',event)" title="Aus den Favoriten entfernen" aria-label="${k.lbl} aus den Favoriten entfernen">★</button></div>
+      <div class="fav-val">${akt ? fmtN(akt[1], k.dec) : '—'}<small>${k.unit}</small></div>
+      <div class="fav-meta">${datum ? `<span>${datum}</span>` : '<span>noch keine Daten</span>'}${chips}</div>
+      <div class="fav-spark">${favSpark(r, k.col)}</div>
+      <div class="fav-why">${k.why}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('fav-foot').innerHTML =
+    'Rot = für Verbraucher ungünstige Richtung, Grün = günstige. Quellen: Tankerkönig, TECSON, Eurostat, Energy-Charts, GIE AGSI+, Yahoo Finance, SMARD, Makrowolf (Destatis). Ein Klick auf eine Kachel öffnet den passenden Reiter.';
+}
+
+// ══════════════════════════════════════════════
+// KARTE DE/EU
+// ══════════════════════════════════════════════
+// Geometrie: data/geo/*.json, einmalig aus Eurostat GISCO gebaut
+// (scripts/tools/build_geo.py), schon als SVG-Pfade – keine Kartenbibliothek.
+const GEO = {};
+async function geoLaden(name) {
+  if (GEO[name]) return GEO[name];
+  try { const r = await fetch(`./data/geo/${name}.json`); GEO[name] = r.ok ? await r.json() : null; }
+  catch(e) { GEO[name] = null; }
+  return GEO[name];
+}
+
+// Farbskala über drei Stützfarben; umkehren, wenn hoch = gut
+function skalaFarbe(v, mn, mx, umkehren) {
+  const st = [[31,157,85],[240,190,40],[192,57,43]];
+  let t = mx > mn ? (v - mn) / (mx - mn) : .5; t = Math.max(0, Math.min(1, t)); if (umkehren) t = 1 - t;
+  const [a, b, u] = t < .5 ? [st[0], st[1], t * 2] : [st[1], st[2], (t - .5) * 2];
+  return `rgb(${a.map((c, i) => Math.round(c + (b[i] - c) * u)).join(',')})`;
+}
+
+function karteZeichnen(boxId, geo, werte, opt) {
+  const box = document.getElementById(boxId);
+  if (!geo) { box.innerHTML = '<div class="nodata">Kartengeometrie fehlt (data/geo/)</div>'; return; }
+  const vals = Object.values(werte).filter(v => v != null);
+  const mn = Math.min(...vals), mx = Math.max(...vals);
+  const pfade = Object.entries(geo.shapes).map(([id, s]) => {
+    const v = werte[id];
+    return `<path d="${s.d}" data-id="${id}" class="${v == null ? 'leer' : ''}" style="${v == null ? '' : 'fill:' + skalaFarbe(v, mn, mx, opt.hochGut)}"></path>`;
+  }).join('');
+  const punkte = (opt.punkte || []).map(p => {
+    const [x, y] = karteProj(geo, p.lon, p.lat).map(Number);
+    return `<circle cx="${x}" cy="${y}" r="${p.r || 9}" data-tip="${p.tip}" style="fill:${p.v == null ? '#8c98a8' : skalaFarbe(p.v, p.mn, p.mx, false)}"></circle>
+      <text x="${x}" y="${y + (p.r || 9) + 10}" text-anchor="middle">${p.lbl}</text>`;
+  }).join('');
+  box.innerHTML = `<svg viewBox="0 0 ${geo.width} ${geo.height}" role="img" aria-label="${opt.titel}">${pfade}<g class="lbls"></g>${punkte}</svg><div class="map-tip"></div>`;
+  const svg = box.querySelector('svg'), tip = box.querySelector('.map-tip'), lbls = svg.querySelector('.lbls');
+  // Werte in die Flächen schreiben (nur wo Platz ist)
+  if (opt.beschriften !== false) svg.querySelectorAll('path[data-id]').forEach(p => {
+    const v = werte[p.dataset.id]; if (v == null) return;
+    const b = p.getBBox(); if (b.width < 18 || b.height < 12) return;
+    const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    t.setAttribute('x', b.x + b.width / 2 + (opt.versatz?.[p.dataset.id]?.[0] || 0));
+    t.setAttribute('y', b.y + b.height / 2 + 3 + (opt.versatz?.[p.dataset.id]?.[1] || 0));
+    t.setAttribute('text-anchor', 'middle'); t.textContent = fmtN(v, opt.dec);
+    lbls.appendChild(t);
+  });
+  const zeigen = (e, txt) => { const r = box.getBoundingClientRect();
+    tip.style.left = (e.clientX - r.left) + 'px'; tip.style.top = (e.clientY - r.top) + 'px';
+    tip.textContent = txt; tip.style.display = 'block'; };
+  svg.addEventListener('mousemove', e => {
+    const c = e.target.closest('circle'), p = e.target.closest('path');
+    if (c) return zeigen(e, c.dataset.tip);
+    if (p) { const id = p.dataset.id, v = werte[id];
+      return zeigen(e, `${opt.namen?.[id] || geo.shapes[id].name}: ${v == null ? 'keine Daten' : fmtN(v, opt.dec) + ' ' + opt.einheit}`); }
+    tip.style.display = 'none';
+  });
+  svg.addEventListener('mouseleave', () => tip.style.display = 'none');
+  const leg = document.getElementById(boxId + '-legend');
+  if (leg) leg.innerHTML = vals.length ? `<span>${fmtN(mn, opt.dec)}</span><span class="bar" style="background:linear-gradient(90deg,${
+    [0, .5, 1].map(t => skalaFarbe(mn + (mx - mn) * t, mn, mx, opt.hochGut)).join(',')})"></span><span>${fmtN(mx, opt.dec)} ${opt.einheit}</span>
+    <span style="flex-basis:100%;color:var(--text3)">${opt.quelle} · Karte: ${geo.source}</span>` : '';
+}
+
+function karteProj(geo, lon, lat) {
+  const [lon0, lat0, lon1, lat1] = geo.box, k = Math.cos((lat0 + lat1) / 2 * Math.PI / 180);
+  const sx = geo.width / ((lon1 - lon0) * k);
+  return [((lon - lon0) * k * sx).toFixed(1), ((lat1 - lat) * sx).toFixed(1)];
+}
+
+async function renderKarte() { await Promise.all([renderKarteEU(), renderKarteDE()]); }
+
+const EU_ZONE_LAND = {price_de:['DE','LU'], price_at:['AT'], price_fr:['FR'], price_pl:['PL'], price_ch:['CH'], price_nl:['NL'],
+  price_be:['BE'], price_cz:['CZ'], price_dk1:['DK'], price_dk2:['DK'], price_no2:['NO'], price_si:['SI'], price_hu:['HU'], price_it_north:['IT']};
+
+async function renderKarteEU() {
+  const geo = await geoLaden('europa');
+  const lay = document.getElementById('map-eu-layer')?.value || 'da';
+  const werte = {}; let opt = {};
+  if (lay === 'da') {
+    const ec = D.energy_charts || {};
+    const tag = t => new Date(t * 1000).toLocaleDateString('sv-SE', {timeZone:'Europe/Berlin'});
+    const de = ec.price_de; let ziel = null;
+    if (de?.unix_seconds?.length) {
+      const n = {}; de.unix_seconds.forEach((t, i) => { if (de.price[i] != null) n[tag(t)] = (n[tag(t)] || 0) + 1; });
+      ziel = Object.keys(n).sort().filter(d => n[d] >= 92 || (n[d] >= 23 && n[d] <= 25)).at(-1);
+    }
+    Object.entries(EU_ZONE_LAND).forEach(([k, laender]) => {
+      const z = ec[k]; if (!z?.unix_seconds?.length || !ziel) return;
+      const xs = z.unix_seconds.map((t, i) => tag(t) === ziel ? z.price[i] : null).filter(v => v != null);
+      if (!xs.length) return;
+      laender.forEach(l => { if (werte[l] == null) werte[l] = xs.reduce((a, b) => a + b, 0) / xs.length; });
+    });
+    opt = {dec:0, einheit:'€/MWh', titel:'Day-Ahead-Strompreise Europa', quelle:'Energy-Charts (Fraunhofer ISE)',
+           sub:`Tagesmittel Day-Ahead · ${ziel ? ziel.split('-').reverse().join('.') : '—'} · Italien = Zone Nord, Dänemark = Ost, Norwegen = NO2`};
+  } else if (lay === 'gas') {
+    const g = D.gas_storage?.gas || {}; let datum = '';
+    Object.entries(g).forEach(([cc, s]) => { const l = (s.data || []).filter(x => x.fill_pct != null).at(-1);
+      if (l && cc !== 'eu') { werte[cc.toUpperCase()] = l.fill_pct; datum = l.date > datum ? l.date : datum; } });
+    opt = {dec:0, einheit:'%', hochGut:true, titel:'Gasspeicher-Füllstand Europa', quelle:'GIE AGSI+',
+           sub:`Füllstand der Gasspeicher · ${datum.split('-').reverse().join('.')} · nur Länder mit Abruf im Dashboard`};
+  } else {
+    const teil = {strom_hh:'electricity_household', gas_hh:'gas_household', strom_ind:'electricity_industry'}[lay];
+    const t = D.eurostat_prices?.[teil] || {}; let per = '';
+    Object.entries(t.series_per_country || {}).forEach(([cc, r]) => { const l = (r || []).filter(x => x.v != null).at(-1);
+      if (l && !cc.startsWith('EU')) { werte[cc] = l.v * 100; per = String(l.period) > per ? String(l.period) : per; } });
+    opt = {dec:1, einheit:'ct/kWh', titel:t.label || 'Endkundenpreise', quelle:'Eurostat',
+           sub:`${t.label || ''} · inkl. aller Steuern und Abgaben · ${per.replace('-S1', ' 1. Halbjahr').replace('-S2', ' 2. Halbjahr')}`};
+  }
+  document.getElementById('map-eu-sub').textContent = opt.sub;
+  if (!Object.keys(werte).length) { document.getElementById('map-eu').innerHTML = '<div class="nodata">Für diese Ebene liegen noch keine Daten vor</div>';
+    document.getElementById('map-eu-legend').innerHTML = ''; return; }
+  karteZeichnen('map-eu', geo, werte, opt);
+}
+
+const DE_LAND = {DE1:'BW', DE2:'BY', DE3:'BE', DE4:'BB', DE5:'HB', DE6:'HH', DE7:'HE', DE8:'MV', DE9:'NI',
+  DEA:'NW', DEB:'RP', DEC:'SL', DED:'SN', DEE:'ST', DEF:'SH', DEG:'TH'};
+const DE_STADT = {Berlin:[13.40,52.52], Hamburg:[9.99,53.55], 'München':[11.58,48.14], Frankfurt:[8.68,50.11],
+  Leipzig:[12.37,51.34], 'Köln':[6.96,50.94], Stuttgart:[9.18,48.78], 'Düsseldorf':[6.77,51.22], Hannover:[9.73,52.37],
+  Dresden:[13.74,51.05], Bremen:[8.80,53.08], 'Nürnberg':[11.08,49.45]};
+
+async function renderKarteDE() {
+  const geo = await geoLaden('deutschland');
+  const lay = document.getElementById('map-de-layer')?.value || 'e5';
+  const sub = document.getElementById('map-de-sub');
+  if (lay === 'wind' || lay === 'solar') {
+    const bl = D.expansion?.bundeslaender || {};
+    const werte = {};
+    Object.entries(DE_LAND).forEach(([nuts, k]) => { const v = bl[k]?.[lay + '_mw']; if (v != null) werte[nuts] = v / 1000; });
+    sub.textContent = `${lay === 'wind' ? 'Wind' : 'Solar'}leistung je Bundesland · GW · grobe Schätzwerte aus einem Einmal-Snapshot (Energy-Charts/BDEW)`;
+    if (!Object.keys(werte).length) { document.getElementById('map-de').innerHTML = '<div class="nodata">Keine Länderwerte</div>'; return; }
+    karteZeichnen('map-de', geo, werte, {dec:1, einheit:'GW', hochGut:true, titel:'Leistung je Bundesland', quelle:'Energy-Charts + BDEW (Snapshot)'});
+    return;
+  }
+  const c = D.fuel?.cities || {}, feld = lay + '_avg';
+  const st = Object.entries(c).filter(([n, v]) => DE_STADT[n] && v?.[feld] != null);
+  const preise = st.map(([, v]) => v[feld]);
+  const mn = Math.min(...preise), mx = Math.max(...preise);
+  const nat = c._national?.[feld];
+  sub.textContent = `${{e5:'Super E5', e10:'Super E10', diesel:'Diesel'}[lay]} · Durchschnitt der Tankstellen je Stadt · Tankerkönig${nat ? ` · bundesweite Stichprobe ${fmtN(nat, 3)} €/l` : ''}`;
+  if (!st.length) { document.getElementById('map-de').innerHTML = '<div class="nodata">Keine Kraftstoffpreise je Stadt</div>'; return; }
+  karteZeichnen('map-de', geo, {}, {dec:3, einheit:'€/l', titel:'Kraftstoffpreise je Stadt', quelle:'Tankerkönig (MTS-K)', beschriften:false,
+    punkte: st.map(([n, v]) => ({lon:DE_STADT[n][0], lat:DE_STADT[n][1], v:v[feld], mn, mx, r:10,
+      lbl:`${n} ${fmtN(v[feld], 3)}`, tip:`${n}: ${fmtN(v[feld], 3)} €/l (min ${fmtN(v[lay + '_min'], 3)}, max ${fmtN(v[lay + '_max'], 3)}, ${v.count || '?'} Tankstellen)`}))});
+  // Legende für die Punkte
+  document.getElementById('map-de-legend').innerHTML = `<span>${fmtN(mn, 3)}</span><span class="bar" style="background:linear-gradient(90deg,${
+    [0, .5, 1].map(t => skalaFarbe(mn + (mx - mn) * t, mn, mx, false)).join(',')})"></span><span>${fmtN(mx, 3)} €/l</span>
+    <span style="flex-basis:100%;color:var(--text3)">Tankerkönig (Markttransparenzstelle) · Karte: ${geo?.source || ''}</span>`;
 }
 
 // ══════════════════════════════════════════════
