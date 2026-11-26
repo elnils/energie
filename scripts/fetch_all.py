@@ -38,7 +38,7 @@ from fetchers import (
     commodities, news, fx_ecb, heating_oil, destatis_vpi,
     entsog, entsoe, eia_petroleum, fred_energy, eurostat_oil,
     energy_futures, eurostat_prices, eurostat_env, worldbank_g20,
-    bnetza_gas, gas_storage_history, kennzahlen, makro, gas_sites,
+    bnetza_gas, gas_storage_history, kennzahlen, makro, gas_sites, themen,
 )
 
 
@@ -94,6 +94,8 @@ SCHEDULE = [
     ('Jahreskennzahlen', 'kennzahlen',      kennzahlen.fetch,       720,   300),
     # Makroreihen mit Energiebezug (amtliche Statistik, 11 kleine JSON-Dateien).
     ('Makro',            'makro',           makro.fetch,            720,   90),
+    # Energiethemen (18 Suchen) und amtliche Meldungen (13 Stellen).
+    ('Themen & Amtliches', 'themen',        themen.fetch,           180,   150),
     ('News RSS',         'news',            news.fetch,             120,   90),
 ]
 

@@ -65,6 +65,7 @@ EXPECTED_KEYS: Dict[str, Set[str]] = {
     'kennzahlen':    {'years'},
     'makro':         {'series'},
     'gas_sites':     {'standorte'},
+    'themen':        {'themen', 'meldungen'},
 }
 
 FORBIDDEN_KEYS: Dict[str, Set[str]] = {
@@ -91,6 +92,7 @@ FORBIDDEN_KEYS: Dict[str, Set[str]] = {
     'kennzahlen':    {'gas', 'points', 'articles', 'cities'},
     'makro':         {'gas', 'points', 'articles', 'cities'},
     'gas_sites':     {'gas', 'points', 'articles', 'cities'},
+    'themen':        {'gas', 'points', 'articles', 'cities'},
 }
 
 
