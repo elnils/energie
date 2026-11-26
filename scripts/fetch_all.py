@@ -38,7 +38,7 @@ from fetchers import (
     commodities, news, fx_ecb, heating_oil, destatis_vpi,
     entsog, entsoe, eia_petroleum, fred_energy, eurostat_oil,
     energy_futures, eurostat_prices, eurostat_env, worldbank_g20,
-    bnetza_gas, gas_storage_history,
+    bnetza_gas, gas_storage_history, kennzahlen, makro, gas_sites,
 )
 
 
@@ -86,6 +86,14 @@ SCHEDULE = [
     # Multi-year AGSI archive for the seasonal comparison. Resumable backfill
     # capped at 90 requests per run, then only the recent weeks are re-read.
     ('AGSI Historie',    'gas_storage_history', gas_storage_history.fetch, 360, 240),
+    # Jahreskennzahlen (Marktwertfaktoren, negative Stunden, Volllaststunden):
+    # zwei große Energy-Charts-Abrufe je Jahr, abgeschlossene Jahre bleiben
+    # gespeichert, nur das laufende Jahr wird neu gerechnet.
+    # Gasspeicher je Standort: ~50 kleine AGSI-Abrufe, einer je Anlage.
+    ('AGSI Standorte',   'gas_sites',       gas_sites.fetch,        360,   120),
+    ('Jahreskennzahlen', 'kennzahlen',      kennzahlen.fetch,       720,   300),
+    # Makroreihen mit Energiebezug (amtliche Statistik, 11 kleine JSON-Dateien).
+    ('Makro',            'makro',           makro.fetch,            720,   90),
     ('News RSS',         'news',            news.fetch,             120,   90),
 ]
 
