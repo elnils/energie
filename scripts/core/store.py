@@ -62,6 +62,8 @@ EXPECTED_KEYS: Dict[str, Set[str]] = {
     'worldbank_g20': {'co2_total', 'co2_per_capita', 'renewable_share'},
     'bnetza_gas':    {'datasets'},
     'gas_storage_history': {'countries'},
+    'kennzahlen':    {'years'},
+    'macrowolf':     {'series'},
 }
 
 FORBIDDEN_KEYS: Dict[str, Set[str]] = {
@@ -85,6 +87,8 @@ FORBIDDEN_KEYS: Dict[str, Set[str]] = {
     'worldbank_g20': {'gas', 'points', 'articles', 'cities'},
     'bnetza_gas':    {'gas', 'points', 'articles', 'cities'},
     'gas_storage_history': {'gas', 'points', 'articles', 'cities'},
+    'kennzahlen':    {'gas', 'points', 'articles', 'cities'},
+    'macrowolf':     {'gas', 'points', 'articles', 'cities'},
 }
 
 

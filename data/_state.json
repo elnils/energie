@@ -121,6 +121,18 @@
     "last_success_epoch": 1795668965,
     "last_success_iso": "2026-11-26T04:56:05Z"
   },
+  "kennzahlen": {
+    "last_attempt_epoch": 1795684082,
+    "last_attempt_iso": "2026-11-26T09:08:02Z",
+    "last_success_epoch": 1795684221,
+    "last_success_iso": "2026-11-26T09:10:21Z"
+  },
+  "macrowolf": {
+    "last_attempt_epoch": 1795684058,
+    "last_attempt_iso": "2026-11-26T09:07:38Z",
+    "last_success_epoch": 1795684059,
+    "last_success_iso": "2026-11-26T09:07:39Z"
+  },
   "news": {
     "last_attempt_epoch": 1795669636,
     "last_attempt_iso": "2026-11-26T05:07:16Z",

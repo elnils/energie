@@ -383,12 +383,125 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
 .lage-status.ok{background:rgba(92,210,154,.15);color:#5cd29a;border:1px solid rgba(92,210,154,.3)}
 .lage-status.warn{background:rgba(220,151,4,.18);color:#f0ad4e;border:1px solid rgba(220,151,4,.3)}
 .lage-status.crit{background:rgba(220,53,69,.18);color:#ff7675;border:1px solid rgba(220,53,69,.3)}
+
+/* ══════════════════════════════════════════════
+   MODERN REFRESH 2026
+   ══════════════════════════════════════════════
+   Ruhigere Fläche, größere Radien, weichere Schatten, Reiter als Pillen und
+   größere Zahlen. Steht bewusst am Ende, damit es die älteren Regeln
+   überschreibt, ohne dass die gesamte Datei umgebaut werden muss. */
+:root{
+  --bg:#f3f5f9; --bg-alt:#f6f8fb; --border:#e3e8ef; --border-strong:#cfd7e2;
+  --header:#0f2540; --header-hover:#17345a; --accent:#2563eb; --accent-bg:#eaf1ff;
+  --radius:14px; --radius-sm:10px;
+  --shadow:0 1px 2px rgba(16,24,40,.04),0 1px 3px rgba(16,24,40,.05);
+  --shadow-md:0 4px 10px -2px rgba(16,24,40,.07),0 12px 28px -6px rgba(16,24,40,.10);
+}
+body{font-size:13.5px;background:
+  radial-gradient(1200px 400px at 10% -10%,rgba(37,99,235,.07),transparent 60%),
+  radial-gradient(900px 380px at 100% 0%,rgba(16,185,129,.06),transparent 60%),var(--bg);background-attachment:fixed}
+header{height:60px;background:linear-gradient(100deg,#0b1d33 0%,#12345c 55%,#1b4f8a 100%);
+  box-shadow:0 6px 24px -10px rgba(11,29,51,.55)}
+.logo{font-size:17px;letter-spacing:-.02em;display:flex;align-items:center;gap:8px}
+.logo .logo-mark{margin:0;color:#fff;width:30px;height:30px;border-radius:9px;flex:none;display:inline-flex;align-items:center;justify-content:center;
+  font-size:16px;background:linear-gradient(135deg,#fbbf24,#f97316);box-shadow:0 2px 10px rgba(249,115,22,.45)}
+.logo .logo-sub{color:#9fb6d3;font-weight:500;margin-left:-2px}
+.btn{border-radius:999px;padding:6px 14px;background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.18)}
+.live{background:rgba(92,210,154,.12);padding:4px 10px;border-radius:999px}
+
+.tabs{position:sticky;top:60px;z-index:150;background:rgba(255,255,255,.82);
+  backdrop-filter:saturate(1.6) blur(12px);-webkit-backdrop-filter:saturate(1.6) blur(12px);
+  border-bottom:1px solid var(--border);box-shadow:0 1px 0 rgba(16,24,40,.02);padding:8px 20px;gap:6px}
+.tab-row{gap:4px}
+.tab-row+.tab-row{border-top:none}
+.tab{border:none;border-radius:999px;padding:7px 14px;font-size:13px;color:var(--text2);border-bottom:none}
+.tab:hover{background:var(--bg-alt);color:var(--text)}
+.tab.active{background:var(--header);color:#fff;font-weight:600;box-shadow:0 2px 8px -2px rgba(15,37,64,.45)}
+
+main{padding-top:22px}
+.card,.kpi,.range-bar,.mod-bar,.news-card,.fuel-tabs{border-radius:var(--radius);border-color:var(--border);box-shadow:var(--shadow)}
+.card{padding:18px}
+.card:hover,.kpi:hover,.news-card:hover{box-shadow:var(--shadow-md)}
+.card-title{font-size:14.5px;font-weight:650;letter-spacing:-.01em}
+.card-sub{font-size:11px;margin-top:3px}
+.grid{gap:16px;margin-bottom:16px}
+.kpis{gap:12px;grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}
+.kpi{padding:16px 18px 14px}
+.kpi-bar{top:16px;bottom:auto;left:18px;right:auto;width:8px;height:8px;border-radius:50%}
+.kpi-lbl{padding-left:16px;text-transform:none;letter-spacing:0;font-size:12px;font-weight:600;margin-top:-2px}
+.kpi-val{font-size:28px;font-weight:750;letter-spacing:-.03em;margin-top:6px;font-variant-numeric:tabular-nums}
+.kpi-delta{border-radius:999px;padding:2px 8px}
+.range-bar{padding:8px 14px}
+.range-opts{border-radius:999px;padding:3px}
+.range-opt{border-radius:999px;padding:5px 12px}
+.fuel-tab{border-radius:999px}
+.fuel-tabs{border-radius:999px;padding:4px}
+.exp-btn,.card-ctl,select{border-radius:8px}
+.card-stamp{border-top-style:dashed}
+.statusbar{background:rgba(255,255,255,.88);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.lage-hero{border-radius:var(--radius)}
+
+/* Grid-Kinder dürfen schmaler als ihr Inhalt werden, sonst schiebt eine
+   breite Tabelle die ganze Seite auf dem Handy nach rechts. */
+.grid > *{min-width:0}
+/* Jahreskennzahlen */
+.jahr-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.jahr-title{font-size:22px;font-weight:750;letter-spacing:-.02em}
+.jahr-sub{font-size:12px;color:var(--text2);margin-top:2px}
+.jahr-card .card-hdr{min-height:0;margin-bottom:6px}
+.jahr-card .card-sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.jahr-wert{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
+.jahr-wert b{font-size:26px;font-weight:750;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.jahr-wert span{font-size:12px;color:var(--text3)}
+.jahr-wert em{font-size:10px;font-style:normal;color:var(--yellow);background:var(--yellow-bg);padding:1px 7px;border-radius:999px}
+.jahr-vor{font-size:11px;color:var(--text3);margin:2px 0 6px}
+
+/* Einwilligung: Dialog in der Mitte, die Seite dahinter ist bis zur Wahl
+   gesperrt. Die Zustimmung ist der große Knopf; Ablehnen und Anpassen
+   stehen gleich darunter auf derselben Ebene, kleiner. */
+.consent{position:fixed;inset:0;z-index:1000;background:rgba(10,20,35,.55);
+  backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);border:none;box-shadow:none;
+  display:flex;align-items:center;justify-content:center;padding:20px;
+  padding-bottom:calc(20px + env(safe-area-inset-bottom))}
+.consent-box{background:var(--card);border-radius:20px;box-shadow:0 24px 60px -12px rgba(10,20,35,.45);
+  width:min(560px,100%);max-height:calc(100vh - 40px);overflow:auto;padding:28px 28px 22px}
+.consent-icon{width:44px;height:44px;border-radius:12px;background:var(--accent-bg);color:var(--accent);
+  display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:14px}
+.consent-txt{font-size:13px;min-width:0}
+.consent-txt strong{font-size:19px;letter-spacing:-.01em;margin-bottom:8px}
+.consent-actions{display:flex;flex-direction:column;gap:10px;margin-top:20px}
+.consent-btn.primary{width:100%;min-height:56px;font-size:16px;font-weight:700;border-radius:14px;
+  background:linear-gradient(135deg,#2563eb,#1d4ed8);border:none;box-shadow:0 8px 20px -6px rgba(37,99,235,.6)}
+.consent-btn.primary:hover{filter:brightness(1.06)}
+.consent-sec{display:flex;justify-content:center;gap:6px}
+.consent-link{background:none;border:none;font:inherit;font-size:12.5px;color:var(--text2);cursor:pointer;
+  padding:8px 12px;border-radius:8px;text-decoration:underline;text-underline-offset:3px}
+.consent-link:hover{background:var(--bg-alt);color:var(--text)}
+.consent-opts{display:none;margin-top:16px;border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.consent-opts.open{display:block}
+.consent-opt{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;font-size:12px;color:var(--text2)}
+.consent-opt+.consent-opt{border-top:1px solid var(--border)}
+.consent-opt b{display:block;color:var(--text);font-size:13px}
+.consent-opt input{margin-top:3px;width:18px;height:18px;accent-color:var(--accent);flex:none}
+.consent-save{display:block;width:calc(100% - 28px);margin:4px 14px 14px;min-height:40px;border-radius:10px;
+  border:1px solid var(--border-strong);background:var(--bg-alt);font:inherit;font-weight:600;cursor:pointer}
+body.consent-offen{overflow:hidden}
+@media (max-width:760px){
+  header{height:auto;min-height:56px;padding-top:8px;padding-bottom:8px}
+  .tabs{top:auto;position:relative}
+  .consent{flex-direction:row;justify-content:center;align-items:flex-end;padding:0}
+  .consent-box{border-radius:20px 20px 0 0;padding:22px 18px calc(18px + env(safe-area-inset-bottom))}
+  .consent-actions{flex-direction:column}
+  .consent-btn{width:100%}
+  .kpi-val{font-size:22px}
+  .jahr-wert b{font-size:22px}
+}
 </style>
 </head>
 <body>
 
 <header>
-  <div class="logo">⚡ energie<span>dashboard</span></div>
+  <div class="logo"><span class="logo-mark" aria-hidden="true">⚡</span>Energie<span class="logo-sub">Dashboard DE/EU</span></div>
   <div class="hdr-right">
     <div class="live"><span class="pulse"></span>LIVE</div>
     <span>Stand: <b id="last-update">—</b></span>
@@ -403,6 +516,7 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
 <nav class="tabs">
   <div class="tab-row">
     <button class="tab active" data-tab="strom">Stromerzeugung</button>
+    <button class="tab" data-tab="jahr">Jahreskennzahlen</button>
     <button class="tab" data-tab="strompreise">Strompreise & Importe</button>
     <button class="tab" data-tab="markt">Marktpreise</button>
     <button class="tab" data-tab="gas">Gas</button>
@@ -413,6 +527,7 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
   <div class="tab-row">
     <button class="tab" data-tab="erneuerbare">Erneuerbare</button>
     <button class="tab" data-tab="umwelt">Emissionen & Wärme</button>
+    <button class="tab" data-tab="makro">Makro &amp; Endenergie</button>
     <button class="tab" data-tab="g20">G20-Vergleich</button>
     <button class="tab" data-tab="lage">Marktlage & Versorgung</button>
     <button class="tab" data-tab="wetter">Wetter</button>
@@ -443,6 +558,18 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
         <div><div class="card-title">Day-Ahead Strompreis</div><div class="card-sub">Energy-Charts · Fraunhofer ISE · stündlich</div></div>
       </div>
       <div class="chart-wrap" style="height:180px"><canvas id="chart-price"></canvas></div>
+    </div>
+    <div class="card g6" data-src="smard energy_charts">
+      <div class="card-hdr"><div><div class="card-title">Spotpreis gegen Residuallast</div><div class="card-sub">Residuallast = Last − Wind − Solar · je Viertelstunde · letzte Tage</div></div></div>
+      <div class="chart-wrap" style="height:240px"><canvas id="chart-residual"></canvas></div>
+    </div>
+    <div class="card g6" data-src="energy_charts">
+      <div class="card-hdr"><div><div class="card-title">Preisspitzen &amp; negative Preise</div><div class="card-sub">Stunden je Tag mit Preis &lt; 0 bzw. &gt; 200 €/MWh · Energy-Charts</div></div></div>
+      <div class="chart-wrap" style="height:240px"><canvas id="chart-spikes"></canvas></div>
+    </div>
+    <div class="card g12" data-src="energy_charts">
+      <div class="card-hdr"><div><div class="card-title">Day-Ahead-Preise Europa</div><div class="card-sub">Tagesmittel je Gebotszone · letzter vollständiger Tag und Vortag · €/MWh</div></div></div>
+      <div class="chart-wrap" style="height:260px"><canvas id="chart-eu-da"></canvas></div>
     </div>
     <div class="card g12" data-src="worldbank_g20" data-g20="elec_coal,elec_gas,elec_nuclear,elec_renew_ex_hydro,elec_hydro,renewable_electricity,electricity_per_capita">
       <div class="card-hdr"><div><div class="card-title">G20: Stromerzeugung im Vergleich</div><div class="card-sub">Weltbank · letztes Berichtsjahr je Land</div></div></div>
@@ -782,6 +909,64 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
     <div class="card g12" data-src="worldbank_g20" data-g20="renewable_share,renewable_electricity,elec_renew_ex_hydro,elec_hydro">
       <div class="card-hdr"><div><div class="card-title">G20: Erneuerbare im Vergleich</div><div class="card-sub">Weltbank · letztes Berichtsjahr je Land</div></div></div>
       <div class="chart-wrap" style="height:380px"><canvas id="chart-g20-ee"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- JAHRESKENNZAHLEN (nach dem Vorbild von neon.energy/dashboard) -->
+<div class="panel" id="panel-jahr">
+  <div class="jahr-head">
+    <div>
+      <div class="jahr-title">Strommarkt in Jahreszahlen</div>
+      <div class="jahr-sub" id="jahr-sub">Deutschland · Energy-Charts (Fraunhofer ISE) · laufendes Jahr bis zum letzten Datenstand</div>
+    </div>
+    <div class="range-opts" id="jahr-modus" role="group" aria-label="Zeitraum">
+      <button class="range-opt active" data-m="10">10 Jahre</button>
+      <button class="range-opt" data-m="all">Gesamt</button>
+    </div>
+  </div>
+  <div class="kpis" id="kpi-jahr"></div>
+  <div class="grid" id="jahr-grid"></div>
+  <div class="grid">
+    <div class="card g12" data-src="kennzahlen">
+      <div class="card-hdr"><div><div class="card-title">Alle Jahreswerte</div><div class="card-sub">laufendes Jahr kursiv (unvollständig)</div></div></div>
+      <div id="jahr-tabelle"><div class="loading"><span class="spin"></span>Lädt…</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- MAKRO & ENDENERGIE (Makrowolf) -->
+<div class="panel" id="panel-makro">
+  <div class="range-bar" data-tab="makro"></div>
+  <div class="kpis" id="kpi-makro"></div>
+  <div class="grid">
+    <div class="card g8" data-src="macrowolf">
+      <div class="card-hdr"><div><div class="card-title">Großhandelspreis Strom und Verbrauch</div><div class="card-sub">Monatsmittel €/MWh (links) · Stromverbrauch % zum Vorjahresmonat (rechts) · SMARD via Makrowolf</div></div></div>
+      <div class="chart-wrap" style="height:260px"><canvas id="chart-mw-power"></canvas></div>
+    </div>
+    <div class="card g4" data-src="macrowolf">
+      <div class="card-hdr"><div><div class="card-title">Preisdruck aus Energie</div><div class="card-sub">% zum Vorjahr · Destatis via Makrowolf</div></div></div>
+      <div class="chart-wrap" style="height:260px"><canvas id="chart-mw-preise"></canvas></div>
+    </div>
+    <div class="card g6" data-src="macrowolf">
+      <div class="card-hdr"><div><div class="card-title">Endenergie nach Quelle</div><div class="card-sub">TWh je Jahr · Eurostat via Makrowolf</div></div></div>
+      <div class="chart-wrap" style="height:280px"><canvas id="chart-mw-fec-q"></canvas></div>
+    </div>
+    <div class="card g6" data-src="macrowolf">
+      <div class="card-hdr"><div><div class="card-title">Endenergie nach Sektor</div><div class="card-sub">TWh je Jahr · Eurostat via Makrowolf</div></div></div>
+      <div class="chart-wrap" style="height:280px"><canvas id="chart-mw-fec-s"></canvas></div>
+    </div>
+    <div class="card g6" data-src="macrowolf">
+      <div class="card-hdr"><div><div class="card-title">Kraftwerksleistung nach Träger</div><div class="card-sub">GW · Jahresende · Makrowolf</div></div></div>
+      <div class="chart-wrap" style="height:260px"><canvas id="chart-mw-cap"></canvas></div>
+    </div>
+    <div class="card g6" data-src="macrowolf">
+      <div class="card-hdr"><div><div class="card-title">Benzin, Diesel, Heizöl seit 2005</div><div class="card-sub">€/Liter · Wochenmittel · EU Oil Bulletin via Makrowolf</div></div></div>
+      <div class="chart-wrap" style="height:260px"><canvas id="chart-mw-fuel"></canvas></div>
+    </div>
+    <div class="card g12" data-src="macrowolf">
+      <div class="card-hdr"><div><div class="card-title">Preiserwartungen und Industriestimmung</div><div class="card-sub">Salden der EU-Konjunkturumfragen · Makrowolf</div></div></div>
+      <div class="chart-wrap" style="height:220px"><canvas id="chart-mw-stimmung"></canvas></div>
     </div>
   </div>
 </div>
@@ -1175,22 +1360,35 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
 
 <!-- Consent gate. Analytics is only loaded after an explicit yes; a no is
      remembered so the banner does not reappear on every visit. -->
-<div class="consent" id="consent" style="display:none">
-  <div class="consent-txt">
-    <strong>Dürfen wir die Nutzung messen?</strong>
-    Dieses Dashboard würde Google Analytics einsetzen, um zu sehen, welche Seiten
-    genutzt werden. Dabei werden Cookies gesetzt und Daten an Google übertragen,
-    auch in die USA. Ohne Zustimmung wird nichts geladen und kein Cookie gesetzt —
-    alle Daten und Funktionen stehen trotzdem vollständig zur Verfügung.
-    <div class="consent-more">
-      Die Energiedaten selbst kommen als statische Dateien aus diesem Repository;
-      dafür ist keine Zustimmung nötig. Die Entscheidung lässt sich jederzeit unten
-      rechts über „Datenschutz“ ändern.
+<div class="consent" id="consent" style="display:none" role="dialog" aria-modal="true" aria-labelledby="consent-titel">
+  <div class="consent-box">
+    <div class="consent-icon" aria-hidden="true">📊</div>
+    <div class="consent-txt">
+      <strong id="consent-titel">Dürfen wir die Nutzung messen?</strong>
+      Dieses Dashboard würde Google Analytics einsetzen, um zu sehen, welche Seiten
+      genutzt werden. Dabei werden Cookies gesetzt und Daten an Google übertragen,
+      auch in die USA. Ohne Zustimmung wird nichts geladen und kein Cookie gesetzt —
+      alle Daten und Funktionen stehen trotzdem vollständig zur Verfügung.
+      <div class="consent-more">
+        Die Energiedaten selbst kommen als statische Dateien aus diesem Repository;
+        dafür ist keine Zustimmung nötig. Die Entscheidung lässt sich jederzeit unten
+        rechts über „Datenschutz“ ändern.
+      </div>
     </div>
-  </div>
-  <div class="consent-actions">
-    <button class="consent-btn" onclick="setConsent(false)">Ablehnen</button>
-    <button class="consent-btn primary" onclick="setConsent(true)">Einverstanden</button>
+    <div class="consent-opts" id="consent-opts">
+      <label class="consent-opt"><input type="checkbox" checked disabled>
+        <span><b>Notwendig</b>Speichert nur Ihre Auswahl und Ansichtseinstellungen lokal im Browser. Immer aktiv.</span></label>
+      <label class="consent-opt"><input type="checkbox" id="consent-stat">
+        <span><b>Statistik (Google Analytics)</b>Zählt aufgerufene Reiter, IP gekürzt, keine Werbung.</span></label>
+      <button class="consent-save" onclick="setConsent(document.getElementById('consent-stat').checked)">Auswahl speichern</button>
+    </div>
+    <div class="consent-actions">
+      <button class="consent-btn primary" onclick="setConsent(true)">Einverstanden</button>
+      <div class="consent-sec">
+        <button class="consent-link" onclick="setConsent(false)">Ablehnen</button>
+        <button class="consent-link" onclick="toggleConsentOpts()" aria-controls="consent-opts">Anpassen</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1210,6 +1408,8 @@ select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--
   <div class="st" id="st-eia"><span class="dot"></span>EIA</div>
   <div class="st" id="st-eurostat"><span class="dot"></span>Eurostat</div>
   <div class="st" id="st-bnetza"><span class="dot"></span>BNetzA Gas</div>
+  <div class="st" id="st-kz"><span class="dot"></span>Jahreskennzahlen</div>
+  <div class="st" id="st-mw"><span class="dot"></span>Makrowolf</div>
   <div class="st" id="st-news"><span class="dot"></span>News</div>
   <div style="margin-left:auto;white-space:nowrap">
     <a href="#" onclick="openConsent();return false" style="color:var(--text3)">Datenschutz</a>
@@ -1261,13 +1461,15 @@ const TAB_RANGES = {
   futures:     ['90d','1y','2y','5y','max'],
   lage:        ['90d','1y','2y','5y','max'],
   news:        [],  // no range
+  jahr:        [],  // eigener Umschalter (10 Jahre / Gesamt)
+  makro:       ['2y','5y','max'],
 };
 
 // Default range per tab (must be in TAB_RANGES[tab])
 const TAB_DEFAULT_RANGE = {
   strom:'7d', strompreise:'max', markt:'30d', gas:'1y', rohstoffe:'1y',
   kraftstoff:'30d', erneuerbare:'5y', umwelt:'max', g20:'max',
-  wetter:'7d', fx:'90d', futures:'2y', lage:'2y',
+  wetter:'7d', fx:'90d', futures:'2y', lage:'2y', makro:'max',
 };
 
 // Active range per tab (in-memory). Initialised from URL ?range= or localStorage.
@@ -1367,6 +1569,8 @@ const TAB_FILES = {
   futures:     ['energy_futures','commodities'],
   lage:        ['energy_charts','gas_storage','heating_oil','commodities','destatis_vpi','smard','entsoe','_state'],
   news:        ['news'],
+  jahr:        ['kennzahlen'],
+  makro:       ['macrowolf'],
 };
 
 const C = {
@@ -1474,6 +1678,7 @@ const SOURCE_CADENCE_H = {
   fx:12, fuel:12, heating_oil:12, destatis_vpi:24, entsoe:6, fred_energy:12,
   eia_petroleum:12, energy_futures:6, eurostat_oil:24, eurostat_prices:24,
   news:2, eurostat_env:24, worldbank_g20:24, bnetza_gas:6, gas_storage_history:6,
+  kennzahlen:12, macrowolf:12,
 };
 
 const SOURCE_LABEL = {
@@ -1486,6 +1691,7 @@ const SOURCE_LABEL = {
   eurostat_prices:'Eurostat', news:'RSS',
   eurostat_env:'Eurostat (Umwelt)', worldbank_g20:'Weltbank',
   bnetza_gas:'Bundesnetzagentur', gas_storage_history:'GIE AGSI+ Historie',
+  kennzahlen:'Energy-Charts / Fraunhofer ISE (Jahreskennzahlen)', macrowolf:'Makrowolf',
 };
 
 // Files with no fetcher: one-off snapshots committed to the repo. They are
@@ -1842,6 +2048,8 @@ function updateStatus() {
     'st-eurostat':    isOk('eurostat_oil',  () => Object.keys(D.eurostat_oil?.oil_jet_fuel_stocks?.series_per_country||{}).length>0),
     'st-bnetza':      isOk('bnetza_gas',    () => Object.keys(D.bnetza_gas?.datasets||{}).length>0),
     'st-news':        isOk('news',          () => (D.news?.articles?.length||0)>0),
+    'st-kz':          isOk('kennzahlen',    () => (D.kennzahlen?.years?.length||0)>0),
+    'st-mw':          isOk('macrowolf',     () => Object.keys(D.macrowolf?.series||{}).length>0),
   };
   Object.entries(chk).forEach(([id,ok])=>{
     const el=document.getElementById(id);
@@ -1892,6 +2100,9 @@ function renderStrom() {
     {label:'CO₂-Intensität',val:co2i,unit:'g/kWh (est.)',color:'#dc6803'},
   ]);
   renderPriceChart();
+  try { renderResidual(); } catch(e) { console.error('renderResidual', e); }
+  try { renderSpikes(); } catch(e) { console.error('renderSpikes', e); }
+  try { renderEuDayAhead(); } catch(e) { console.error('renderEuDayAhead', e); }
 }
 
 function renderGenChart(s) {
@@ -4581,6 +4792,8 @@ const SOURCE_INVENTORY = [
   ['worldbank_g20',   'Weltbank',                  'G20-Vergleich: Emissionen, Erneuerbare, Verbrauch, Strommix', 'g20'],
   ['bnetza_gas',      'Bundesnetzagentur (Gaslage)','Gasimporte, LNG, Exporte, Förderung, Verbrauch RLM/SLP, Temperatur', 'gas'],
   ['gas_storage_history','GIE AGSI+ (Historie)',   'Speicherdaten seit 2017 für den Saisonvergleich', 'gas'],
+  ['kennzahlen',      'Energy-Charts (Jahreskennzahlen)', 'Marktwertfaktoren, negative Stunden, Volllaststunden, Last, Import', 'jahr'],
+  ['macrowolf',       'Makrowolf (macrowolf.eu)',  'Strompreis-Historie, Verbraucher-/Erzeugerpreise, Endenergie, Kraftwerksleistung', 'makro'],
   ['news',            'RSS-Quellen',               'Nachrichtenlage', 'news'],
 ];
 
@@ -6031,6 +6244,7 @@ const RENDERS={
   erneuerbare:renderErneuerbare, umwelt:renderUmwelt, g20:renderG20,
   wetter:renderWetter, fx:renderFx,
   futures:renderFutures, lage:renderLage, news:renderNews,
+  jahr:renderJahr, makro:renderMakro,
 };
 
 // Blanket provenance: after a tab renders, every card that shows data and
@@ -6130,6 +6344,299 @@ document.querySelectorAll('.fuel-tab').forEach(btn => {
   });
 });
 
+
+// ══════════════════════════════════════════════
+// KURZFRISTIG (neon-Ansichten im Strom-Reiter)
+// ══════════════════════════════════════════════
+// Spotpreis gegen Residuallast: jede Viertelstunde ein Punkt. Je höher die
+// Last, die Wind und Sonne nicht decken, desto teurer das letzte Kraftwerk.
+function renderResidual() {
+  const s = D.smard?.series, ec = D.energy_charts;
+  if (!s?.load?.length || !ec?.price_de?.unix_seconds?.length) {
+    noData('chart-residual', 'SMARD- oder Energy-Charts-Daten fehlen'); return;
+  }
+  const map = k => Object.fromEntries((s[k] || []).filter(p => p.v != null).map(p => [p.ts, p.v]));
+  const load = map('load'), won = map('wind_onshore'), woff = map('wind_offshore'), sol = map('solar');
+  const pr = ec.price_de, step = pr.unix_seconds.length > 1 ? pr.unix_seconds[1] - pr.unix_seconds[0] : 900;
+  const preisAt = {};
+  pr.unix_seconds.forEach((t, i) => { if (pr.price[i] != null) preisAt[t * 1000] = pr.price[i]; });
+  const pts = [], neu = [];
+  const grenze = Date.now() - 3 * 86400e3;
+  Object.keys(load).map(Number).sort((a, b) => a - b).forEach(ts => {
+    if (won[ts] == null || sol[ts] == null) return;
+    // stündliche Preise gelten für alle vier Viertelstunden der Stunde
+    const p = preisAt[ts] ?? (step >= 3600 ? preisAt[ts - (ts % 3600e3)] : undefined);
+    if (p == null) return;
+    const rl = (load[ts] - won[ts] - (woff[ts] || 0) - sol[ts]) / 1000;
+    (ts >= grenze ? neu : pts).push({x: +rl.toFixed(2), y: p, ts});
+  });
+  if (!pts.length && !neu.length) { noData('chart-residual', 'Keine überlappenden Zeitpunkte von Preis und Erzeugung'); return; }
+  mkChart('chart-residual', 'scatter', [], [
+    {label:'ältere Tage', data:pts, backgroundColor:'rgba(14,108,182,.28)', pointRadius:2.2, pointHoverRadius:4},
+    {label:'letzte 3 Tage', data:neu, backgroundColor:'rgba(217,119,6,.75)', pointRadius:2.6, pointHoverRadius:5},
+  ], {
+    interaction:{mode:'nearest', intersect:true},
+    scales:{
+      x:{type:'linear', title:{display:true, text:'Residuallast GW', color:'#8c98a8', font:{size:10}},
+         grid:{color:'#eef2f6'}, ticks:{color:'#8c98a8', font:{size:10}}},
+      y:{title:{display:true, text:'€/MWh', color:'#8c98a8', font:{size:10}},
+         grid:{color:'#eef2f6'}, ticks:{color:'#8c98a8', font:{size:10}, maxTicksLimit:6}},
+    },
+    plugins:{legend:{display:true, labels:{color:'#56657a', boxWidth:8, font:{size:10}}},
+      tooltip:{callbacks:{label:c => `${fmtTs(c.raw.ts)} · ${fmtN(c.raw.x,1)} GW · ${fmtN(c.raw.y,1)} €/MWh`}}},
+  });
+}
+
+// Tagesweise: wie viele Stunden lag der Preis unter null bzw. über 200 €/MWh?
+function renderSpikes() {
+  const pr = D.energy_charts?.price_de;
+  if (!pr?.unix_seconds?.length) { noData('chart-spikes', 'Energy-Charts noch nicht geladen'); return; }
+  const tage = {};
+  const tag = t => new Date(t * 1000).toLocaleDateString('de-DE', {timeZone:'Europe/Berlin', day:'2-digit', month:'2-digit'});
+  pr.unix_seconds.forEach((t, i) => {
+    const p = pr.price[i]; if (p == null) return;
+    const dt = Math.min(3600, (pr.unix_seconds[i + 1] ?? t + (t - (pr.unix_seconds[i - 1] ?? t - 900))) - t) / 3600;
+    const d = tage[tag(t)] ||= {neg:0, hoch:0, min:Infinity, max:-Infinity};
+    if (p < 0) d.neg += dt;
+    if (p > 200) d.hoch += dt;
+    d.min = Math.min(d.min, p); d.max = Math.max(d.max, p);
+  });
+  const labels = Object.keys(tage);
+  mkChart('chart-spikes', 'bar', labels, [
+    {label:'Stunden < 0 €/MWh', data:labels.map(l => +tage[l].neg.toFixed(2)), backgroundColor:'#1f9d55', borderRadius:4},
+    {label:'Stunden > 200 €/MWh', data:labels.map(l => +tage[l].hoch.toFixed(2)), backgroundColor:'#c0392b', borderRadius:4},
+  ], {
+    plugins:{legend:{display:true, labels:{color:'#56657a', boxWidth:8, font:{size:10}}},
+      tooltip:{callbacks:{afterBody:items => { const d = tage[items[0].label];
+        return d ? `Spanne ${fmtN(d.min,0)} bis ${fmtN(d.max,0)} €/MWh` : ''; }}}},
+    scales:{y:{title:{display:true, text:'Stunden', color:'#8c98a8', font:{size:10}}, beginAtZero:true,
+      grid:{color:'#eef2f6'}, ticks:{color:'#8c98a8', font:{size:10}, maxTicksLimit:5}}},
+  });
+}
+
+const EU_ZONEN = {
+  price_de:'Deutschland-Lux.', price_at:'Österreich', price_fr:'Frankreich', price_pl:'Polen',
+  price_ch:'Schweiz', price_nl:'Niederlande', price_be:'Belgien', price_cz:'Tschechien',
+  price_dk1:'Dänemark West', price_dk2:'Dänemark Ost', price_no2:'Norwegen Süd (NO2)',
+  price_si:'Slowenien', price_hu:'Ungarn', price_it_north:'Italien Nord',
+};
+
+// Tagesmittel aller Gebotszonen für den letzten vollständigen Tag (Berliner Zeit).
+function renderEuDayAhead() {
+  const ec = D.energy_charts;
+  if (!ec) { noData('chart-eu-da', 'Energy-Charts noch nicht geladen'); return; }
+  const dkey = t => new Date(t * 1000).toLocaleDateString('sv-SE', {timeZone:'Europe/Berlin'});
+  const mittel = {};
+  Object.keys(EU_ZONEN).forEach(k => {
+    const z = ec[k]; if (!z?.unix_seconds?.length) return;
+    const acc = {};
+    z.unix_seconds.forEach((t, i) => { const p = z.price[i]; if (p == null) return;
+      const a = acc[dkey(t)] ||= {sum:0, n:0}; a.sum += p; a.n++; });
+    mittel[k] = acc;
+  });
+  const de = mittel.price_de;
+  if (!de) { noData('chart-eu-da', 'Keine Preise für Deutschland'); return; }
+  // vollständig = mindestens 23 Stunden abgedeckt (stündlich ≥23 Werte, viertelstündlich ≥92)
+  const voll = Object.keys(de).sort().filter(d => de[d].n >= 92 || (de[d].n >= 23 && de[d].n <= 25));
+  const heute = voll.at(-1), vortag = voll.at(-2);
+  if (!heute) { noData('chart-eu-da', 'Noch kein vollständiger Tag'); return; }
+  const rows = Object.keys(mittel).map(k => ({k, n:EU_ZONEN[k],
+      a: mittel[k][heute] ? mittel[k][heute].sum / mittel[k][heute].n : null,
+      b: vortag && mittel[k][vortag] ? mittel[k][vortag].sum / mittel[k][vortag].n : null}))
+    .filter(r => r.a != null).sort((x, y) => y.a - x.a);
+  const fmtTag = d => d.split('-').reverse().join('.');
+  mkChart('chart-eu-da', 'bar', rows.map(r => r.n), [
+    {label:fmtTag(heute), data:rows.map(r => +r.a.toFixed(1)), borderRadius:4,
+     backgroundColor:rows.map(r => r.k === 'price_de' ? '#d97706' : '#0e6cb6')},
+    ...(vortag ? [{label:fmtTag(vortag), data:rows.map(r => r.b == null ? null : +r.b.toFixed(1)),
+      backgroundColor:'rgba(140,152,168,.35)', borderRadius:4}] : []),
+  ], {
+    indexAxis:'y',
+    plugins:{legend:{display:true, labels:{color:'#56657a', boxWidth:8, font:{size:10}}}},
+    scales:{x:{grid:{color:'#eef2f6'}, ticks:{color:'#8c98a8', font:{size:10}}, title:{display:true, text:'€/MWh', color:'#8c98a8', font:{size:10}}},
+            y:{grid:{display:false}, ticks:{color:'#56657a', font:{size:11}, autoSkip:false}}},
+  });
+}
+
+// ══════════════════════════════════════════════
+// JAHRESKENNZAHLEN
+// ══════════════════════════════════════════════
+// Die Jahresübersicht von neon.energy als Kacheln: je Kennzahl der Wert des
+// laufenden Jahres (bis zum Datenstand), das Vorjahr und ein Balken je Jahr.
+// Mengen (TWh, Stunden) sind im laufenden Jahr naturgemäß unvollständig,
+// Preise und Faktoren dagegen schon vergleichbar.
+const JAHR_KZ = [
+  ['spot_avg',       'Spotpreis',                 '€/MWh', 1, '#d97706', 'zeitgewichteter Mittelwert Day-Ahead DE-LU'],
+  ['gas_avg',        'Gaspreis TTF',              '€/MWh', 1, '#dc6803', 'Jahresmittel der Monatsschlusskurse'],
+  ['mvf_solar',      'Marktwertfaktor Solar',     '',      2, '#e0a100', 'Marktwert Solar ÷ mittlerer Spotpreis'],
+  ['mvf_wind_on',    'Marktwertfaktor Wind an Land','',    2, '#0e6cb6', 'Marktwert Wind an Land ÷ mittlerer Spotpreis'],
+  ['mvf_wind_off',   'Marktwertfaktor Wind auf See','',    2, '#1e3a8a', 'Marktwert Wind auf See ÷ mittlerer Spotpreis'],
+  ['ren_share_load', 'Erneuerbare an der Last',   '%',     1, '#1f9d55', 'öffentliche Nettoerzeugung'],
+  ['load_twh',       'Last',                      'TWh',   1, '#56657a', 'Netzlast'],
+  ['gen_twh',        'Erzeugung',                 'TWh',   1, '#7e57c2', 'öffentliche Nettoerzeugung'],
+  ['net_import_twh', 'Nettoimport',               'TWh',   1, '#0891b2', 'positiv = Import, negativ = Export'],
+  ['neg_hours',      'Stunden mit negativen Preisen','h',  0, '#1f9d55', 'Viertelstunden anteilig'],
+  ['spike_hours',    'Stunden über 200 €/MWh',    'h',     0, '#c0392b', 'Preisspitzen'],
+  ['mv_solar',       'Marktwert Solar',           '€/MWh', 1, '#e0a100', 'erzeugungsgewichteter Spotpreis'],
+  ['mv_wind_on',     'Marktwert Wind an Land',    '€/MWh', 1, '#0e6cb6', 'erzeugungsgewichteter Spotpreis'],
+  ['flh_wind_on',    'Volllaststunden Wind an Land','h',   0, '#0e6cb6', 'Erzeugung ÷ mittlere Leistung'],
+  ['flh_wind_off',   'Volllaststunden Wind auf See','h',   0, '#1e3a8a', 'Erzeugung ÷ mittlere Leistung'],
+  ['flh_solar',      'Volllaststunden Solar',     'h',     0, '#e0a100', 'nur Netzeinspeisung, ohne Eigenverbrauch'],
+];
+let jahrModus = '10';
+
+function renderJahr() {
+  const kz = D.kennzahlen;
+  const grid = document.getElementById('jahr-grid');
+  const sw = document.getElementById('jahr-modus');
+  if (sw && !sw.dataset.bound) {
+    sw.dataset.bound = '1';
+    sw.querySelectorAll('.range-opt').forEach(b => b.addEventListener('click', () => {
+      jahrModus = b.dataset.m;
+      sw.querySelectorAll('.range-opt').forEach(x => x.classList.toggle('active', x === b));
+      renderJahr(); autoStamp('jahr');
+    }));
+  }
+  if (!kz?.years?.length) {
+    grid.innerHTML = `<div class="card g12"><div class="nodata">Jahreskennzahlen noch nicht abgerufen
+      <span class="why">Die Quelle <code>kennzahlen</code> läuft zweimal täglich über GitHub Actions.</span></div></div>`;
+    document.getElementById('jahr-tabelle').innerHTML = '';
+    return;
+  }
+  let jahre = kz.years.slice().sort((a, b) => a.year - b.year);
+  if (jahrModus === '10') jahre = jahre.slice(-10);
+  const akt = jahre.at(-1), vor = jahre.at(-2);
+  const sub = document.getElementById('jahr-sub');
+  if (sub) sub.textContent = `Deutschland · Energy-Charts (Fraunhofer ISE) · ${akt.year}${akt.partial ? ' bis ' + akt.until.split('-').reverse().join('.') : ''}`;
+
+  // Kopfzeile: die vier Zahlen, nach denen am häufigsten gefragt wird
+  const d = (k, n) => (akt[k] != null && vor?.[k] != null)
+    ? ((akt[k] - vor[k] >= 0 ? '▲ +' : '▼ ') + fmtN(akt[k] - vor[k], n) + ' ggü. ' + vor.year) : '';
+  document.getElementById('kpi-jahr').innerHTML = kpis([
+    {label:`Spotpreis ${akt.year}`, val:fmtN(akt.spot_avg,1), unit:'€/MWh', delta:d('spot_avg',1), color:'#d97706'},
+    {label:'Marktwertfaktor Solar', val:fmtN(akt.mvf_solar,2), unit:'Solar-Marktwert ÷ Spotpreis', delta:d('mvf_solar',2), color:'#e0a100'},
+    {label:'Negative Stunden', val:fmtN(akt.neg_hours,0), unit:akt.partial ? 'h · bisher' : 'h', color:'#1f9d55'},
+    {label:'EE-Anteil Last', val:fmtN(akt.ren_share_load,1)+' %', unit:'öffentliche Nettoerzeugung', delta:d('ren_share_load',1), color:'#1f9d55'},
+  ]);
+
+  grid.innerHTML = JAHR_KZ.map(([k, lbl, unit, dec, col, note]) => `
+    <div class="card g3 jahr-card" data-src="kennzahlen">
+      <div class="card-hdr"><div>
+        <div class="card-title">${lbl}</div>
+        <div class="card-sub">${note}</div>
+      </div></div>
+      <div class="jahr-wert"><b>${fmtN(akt[k], dec)}</b> <span>${unit}</span>
+        ${akt.partial ? '<em>bisher</em>' : ''}</div>
+      <div class="jahr-vor">${vor ? `${vor.year}: ${fmtN(vor[k], dec)} ${unit}` : ''}</div>
+      <div class="chart-wrap" style="height:120px" data-canvas-for="jk-${k}"><canvas id="jk-${k}"></canvas></div>
+    </div>`).join('');
+  JAHR_KZ.forEach(([k, lbl, unit, dec, col]) => {
+    mkChart('jk-' + k, 'bar', jahre.map(y => String(y.year)), [{
+      label:lbl, data:jahre.map(y => y[k] ?? null), borderRadius:3, maxBarThickness:28,
+      backgroundColor:jahre.map(y => y.partial ? col + '66' : col),
+    }], {
+      scales:{x:{grid:{display:false}, ticks:{color:'#8c98a8', font:{size:9}, maxRotation:0, autoSkip:true, maxTicksLimit:6}},
+              y:{grid:{color:'#eef2f6'}, ticks:{color:'#8c98a8', font:{size:9}, maxTicksLimit:4}, beginAtZero:!/^mvf/.test(k)}},
+      plugins:{tooltip:{callbacks:{label:c => `${fmtN(c.raw, dec)} ${unit}${jahre[c.dataIndex].partial ? ' (bisher)' : ''}`}}},
+    });
+  });
+
+  const th = JAHR_KZ.map(([k, lbl, unit]) => `<th class="num">${lbl}${unit ? ` <span style="text-transform:none;font-weight:500">${unit}</span>` : ''}</th>`).join('');
+  const rows = kz.years.slice().sort((a, b) => b.year - a.year).map(y =>
+    `<tr${y.partial ? ' style="font-style:italic"' : ''}><td><b>${y.year}</b>${y.partial ? ' (bis ' + y.until.slice(5).split('-').reverse().join('.') + '.)' : ''}</td>` +
+    JAHR_KZ.map(([k, , , dec]) => `<td class="num">${fmtN(y[k], dec)}</td>`).join('') + '</tr>').join('');
+  document.getElementById('jahr-tabelle').innerHTML =
+    `<div class="tbl-scroll"><table class="tbl"><thead><tr><th>Jahr</th>${th}</tr></thead><tbody>${rows}</tbody></table></div>
+     <div style="font-size:10px;color:var(--text3);margin-top:8px;line-height:1.6">
+     Marktwert = erzeugungsgewichteter Day-Ahead-Preis, Faktor = Marktwert ÷ zeitgewichteter Mittelpreis.
+     Volllaststunden aus öffentlicher Nettoerzeugung und mittlerer installierter Leistung (Jahresende Vorjahr und laufendes Jahr);
+     bei Solar daher unter den amtlichen Werten, weil Eigenverbrauch fehlt. Bis 30.09.2018 Gebotszone DE-AT-LU.
+     Zuschlagswerte der Ausschreibungen und Redispatch-Mengen/-Kosten fehlen noch: sie gibt es nur über die
+     Netztransparenz-WebAPI (Zugang nötig) bzw. die BNetzA-Ergebnisseiten.</div>`;
+}
+
+// ══════════════════════════════════════════════
+// MAKRO & ENDENERGIE (Makrowolf)
+// ══════════════════════════════════════════════
+function mwReihe(id, abMs = -Infinity) {
+  const r = D.macrowolf?.series?.[id];
+  if (!r) return [];
+  return r.series.filter(p => Date.parse(p.date) >= abMs);
+}
+function mwLetzter(id) { const r = mwReihe(id); return r.at(-1) || null; }
+
+function mwLinien(canvasId, ids, farben, extra = {}, abMs = -Infinity) {
+  const reihen = ids.map(id => mwReihe(id, abMs));
+  if (!reihen.some(r => r.length)) { noData(canvasId, 'Makrowolf-Reihe fehlt'); return; }
+  const daten = Array.from(new Set(reihen.flat().map(p => p.date))).sort();
+  const maps = reihen.map(r => Object.fromEntries(r.map(p => [p.date, p.v])));
+  const lbl = daten.map(d => d.length >= 10 ? d.slice(0, 7).split('-').reverse().join('/') : d);
+  mkChart(canvasId, 'line', lbl, ids.map((id, i) => ({
+    label: D.macrowolf.series[id]?.label || id, data: daten.map(d => maps[i][d] ?? null), spanGaps:true,
+    borderColor: farben[i], backgroundColor: farben[i] + '22', borderWidth: 1.8, ...(extra.ds?.[i] || {}),
+  })), Object.assign({plugins:{legend:{display:true, labels:{color:'#56657a', boxWidth:8, font:{size:10}}}}}, extra.opts || {}));
+}
+
+function mwJahresStapel(canvasId, ids, farben) {
+  const reihen = ids.map(id => mwReihe(id));
+  if (!reihen.some(r => r.length)) { noData(canvasId, 'Makrowolf-Reihe fehlt'); return; }
+  const jahre = Array.from(new Set(reihen.flat().map(p => p.date.slice(0, 4)))).sort();
+  const maps = reihen.map(r => Object.fromEntries(r.map(p => [p.date.slice(0, 4), p.v])));
+  mkChart(canvasId, 'bar', jahre, ids.map((id, i) => ({
+    label: D.macrowolf.series[id]?.label || id, data: jahre.map(j => maps[i][j] ?? null),
+    backgroundColor: farben[i], stack:'s', borderWidth:0,
+  })), {
+    plugins:{legend:{display:true, labels:{color:'#56657a', boxWidth:8, font:{size:10}}}},
+    scales:{x:{stacked:true, grid:{display:false}, ticks:{color:'#8c98a8', font:{size:10}, maxTicksLimit:12}},
+            y:{stacked:true, grid:{color:'#eef2f6'}, ticks:{color:'#8c98a8', font:{size:10}, maxTicksLimit:5}}},
+  });
+}
+
+function renderMakro() {
+  const mw = D.macrowolf;
+  const ids = ['chart-mw-power','chart-mw-preise','chart-mw-fec-q','chart-mw-fec-s','chart-mw-cap','chart-mw-fuel','chart-mw-stimmung'];
+  if (!mw?.series) {
+    ids.forEach(id => noData(id, 'Makrowolf-Daten noch nicht abgerufen',
+      'Die Quelle <code>macrowolf</code> läuft zweimal täglich über GitHub Actions.'));
+    document.getElementById('kpi-makro').innerHTML = '';
+    return;
+  }
+  const ab = rangeCutoffMs('makro');
+  const kp = (id, lbl, dec, unit, col) => {
+    const l = mwLetzter(id); if (!l) return null;
+    const m = l.date.slice(0, 7).split('-').reverse().join('/');
+    return {label:lbl, val:fmtN(l.v, dec), unit:`${unit} · ${m}`, color:col};
+  };
+  const fec = ['de_fec_o4000xbio','de_fec_g3000','de_fec_e7000','de_fec_h8000','de_fec_ra000','de_fec_kohle'];
+  const fecSumme = (() => { const j = mwLetzter('de_fec_e7000')?.date; if (!j) return null;
+    return fec.reduce((a, id) => a + (mwReihe(id).find(p => p.date === j)?.v || 0), 0); })();
+  document.getElementById('kpi-makro').innerHTML = kpis([
+    kp('de_power_price', 'Strom Großhandel', 1, '€/MWh', '#d97706'),
+    kp('de_power_load_yoy', 'Stromverbrauch', 1, '% ggü. Vorjahr', '#56657a'),
+    kp('de_vpi_energy_yoy', 'Verbraucherpreise Energie', 1, '% ggü. Vorjahr', '#c0392b'),
+    kp('de_cpi_yoy', 'Inflation gesamt', 1, '% ggü. Vorjahr', '#7e57c2'),
+    kp('de_import_prices_yoy', 'Einfuhrpreise', 1, '% ggü. Vorjahr', '#0891b2'),
+    fecSumme ? {label:'Endenergie', val:fmtN(fecSumme, 0), unit:`TWh · ${mwLetzter('de_fec_e7000').date.slice(0,4)}`, color:'#1f9d55'} : null,
+  ].filter(Boolean));
+
+  mwLinien('chart-mw-power', ['de_power_price', 'de_power_load_yoy'], ['#d97706', '#8c98a8'], {
+    ds:[{yAxisID:'y', fill:true}, {yAxisID:'y1', type:'bar', backgroundColor:'rgba(140,152,168,.45)', borderWidth:0}],
+    opts:{scales:{
+      y:{position:'left', grid:{color:'#eef2f6'}, ticks:{color:'#8c98a8', font:{size:10}, maxTicksLimit:5}, title:{display:true, text:'€/MWh', color:'#8c98a8', font:{size:10}}},
+      y1:{position:'right', grid:{display:false}, ticks:{color:'#8c98a8', font:{size:10}, maxTicksLimit:5}, title:{display:true, text:'% ggü. Vorjahr', color:'#8c98a8', font:{size:10}}},
+    }},
+  }, ab);
+  mwLinien('chart-mw-preise', ['de_vpi_energy_yoy', 'de_cpi_yoy', 'de_ppi_yoy', 'de_import_prices_yoy'],
+    ['#c0392b', '#7e57c2', '#d97706', '#0891b2'], {}, ab);
+  mwJahresStapel('chart-mw-fec-q', fec, ['#4a5568', '#dc6803', '#0e6cb6', '#c0392b', '#1f9d55', '#7c5e2a']);
+  mwJahresStapel('chart-mw-fec-s', ['de_fec_sek_fc_ind_e','de_fec_sek_fc_tra_e','de_fec_sek_fc_oth_hh_e','de_fec_sek_fc_oth_cp_e'],
+    ['#4a5568', '#0e6cb6', '#d97706', '#0891b2']);
+  mwJahresStapel('chart-mw-cap', ['de_cap_ra420','de_cap_ra300','de_cap_cf','de_cap_n9000'],
+    ['#e0a100', '#0e6cb6', '#56657a', '#7e57c2']);
+  mwLinien('chart-mw-fuel', ['de_fuel_e95', 'de_fuel_diesel', 'de_fuel_heating'], ['#d97706', '#4a5568', '#c0392b'], {}, ab);
+  mwLinien('chart-mw-stimmung', ['de_pexp_ind', 'de_pexp_cons', 'de_conf_industry'], ['#c0392b', '#7e57c2', '#0e6cb6'], {}, ab);
+}
+
 // ══════════════════════════════════════════════
 // EINWILLIGUNG UND REICHWEITENMESSUNG
 // ══════════════════════════════════════════════
@@ -6179,6 +6686,7 @@ function setConsent(granted) {
   try { localStorage.setItem(CONSENT_KEY, granted ? 'granted' : 'denied'); } catch(e) {}
   const el = document.getElementById('consent');
   if (el) el.style.display = 'none';
+  document.body.classList.remove('consent-offen');
   if (granted) loadAnalytics();
   // A withdrawal cannot un-send what was already sent, so it only stops
   // future collection; the cookies Google set are cleared on the next
@@ -6188,6 +6696,14 @@ function setConsent(granted) {
 function openConsent() {
   const el = document.getElementById('consent');
   if (el) el.style.display = 'flex';
+  document.body.classList.add('consent-offen');
+  const cb = document.getElementById('consent-stat');
+  if (cb) cb.checked = readConsent() === 'granted';
+  setTimeout(() => el?.querySelector('.consent-btn.primary')?.focus(), 0);
+}
+
+function toggleConsentOpts() {
+  document.getElementById('consent-opts')?.classList.toggle('open');
 }
 
 function initConsent() {
