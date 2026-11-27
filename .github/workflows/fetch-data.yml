@@ -2,8 +2,10 @@ name: Fetch Energy Data
 
 on:
   schedule:
-    # Hourly. Each fetcher decides via its interval if it actually runs.
-    - cron: '0 * * * *'
+    # Alle zwei Stunden zu einer ruhigen Minute: Läufe zur vollen Stunde
+    # verschiebt oder verwirft GitHub bei Last häufig. Jede Quelle entscheidet
+    # über ihr Intervall selbst, ob sie abgerufen wird.
+    - cron: '23 */2 * * *'
   workflow_dispatch:
     inputs:
       force:
@@ -26,7 +28,7 @@ on:
 permissions:
   contents: write
 
-# Cancel any in-progress run when a new one starts. Hourly cron makes this
+# Cancel any in-progress run when a new one starts. The regular schedule makes this
 # safe — we'd rather have one fresh complete run than stack two stale ones.
 concurrency:
   group: fetch-data

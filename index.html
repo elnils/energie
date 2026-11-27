@@ -361,6 +361,17 @@ header{padding-left:calc(20px + env(safe-area-inset-left));
 .nf-btn{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:4px 11px;font-size:11px;cursor:pointer;color:var(--text2);font-family:inherit;font-weight:500;transition:all .12s}
 .nf-btn:hover{background:var(--bg-alt);color:var(--text);border-color:var(--border-strong)}
 .nf-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+/* News-Filter in einer Zeile: Kategorien als schmale Chips zum Wischen, Quelle als Auswahlliste */
+.nf-leiste{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.nf-kats{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;flex:1;min-width:0;-webkit-mask-image:linear-gradient(90deg,#000 92%,transparent);mask-image:linear-gradient(90deg,#000 92%,transparent);padding-right:18px}
+.nf-kats::-webkit-scrollbar{display:none}
+.nf-kat{flex:none;background:none;border:1px solid var(--border);border-radius:999px;padding:2px 10px;font:inherit;font-size:11.5px;color:var(--text2);cursor:pointer;white-space:nowrap;line-height:1.6}
+.nf-kat:hover{color:var(--text);border-color:var(--border-strong)}
+.nf-kat.active{background:var(--text);border-color:var(--text);color:var(--card)}
+.nf-kat small{opacity:.6;font-size:10px;margin-left:3px}
+.nf-quelle{flex:none;display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text3)}
+.nf-leiste .nf-quelle select{font:inherit;font-size:11.5px;color:var(--text);background:var(--card);border:1px solid var(--border);border-radius:999px;padding:2px 8px;max-width:170px}
+@media (max-width:760px){.nf-quelle span{display:none}.nf-leiste .nf-quelle select{max-width:118px;min-height:28px;font-size:12px;padding:2px 8px;border-radius:999px}}
 
 .statusbar{display:flex;align-items:center;gap:12px;padding:6px 20px;background:var(--card);border-top:1px solid var(--border);font-size:10px;color:var(--text3);position:fixed;bottom:0;left:0;right:0;z-index:100;overflow-x:auto;scrollbar-width:none;box-shadow:0 -1px 3px rgba(15,30,55,.05)}
 .statusbar::-webkit-scrollbar{display:none}
@@ -525,6 +536,27 @@ main{padding-top:22px}
 .consent-save{display:block;width:calc(100% - 28px);margin:4px 14px 14px;min-height:40px;border-radius:10px;
   border:1px solid var(--border-strong);background:var(--bg-alt);font:inherit;font-weight:600;cursor:pointer}
 body.consent-offen{overflow:hidden}
+/* Über diese Seite */
+.ueber{margin:auto;border:none;border-radius:20px;padding:26px 28px 22px;width:min(620px,calc(100% - 32px));max-height:calc(100vh - 48px);
+  background:var(--card);color:var(--text);box-shadow:0 24px 60px -12px rgba(10,20,35,.45);font-size:13.5px;line-height:1.55}
+.ueber::backdrop{background:rgba(10,20,35,.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.ueber-zu{position:sticky;top:0;float:right;margin:-10px -12px 0 0;width:34px;height:34px;border-radius:50%;border:none;
+  background:var(--bg-alt);color:var(--text2);font-size:20px;line-height:1;cursor:pointer}
+.ueber-zu:hover{color:var(--text)}
+.ueber-kopf{display:flex;gap:12px;align-items:center;margin-bottom:14px}
+.ueber-kopf .logo-mark{width:42px;height:42px;font-size:20px;border-radius:12px;flex:none;display:inline-flex;align-items:center;justify-content:center;background:var(--accent-bg);color:var(--accent)}
+.ueber-kopf h2{font-size:20px;margin:0;letter-spacing:-.01em}
+.ueber-kopf p{margin:0;color:var(--text3);font-size:12.5px}
+.ueber-lead{font-size:14.5px;color:var(--text)}
+.ueber h3{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin:18px 0 6px}
+.ueber p{margin:0 0 8px;color:var(--text2)}
+.ueber-liste{margin:0;padding-left:18px;color:var(--text2)}
+.ueber-liste li{margin:3px 0}
+.ueber-liste b{color:var(--text)}
+.ueber a{color:var(--accent)}
+.ueber-gruss{margin-top:14px!important;padding-top:12px;border-top:1px solid var(--border);color:var(--text)!important}
+@media (max-width:760px){.ueber{width:100%;max-width:100%;max-height:88vh;margin:auto 0 0;border-radius:20px 20px 0 0;padding:20px 18px calc(18px + env(safe-area-inset-bottom))}
+  .btn-ueber span{display:none}}
 @media (max-width:760px){
   header{height:auto;min-height:56px;padding-top:8px;padding-bottom:8px}
   .tabs{top:auto;position:relative}
@@ -933,6 +965,7 @@ main [style*="font-size:11px"]{font-size:12px!important}
     </label>
     <div class="live"><span class="pulse"></span>LIVE</div>
     <span>Stand: <b id="last-update">—</b></span>
+    <button class="btn btn-ueber" onclick="ueberOeffnen()" aria-haspopup="dialog" title="Über diese Seite">ⓘ<span> Über</span></button>
     <button class="btn" onclick="forceRefresh()">↺ Refresh</button>
   </div>
 </header>
@@ -949,7 +982,7 @@ main [style*="font-size:11px"]{font-size:12px!important}
     <button class="kat" data-kat="gas">Gas</button>
     <button class="kat" data-kat="oel">Öl &amp; Sprit</button>
     <button class="kat" data-kat="maerkte">Märkte</button>
-    <button class="kat" data-kat="klima">Klima &amp; Makro</button>
+    <button class="kat" data-kat="klima">Makro &amp; Klima</button>
     <button class="kat" data-kat="lage">Lage &amp; Karte</button>
     <button class="kat" data-kat="news">News</button>
   </div>
@@ -1912,9 +1945,9 @@ main [style*="font-size:11px"]{font-size:12px!important}
 
 <!-- NEWS -->
 <div class="panel" id="panel-news">
-  <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
-    <div id="news-category-tabs" style="display:flex;gap:4px;flex-wrap:wrap"></div>
-    <div id="news-source-filter" style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap"></div>
+  <div class="nf-leiste">
+    <div id="news-category-tabs" class="nf-kats"></div>
+    <label class="nf-quelle"><span>Quelle</span><select id="news-source-filter" onchange="filterNews(this.value)" aria-label="Nach Quelle filtern"></select></label>
   </div>
   <div id="news-meta" style="font-size:10px;color:var(--text3);margin-bottom:12px"></div>
   <div id="news-wrap" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px">
@@ -1958,6 +1991,55 @@ main [style*="font-size:11px"]{font-size:12px!important}
   </div>
 </div>
 
+<dialog class="ueber" id="ueber" aria-labelledby="ueber-titel">
+  <button class="ueber-zu" onclick="ueberSchliessen()" aria-label="Schließen">×</button>
+  <div class="ueber-kopf">
+    <span class="logo-mark" aria-hidden="true">⚡</span>
+    <div><h2 id="ueber-titel">Über diese Seite</h2><p>Energie in Deutschland und Europa – auf einen Blick</p></div>
+  </div>
+  <p class="ueber-lead">Schön, dass Sie hier sind! Strompreise, Gasspeicher, Spritpreise, Netze und
+    Wirtschaftsdaten werden an vielen verschiedenen Stellen veröffentlicht – von Behörden,
+    Netzbetreibern, Forschungsinstituten und internationalen Organisationen. Dieses Dashboard
+    versucht, diese öffentlichen Daten an einem Ort zusammenzuführen, damit man schnell einen
+    Überblick über den deutschen und europäischen Energiemarkt bekommt.</p>
+
+  <h3>Was Sie hier finden</h3>
+  <ul class="ueber-liste">
+    <li><b>Strom</b> – Börsenpreise, Erzeugungsmix, Last, Austausch mit den Nachbarländern</li>
+    <li><b>Gas</b> – Speicherstände, Flüsse, Verbrauch und eine einfache Füllstandsprognose</li>
+    <li><b>Öl &amp; Sprit</b> – Rohöl, Benzin, Diesel und Heizöl, auch nach Bundesland</li>
+    <li><b>Märkte</b> – Rohstoffe, Terminmärkte, Wechselkurse und eigene Indizes</li>
+    <li><b>Makro &amp; Klima</b> – Inflation, Erzeugerpreise, Stimmung, Emissionen und Ländervergleiche</li>
+    <li><b>Lage &amp; Karte</b> – Europa- und Deutschlandkarten, Versorgungslage auf einen Blick</li>
+    <li><b>News</b> – aktuelle Themen, amtliche Mitteilungen und Fachpresse</li>
+  </ul>
+
+  <h3>Woher die Daten kommen</h3>
+  <p>Ausschließlich aus frei zugänglichen Quellen, unter anderem SMARD (Bundesnetzagentur),
+    Energy-Charts, ENTSO-E, ENTSOG, GIE AGSI+/ALSI, Tankerkönig, TECSON, Destatis, Deutsche
+    Bundesbank, Eurostat, Europäische Kommission, EZB, U.S. EIA, FRED, Weltbank, Open-Meteo und
+    Yahoo Finance. Bei jeder Grafik steht, woher die Zahlen stammen – auch im Export.</p>
+
+  <h3>Wie aktuell ist das?</h3>
+  <p>Die Daten werden automatisch abgerufen: Strom, Gas und Märkte mehrmals
+    am Tag, amtliche Statistiken täglich. Wann zuletzt aktualisiert wurde, sehen Sie oben rechts;
+    welche Quellen gerade erreichbar sind, zeigt die Leiste ganz unten.</p>
+
+  <h3>Ein paar Tipps</h3>
+  <ul class="ueber-liste">
+    <li>Mit dem <b>☆</b> an Kennzahlen und Grafiken legen Sie sich Ihre eigene Startseite unter „Favoriten“ an.</li>
+    <li>Senkrechte Linien markieren <b>Ereignisse</b> wie Krisen oder Entlastungen – sie lassen sich an jeder Grafik ein- und ausblenden.</li>
+    <li>Fast alles lässt sich als Bild, CSV oder Excel <b>herunterladen</b> – mit Quellenangabe.</li>
+  </ul>
+
+  <h3>Gut zu wissen</h3>
+  <p>Das Dashboard ist ein offenes, nicht-kommerzielles Projekt. Alle Angaben ohne Gewähr – für
+    verbindliche Zahlen gilt immer die jeweilige Originalquelle. Ihre Einstellungen und Favoriten
+    bleiben nur in Ihrem Browser; eine Nutzungsstatistik gibt es nur mit Ihrer Zustimmung
+    (<a href="#" onclick="ueberSchliessen();openConsent();return false">Datenschutz</a>).</p>
+  <p class="ueber-gruss">Viel Freude beim Stöbern – und danke an alle, die ihre Daten offen zur Verfügung stellen.</p>
+</dialog>
+
 <div class="statusbar">
   <div class="st" id="st-smard"><span class="dot"></span>SMARD</div>
   <div class="st" id="st-ec"><span class="dot"></span>Energy-Charts</div>
@@ -1978,6 +2060,7 @@ main [style*="font-size:11px"]{font-size:12px!important}
   <div class="st" id="st-mw"><span class="dot"></span>Makroreihen</div>
   <div class="st" id="st-news"><span class="dot"></span>News</div>
   <div style="margin-left:auto;white-space:nowrap">
+    <a href="#" onclick="ueberOeffnen();return false" style="color:var(--text3)">Über diese Seite</a> ·
     <a href="#" onclick="openConsent();return false" style="color:var(--text3)">Datenschutz</a>
     · Alle Preise ohne Gewähr
   </div>
@@ -3894,7 +3977,7 @@ let newsCategory = 'alle';
 function setNewsCategory(cat) {
   newsCategory = cat;
   newsSource = 'alle';  // reset source filter when category changes
-  document.querySelectorAll('#news-category-tabs .fuel-tab').forEach(b => {
+  document.querySelectorAll('#news-category-tabs .nf-kat').forEach(b => {
     b.classList.toggle('active', b.dataset.newscat === cat);
   });
   renderNews();
@@ -3902,9 +3985,8 @@ function setNewsCategory(cat) {
 
 function filterNews(src) {
   newsSource = src;
-  document.querySelectorAll('#news-filters .nf-btn').forEach(b => {
-    b.classList.toggle('active', b.dataset.src === src);
-  });
+  const sel = document.getElementById('news-source-filter');
+  if (sel && sel.value !== src) sel.value = src;
   renderNewsGrid();
 }
 
@@ -3959,9 +4041,9 @@ function renderNews() {
   const cats = Object.entries(catCounts).sort((a, b) => b[1] - a[1]);
 
   document.getElementById('news-category-tabs').innerHTML =
-    `<button class="fuel-tab ${newsCategory==='alle'?'active':''}" data-newscat="alle" onclick="setNewsCategory('alle')">Alle (${news.articles.length})</button>`
+    `<button class="nf-kat ${newsCategory==='alle'?'active':''}" data-newscat="alle" onclick="setNewsCategory('alle')">Alle<small>${news.articles.length}</small></button>`
     + cats.map(([c, n]) =>
-        `<button class="fuel-tab ${newsCategory===c?'active':''}" data-newscat="${c}" onclick="setNewsCategory('${c.replace(/'/g,"\\'")}')">${c} (${n})</button>`
+        `<button class="nf-kat ${newsCategory===c?'active':''}" data-newscat="${c}" onclick="setNewsCategory('${c.replace(/'/g,"\\'")}')">${c}<small>${n}</small></button>`
       ).join('');
 
   // Source filter for the currently selected category
@@ -3973,10 +4055,8 @@ function renderNews() {
   const sources = Object.entries(sourceCounts).sort((a, b) => b[1] - a[1]);
 
   document.getElementById('news-source-filter').innerHTML =
-    `<button class="nf-btn ${newsSource==='alle'?'active':''}" data-src="alle" onclick="filterNews('alle')">Alle Quellen (${articlesInCat.length})</button>`
-    + sources.map(([s, n]) =>
-        `<button class="nf-btn ${newsSource===s?'active':''}" data-src="${s}" onclick="filterNews('${s.replace(/'/g,"\\'")}')">${s} (${n})</button>`
-      ).join('');
+    `<option value="alle">Alle (${articlesInCat.length})</option>`
+    + sources.map(([s, n]) => `<option value="${s.replace(/"/g,'&quot;')}"${newsSource===s?' selected':''}>${s} (${n})</option>`).join('');
 
   // Meta-Block: when fetched, how many sources OK
   const sourcesArr = news.sources || [];
@@ -8743,6 +8823,18 @@ function setConsent(granted) {
   // future collection; the cookies Google set are cleared on the next
   // browser cleanup. Saying so honestly beats implying a full erase.
 }
+
+function ueberOeffnen() {
+  const d = document.getElementById('ueber');
+  if (!d) return;
+  if (d.showModal) { if (!d.open) d.showModal(); } else d.setAttribute('open', '');
+  d.scrollTop = 0;
+}
+function ueberSchliessen() {
+  const d = document.getElementById('ueber');
+  if (d?.close) d.close(); else d?.removeAttribute('open');
+}
+document.addEventListener('click', e => { if (e.target.id === 'ueber') ueberSchliessen(); });
 
 function openConsent() {
   const el = document.getElementById('consent');
