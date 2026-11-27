@@ -774,6 +774,19 @@ main [style*="font-size:11px"]{font-size:12px!important}
 .th-art .am-meta{margin-top:8px}
 .th-art .am-det summary{color:var(--text);font-size:13.5px}
 .am-item a.am-orig,.th-art a.am-orig{color:var(--accent);font-size:12.5px}
+
+/* Kernaussage über der Grafik */
+.card-kern{font-size:15px;line-height:1.45;color:var(--text);margin:-2px 0 10px;padding:0 0 10px;border-bottom:1px solid var(--border)}
+.card-kern b{font-weight:700}
+.card-kern .k-neg{color:#b91c1c}.card-kern .k-pos{color:#15803d}
+/* Favoritenleiste schlanker */
+.favbar{min-height:36px;padding:4px 20px;gap:8px}
+.favbar-items{gap:5px}
+.fb-item{padding:2px 9px;font-size:12.5px;gap:4px;border-radius:999px;line-height:1.5;background:#f1f4f8}
+.fb-v{font-weight:650}
+.fb-u{font-size:11px}
+.fb-d{font-size:11px}
+.favbar-suche input{font-size:13px;padding:3px 2px 4px 22px}
 </style>
 </head>
 <body>
@@ -2021,12 +2034,59 @@ Chart.defaults.plugins.tooltip.padding=10;
 Chart.defaults.plugins.tooltip.cornerRadius=5;
 Chart.defaults.plugins.tooltip.titleFont={weight:'600',size:11};
 
+// Direkte Beschriftung: Bei Liniendiagrammen mit bis zu vier Reihen steht
+// Name und letzter Wert am Ende jeder Linie, die Legende entfällt.
+// Bänder (Spanne, min/max) werden nicht beschriftet; überlappende Etiketten
+// werden auseinandergeschoben.
+const END_SKIP = /spanne|\(max\)|\(min\)|band|bereich/i;
+// Kurzname fürs Linienende: Klammern und Einheiten weg, lange Fachbegriffe gekürzt
+function endName(l) {
+  return String(l || '').replace(/\s*\(.*?\)\s*/g, ' ').replace(/ (EUR|€|USD|\$)\/.*$/, '')
+    .replace('Verbraucherpreise insgesamt', 'Inflation').replace('Verbraucherpreise Energie', 'VPI Energie')
+    .replace(/Erzeugerpreise.*/, 'Erzeugerpreise').replace('Preiserwartungen ', 'Preiserw. ')
+    .replace(/\s+/g, ' ').trim().slice(0, 24);
+}
+function endLabelsAktiv(type, datasets, extra) {
+  if (extra?.endLabels === false || type !== 'line') return false;
+  const echt = datasets.filter(d => (d.type || 'line') === 'line' && !END_SKIP.test(d.label || '') && d.label);
+  return echt.length >= 1 && echt.length <= 4 && echt.length === datasets.filter(d => !END_SKIP.test(d.label || '')).length;
+}
+Chart.register({
+  id: 'endLabels',
+  afterDatasetsDraw(chart) {
+    if (!chart.options.plugins?.endLabels?.on) return;
+    const {ctx, chartArea} = chart, items = [];
+    chart.data.datasets.forEach((d, i) => {
+      if (END_SKIP.test(d.label || '') || !chart.isDatasetVisible(i)) return;
+      const meta = chart.getDatasetMeta(i);
+      for (let k = d.data.length - 1; k >= 0; k--) {
+        const v = d.data[k], y = typeof v === 'object' && v ? v.y : v;
+        if (y == null || isNaN(y)) continue;
+        const pt = meta.data[k]; if (!pt) break;
+        items.push({y: pt.y, x: pt.x, farbe: typeof d.borderColor === 'string' ? d.borderColor : '#1a2332',
+          text: `${endName(d.label)}  ${fmtN(y, Math.abs(y) < 10 ? 2 : Math.abs(y) < 100 ? 1 : 0)}`});
+        break;
+      }
+    });
+    items.sort((a, b) => a.y - b.y);
+    for (let i = 1; i < items.length; i++) if (items[i].y - items[i - 1].y < 14) items[i].y = items[i - 1].y + 14;
+    ctx.save();
+    ctx.font = "600 11.5px 'Source Sans 3', sans-serif"; ctx.textBaseline = 'middle';
+    items.forEach(it => {
+      ctx.fillStyle = it.farbe;
+      ctx.beginPath(); ctx.arc(chartArea.right + 1, Math.min(Math.max(it.y, chartArea.top), chartArea.bottom), 2.5, 0, 7); ctx.fill();
+      ctx.fillText(it.text, chartArea.right + 7, Math.min(Math.max(it.y, chartArea.top + 6), chartArea.bottom - 4));
+    });
+    ctx.restore();
+  },
+});
+
 const BASE={
   responsive:true,maintainAspectRatio:false,
   interaction:{mode:'index',intersect:false},
   scales:{
-    x:{grid:{color:'#eef2f6',drawBorder:false},ticks:{maxTicksLimit:8,color:'#6b7685',font:{size:11.5}}},
-    y:{grid:{color:'#eef2f6',drawBorder:false},ticks:{maxTicksLimit:5,color:'#6b7685',font:{size:11.5}}}
+    x:{grid:{display:false},border:{color:'#d5dbe3'},ticks:{maxTicksLimit:8,color:'#6b7685',font:{size:11.5},maxRotation:0}},
+    y:{grid:{color:'#edf0f4'},border:{display:false},ticks:{maxTicksLimit:5,color:'#6b7685',font:{size:11.5},padding:6}}
   },
   elements:{point:{radius:0,hoverRadius:4},line:{tension:0.25,borderWidth:2}}
 };
@@ -2060,6 +2120,12 @@ function mkChart(id, type, labels, datasets, extra={}) {
   if(extra.plugins) opts.plugins = Object.assign({}, opts.plugins||{}, extra.plugins);
   if(extra.indexAxis) opts.indexAxis = extra.indexAxis;
   if(extra.interaction) opts.interaction = extra.interaction;
+  if (endLabelsAktiv(type, datasets, extra)) {
+    // Platz rechts für die Etiketten; Legende überflüssig
+    const breit = Math.max(...datasets.filter(d => !END_SKIP.test(d.label || '')).map(d => endName(d.label).length + 6));
+    opts.layout = {padding: {right: Math.min(180, breit * 6.2 + 12)}};
+    opts.plugins = Object.assign({}, opts.plugins, {endLabels: {on: true}, legend: Object.assign({}, opts.plugins?.legend, {display: false})});
+  }
   schriftAnheben(opts);
   CH[id] = new Chart(el, {type, data:{labels,datasets}, options:opts});
   // Charts redrawn by a card's own menus need their export entry too.
@@ -2522,6 +2588,7 @@ function renderStrom() {
     {label:'CO₂-Intensität',val:co2i,unit:'g/kWh (est.)',color:'#dc6803'},
   ]);
   renderPriceChart();
+  try { kernStrom(); } catch(e) { console.error('kernStrom', e); }
   try { renderResidual(); } catch(e) { console.error('renderResidual', e); }
   try { renderSpikes(); } catch(e) { console.error('renderSpikes', e); }
   try { renderEuDayAhead(); } catch(e) { console.error('renderEuDayAhead', e); }
@@ -6710,15 +6777,15 @@ function initLand() {
 // ══════════════════════════════════════════════
 const RENDERS={
   strom:renderStrom, strompreise:renderStrompreise, markt:renderMarkt,
-  gas:() => { renderGas();
+  gas:() => { renderGas(); try { kernGas(); } catch(e) { console.error('kernGas', e); }
     try { renderGasPrognose(); } catch(e) { console.error('renderGasPrognose', e); }
     try { renderGasStandorte(); } catch(e) { console.error('renderGasStandorte', e); } },
   rohstoffe:() => { renderRohstoffe(); try { renderIdx(); } catch(e) { console.error('renderIdx', e); } },
-  kraftstoff:renderKraftstoffMerged,
+  kraftstoff:() => { renderKraftstoffMerged(); kernSprit().catch(e => console.error('kernSprit', e)); },
   erneuerbare:renderErneuerbare, umwelt:renderUmwelt, g20:renderG20,
   wetter:renderWetter, fx:renderFx,
   futures:renderFutures, lage:renderLage, news:renderNews,
-  jahr:renderJahr, makro:renderMakro, themen:renderThemen, fav:renderFav, karte:renderKarte,
+  jahr:renderJahr, makro:() => { renderMakro(); try { kernMakro(); } catch(e) { console.error('kernMakro', e); } }, themen:renderThemen, fav:renderFav, karte:renderKarte,
 };
 
 // Blanket provenance: after a tab renders, every card that shows data and
@@ -7917,6 +7984,56 @@ async function renderFavGrafiken() {
     }
     addExportButtons('fav');
   } finally { _favgLaeuft = false; }
+}
+
+
+// ══════════════════════════════════════════════
+// KERNAUSSAGEN ÜBER GRAFIKEN
+// ══════════════════════════════════════════════
+// Ein Satz über der Grafik, der sagt, was man sieht – die Zahl, die zählt,
+// und der Vergleich, der sie einordnet.
+function kern(anchorId, html) {
+  const a = document.getElementById(anchorId) || document.querySelector(`[data-canvas-for="${anchorId}"]`);
+  const card = a?.closest('.card'); if (!card) return;
+  let el = card.querySelector('.card-kern');
+  if (!html) { el?.remove(); return; }
+  if (!el) { el = document.createElement('div'); el.className = 'card-kern'; card.querySelector('.card-hdr')?.insertAdjacentElement('afterend', el); }
+  el.innerHTML = html;
+}
+const _pz = (a, b) => b ? (a - b) / Math.abs(b) * 100 : null;
+const _rich = (v, gutTief = true) => v == null ? '' : `<b class="${Math.abs(v) < 0.5 ? '' : (v > 0) === gutTief ? 'k-neg' : 'k-pos'}">${v >= 0 ? '+' : '−'}${fmtN(Math.abs(v), 0)} %</b>`;
+
+function kernStrom() {
+  const pr = D.energy_charts?.price_de; if (!pr?.unix_seconds?.length) return;
+  const tag = t => new Date(t * 1000).toLocaleDateString('sv-SE', {timeZone:'Europe/Berlin'});
+  const acc = {}; pr.unix_seconds.forEach((t, i) => { const v = pr.price[i]; if (v == null) return; (acc[tag(t)] ||= []).push(v); });
+  const tage = Object.keys(acc).sort().filter(d => acc[d].length >= 23);
+  if (tage.length < 3) return;
+  const m = d => acc[d].reduce((a, b) => a + b, 0) / acc[d].length;
+  const heute = tage.at(-1), vor = tage.slice(-8, -1), mv = vor.reduce((a, d) => a + m(d), 0) / vor.length;
+  kern('chart-price', `Day-Ahead am ${heute.split('-').reverse().slice(0, 2).join('.')}. im Mittel <b>${fmtN(m(heute), 0)} €/MWh</b> – ${_rich(_pz(m(heute), mv))} gegenüber dem Mittel der ${vor.length} Tage davor.`);
+}
+
+function kernGas() {
+  const rows = D.gas_storage_history?.countries?.de?.rows; if (!rows?.length) return;
+  const l = rows.at(-1), d = new Date(l[0]); d.setUTCFullYear(d.getUTCFullYear() - 1);
+  const vj = rows.find(r => r[0] >= d.toISOString().slice(0, 10));
+  if (!vj) return;
+  const pp = l[1] - vj[1];
+  kern('chart-gas', `Deutsche Gasspeicher zu <b>${fmtN(l[1], 1)} %</b> gefüllt – <b class="${pp < 0 ? 'k-neg' : 'k-pos'}">${fmtN(Math.abs(pp), 1)} Punkte ${pp < 0 ? 'weniger' : 'mehr'}</b> als vor einem Jahr (${fmtN(vj[1], 1)} %).`);
+}
+
+async function kernSprit() {
+  const h = (await loadHistory('fuel')).filter(r => r.e10_avg != null); if (h.length < 8) return;
+  const l = h.at(-1), w = h.at(-8);
+  kern('chart-fuel-history', `Super E10 kostet <b>${fmtN(l.e10_avg, 3)} €/l</b>, Diesel <b>${fmtN(l.diesel_avg, 3)} €/l</b> – E10 ${_rich(_pz(l.e10_avg, w.e10_avg))} binnen einer Woche.`);
+}
+
+function kernMakro() {
+  const r = D.makro?.series?.de_power_price?.series; if (!r?.length) return;
+  const l = r.at(-1), vj = r.find(p => p.date.slice(0, 7) === `${+l.date.slice(0, 4) - 1}${l.date.slice(4, 7)}`);
+  const monat = new Date(l.date).toLocaleDateString('de-DE', {month:'long', year:'numeric'});
+  kern('chart-mw-power', `Strom im Großhandel im ${monat}: <b>${fmtN(l.v, 0)} €/MWh</b>${vj ? ` – ${_rich(_pz(l.v, vj.v))} gegenüber dem Vorjahresmonat` : ''}.`);
 }
 
 // ══════════════════════════════════════════════
