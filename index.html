@@ -917,6 +917,9 @@ main [style*="font-size:11px"]{font-size:12px!important}
 .ec-det summary::-webkit-details-marker{display:none}
 .ec-det[open] summary{background:var(--bg-alt)}
 .ec-liste{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
+.ereig-chips.ec-zeile{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:2px}
+.ereig-chips.ec-zeile::-webkit-scrollbar{display:none}
+.ereig-chips.ec-zeile .ec{flex:none;font-size:11px;padding:1px 8px 1px 6px}
 </style>
 </head>
 <body>
@@ -2413,10 +2416,9 @@ function ereignisChips() {
       return `<button type="button" class="ec${an ? ' an' : ''}" title="${an ? 'Ausblenden' : 'Einblenden'}: ${e.text}${e.quelle ? ' – Quelle: ' + e.quelle : ''}"
         onclick="event.stopPropagation();ereignisUmschalten('${id}', ${!an})"><i class="${e.bis ? 'zr' : 'li'}"></i>${e.text}</button>`; }).join('');
     // In den kleinen Kacheln zusammengeklappt, damit sie schlank bleiben
-    const offen = box.querySelector('details')?.open;
-    const html = inKachel && liste.length > 1
-      ? `<details class="ec-det"${offen ? ' open' : ''} onclick="event.stopPropagation()"><summary>⚑ ${liste.filter(e => !aus.includes(e.id || e.text)).length}/${liste.length} Ereignisse</summary><div class="ec-liste">${chips}</div></details>`
-      : chips;
+    // In den kleinen Kacheln eine einzeilige, wischbare Reihe – jeder Schalter direkt klickbar
+    const html = chips;
+    box.classList.toggle('ec-zeile', inKachel);
     if (box.innerHTML !== html) box.innerHTML = html;
   });
 }
