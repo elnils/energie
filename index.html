@@ -536,6 +536,7 @@ main{padding-top:22px}
 .consent-save{display:block;width:calc(100% - 28px);margin:4px 14px 14px;min-height:40px;border-radius:10px;
   border:1px solid var(--border-strong);background:var(--bg-alt);font:inherit;font-weight:600;cursor:pointer}
 body.consent-offen{overflow:hidden}
+.panel.zeichnet{opacity:.55;transition:opacity .1s}
 /* Über diese Seite */
 .ueber{margin:auto;border:none;border-radius:20px;padding:26px 28px 22px;width:min(620px,calc(100% - 32px));max-height:calc(100vh - 48px);
   background:var(--card);color:var(--text);box-shadow:0 24px 60px -12px rgba(10,20,35,.45);font-size:13.5px;line-height:1.55}
@@ -1426,6 +1427,7 @@ main [style*="font-size:11px"]{font-size:12px!important}
     </div>
   </div>
   <div class="fav-picker" id="fav-picker" hidden></div>
+  <div class="range-bar" data-tab="fav"></div>
   <div class="fav-grid" id="fav-grid"><div class="loading"><span class="spin"></span>Lädt…</div></div>
   <div class="fav-foot" id="fav-foot"></div>
   <div class="fav-abschnitt">Angeheftete Grafiken</div>
@@ -2111,7 +2113,8 @@ const TAB_RANGES = {
   lage:        ['90d','1y','2y','5y','max'],
   news:        [],  // no range
   jahr:        [],  // eigener Umschalter (10 Jahre / Gesamt)
-  fav:         [],
+  // Zeitraum der Verlaufslinien in den Kacheln; Monats- und Jahresreihen zeigen mindestens gut ein Jahr bzw. alle Jahre
+  fav:         ['7d','30d','90d','1y','2y','5y','max'],
   themen:      [],
   karte:       [],
   makro:       ['2y','5y','max'],
@@ -2121,7 +2124,7 @@ const TAB_RANGES = {
 const TAB_DEFAULT_RANGE = {
   strom:'7d', strompreise:'max', markt:'30d', gas:'1y', rohstoffe:'1y',
   kraftstoff:'30d', erneuerbare:'5y', umwelt:'max', g20:'max',
-  wetter:'7d', fx:'90d', futures:'2y', lage:'2y', makro:'max',
+  wetter:'7d', fx:'90d', futures:'2y', lage:'2y', makro:'max', fav:'max',
 };
 
 // Active range per tab (in-memory). Initialised from URL ?range= or localStorage.
@@ -2550,7 +2553,7 @@ function mkChart(id, type, labels, datasets, extra={}) {
   if (iso.length && iso.length >= labels.length * 0.8 && type !== 'scatter' && !extra.indexAxis) {
     const tage = (Date.parse(iso.at(-1)) - Date.parse(iso[0])) / 864e5;
     const fmt = l => { const d = new Date(String(l).slice(0, 10) + 'T12:00:00Z');
-      return tage <= 400 ? `${d.getUTCDate()}.${d.getUTCMonth() + 1}.` : d.toLocaleDateString('de-DE', {month:'short', year:'2-digit', timeZone:'UTC'}); };
+      return tage <= 400 ? `${d.getUTCDate()}.${d.getUTCMonth() + 1}.` : _fMonJ.format(d); };
     opts.scales = opts.scales || {}; opts.scales.x = Object.assign({}, opts.scales.x);
     opts.scales.x.ticks = Object.assign({}, opts.scales.x.ticks, {maxRotation:0, autoSkipPadding:14, callback:(v, i) => /^\d{4}-/.test(String(labels[i])) ? fmt(labels[i]) : labels[i]});
   }
@@ -2577,10 +2580,18 @@ function mkChart(id, type, labels, datasets, extra={}) {
 // ══════════════════════════════════════════════
 // UTILS
 // ══════════════════════════════════════════════
-const fmtDt = iso => iso ? new Date(iso).toLocaleString('de-DE',{dateStyle:'short',timeStyle:'short'}) : '—';
-const fmtN  = (n,d=1) => (n==null||isNaN(n)) ? '—' : Number(n).toLocaleString('de-DE',{minimumFractionDigits:d,maximumFractionDigits:d});
-const fmtTs = ts => new Date(ts).toLocaleString('de-DE',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
-const fmtDate = ts => new Date(ts).toLocaleDateString('de-DE',{month:'2-digit',day:'2-digit',year:'2-digit'});
+// Formatierer einmal anlegen und wiederverwenden: toLocaleString mit Optionen
+// baut sie sonst bei jedem Wert neu – bei Tausenden Achsenwerten spürbar
+const _fDt = new Intl.DateTimeFormat('de-DE',{dateStyle:'short',timeStyle:'short'});
+const _fTs = new Intl.DateTimeFormat('de-DE',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+const _fDate = new Intl.DateTimeFormat('de-DE',{month:'2-digit',day:'2-digit',year:'2-digit'});
+const _fN = {};
+const _fMonJ = new Intl.DateTimeFormat('de-DE', {month:'short', year:'2-digit', timeZone:'UTC'});
+const _fTagMon = new Intl.DateTimeFormat('de-DE', {day:'2-digit', month:'2-digit', timeZone:'UTC'});
+const fmtDt = iso => iso ? _fDt.format(new Date(iso)) : '—';
+const fmtN  = (n,d=1) => (n==null||isNaN(n)) ? '—' : (_fN[d] ||= new Intl.NumberFormat('de-DE',{minimumFractionDigits:d,maximumFractionDigits:d})).format(Number(n));
+const fmtTs = ts => _fTs.format(new Date(ts));
+const fmtDate = ts => _fDate.format(new Date(ts));
 const coCut  = days => Date.now() - days*86400*1000;
 const coCutS = days => Date.now()/1000 - days*86400;
 
@@ -7424,6 +7435,12 @@ document.querySelectorAll('.tab').forEach(btn=>{
       try { addStarButtons(tab); } catch(e) {}
       return;
     }
+    // Erst die Umschaltung sichtbar werden lassen, dann zeichnen – sonst
+    // wirkt der Tipp, als sei nichts passiert, und man tippt ein zweites Mal
+    panel?.classList.add('zeichnet');
+    await new Promise(r => requestAnimationFrame(() => setTimeout(r, 0)));
+    panel?.classList.remove('zeichnet');
+    if (activeTab !== tab) return;
     renderTab(tab);
   });
 });
@@ -7751,10 +7768,26 @@ function favStromTage() {
   if (_stromTage?.z === z) return _stromTage.r;
   return (_stromTage = {z, r: _favStromTage(z)}).r;
 }
+// Tagesmittel aus Viertelstunden: Tage als ganze Zahlen zählen und den
+// Sommerzeit-Versatz nur an den Umstellungen neu bestimmen – erst am Ende wird
+// je Tag ein Datumstext gebildet (vorher je Viertelstunde, über 300 000 Mal)
 function _favStromTage(z) {
-  const acc = {}; z.unix_seconds.forEach((t, i) => { const v = z.price[i]; if (v == null) return;
-    const d = berlinTag(t); (acc[d] ||= [0, 0]); acc[d][0] += v; acc[d][1]++; });
-  return Object.entries(acc).filter(([, a]) => a[1] >= 20).map(([d, a]) => [d, a[0] / a[1]]);
+  const ts = z.unix_seconds, pr = z.price, sum = new Map(), anz = new Map();
+  let off = 0, gueltigBis = -Infinity, gueltigAb = Infinity;
+  for (let i = 0; i < ts.length; i++) {
+    const t = ts[i], v = pr[i]; if (v == null) continue;
+    if (t >= gueltigBis || t < gueltigAb) {
+      const j = new Date(t * 1000).getUTCFullYear(), [a, e] = _sommerzeit(j);
+      if (t < a) { off = 3600; gueltigAb = Date.UTC(j, 0, 1) / 1000; gueltigBis = a; }
+      else if (t < e) { off = 7200; gueltigAb = a; gueltigBis = e; }
+      else { off = 3600; gueltigAb = e; gueltigBis = Date.UTC(j + 1, 0, 1) / 1000; }
+    }
+    const d = Math.floor((t + off) / 86400);
+    sum.set(d, (sum.get(d) || 0) + v); anz.set(d, (anz.get(d) || 0) + 1);
+  }
+  const r = [];
+  for (const [d, n] of anz) if (n >= 20) r.push([new Date(d * 86400000).toISOString().slice(0, 10), sum.get(d) / n]);
+  return r.sort((x, y) => x[0] < y[0] ? -1 : 1);
 }
 const favSpeicher = land => (D.gas_storage_history?.countries?.[land]?.rows || []).map(r => [r[0], r[1]]);
 
@@ -8032,8 +8065,18 @@ async function renderFav() {
   const reihen = await Promise.all(items.map(k => k.reihe().catch(() => [])));
   const reihenSauber = items.map((k, i) => (reihen[i] || []).filter(p => p[0] && p[1] != null && !isNaN(p[1])).sort((a, b) => a[0].localeCompare(b[0])));
   const spezial = items.map((k, i) => k.art ? kachelSpezial(k, reihenSauber[i]) : null);
+  // Gewählter Zeitraum für die Verlaufslinie; Veränderungs-Chips rechnen weiter mit der ganzen Reihe
+  const favTage = RANGE_DEFS[getRange('fav')]?.days ?? Infinity;
+  const favAusschnitt = (k, r) => {
+    if (!isFinite(favTage) || k.art || k.jahr || r.length < 2) return r;
+    const tage = Math.max(favTage, k.monat || /_hh$/.test(k.id) ? 400 : 0);
+    const ab = new Date(Date.parse(r.at(-1)[0]) - tage * 864e5).toISOString().slice(0, 10);
+    const t = r.filter(p => p[0] >= ab);
+    return t.length >= 2 ? t : r.slice(-2);
+  };
+  const ausschnitt = items.map((k, i) => favAusschnitt(k, reihenSauber[i]));
   grid.innerHTML = items.map((k, i) => {
-    const r = reihenSauber[i], akt = r.at(-1);
+    const r = reihenSauber[i], akt = r.at(-1), rz = ausschnitt[i];
     const datum = akt ? (k.jahr ? akt[0].slice(0, 4) + (D.kennzahlen?.years?.at(-1)?.partial ? ' bisher' : '')
                          : k.monat ? akt[0].slice(5, 7) + '/' + akt[0].slice(0, 4)
                          : new Date(akt[0]).toLocaleDateString('de-DE')) : '';
@@ -8055,13 +8098,13 @@ async function renderFav() {
       <div class="fav-why">${k.why}</div>
       ${k.zweite ? `<div class="fav-leg"><span><i style="background:${k.col}"></i>${k.lbl}</span><span><i style="background:${k.zweite.col}"></i>${k.zweite.lbl}</span></div>` : ''}
       <div class="fav-mini${k.art ? ' fav-mini-' + k.art : ''}">${r.length > 1 || k.art ? `<canvas id="fav-mini-${k.id.replace(/[^a-z0-9_-]/gi, '_')}"></canvas>` : `<div class="fav-leer">${akt ? fmtN(akt[1], k.dec) + ' ' + k.unit : 'noch keine Daten'}</div>`}</div>
-      ${!k.art && r.length > 1 ? `<div class="fav-achse"><span>${kurzDatum(r[0][0])}</span><span>${kurzDatum(r.at(-1)[0])}</span></div>` : ''}
+      ${!k.art && rz.length > 1 ? `<div class="fav-achse"><span>${kurzDatum(rz[0][0])}</span><span>${kurzDatum(rz.at(-1)[0])}</span></div>` : ''}
       <div class="fav-meta">${datum ? `<span>Stand ${datum}</span>` : ''}${chips}</div>
       <div class="fav-quelle">Quelle: ${FAV_QUELLE[k.id] || (k.id.startsWith('idx:') ? 'Yahoo Finance, eigene Gewichtung' : 'Energie-Dashboard')}</div>
     </div>`;
   }).join('');
   items.forEach((k, i) => {
-    const r = reihenSauber[i], id = 'fav-mini-' + k.id.replace(/[^a-z0-9_-]/gi, '_');
+    const r = ausschnitt[i], id = 'fav-mini-' + k.id.replace(/[^a-z0-9_-]/gi, '_');
     const el = document.getElementById(id); if (!el) return;
     if (CH[id]) CH[id].destroy();
     const cfg = k.art ? spezial[i] : null;
@@ -8347,7 +8390,7 @@ function renderGasPrognose() {
   const ist = xs.map(d => d <= d0 ? (tag[iso(d)]?.f ?? null) : null);
   const vor = xs.map(d => naehe(jahrZurueck(d, 1), 1)?.f ?? null);
   const pj = xs.map(d => { const k = Math.round((d - d0) / 86400e3); return k >= 0 ? proj(k) : null; });
-  mkChart('chart-gasprog', 'line', xs.map(d => d.toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit', timeZone:'UTC'})), [
+  mkChart('chart-gasprog', 'line', xs.map(d => _fTagMon.format(d)), [
     {label:'Spanne Vorjahre (max)', data:pj.map(p => p?.hi ?? null), borderColor:'transparent', backgroundColor:'rgba(37,99,235,.12)', fill:'+1', pointRadius:0},
     {label:'Spanne Vorjahre (min)', data:pj.map(p => p?.lo ?? null), borderColor:'transparent', backgroundColor:'rgba(37,99,235,.12)', fill:false, pointRadius:0},
     {label:'Fortschreibung (Median)', data:pj.map(p => p?.m ?? null), borderColor:'#2563eb', borderDash:[5, 4], borderWidth:2, fill:false},
