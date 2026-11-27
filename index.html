@@ -555,6 +555,11 @@ body.consent-offen{overflow:hidden}
 #map-vo path.wahl{stroke:#c2410c;stroke-width:2;paint-order:stroke}
 #map-vo path:hover{stroke:#0f2540;stroke-width:1.1;opacity:1}
 #map-vo .laender{fill:none;stroke:#fff;stroke-width:1.3;pointer-events:none}
+.gilt-fuer{display:inline-block;margin:3px 0 1px;font-size:11px;font-weight:600;color:#9a3412;background:#fff1e6;border-radius:999px;padding:1px 9px}
+.gilt-fuer.welt{color:#1e40af;background:#e8effc}
+.card-title + .gilt-fuer{display:table}
+.fav-region{font-weight:600;color:#9a3412}
+#map-vo circle.vo-stadt{fill:#c2410c;stroke:#fff;stroke-width:1.5;cursor:default}
 .vo-legende{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text2);margin:8px auto 0;max-width:420px}
 .vo-stufen{display:flex;flex:1;gap:2px}
 .vo-stufen span{flex:1;height:10px;position:relative}
@@ -7447,6 +7452,34 @@ function tabSignatur(tab) {
   return [datenStand(), tabRange[tab] || '', (TAB_FILES[tab] || []).map(f => D[f] ? 1 : 0).join(''), ls].join('#');
 }
 
+// Für welches Land gilt eine Grafik? Ist oben ein anderes Land als Deutschland
+// gewählt, bekommt jede Karte ohne eigene Länderwahl einen Hinweis, damit
+// niemand den deutschen Spritpreis für den österreichischen hält.
+const REGION_QUELLE = {fuel:'DE', heating_oil:'DE', smard:'DE', bnetza_gas:'DE', destatis_vpi:'DE', makro:'DE', kennzahlen:'DE',
+  weather:'DE', vor_ort:'DE', gas_sites:'DE', energy_charts:'DE', entsoe:'DE', expansion:'DE',
+  commodities:'Welt', energy_futures:'Welt', eia_petroleum:'US', fred_energy:'US'};
+const REGION_TEXT = {DE:'gilt für Deutschland', Welt:'Weltmarkt – für alle Länder gleich', US:'gilt für die USA'};
+function folgtLand(card) {
+  if (card.querySelector('select[data-k="land"]')) return true;
+  return [...card.querySelectorAll('select')].some(sel => [...sel.options].filter(o => /^[a-z]{2}$|^[A-Z]{2}$|^EU27|^EA2|^price_/.test(o.value)).length >= 4);
+}
+function landHinweise(tab) {
+  const panel = document.getElementById('panel-' + tab); if (!panel) return;
+  const iso = landGlobal();
+  panel.querySelectorAll('.card').forEach(card => {
+    card.querySelectorAll(':scope > .card-hdr .gilt-fuer').forEach(x => x.remove());
+    if (iso === 'DE') return;
+    const titel = card.querySelector('.card-title')?.textContent || '';
+    if (/Europa|EU-|EU\b|Vergleich|G20|Länder/.test(titel) || folgtLand(card)) return;
+    const reg = card.dataset.region || REGION_QUELLE[(card.dataset.src || '').split(' ')[0]];
+    if (!reg || !REGION_TEXT[reg]) return;
+    const ziel = card.querySelector(':scope > .card-hdr .card-title'); if (!ziel) return;
+    const t = document.createElement('span'); t.className = 'gilt-fuer' + (reg === 'Welt' ? ' welt' : '');
+    t.textContent = REGION_TEXT[reg] + (reg === 'DE' ? ` · für ${landName(iso)} keine Daten` : '');
+    ziel.insertAdjacentElement('afterend', t);
+  });
+}
+
 function renderTab(tab){
   _tabStand[tab] = tabSignatur(tab);
   // Range bar always renders, even if main render crashes
@@ -7475,6 +7508,7 @@ function renderTab(tab){
       }
     }
     try { addExportButtons(tab); } catch(e) { console.error('export buttons', e); }
+    try { landHinweise(tab); setTimeout(() => landHinweise(tab), 700); } catch(e) { console.error('landHinweise', e); }
     try { _gerendert.add(tab); addStarButtons(tab); setTimeout(() => addStarButtons(tab), 600); } catch(e) { console.error('stars', e); }
   }
 }
@@ -8117,6 +8151,12 @@ function favSpark(reihe, col) {
     <polyline points="${pts.join(' ')}" fill="none" stroke="${col}" stroke-width="1.6" vector-effect="non-scaling-stroke"/></svg>`;
 }
 
+// Region einer Kachel, nur gezeigt, wenn oben ein anderes Land gewählt ist
+function favRegion(k) {
+  if (landGlobal() === 'DE') return '';
+  const r = /^(brent|wti)$|^idx:/.test(k.id) ? 'Weltmarkt' : k.id === 'ttf' ? 'Europa (TTF)' : 'Deutschland';
+  return ` <b class="fav-region">· ${r}</b>`;
+}
 function favChip(akt, alt, k, txt) {
   if (!alt) return '';
   const d = akt[1] - alt[1];
@@ -8165,7 +8205,7 @@ async function renderFav() {
         chips = `<span class="fav-chip neutral" title="Mittel 2018–2021 derselben Kalenderwoche: ${fmtN(rv, 0)} GWh/Tag">${pz >= 0 ? '+' : '−'}${fmtN(Math.abs(pz), 0)} % ggü. 2018–21</span>` + chips; } }
     return `<div class="fav" onclick="favOeffnen('${k.id}')" title="Zur Grafik im Reiter springen">
       <div class="fav-top">
-        <div class="fav-tt"><span class="fav-lbl">${k.lbl}</span><span class="fav-einheit">${k._einheit || (/\bin\b|^am |^Füllstand/.test(k.unit) ? k.unit : 'in ' + k.unit)}</span></div>
+        <div class="fav-tt"><span class="fav-lbl">${k.lbl}</span><span class="fav-einheit">${k._einheit || (/\bin\b|^am |^Füllstand/.test(k.unit) ? k.unit : 'in ' + k.unit)}${favRegion(k)}</span></div>
         <button class="fav-info" onclick="event.stopPropagation();this.closest('.fav').classList.toggle('info')" title="Erklärung" aria-label="Erklärung zu ${k.lbl}">i</button>
         <button class="fav-star" onclick="favUmschalten('${k.id}',event)" title="Aus den Favoriten entfernen" aria-label="${k.lbl} aus den Favoriten entfernen">★</button></div>
       <div class="fav-why">${k.why}</div>
@@ -8228,9 +8268,22 @@ const VO_EBENEN = {
   bev_je_lp:  {lbl:'E-Autos je Ladepunkt', titel:'Elektroautos je öffentlichem Ladepunkt', einheit:'E-Autos', dec:1, wenigGut:true,
                w:k => k.bev != null && k.lade_lp ? k.bev / k.lade_lp : null, sum:['bev','lade_lp',1], q:'kba lade'},
 };
+// Tanken: keine eigenen Kreisdaten – die Preise kommen aus den Messstädten
+// (Tankstellen im Umkreis von 10 km). Jeder Kreis zeigt das Mittel seines
+// Landes; im Profil steht die nächstgelegene Messstadt.
+['e10', 'e5', 'diesel'].forEach(f => VO_EBENEN[f] = {
+  lbl: {e5:'Super E5', e10:'Super E10', diesel:'Diesel'}[f], titel: {e5:'Super E5', e10:'Super E10', diesel:'Diesel'}[f] + ' (Mittel des Landes)',
+  einheit:'€/l', dec:3, tank:f, wenigGut:true, leg:['günstig', 'teuer'], q:'fuel',
+  w:k => voTankLand(f)[DE_LAND[k._nuts?.slice(0, 3)]] ?? null});
+function voTankLand(f) {
+  const c = D.fuel?.cities || {}, l = {};
+  Object.entries(c).forEach(([n, v]) => { if (n !== '_national' && v?.land && v[f + '_avg'] != null) (l[v.land] ||= []).push(v[f + '_avg']); });
+  return Object.fromEntries(Object.entries(l).map(([k, a]) => [k, a.reduce((x, y) => x + y, 0) / a.length]));
+}
 const VO_THEMEN = [
-  {id:'sonne', lbl:'Wind und Sonne', ebenen:['solar_ew','wind_km2','wind_n','speicher_ew']},
-  {id:'auto',  lbl:'Elektroautos',   ebenen:['bev_anteil','bev_ew','lade_ew','bev_je_lp']},
+  {id:'sonne',  lbl:'Wind und Sonne', ebenen:['solar_ew','wind_km2','wind_n','speicher_ew']},
+  {id:'auto',   lbl:'Elektroautos',   ebenen:['bev_anteil','bev_ew','lade_ew','bev_je_lp']},
+  {id:'tanken', lbl:'Tanken',         ebenen:['e10','e5','diesel']},
 ];
 const VO_FARBEN = ['#dce8f7','#a3c4ea','#5f99d8','#2c64b2','#10295c'];
 const VO_KEY = 'energydash:vorort';
@@ -8243,6 +8296,7 @@ function voKreis(nuts) { VO.kreis = nuts || ''; voSpeichern(); renderVorOrt(); }
 
 // Wert für Deutschland insgesamt: Summe der Zähler durch Summe der Nenner
 function voGesamt(e, kreise) {
+  if (e.tank) return D.fuel?.cities?._national?.[e.tank + '_avg'] ?? null;
   const [a, b, f] = e.sum; const za = kreise.reduce((s, k) => s + (+k[a] || 0), 0);
   if (!b) return za;
   const nb = kreise.reduce((s, k) => s + (k[a] != null ? (+k[b] || 0) : 0), 0);
@@ -8256,7 +8310,12 @@ async function renderVorOrt() {
   const thema = VO_THEMEN.find(t => t.id === VO.thema) || VO_THEMEN[0];
   if (!thema.ebenen.includes(VO.ebene)) VO.ebene = thema.ebenen[0];
   const e = VO_EBENEN[VO.ebene], K = vo.kreise, liste = Object.values(K);
+  Object.entries(K).forEach(([n, k]) => k._nuts = n);
   if (VO.kreis && !K[VO.kreis]) VO.kreis = '';
+  // Messstädte für Tanken: Lage auf der Karte und Abstand in km
+  const [lon0, lat0, lon1, lat1] = geo.box, kmJeEinheit = 111.2 / (geo.width / ((lon1 - lon0) * Math.cos((lat0 + lat1) / 2 * Math.PI / 180)));
+  const staedte = e.tank ? Object.entries(D.fuel?.cities || {}).filter(([n, v]) => n !== '_national' && v?.lat && v[e.tank + '_avg'] != null)
+    .map(([n, v]) => { const [x, y] = karteProj(geo, v.lon, v.lat).map(Number); return {n, v, x, y, p: v[e.tank + '_avg']}; }) : [];
 
   document.getElementById('vo-themen').innerHTML = VO_THEMEN.map(t =>
     `<button class="vo-thema ${t.id === thema.id ? 'active' : ''}" role="tab" aria-selected="${t.id === thema.id}" onclick="voThema('${t.id}')">${t.lbl}</button>`).join('');
@@ -8283,39 +8342,58 @@ async function renderVorOrt() {
     return `<path d="${sh.d}" data-id="${id}" class="${v == null ? 'leer' : ''}${id === VO.kreis ? ' wahl' : ''}"${v == null ? '' : ` style="fill:${VO_FARBEN[stufe(v)]}"`}></path>`;
   }).join('');
   const gewaehlt = VO.kreis ? `<path d="${geo.shapes[VO.kreis]?.d || ''}" class="wahl" style="fill:none;pointer-events:none"></path>` : '';
-  box.innerHTML = `<svg viewBox="0 0 ${geo.width} ${geo.height}" role="img" aria-label="${e.titel} je Kreis">${pfade}<path class="laender" d="${geo.laender || ''}"></path>${gewaehlt}</svg><div class="map-tip"></div>`;
-  const quelleTxt = e.q.split(' ').map(q => vo.quellen?.[q]).filter(Boolean).join(', ');
+  const punkte = staedte.map(c => `<circle cx="${c.x}" cy="${c.y}" r="4.2" class="vo-stadt" data-tip="${c.n}: ${fmtN(c.p, 3)} €/l (${c.v.count || '?'} Tankstellen im Umkreis von 10 km)"></circle>`).join('');
+  box.innerHTML = `<svg viewBox="0 0 ${geo.width} ${geo.height}" role="img" aria-label="${e.titel} je Kreis">${pfade}<path class="laender" d="${geo.laender || ''}"></path>${gewaehlt}${punkte}</svg><div class="map-tip"></div>`;
+  const quelleTxt = e.q.split(' ').map(q => q === 'fuel' ? 'Tankerkönig (Markttransparenzstelle für Kraftstoffe)' : vo.quellen?.[q]).filter(Boolean).join(', ');
   box.dataset.quelle = quelleTxt;
   box._rows = [['Kreis', 'Land', `${e.titel} (${e.einheit})`, 'Platz']].concat(
     Object.entries(K).sort((a, b) => a[1].ags.localeCompare(b[1].ags)).map(([n, k]) => [k.name, k.land, werte[n] != null ? +werte[n].toFixed(3) : '', rang[n] || '']));
   const svg = box.querySelector('svg'), tip = box.querySelector('.map-tip');
   svg.addEventListener('mousemove', ev => {
-    const p = ev.target.closest('path[data-id]'); if (!p) { tip.style.display = 'none'; return; }
-    const k = K[p.dataset.id], v = werte[p.dataset.id], r = box.getBoundingClientRect();
+    const c = ev.target.closest('circle[data-tip]'), p = ev.target.closest('path[data-id]'); if (!p && !c) { tip.style.display = 'none'; return; }
+    const r = box.getBoundingClientRect();
     tip.style.left = (ev.clientX - r.left) + 'px'; tip.style.top = (ev.clientY - r.top) + 'px';
-    tip.textContent = `${k?.name || geo.shapes[p.dataset.id].name}: ${v == null ? 'keine Daten' : fmtN(v, e.dec) + ' ' + e.einheit}`; tip.style.display = 'block';
+    if (c) { tip.textContent = c.dataset.tip; tip.style.display = 'block'; return; }
+    const k = K[p.dataset.id], v = werte[p.dataset.id];
+    tip.textContent = `${k?.name || geo.shapes[p.dataset.id].name}: ${v == null ? 'keine Daten' : fmtN(v, e.dec) + ' ' + e.einheit}${e.tank ? ' (Mittel ' + (k?.land || 'des Landes') + ')' : ''}`; tip.style.display = 'block';
   });
   svg.addEventListener('mouseleave', () => tip.style.display = 'none');
   svg.addEventListener('click', ev => { const p = ev.target.closest('path[data-id]'); if (p && K[p.dataset.id]) voKreis(p.dataset.id === VO.kreis ? '' : p.dataset.id); });
 
   // Ein Satz über der Karte
   const de = voGesamt(e, liste), mi = sortiert[0], ma = sortiert.at(-1);
-  const mitE = v => fmtN(v, e.dec) + (e.einheit === '%' ? ' %' : '');
+  const mitE = v => fmtN(v, e.dec) + (e.einheit === '%' ? ' %' : e.einheit === '€/l' ? ' €/l' : '');
+  const landName2 = code => liste.find(k => DE_LAND[k._nuts.slice(0, 3)] === code)?.land || code;
+  if (e.tank) {
+    const lw = Object.entries(voTankLand(e.tank)).sort((a, b) => a[1] - b[1]);
+    document.getElementById('vo-satz').innerHTML = lw.length ? `<b>${e.lbl}:</b> bundesweite Stichprobe ${mitE(de)} · Länder von ${mitE(lw[0][1])} (${landName2(lw[0][0])}) bis ${mitE(lw.at(-1)[1])} (${landName2(lw.at(-1)[0])}) · gemessen in ${staedte.length} Städten, Tankstellen im Umkreis von 10 km` : 'Keine Kraftstoffpreise je Stadt.';
+  } else
   document.getElementById('vo-satz').innerHTML = vs.length ? `<b>${e.titel}:</b> Deutschland ${mitE(de)} · von ${mitE(mi[1])} (${K[mi[0]].name}) bis ${mitE(ma[1])} (${K[ma[0]].name})` : 'Für diese Kennzahl liegen noch keine Werte vor.';
 
   // Legende: fünf Stufen, darunter die Grenzen
-  document.getElementById('vo-legende').innerHTML = `<b>wenig</b><span class="vo-stufen">${VO_FARBEN.map((f, i) =>
-    `<span style="background:${f}">${i < 4 ? `<i>${fmtN(grenzen[i], e.dec >= 1 && grenzen[i] < 10 ? 1 : 0)}</i>` : ''}</span>`).join('')}</span><b>viel</b>`;
+  const [lw0, lw1] = e.leg || ['wenig', 'viel'];
+  document.getElementById('vo-legende').innerHTML = `<b>${lw0}</b><span class="vo-stufen">${VO_FARBEN.map((f, i) =>
+    `<span style="background:${f}">${i < 4 ? `<i>${fmtN(grenzen[i], e.dec > 1 ? e.dec : e.dec >= 1 && grenzen[i] < 10 ? 1 : 0)}</i>` : ''}</span>`).join('')}</span><b>${lw1}</b>`;
 
   // Profil des gewählten Kreises (oder Deutschland) mit allen Kennzahlen
   const k = VO.kreis ? K[VO.kreis] : null;
+  const naechste = (() => {
+    if (!k || !staedte.length && !D.fuel?.cities) return null;
+    const pfad = box.querySelector(`path[data-id="${VO.kreis}"]`); if (!pfad) return null;
+    const b = pfad.getBBox(), cx = b.x + b.width / 2, cy = b.y + b.height / 2;
+    return Object.entries(D.fuel?.cities || {}).filter(([n, v]) => n !== '_national' && v?.lat).map(([n, v]) => {
+      const [x, y] = karteProj(geo, v.lon, v.lat).map(Number); return {n, v, km: Math.hypot(x - cx, y - cy) * kmJeEinheit}; }).sort((a, b) => a.km - b.km)[0];
+  })();
   const zeile = id => { const x = VO_EBENEN[id];
     const v = k ? x.w(k) : voGesamt(x, liste);
     let r = '';
-    if (k && v != null) { const alle = liste.map(x.w).filter(y => y != null && isFinite(y)).sort((a, b) => b - a);
+    if (x.tank && k && naechste?.v[x.tank + '_avg'] != null) r = `${naechste.n} (${fmtN(naechste.km, 0)} km): ${fmtN(naechste.v[x.tank + '_avg'], 3)}`;
+    else if (x.tank) r = k ? '' : 'Stichprobe';
+    else if (k && v != null) { const alle = liste.map(x.w).filter(y => y != null && isFinite(y)).sort((a, b) => b - a);
       r = `Platz ${alle.findIndex(y => y <= v) + 1} von ${alle.length}`; }
     const akt = id === VO.ebene ? ' akt' : '';
-    return `<span class="k${akt}">${x.titel}</span><span class="w${akt}">${v == null ? '–' : fmtN(v, x.dec) + (x.einheit === '%' ? ' %' : '')}</span><span class="r">${r}</span>`; };
+    return `<span class="k${akt}">${x.titel}</span><span class="w${akt}">${v == null ? '–' : mitE2(v, x)}</span><span class="r">${r}</span>`; };
+  const mitE2 = (v, x) => fmtN(v, x.dec) + (x.einheit === '%' ? ' %' : x.einheit === '€/l' ? ' €' : '');
   document.getElementById('vo-profil').innerHTML = `<h4>${k ? k.name : 'Deutschland'}</h4>
     <div class="vo-art">${k ? `${k.art} · ${k.land} · ${fmtN(k.ew, 0)} Einwohner · ${fmtN(k.km2, 0)} km²` : `${liste.length} Kreise · ${fmtN(liste.reduce((a, x) => a + x.ew, 0), 0)} Einwohner`}</div>
     <div class="vo-zeilen">${Object.keys(VO_EBENEN).map(zeile).join('')}</div>
@@ -8323,14 +8401,19 @@ async function renderVorOrt() {
 
   // Die fünf höchsten und niedrigsten Werte der gezeigten Kennzahl
   const eintrag = ([n, v]) => `<li onclick="voKreis('${n}')">${K[n].name}<span>${fmtN(v, e.dec)}</span></li>`;
-  document.getElementById('vo-rang').innerHTML = sortiert.length ? `
+  const stEintrag = c => `<li>${c.n}<span>${fmtN(c.p, 3)}</span></li>`;
+  const stS = [...staedte].sort((a, b) => a.p - b.p);
+  document.getElementById('vo-rang').innerHTML = e.tank ? (stS.length ? `
+    <div><h5>Am günstigsten (Messstädte)</h5><ol>${stS.slice(0, 5).map(stEintrag).join('')}</ol></div>
+    <div><h5>Am teuersten (Messstädte)</h5><ol>${stS.slice(-5).reverse().map(stEintrag).join('')}</ol></div>` : '') : sortiert.length ? `
     <div><h5>${e.wenigGut ? 'Am wenigsten' : 'Am meisten'}</h5><ol>${(e.wenigGut ? sortiert.slice(0, 5) : sortiert.slice(-5).reverse()).map(eintrag).join('')}</ol></div>
     <div><h5>${e.wenigGut ? 'Am meisten' : 'Am wenigsten'}</h5><ol>${(e.wenigGut ? sortiert.slice(-5).reverse() : sortiert.slice(0, 5)).map(eintrag).join('')}</ol></div>` : '';
 
   const st = vo.stand || {};
-  const stTxt = {mastr: st.mastr && `Register ${fmtDatum(st.mastr_bis || st.mastr)}`,
+  const fuelStand = D.meta?.sources?.fuel?.last_success;
+  const stTxt = {fuel: fuelStand && `Preise ${fmtDt(fuelStand)}`, mastr: st.mastr && `Register ${fmtDatum(st.mastr_bis || st.mastr)}`,
     kba: st.kba && `Pkw-Bestand ${fmtDatum(st.kba)}`, lade: st.lade && `Ladesäulen ${fmtDatum(st.lade)}`};
-  document.getElementById('vo-quelle').textContent = `Quelle: ${quelleTxt}${e.q.split(' ').map(q => stTxt[q]).filter(Boolean).length ? ' (Stand: ' + e.q.split(' ').map(q => stTxt[q]).filter(Boolean).join('; ') + ')' : ''} · Einwohner und Fläche: ${vo.quellen?.kreise || 'Destatis'}${st.kreise ? ' (' + st.kreise + ')' : ''} · Karte: ${geo.source}. Gezählt werden Anlagen in Betrieb; Speicher meist Heimspeicher. Ladepunkte: nur angezeigte öffentliche Ladeeinrichtungen.`;
+  document.getElementById('vo-quelle').textContent = `Quelle: ${quelleTxt}${e.q.split(' ').map(q => stTxt[q]).filter(Boolean).length ? ' (Stand: ' + e.q.split(' ').map(q => stTxt[q]).filter(Boolean).join('; ') + ')' : ''} · Einwohner und Fläche: ${vo.quellen?.kreise || 'Destatis'}${st.kreise ? ' (' + st.kreise + ')' : ''} · Karte: ${geo.source}. ${e.tank ? 'Preise je Messstadt: Mittel der Tankstellen im Umkreis von 10 km; Kreise zeigen das Mittel der Messstädte ihres Landes.' : 'Gezählt werden Anlagen in Betrieb; Speicher meist Heimspeicher. Ladepunkte: nur angezeigte öffentliche Ladeeinrichtungen.'}`;
   document.getElementById('vo-sub').textContent = `${e.titel} · ${liste.length} Kreise und kreisfreie Städte · Klick auf einen Kreis zeigt sein Profil`;
   setTimeout(() => { try { addExportButtons(activeTab); addStarButtons(activeTab); } catch(err) {} }, 0);
 }
