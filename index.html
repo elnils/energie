@@ -2919,6 +2919,20 @@ function unwrap(name, raw) {
   return raw; // legacy v4 schema
 }
 
+// Kalendertag in Berliner Zeit (JJJJ-MM-TT) aus Unix-Sekunden. Schnell gerechnet
+// nach der EU-Sommerzeitregel (letzter Sonntag im März bzw. Oktober, 1 Uhr UTC):
+// toLocaleDateString mit Zeitzone braucht je Aufruf ein Vielfaches und machte
+// Reihen mit Hunderttausenden Viertelstunden sekundenlang zäh.
+const _szCache = {};
+function _sommerzeit(jahr) {
+  if (_szCache[jahr]) return _szCache[jahr];
+  const letzterSo = m => { const d = new Date(Date.UTC(jahr, m + 1, 0, 1)); d.setUTCDate(d.getUTCDate() - d.getUTCDay()); return d.getTime() / 1000; };
+  return (_szCache[jahr] = [letzterSo(2), letzterSo(9)]);
+}
+function berlinTag(sek) {
+  const j = new Date(sek * 1000).getUTCFullYear(), [a, b] = _sommerzeit(j);
+  return new Date((sek + (sek >= a && sek < b ? 7200 : 3600)) * 1000).toISOString().slice(0, 10);
+}
 async function loadFile(name) {
   try {
     // meta immer frisch; alle anderen Dateien mit dem Stand des letzten Datenlaufs als
@@ -7340,7 +7354,18 @@ function autoStamp(tab) {
   });
 }
 
+// Zustand, von dem die Darstellung eines Reiters abhängt. Stimmt er beim
+// erneuten Öffnen mit dem letzten Zeichnen überein, wird der Reiter nur
+// eingeblendet statt komplett neu gezeichnet.
+const _tabStand = {};
+function tabSignatur(tab) {
+  let ls = '';
+  try { ls = ['energydash:land', EREIG_AUS_KEY, FAV_KEY, FAVG_KEY].map(k => localStorage.getItem(k)).join('|'); } catch(e) {}
+  return [datenStand(), tabRange[tab] || '', (TAB_FILES[tab] || []).map(f => D[f] ? 1 : 0).join(''), ls].join('#');
+}
+
 function renderTab(tab){
+  _tabStand[tab] = tabSignatur(tab);
   // Range bar always renders, even if main render crashes
   try { renderRangeBar(tab); }
   catch(e){ console.error('range-bar render failed for', tab, e); }
@@ -7394,6 +7419,11 @@ document.querySelectorAll('.tab').forEach(btn=>{
       console.warn('loadForTab failed for', tab, e);
     }
     try { updateStatus(); } catch(e) { console.warn('updateStatus', e); }
+    if (activeTab !== tab) return;                 // inzwischen woanders hingeklickt
+    if (_tabStand[tab] && _tabStand[tab] === tabSignatur(tab)) {
+      try { addStarButtons(tab); } catch(e) {}
+      return;
+    }
     renderTab(tab);
   });
 });
@@ -7455,7 +7485,7 @@ function renderSpikes() {
   const pr = D.energy_charts?.price_de;
   if (!pr?.unix_seconds?.length) { noData('chart-spikes', 'Energy-Charts noch nicht geladen'); return; }
   const tage = {};
-  const tag = t => new Date(t * 1000).toLocaleDateString('de-DE', {timeZone:'Europe/Berlin', day:'2-digit', month:'2-digit'});
+  const tag = t => { const d = berlinTag(t); return d.slice(8, 10) + '.' + d.slice(5, 7) + '.'; };
   pr.unix_seconds.forEach((t, i) => {
     const p = pr.price[i]; if (p == null) return;
     const dt = Math.min(3600, (pr.unix_seconds[i + 1] ?? t + (t - (pr.unix_seconds[i - 1] ?? t - 900))) - t) / 3600;
@@ -7488,7 +7518,7 @@ const EU_ZONEN = {
 function renderEuDayAhead() {
   const ec = D.energy_charts;
   if (!ec) { noData('chart-eu-da', 'Energy-Charts noch nicht geladen'); return; }
-  const dkey = t => new Date(t * 1000).toLocaleDateString('sv-SE', {timeZone:'Europe/Berlin'});
+  const dkey = berlinTag;
   const mittel = {};
   Object.keys(EU_ZONEN).forEach(k => {
     const z = ec[k]; if (!z?.unix_seconds?.length) return;
@@ -7715,10 +7745,15 @@ const FAV_DEFAULT = ['e10','diesel','strom_da','brent','ttf'];
 const favZusammen = (...teile) => { const m = new Map(); teile.forEach(t => (t || []).forEach(([d, v]) => { if (d && v != null && !isNaN(v)) m.set(String(d).slice(0, 10), +v); })); return [...m].sort((a, b) => a[0].localeCompare(b[0])); };
 const favKurse = key => (D.commodities?.[key]?.series || []).map(p => [new Date(p.ts * 1000).toISOString().slice(0, 10), p.v]);
 const favMakro = id => (D.makro?.series?.[id]?.series || []).map(p => [p.date, p.v]);
+let _stromTage = null;
 function favStromTage() {
   const z = D.energy_charts?.price_de_monthly; if (!z?.unix_seconds?.length) return [];
+  if (_stromTage?.z === z) return _stromTage.r;
+  return (_stromTage = {z, r: _favStromTage(z)}).r;
+}
+function _favStromTage(z) {
   const acc = {}; z.unix_seconds.forEach((t, i) => { const v = z.price[i]; if (v == null) return;
-    const d = new Date(t * 1000).toLocaleDateString('sv-SE', {timeZone:'Europe/Berlin'}); (acc[d] ||= [0, 0]); acc[d][0] += v; acc[d][1]++; });
+    const d = berlinTag(t); (acc[d] ||= [0, 0]); acc[d][0] += v; acc[d][1]++; });
   return Object.entries(acc).filter(([, a]) => a[1] >= 20).map(([d, a]) => [d, a[0] / a[1]]);
 }
 const favSpeicher = land => (D.gas_storage_history?.countries?.[land]?.rows || []).map(r => [r[0], r[1]]);
@@ -7900,7 +7935,7 @@ function kachelSpezial(k, r) {
   }
   if (k.art === 'mix') {
     const sm = D.smard?.series; if (!sm) return null;
-    const tag = ts => new Date(ts).toLocaleDateString('sv-SE', {timeZone:'Europe/Berlin'});
+    const tag = ts => berlinTag(ts / 1000);
     const tage = {}; (sm.load || []).forEach(p => { tage[tag(p.ts)] = (tage[tag(p.ts)] || 0) + 1; });
     const voll = Object.keys(tage).sort().filter(t => tage[t] >= 90).at(-1); if (!voll) return null;
     const summe = key => (sm[key] || []).filter(p => p.v != null && tag(p.ts) === voll).reduce((a, p) => a + p.v, 0);
@@ -8141,7 +8176,7 @@ async function renderKarteEU() {
   const werte = {}; let opt = {};
   if (lay === 'da') {
     const ec = D.energy_charts || {};
-    const tag = t => new Date(t * 1000).toLocaleDateString('sv-SE', {timeZone:'Europe/Berlin'});
+    const tag = berlinTag;
     const de = ec.price_de; let ziel = null;
     if (de?.unix_seconds?.length) {
       const n = {}; de.unix_seconds.forEach((t, i) => { if (de.price[i] != null) n[tag(t)] = (n[tag(t)] || 0) + 1; });
@@ -8708,7 +8743,7 @@ const _rich = (v, gutTief = true) => v == null ? '' : `<b class="${Math.abs(v) <
 
 function kernStrom() {
   const pr = D.energy_charts?.price_de; if (!pr?.unix_seconds?.length) return;
-  const tag = t => new Date(t * 1000).toLocaleDateString('sv-SE', {timeZone:'Europe/Berlin'});
+  const tag = berlinTag;
   const acc = {}; pr.unix_seconds.forEach((t, i) => { const v = pr.price[i]; if (v == null) return; (acc[tag(t)] ||= []).push(v); });
   const tage = Object.keys(acc).sort().filter(d => acc[d].length >= 23);
   if (tage.length < 3) return;
