@@ -18,6 +18,7 @@ AMTLICHE MELDUNGEN
 
 Keine Schlüssel nötig.
 """
+import html as _html
 import re
 import time
 import xml.etree.ElementTree as ET
@@ -26,7 +27,7 @@ from email.utils import parsedate_to_datetime
 from typing import Dict, List, Optional
 from urllib.parse import urlparse
 
-from core import http, history
+from core import http, history, store
 
 GN = 'https://news.google.com/rss/search'
 
@@ -118,6 +119,33 @@ def _datum(txt: Optional[str]) -> Optional[datetime]:
         return None
 
 
+def _sauber(t: str) -> str:
+    t = _html.unescape(re.sub(r'<[^>]+>', ' ', t or ''))
+    return re.sub(r'\s+', ' ', t).strip()
+
+
+def _text(beschreibung: str, titel: str) -> str:
+    """Ausschnitt aus der Feed-Beschreibung – leer, wenn sie nur die Überschrift wiederholt."""
+    t, ti = _sauber(beschreibung), _sauber(titel)
+    ti = re.sub(r'\s+[-–|]\s+[^-–|]+$', '', ti)          # " - Quelle" am Ende der Überschrift
+    if not t or len(t) < 40 or t.startswith(ti[:30]) or ti.startswith(t[:30]):
+        return ''
+    return t[:600]
+
+
+def _erster_absatz(url: str) -> str:
+    """Erster Absatz nach der Überschrift einer Pressemitteilung (Bundesnetzagentur)."""
+    r = http.get_session().get(url.replace('http://', 'https://'), timeout=20)
+    r.raise_for_status()
+    h = r.text
+    i = h.find('<h1')
+    for p in re.findall(r'<p[^>]*>(.*?)</p>', h[i if i >= 0 else 0:], re.S):
+        t = _sauber(p)
+        if len(t) > 80:
+            return t[:700]
+    return ''
+
+
 def _rss(url: str, params: Optional[dict] = None) -> List[dict]:
     r = http.get_session().get(url, params=params, timeout=20)
     r.raise_for_status()
@@ -132,6 +160,7 @@ def _rss(url: str, params: Optional[dict] = None) -> List[dict]:
             if m:
                 datum = datetime.strptime(m.group(1), '%Y%m%d').replace(tzinfo=timezone.utc, hour=12)
         out.append({
+            'text': _text(it.findtext('description') or '', it.findtext('title') or ''),
             'titel': (it.findtext('title') or '').strip(),
             'link': link,
             'datum': datum,
@@ -192,6 +221,8 @@ def fetch() -> dict:
             else:
                 items = _gn(f'site:{ziel} when:30d')
                 items = [i for i in items if ziel in urlparse(i['quelle_url']).netloc]
+                for i in items:                   # die Suche liefert nie einen Text, nur die Überschrift
+                    i['text'] = ''
         except Exception as e:
             fehler.append(f'{name}: {type(e).__name__}')
             continue
@@ -207,7 +238,8 @@ def fetch() -> dict:
             if len(titel.split()) < 3 or titel.startswith('-') or re.search(r'\|\s*\w+$', titel):
                 continue
             meldungen.append({'stelle': name, 'gruppe': gruppe, 'titel': titel, 'link': i['link'],
-                              'datum': i['datum'].isoformat(), 'themen': _themen_von(titel)})
+                              'datum': i['datum'].isoformat(), 'themen': _themen_von(titel + ' ' + i.get('text', '')),
+                              'text': i.get('text', '')})
         time.sleep(0.8)
 
     if not themen and not meldungen:
@@ -222,10 +254,43 @@ def fetch() -> dict:
         gesehen.add(k)
         eindeutig.append(m)
 
+    # Ausschnitte: Pressemitteilungen der Bundesnetzagentur haben keinen Text im
+    # Feed; der erste Absatz der Seite wird nachgeladen und zwischengespeichert.
+    alt = {m.get('link'): m.get('text') for m in ((store.read_json('themen') or {}).get('data') or {}).get('meldungen', [])
+           if m.get('text')}
+    nachgeladen = 0
+    for m in eindeutig[:200]:
+        if m['text'] or 'bundesnetzagentur.de' not in m['link']:
+            continue
+        if alt.get(m['link']):
+            m['text'] = alt[m['link']]
+        elif nachgeladen < 12:
+            try:
+                m['text'] = _erster_absatz(m['link'])
+                nachgeladen += 1
+                time.sleep(0.5)
+            except Exception as e:
+                fehler.append(f'Text {m["link"][-40:]}: {type(e).__name__}')
+        if m['text'] and not m['themen']:
+            m['themen'] = _themen_von(m['titel'] + ' ' + m['text'])
+
+    # Fachartikel mit echtem Text aus dem News-Abruf des Dashboards
+    artikel = []
+    for a in ((store.read_json('news') or {}).get('data') or {}).get('articles', []):
+        text = _text(a.get('summary') or '', a.get('title') or '')
+        titel = _sauber(a.get('title') or '')
+        if not text or not ENERGIE_RE.search(titel + ' ' + text) or RAUSCHEN_RE.search(titel):
+            continue
+        th = _themen_von(titel + ' ' + text)
+        artikel.append({'titel': titel, 'quelle': a.get('source') or '', 'link': a.get('link') or '',
+                        'datum': a.get('date') or '', 'text': text, 'themen': th})
+    artikel.sort(key=lambda a: a['datum'], reverse=True)
+
     history.record_history('themen', {t['id']: t['summe_7t'] for t in themen})
 
     return {
-        'data': {'themen': themen, 'tage': tage, 'meldungen': eindeutig[:200], 'fehler': fehler},
+        'data': {'themen': themen, 'tage': tage, 'meldungen': eindeutig[:200], 'artikel': artikel[:80],
+                 'fehler': fehler},
         'meta': {
             'source': 'Google News (Suche je Thema, Deutsch), Pressestellen von Bund, '
                       'Übertragungsnetzbetreibern, EU und Verbänden',

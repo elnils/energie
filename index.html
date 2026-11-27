@@ -760,6 +760,20 @@ main [style*="font-size:10px"]{font-size:11.5px!important}
 main [style*="font-size:11px"]{font-size:12px!important}
 .card-hdr{gap:10px}
 .card-hdr > div:first-child{min-width:0;flex:1}
+
+/* Lesen im Dashboard */
+.am-det summary{cursor:pointer;list-style:none;font-size:14px;line-height:1.35;color:var(--text)}
+.am-det summary::-webkit-details-marker{display:none}
+.am-det summary::after{content:" ▾";color:var(--text3);font-size:11px}
+.am-det[open] summary::after{content:" ▴"}
+.am-det p{margin:6px 0 4px;font-size:13.5px;line-height:1.55;color:var(--text2);background:var(--bg-alt);border-left:3px solid #c9d6e8;padding:8px 10px;border-radius:0 8px 8px 0}
+.am-orig{font-size:12.5px;color:var(--accent)}
+.am-lesen{font-size:10.5px;color:var(--accent);background:var(--accent-bg);border-radius:999px;padding:0 7px}
+.th-art{margin-top:6px}
+.th-art summary{cursor:pointer;font-size:12.5px;color:var(--accent)}
+.th-art .am-meta{margin-top:8px}
+.th-art .am-det summary{color:var(--text);font-size:13.5px}
+.am-item a.am-orig,.th-art a.am-orig{color:var(--accent);font-size:12.5px}
 </style>
 </head>
 <body>
@@ -1275,7 +1289,7 @@ main [style*="font-size:11px"]{font-size:12px!important}
     </div>
     <div class="card g5" data-src="themen" id="amtlich-card">
       <div class="card-hdr"><div><div class="card-title">Amtliche Meldungen</div>
-        <div class="card-sub">Bund, Übertragungsnetzbetreiber, EU-Kommission, Energieagentur und Verbände · letzte 45 Tage</div></div></div>
+        <div class="card-sub">Bund, Übertragungsnetzbetreiber, EU-Kommission, Energieagentur, Verbände und Fachmedien · aufklappen zum Lesen, wo ein Ausschnitt vorliegt</div></div></div>
       <div class="am-filter" id="am-filter"></div>
       <div id="am-liste" class="am-liste"><div class="loading"><span class="spin"></span>Lädt…</div></div>
     </div>
@@ -7712,6 +7726,8 @@ async function renderThemen() {
         <span class="th-n">${t.summe_7t}${t.gedeckelt ? '+' : ''} Treffer</span></div>
       <div class="th-mitte"><span class="th-bars" aria-hidden="true">${bars}</span>
         <span class="th-titel">${s ? `<a href="${_esc(s.link)}" target="_blank" rel="noopener">${_esc(s.titel)}</a> <span class="th-q">${_esc(s.quelle)}</span>` : '<span class="th-q">keine Schlagzeile</span>'}</span></div>
+      ${(() => { const art = (d.artikel || []).filter(a => (a.themen || []).includes(t.id)).slice(0, 4);
+        return art.length ? `<details class="th-art"><summary>${art.length} Artikel zum Lesen</summary>${art.map(a => leseItem(a.titel, a.quelle, a.datum, a.text, a.link)).join('')}</details>` : ''; })()}
       <div class="th-links"><a href="#" onclick="gotoTab('${t.tab}');return false">Daten ansehen →</a>
         ${fav ? `<a href="#" onclick="favUmschalten('${fav}');return false">${favLesen().includes(fav) ? '★ Kennzahl angeheftet' : '☆ Kennzahl anheften'}</a>` : ''}
         <a href="#" onclick="amThema='${t.id}';renderAmtlich();document.getElementById('am-liste').scrollIntoView({behavior:'smooth',block:'nearest'});return false">Amtliches dazu</a></div>
@@ -7725,19 +7741,29 @@ async function renderThemen() {
   addExportButtons('themen');
 }
 
+// Ein Eintrag zum Lesen: mit Text aufklappbar (Ausschnitt + Link zum Original),
+// ohne Text nur die verlinkte Überschrift.
+function leseItem(titel, quelle, datum, text, link, kopf) {
+  const meta = `<div class="am-meta"><span class="am-stelle">${_esc(quelle)}</span><span>${datum ? new Date(datum).toLocaleDateString('de-DE') : ''}</span>${text ? '<span class="am-lesen">Ausschnitt</span>' : ''}</div>`;
+  if (!text) return `${meta}<a href="${_esc(link)}" target="_blank" rel="noopener">${_esc(titel)}</a>`;
+  return `${meta}<details class="am-det"><summary>${_esc(titel)}</summary>
+    <p>${_esc(text)}${text.length >= 590 ? ' …' : ''}</p>
+    <a class="am-orig" href="${_esc(link)}" target="_blank" rel="noopener">Ganzen Text beim Original lesen ↗</a></details>`;
+}
+
 function renderAmtlich() {
   const d = D.themen, box = document.getElementById('am-liste'), fil = document.getElementById('am-filter');
   if (!d?.meldungen || !box) return;
-  const gruppen = ['alle', ...new Set(d.meldungen.map(m => m.gruppe))];
+  const gruppen = ['alle', ...new Set(d.meldungen.map(m => m.gruppe)), ...((d.artikel || []).length ? ['Fachmedien'] : [])];
   const themaName = Object.fromEntries((d.themen || []).map(t => [t.id, t.name]));
   fil.innerHTML = gruppen.map(g => `<button class="mod-chip${amGruppe === g ? ' on' : ''}" onclick="amGruppe='${g}';renderAmtlich()">${g === 'alle' ? 'Alle' : _esc(g)}</button>`).join('') +
     (amThema ? `<button class="mod-chip on" onclick="amThema='';renderAmtlich()" title="Themenfilter aufheben">${_esc(themaName[amThema] || amThema)} ×</button>` : '');
-  const ms = d.meldungen.filter(m => (amGruppe === 'alle' || m.gruppe === amGruppe) && (!amThema || (m.themen || []).includes(amThema)));
-  document.getElementById('amtlich-card')._exportRows = () => [['Datum', 'Stelle', 'Gruppe', 'Titel', 'Themen', 'Link']]
-    .concat(ms.map(m => [m.datum.slice(0, 10), m.stelle, m.gruppe, m.titel, (m.themen || []).map(t => themaName[t] || t).join(', '), m.link]));
+  const quelle = amGruppe === 'Fachmedien' ? (d.artikel || []).map(a => ({...a, stelle: a.quelle, gruppe: 'Fachmedien'})) : d.meldungen;
+  const ms = quelle.filter(m => (amGruppe === 'alle' || amGruppe === 'Fachmedien' || m.gruppe === amGruppe) && (!amThema || (m.themen || []).includes(amThema)));
+  document.getElementById('amtlich-card')._exportRows = () => [['Datum', 'Stelle', 'Gruppe', 'Titel', 'Themen', 'Link', 'Ausschnitt']]
+    .concat(ms.map(m => [String(m.datum).slice(0, 10), m.stelle, m.gruppe, m.titel, (m.themen || []).map(t => themaName[t] || t).join(', '), m.link, m.text || '']));
   box.innerHTML = ms.length ? ms.slice(0, 60).map(m => `<div class="am-item">
-      <div class="am-meta"><span class="am-stelle">${_esc(m.stelle)}</span><span>${new Date(m.datum).toLocaleDateString('de-DE')}</span></div>
-      <a href="${_esc(m.link)}" target="_blank" rel="noopener">${_esc(m.titel)}</a>
+      ${leseItem(m.titel, m.stelle, m.datum, m.text, m.link, true)}
       ${(m.themen || []).length ? `<div class="am-tags">${m.themen.map(t => `<button onclick="amThema='${t}';renderAmtlich()">${_esc(themaName[t] || t)}</button>`).join('')}</div>` : ''}
     </div>`).join('') + (ms.length > 60 ? `<div class="th-fuss">${ms.length - 60} weitere ältere Meldungen ausgeblendet</div>` : '')
     : '<div class="nodata">Keine Meldungen für diese Auswahl</div>';
