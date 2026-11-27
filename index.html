@@ -536,6 +536,52 @@ main{padding-top:22px}
 .consent-save{display:block;width:calc(100% - 28px);margin:4px 14px 14px;min-height:40px;border-radius:10px;
   border:1px solid var(--border-strong);background:var(--bg-alt);font:inherit;font-weight:600;cursor:pointer}
 body.consent-offen{overflow:hidden}
+/* Vor Ort: Kreiskarte */
+.vo-themen{display:flex;gap:4px;margin:2px 0 8px;overflow-x:auto;scrollbar-width:none}
+.vo-themen::-webkit-scrollbar{display:none}
+.vo-thema{flex:none;background:none;border:none;border-radius:8px;padding:6px 12px;font:inherit;font-size:13.5px;font-weight:600;color:var(--text2);cursor:pointer}
+.vo-thema:hover{background:var(--bg-alt);color:var(--text)}
+.vo-thema.active{background:var(--accent-bg);color:var(--text)}
+.vo-steuer{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.vo-ebenen{display:flex;gap:4px;flex-wrap:wrap;flex:1;min-width:0}
+.vo-ebene{background:none;border:1px solid var(--border);border-radius:999px;padding:2px 10px;font:inherit;font-size:12px;color:var(--text2);cursor:pointer;white-space:nowrap}
+.vo-ebene.active{background:var(--text);border-color:var(--text);color:var(--card)}
+.vo-kreis{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text3);white-space:nowrap}
+.vo-kreis select{max-width:230px}
+.vo-satz{border-left:3px solid #2f6fd0;padding:2px 0 2px 10px;margin:6px 0 10px;font-size:13.5px;color:var(--text)}
+.vo-body{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:20px;align-items:start}
+.vo-karte .map-wrap svg{max-height:640px;width:auto;max-width:100%;margin:0 auto}
+#map-vo path{stroke:#fff;stroke-width:.35}
+#map-vo path.wahl{stroke:#c2410c;stroke-width:2;paint-order:stroke}
+#map-vo path:hover{stroke:#0f2540;stroke-width:1.1;opacity:1}
+#map-vo .laender{fill:none;stroke:#fff;stroke-width:1.3;pointer-events:none}
+.vo-legende{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text2);margin:8px auto 0;max-width:420px}
+.vo-stufen{display:flex;flex:1;gap:2px}
+.vo-stufen span{flex:1;height:10px;position:relative}
+.vo-stufen span i{position:absolute;top:13px;left:100%;transform:translateX(-50%);font-style:normal;font-size:10px;color:var(--text3);white-space:nowrap}
+.vo-stufen span:last-child i{display:none}
+.vo-legende b{font-weight:500}
+.vo-profil{border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+.vo-profil h4{margin:0;font-size:16px}
+.vo-profil .vo-art{font-size:12px;color:var(--text3);margin-bottom:8px}
+.vo-zeilen{display:grid;grid-template-columns:1fr auto auto;gap:5px 12px;font-size:12.5px;align-items:baseline}
+.vo-zeilen .k{color:var(--text2)}
+.vo-zeilen .w{font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
+.vo-zeilen .r{font-size:11px;color:var(--text3);text-align:right;white-space:nowrap}
+.vo-zeilen .akt{color:var(--text)}
+.vo-zeilen .akt.w{color:#1d4ed8}
+.vo-rang{margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:12px}
+.vo-rang h5{margin:0 0 4px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);font-weight:600}
+.vo-rang ol{margin:0;padding-left:18px}
+.vo-rang li{margin:2px 0;cursor:pointer}
+.vo-rang li:hover{color:var(--accent)}
+.vo-rang li span{float:right;font-variant-numeric:tabular-nums;color:var(--text2)}
+.vo-quelle{font-size:11px;color:var(--text3);margin-top:12px}
+.zurueck-btn{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(46px + env(safe-area-inset-bottom));z-index:900;
+  background:var(--card);color:#1d4ed8;border:1.5px solid #2f6fd0;border-radius:999px;padding:9px 18px;font:inherit;font-size:14px;
+  box-shadow:0 8px 24px -8px rgba(15,37,64,.35);cursor:pointer;max-width:calc(100% - 32px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:760px){.vo-body{grid-template-columns:1fr}.vo-kreis{width:100%}.vo-kreis select{flex:1;max-width:none}.vo-rang{grid-template-columns:1fr}}
+
 .panel.zeichnet{opacity:.55;transition:opacity .1s}
 /* Über diese Seite */
 .ueber{margin:auto;border:none;border-radius:20px;padding:26px 28px 22px;width:min(620px,calc(100% - 32px));max-height:calc(100vh - 48px);
@@ -1466,6 +1512,30 @@ main [style*="font-size:11px"]{font-size:12px!important}
       <div class="map-wrap" id="map-de"><div class="loading"><span class="spin"></span>Lädt…</div></div>
       <div class="map-legend" id="map-de-legend"></div>
     </div>
+    <div class="card g12" data-src="vor_ort" id="vo-card">
+      <div class="card-hdr">
+        <div><div class="card-title">Vor Ort: Energiewende je Kreis</div>
+          <div class="card-sub" id="vo-sub">400 Kreise und kreisfreie Städte</div></div>
+      </div>
+      <div class="vo-themen" id="vo-themen" role="tablist" aria-label="Thema"></div>
+      <div class="vo-steuer">
+        <div class="vo-ebenen" id="vo-ebenen"></div>
+        <label class="vo-kreis"><span>Kreis wählen</span>
+          <select id="vo-kreis" onchange="voKreis(this.value)" aria-label="Kreis wählen"></select></label>
+      </div>
+      <div class="vo-satz" id="vo-satz"></div>
+      <div class="vo-body">
+        <div class="vo-karte">
+          <div class="map-wrap" id="map-vo"><div class="loading"><span class="spin"></span>Lädt…</div></div>
+          <div class="vo-legende" id="vo-legende"></div>
+        </div>
+        <div class="vo-seite">
+          <div class="vo-profil" id="vo-profil"></div>
+          <div class="vo-rang" id="vo-rang"></div>
+        </div>
+      </div>
+      <div class="vo-quelle" id="vo-quelle"></div>
+    </div>
   </div>
 </div>
 
@@ -2012,14 +2082,14 @@ main [style*="font-size:11px"]{font-size:12px!important}
     <li><b>Öl &amp; Sprit</b> – Rohöl, Benzin, Diesel und Heizöl, auch nach Bundesland</li>
     <li><b>Märkte</b> – Rohstoffe, Terminmärkte, Wechselkurse und eigene Indizes</li>
     <li><b>Makro &amp; Klima</b> – Inflation, Erzeugerpreise, Stimmung, Emissionen und Ländervergleiche</li>
-    <li><b>Lage &amp; Karte</b> – Europa- und Deutschlandkarten, Versorgungslage auf einen Blick</li>
+    <li><b>Lage &amp; Karte</b> – Europa- und Deutschlandkarten, Versorgungslage und „Vor Ort“: Solar, Wind, Speicher, Elektroautos und Ladepunkte in allen 400 Kreisen</li>
     <li><b>News</b> – aktuelle Themen, amtliche Mitteilungen und Fachpresse</li>
   </ul>
 
   <h3>Woher die Daten kommen</h3>
   <p>Ausschließlich aus frei zugänglichen Quellen, unter anderem SMARD (Bundesnetzagentur),
-    Energy-Charts, ENTSO-E, ENTSOG, GIE AGSI+/ALSI, Tankerkönig, TECSON, Destatis, Deutsche
-    Bundesbank, Eurostat, Europäische Kommission, EZB, U.S. EIA, FRED, Weltbank, Open-Meteo und
+    Energy-Charts, ENTSO-E, ENTSOG, GIE AGSI+/ALSI, Marktstammdatenregister, Ladesäulenregister,
+    Kraftfahrt-Bundesamt, Tankerkönig, TECSON, Destatis, Deutsche Bundesbank, Eurostat, Europäische Kommission, EZB, U.S. EIA, FRED, Weltbank, Open-Meteo und
     Yahoo Finance. Bei jeder Grafik steht, woher die Zahlen stammen – auch im Export.</p>
 
   <h3>Wie aktuell ist das?</h3>
@@ -2060,6 +2130,7 @@ main [style*="font-size:11px"]{font-size:12px!important}
   <div class="st" id="st-bnetza"><span class="dot"></span>BNetzA Gas</div>
   <div class="st" id="st-kz"><span class="dot"></span>Jahreskennzahlen</div>
   <div class="st" id="st-mw"><span class="dot"></span>Makroreihen</div>
+  <div class="st" id="st-vo"><span class="dot"></span>Vor Ort</div>
   <div class="st" id="st-news"><span class="dot"></span>News</div>
   <div style="margin-left:auto;white-space:nowrap">
     <a href="#" onclick="ueberOeffnen();return false" style="color:var(--text3)">Über diese Seite</a> ·
@@ -2227,7 +2298,7 @@ const TAB_FILES = {
   jahr:        ['kennzahlen'],
   fav:         ['fuel','heating_oil','energy_charts','gas_storage','commodities','makro','eurostat_prices','kennzahlen','bnetza_gas','gas_storage_history','smard'],
   // (die Kacheln nutzen die langen Reihen aus energy_charts, commodities, gas_storage_history und makro)
-  karte:       ['energy_charts','gas_storage','eurostat_prices','fuel','expansion','gas_sites'],
+  karte:       ['energy_charts','gas_storage','eurostat_prices','fuel','expansion','gas_sites','vor_ort'],
   makro:       ['makro'],
   themen:      ['themen'],
 };
@@ -3023,6 +3094,7 @@ function updateStatus() {
     'st-eurostat':    isOk('eurostat_oil',  () => Object.keys(D.eurostat_oil?.oil_jet_fuel_stocks?.series_per_country||{}).length>0),
     'st-bnetza':      isOk('bnetza_gas',    () => Object.keys(D.bnetza_gas?.datasets||{}).length>0),
     'st-news':        isOk('news',          () => (D.news?.articles?.length||0)>0),
+    'st-vo':         isOk('vor_ort',       () => Object.keys(D.vor_ort?.kreise||{}).length>0),
     'st-kz':          isOk('kennzahlen',    () => (D.kennzahlen?.years?.length||0)>0),
     'st-mw':          isOk('makro',     () => Object.keys(D.makro?.series||{}).length>0),
   };
@@ -7903,6 +7975,7 @@ async function gotoKarte(tab, anker, vor) {
 }
 function favOeffnen(id) {
   const k = favKatalog().find(x => x.id === id); if (!k) return;
+  zurueckMerken('Favoriten');
   const z = FAV_ZIEL[id] || (id.startsWith('idx:') ? ['rohstoffe','chart-idx'] : null);
   if (z) gotoKarte(z[0], z[1], z[2]); else gotoTab(k.tab);
 }
@@ -8131,6 +8204,153 @@ async function renderFav() {
 }
 
 // ══════════════════════════════════════════════
+// VOR ORT: KENNZAHLEN JE KREIS
+// ══════════════════════════════════════════════
+// 400 Kreise (NUTS 3) in fünf gleich großen Gruppen eingefärbt – „wenig“ bis
+// „viel“ –, damit Unterschiede sichtbar bleiben, auch wenn wenige Ausreißer
+// eine lineare Skala platt drücken würden. Werte je Einwohner, je km² oder
+// als Anteil, damit große und kleine Kreise vergleichbar sind.
+const VO_EBENEN = {
+  solar_ew:   {lbl:'Solaranlagen', titel:'Solaranlagen je 1.000 Einwohner', einheit:'je 1.000 Einw.', dec:0,
+               w:k => k.solar_n != null ? k.solar_n / k.ew * 1000 : null, sum:['solar_n','ew',1000], q:'mastr'},
+  speicher_ew:{lbl:'Batteriespeicher', titel:'Batteriespeicher je 1.000 Einwohner', einheit:'je 1.000 Einw.', dec:0,
+               w:k => k.speicher_n != null ? k.speicher_n / k.ew * 1000 : null, sum:['speicher_n','ew',1000], q:'mastr'},
+  wind_km2:   {lbl:'Windleistung je km²', titel:'Windleistung an Land je km²', einheit:'kW je km²', dec:0,
+               w:k => k.wind_mw != null ? k.wind_mw * 1000 / k.km2 : null, sum:['wind_mw','km2',1000], q:'mastr'},
+  wind_n:     {lbl:'Windräder', titel:'Windenergieanlagen in Betrieb', einheit:'Anlagen', dec:0,
+               w:k => k.wind_n, sum:['wind_n'], q:'mastr'},
+  bev_anteil: {lbl:'Anteil E-Autos', titel:'Anteil reiner Elektroautos am Pkw-Bestand', einheit:'%', dec:1,
+               w:k => k.bev != null && k.pkw ? k.bev / k.pkw * 100 : null, sum:['bev','pkw',100], q:'kba'},
+  bev_ew:     {lbl:'E-Autos je Einwohner', titel:'Elektroautos je 1.000 Einwohner', einheit:'je 1.000 Einw.', dec:1,
+               w:k => k.bev != null ? k.bev / k.ew * 1000 : null, sum:['bev','ew',1000], q:'kba'},
+  lade_ew:    {lbl:'Ladepunkte', titel:'Öffentliche Ladepunkte je 10.000 Einwohner', einheit:'je 10.000 Einw.', dec:1,
+               w:k => k.lade_lp != null ? k.lade_lp / k.ew * 10000 : null, sum:['lade_lp','ew',10000], q:'lade'},
+  bev_je_lp:  {lbl:'E-Autos je Ladepunkt', titel:'Elektroautos je öffentlichem Ladepunkt', einheit:'E-Autos', dec:1, wenigGut:true,
+               w:k => k.bev != null && k.lade_lp ? k.bev / k.lade_lp : null, sum:['bev','lade_lp',1], q:'kba lade'},
+};
+const VO_THEMEN = [
+  {id:'sonne', lbl:'Wind und Sonne', ebenen:['solar_ew','wind_km2','wind_n','speicher_ew']},
+  {id:'auto',  lbl:'Elektroautos',   ebenen:['bev_anteil','bev_ew','lade_ew','bev_je_lp']},
+];
+const VO_FARBEN = ['#dce8f7','#a3c4ea','#5f99d8','#2c64b2','#10295c'];
+const VO_KEY = 'energydash:vorort';
+let VO = (() => { try { return Object.assign({thema:'sonne', ebene:'solar_ew', kreis:''}, JSON.parse(localStorage.getItem(VO_KEY) || '{}')); } catch(e) { return {thema:'sonne', ebene:'solar_ew', kreis:''}; } })();
+const voSpeichern = () => { try { localStorage.setItem(VO_KEY, JSON.stringify(VO)); } catch(e) {} };
+
+function voThema(id) { const t = VO_THEMEN.find(x => x.id === id); if (!t) return; VO.thema = id; VO.ebene = t.ebenen[0]; voSpeichern(); renderVorOrt(); }
+function voEbene(id) { VO.ebene = id; voSpeichern(); renderVorOrt(); }
+function voKreis(nuts) { VO.kreis = nuts || ''; voSpeichern(); renderVorOrt(); }
+
+// Wert für Deutschland insgesamt: Summe der Zähler durch Summe der Nenner
+function voGesamt(e, kreise) {
+  const [a, b, f] = e.sum; const za = kreise.reduce((s, k) => s + (+k[a] || 0), 0);
+  if (!b) return za;
+  const nb = kreise.reduce((s, k) => s + (k[a] != null ? (+k[b] || 0) : 0), 0);
+  return nb ? za / nb * f : null;
+}
+
+async function renderVorOrt() {
+  const box = document.getElementById('map-vo'); if (!box) return;
+  const vo = D.vor_ort, geo = await geoLaden('kreise');
+  if (!vo?.kreise || !geo) { box.innerHTML = '<div class="nodata">Kreisdaten folgen mit dem nächsten Datenlauf</div>'; return; }
+  const thema = VO_THEMEN.find(t => t.id === VO.thema) || VO_THEMEN[0];
+  if (!thema.ebenen.includes(VO.ebene)) VO.ebene = thema.ebenen[0];
+  const e = VO_EBENEN[VO.ebene], K = vo.kreise, liste = Object.values(K);
+  if (VO.kreis && !K[VO.kreis]) VO.kreis = '';
+
+  document.getElementById('vo-themen').innerHTML = VO_THEMEN.map(t =>
+    `<button class="vo-thema ${t.id === thema.id ? 'active' : ''}" role="tab" aria-selected="${t.id === thema.id}" onclick="voThema('${t.id}')">${t.lbl}</button>`).join('');
+  document.getElementById('vo-ebenen').innerHTML = thema.ebenen.map(id =>
+    `<button class="vo-ebene ${id === VO.ebene ? 'active' : ''}" onclick="voEbene('${id}')">${VO_EBENEN[id].lbl}</button>`).join('');
+  const sel = document.getElementById('vo-kreis');
+  if (!sel.options.length) {
+    const laender = {}; Object.entries(K).forEach(([n, k]) => (laender[k.land] ||= []).push([n, k.name]));
+    sel.innerHTML = '<option value="">Deutschland gesamt</option>' + Object.keys(laender).sort((a, b) => a.localeCompare(b, 'de')).map(l =>
+      `<optgroup label="${l}">${laender[l].sort((a, b) => a[1].localeCompare(b[1], 'de')).map(([n, nm]) => `<option value="${n}">${nm}</option>`).join('')}</optgroup>`).join('');
+  }
+  sel.value = VO.kreis;
+
+  // Werte und fünf gleich große Gruppen
+  const werte = {}; Object.entries(K).forEach(([n, k]) => { const v = e.w(k); if (v != null && isFinite(v)) werte[n] = v; });
+  const sortiert = Object.entries(werte).sort((a, b) => a[1] - b[1]);
+  const vs = sortiert.map(x => x[1]);
+  const grenzen = [.2, .4, .6, .8].map(q => vs[Math.min(vs.length - 1, Math.floor(q * vs.length))]);
+  const stufe = v => grenzen.filter(g => v >= g).length;
+  const rang = {}; [...sortiert].reverse().forEach(([n], i) => rang[n] = i + 1);
+
+  const pfade = Object.entries(geo.shapes).map(([id, sh]) => {
+    const v = werte[id];
+    return `<path d="${sh.d}" data-id="${id}" class="${v == null ? 'leer' : ''}${id === VO.kreis ? ' wahl' : ''}"${v == null ? '' : ` style="fill:${VO_FARBEN[stufe(v)]}"`}></path>`;
+  }).join('');
+  const gewaehlt = VO.kreis ? `<path d="${geo.shapes[VO.kreis]?.d || ''}" class="wahl" style="fill:none;pointer-events:none"></path>` : '';
+  box.innerHTML = `<svg viewBox="0 0 ${geo.width} ${geo.height}" role="img" aria-label="${e.titel} je Kreis">${pfade}<path class="laender" d="${geo.laender || ''}"></path>${gewaehlt}</svg><div class="map-tip"></div>`;
+  const quelleTxt = e.q.split(' ').map(q => vo.quellen?.[q]).filter(Boolean).join(', ');
+  box.dataset.quelle = quelleTxt;
+  box._rows = [['Kreis', 'Land', `${e.titel} (${e.einheit})`, 'Platz']].concat(
+    Object.entries(K).sort((a, b) => a[1].ags.localeCompare(b[1].ags)).map(([n, k]) => [k.name, k.land, werte[n] != null ? +werte[n].toFixed(3) : '', rang[n] || '']));
+  const svg = box.querySelector('svg'), tip = box.querySelector('.map-tip');
+  svg.addEventListener('mousemove', ev => {
+    const p = ev.target.closest('path[data-id]'); if (!p) { tip.style.display = 'none'; return; }
+    const k = K[p.dataset.id], v = werte[p.dataset.id], r = box.getBoundingClientRect();
+    tip.style.left = (ev.clientX - r.left) + 'px'; tip.style.top = (ev.clientY - r.top) + 'px';
+    tip.textContent = `${k?.name || geo.shapes[p.dataset.id].name}: ${v == null ? 'keine Daten' : fmtN(v, e.dec) + ' ' + e.einheit}`; tip.style.display = 'block';
+  });
+  svg.addEventListener('mouseleave', () => tip.style.display = 'none');
+  svg.addEventListener('click', ev => { const p = ev.target.closest('path[data-id]'); if (p && K[p.dataset.id]) voKreis(p.dataset.id === VO.kreis ? '' : p.dataset.id); });
+
+  // Ein Satz über der Karte
+  const de = voGesamt(e, liste), mi = sortiert[0], ma = sortiert.at(-1);
+  const mitE = v => fmtN(v, e.dec) + (e.einheit === '%' ? ' %' : '');
+  document.getElementById('vo-satz').innerHTML = vs.length ? `<b>${e.titel}:</b> Deutschland ${mitE(de)} · von ${mitE(mi[1])} (${K[mi[0]].name}) bis ${mitE(ma[1])} (${K[ma[0]].name})` : 'Für diese Kennzahl liegen noch keine Werte vor.';
+
+  // Legende: fünf Stufen, darunter die Grenzen
+  document.getElementById('vo-legende').innerHTML = `<b>wenig</b><span class="vo-stufen">${VO_FARBEN.map((f, i) =>
+    `<span style="background:${f}">${i < 4 ? `<i>${fmtN(grenzen[i], e.dec >= 1 && grenzen[i] < 10 ? 1 : 0)}</i>` : ''}</span>`).join('')}</span><b>viel</b>`;
+
+  // Profil des gewählten Kreises (oder Deutschland) mit allen Kennzahlen
+  const k = VO.kreis ? K[VO.kreis] : null;
+  const zeile = id => { const x = VO_EBENEN[id];
+    const v = k ? x.w(k) : voGesamt(x, liste);
+    let r = '';
+    if (k && v != null) { const alle = liste.map(x.w).filter(y => y != null && isFinite(y)).sort((a, b) => b - a);
+      r = `Platz ${alle.findIndex(y => y <= v) + 1} von ${alle.length}`; }
+    const akt = id === VO.ebene ? ' akt' : '';
+    return `<span class="k${akt}">${x.titel}</span><span class="w${akt}">${v == null ? '–' : fmtN(v, x.dec) + (x.einheit === '%' ? ' %' : '')}</span><span class="r">${r}</span>`; };
+  document.getElementById('vo-profil').innerHTML = `<h4>${k ? k.name : 'Deutschland'}</h4>
+    <div class="vo-art">${k ? `${k.art} · ${k.land} · ${fmtN(k.ew, 0)} Einwohner · ${fmtN(k.km2, 0)} km²` : `${liste.length} Kreise · ${fmtN(liste.reduce((a, x) => a + x.ew, 0), 0)} Einwohner`}</div>
+    <div class="vo-zeilen">${Object.keys(VO_EBENEN).map(zeile).join('')}</div>
+    ${k?.kba_geteilt ? '<div class="vo-art" style="margin:8px 0 0">Elektroautos: Das Kraftfahrt-Bundesamt weist Trier und Trier-Saarburg gemeinsam aus; aufgeteilt nach Einwohnern.</div>' : ''}`;
+
+  // Die fünf höchsten und niedrigsten Werte der gezeigten Kennzahl
+  const eintrag = ([n, v]) => `<li onclick="voKreis('${n}')">${K[n].name}<span>${fmtN(v, e.dec)}</span></li>`;
+  document.getElementById('vo-rang').innerHTML = sortiert.length ? `
+    <div><h5>${e.wenigGut ? 'Am wenigsten' : 'Am meisten'}</h5><ol>${(e.wenigGut ? sortiert.slice(0, 5) : sortiert.slice(-5).reverse()).map(eintrag).join('')}</ol></div>
+    <div><h5>${e.wenigGut ? 'Am meisten' : 'Am wenigsten'}</h5><ol>${(e.wenigGut ? sortiert.slice(-5).reverse() : sortiert.slice(0, 5)).map(eintrag).join('')}</ol></div>` : '';
+
+  const st = vo.stand || {};
+  const stTxt = {mastr: st.mastr && `Register ${fmtDatum(st.mastr_bis || st.mastr)}`,
+    kba: st.kba && `Pkw-Bestand ${fmtDatum(st.kba)}`, lade: st.lade && `Ladesäulen ${fmtDatum(st.lade)}`};
+  document.getElementById('vo-quelle').textContent = `Quelle: ${quelleTxt}${e.q.split(' ').map(q => stTxt[q]).filter(Boolean).length ? ' (Stand: ' + e.q.split(' ').map(q => stTxt[q]).filter(Boolean).join('; ') + ')' : ''} · Einwohner und Fläche: ${vo.quellen?.kreise || 'Destatis'}${st.kreise ? ' (' + st.kreise + ')' : ''} · Karte: ${geo.source}. Gezählt werden Anlagen in Betrieb; Speicher meist Heimspeicher. Ladepunkte: nur angezeigte öffentliche Ladeeinrichtungen.`;
+  document.getElementById('vo-sub').textContent = `${e.titel} · ${liste.length} Kreise und kreisfreie Städte · Klick auf einen Kreis zeigt sein Profil`;
+  setTimeout(() => { try { addExportButtons(activeTab); addStarButtons(activeTab); } catch(err) {} }, 0);
+}
+const fmtDatum = d => { const x = String(d).slice(0, 10).split('-'); return x.length === 3 ? `${+x[2]}.${+x[1]}.${x[0]}` : d; };
+
+// „Zurück zu …“: nach einem Sprung aus den Favoriten unten ein Knopf, der an
+// die alte Stelle zurückführt; verschwindet beim nächsten eigenen Reiterwechsel
+let _zurueck = null;
+function zurueckMerken(label) {
+  _zurueck = {tab: activeTab, y: window.scrollY, label};
+  let b = document.getElementById('zurueck-btn');
+  if (!b) { b = document.createElement('button'); b.id = 'zurueck-btn'; b.className = 'zurueck-btn'; b.type = 'button';
+    b.onclick = () => { const z = _zurueck; zurueckWeg(); if (!z) return; gotoTab(z.tab); setTimeout(() => window.scrollTo({top: z.y, behavior: 'smooth'}), 350); };
+    document.body.appendChild(b); }
+  b.textContent = `← Zurück zu „${label}“`; b.hidden = false;
+}
+function zurueckWeg() { _zurueck = null; const b = document.getElementById('zurueck-btn'); if (b) b.hidden = true; }
+document.addEventListener('click', ev => { if (ev.isTrusted && ev.target.closest('.tab, .kat')) zurueckWeg(); }, true);
+
+// ══════════════════════════════════════════════
 // KARTE DE/EU
 // ══════════════════════════════════════════════
 // Geometrie: data/geo/*.json, einmalig aus Eurostat GISCO gebaut
@@ -8208,7 +8428,7 @@ function karteProj(geo, lon, lat) {
   return [((lon - lon0) * k * sx).toFixed(1), ((lat1 - lat) * sx).toFixed(1)];
 }
 
-async function renderKarte() { await Promise.all([renderKarteEU(), renderKarteDE()]); }
+async function renderKarte() { await Promise.all([renderKarteEU(), renderKarteDE(), renderVorOrt()]); }
 
 const EU_ZONE_LAND = {price_de:['DE','LU'], price_at:['AT'], price_fr:['FR'], price_pl:['PL'], price_ch:['CH'], price_nl:['NL'],
   price_be:['BE'], price_cz:['CZ'], price_dk1:['DK'], price_dk2:['DK'], price_no2:['NO'], price_si:['SI'], price_hu:['HU'], price_it_north:['IT']};

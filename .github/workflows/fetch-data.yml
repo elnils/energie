@@ -42,7 +42,7 @@ jobs:
     # run is killed
     # mid-flight and the freshly fetched data is never committed. Normal runs
     # finish in 1-2 minutes because frequency gating skips most sources.
-    timeout-minutes: 55
+    timeout-minutes: 75
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4

@@ -4,6 +4,8 @@ Baut die Kartengeometrie für das Dashboard (einmalig, nicht im Cronlauf).
 Quelle: Eurostat GISCO, NUTS 2021, Maßstab 1:20 Mio., WGS84.
   Länder:        NUTS_RG_20M_2021_4326_LEVL_0.geojson
   Bundesländer:  NUTS_RG_20M_2021_4326_LEVL_1.geojson (CNTR_CODE = DE)
+  Kreise:        NUTS_RG_10M_2024_4326_LEVL_3.geojson (CNTR_CODE = DE), dazu die
+                 Ländergrenzen im selben Maßstab als Linien darüber
 Lizenz: © EuroGeographics für die Verwaltungsgrenzen.
 
 Die Polygone werden hier schon in SVG-Pfade umgerechnet (flächentreue
@@ -22,8 +24,8 @@ BASE = 'https://gisco-services.ec.europa.eu/distribution/v2/nuts/geojson/'
 OUT = os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'geo')
 
 
-def load(level):
-    with urllib.request.urlopen(f'{BASE}NUTS_RG_20M_2021_4326_LEVL_{level}.geojson', timeout=60) as r:
+def load(level, scale='20M', year='2021'):
+    with urllib.request.urlopen(f'{BASE}NUTS_RG_{scale}_{year}_4326_LEVL_{level}.geojson', timeout=120) as r:
         return json.load(r)
 
 
@@ -76,7 +78,16 @@ def main():
     l1 = load(1)['features']
     de = build([f for f in l1 if f['properties']['CNTR_CODE'] == 'DE'],
                (5.7, 47.2, 15.2, 55.1), 420, 'NUTS_ID', tol=0.4)
-    for name, data in (('europa', eu), ('deutschland', de)):
+    # Kreise (NUTS 3) feiner als die Länderkarte; Ländergrenzen im selben Maßstab,
+    # damit Linien und Flächen exakt aufeinanderliegen
+    box_de = (5.7, 47.2, 15.2, 55.1)
+    l3 = load(3, '10M', '2024')['features']
+    kreise = build([f for f in l3 if f['properties']['CNTR_CODE'] == 'DE'], box_de, 420, 'NUTS_ID', tol=0.35)
+    l1b = load(1, '10M', '2024')['features']
+    laender = build([f for f in l1b if f['properties']['CNTR_CODE'] == 'DE'], box_de, 420, 'NUTS_ID', tol=0.35)
+    kreise['laender'] = ''.join(v['d'] for v in laender['shapes'].values())
+    kreise['source'] = 'Eurostat GISCO NUTS 2024 (1:10 Mio.), © EuroGeographics'
+    for name, data in (('europa', eu), ('deutschland', de), ('kreise', kreise)):
         fp = os.path.join(OUT, f'{name}.json')
         with open(fp, 'w', encoding='utf-8') as fh:
             json.dump(data, fh, ensure_ascii=False, separators=(',', ':'))
