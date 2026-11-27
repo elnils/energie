@@ -6872,17 +6872,26 @@ function loadXlsx() {
 
 // Karte (SVG) als eigenständige Datei: Farben und Schrift fest eingebettet,
 // für PNG auf weißem Grund in doppelter Auflösung gerastert.
-async function svgExport(svg, art) {
+async function svgExport(svg, art, card) {
   const k = svg.cloneNode(true);
   const vb = (svg.getAttribute('viewBox') || '0 0 600 600').split(/\s+/).map(Number);
+  if (card) {                       // Titel oben, Quelle unten in die Vektorgrafik
+    const ns = 'http://www.w3.org/2000/svg', esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+    k.setAttribute('viewBox', `0 -40 ${vb[2]} ${vb[3] + 70}`); vb[1] = -40; vb[3] += 70;
+    const g = document.createElementNS(ns, 'g');
+    g.innerHTML = `<text x="0" y="-18" style="font:700 16px 'Source Sans 3',Arial,sans-serif;fill:#111827;stroke:none">${esc(card.querySelector('.card-title')?.textContent.trim() || '')}</text>
+      <text x="0" y="${vb[3] - 52}" style="font:11px 'Source Sans 3',Arial,sans-serif;fill:#8c98a8;stroke:none">Quelle: ${esc(quelleZeile(card))} · Stand ${new Date().toLocaleDateString('de-DE')}</text>`;
+    k.appendChild(g);
+  }
   k.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
   k.setAttribute('width', vb[2]); k.setAttribute('height', vb[3]);
+  if (art === 'svg' && card) k.setAttribute('height', vb[3]);
   const st = document.createElementNS('http://www.w3.org/2000/svg', 'style');
   st.textContent = `path{stroke:#fff;stroke-width:.7}path.leer{fill:#e7ebf1}circle{stroke:#fff;stroke-width:1.5}
     text{font:600 9px 'Source Sans 3',Arial,sans-serif;fill:#1a2332;paint-order:stroke;stroke:#fff;stroke-width:2.5px}`;
   k.insertBefore(st, k.firstChild);
   const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-  bg.setAttribute('width', '100%'); bg.setAttribute('height', '100%'); bg.setAttribute('fill', '#fff');
+  bg.setAttribute('x', 0); bg.setAttribute('y', vb[1] || 0); bg.setAttribute('width', vb[2]); bg.setAttribute('height', vb[3]); bg.setAttribute('fill', '#fff');
   k.insertBefore(bg, st.nextSibling);
   const text = new XMLSerializer().serializeToString(k);
   if (art === 'svg') return new Blob([text], {type: 'image/svg+xml'});
@@ -6896,11 +6905,54 @@ async function svgExport(svg, art) {
   return await new Promise(r => c.toBlob(r, 'image/png'));
 }
 
+// Quelle einer Karte für den Export: die Quellen aus der Stempelzeile, sonst aus data-src
+function quelleZeile(card) {
+  if (card.dataset.quelle) return card.dataset.quelle;
+  const kq = card.querySelector('.map-wrap[data-quelle]')?.dataset.quelle;   // Karten: Quelle der gezeigten Ebene
+  if (kq) return kq;
+  const st = [...card.querySelectorAll('.card-stamp .src')].map(e => e.textContent.trim()).filter(Boolean);
+  const q = st.length ? st : (card.dataset.src || '').split(/[\s,]+/).filter(Boolean).map(f => SOURCE_LABEL[f] || f);
+  return [...new Set(q)].join(' · ');
+}
+
+// Bild mit Rahmen: oben der Titel, unten klein Quelle und Stand – schlicht, auf Weiß
+function rahmenBild(card, bild, breite, hoehe, f) {
+  const titel = card.querySelector('.card-title')?.textContent.trim() || '';
+  const sub = card.querySelector('.card-sub')?.textContent.trim() || '';
+  const quelle = quelleZeile(card);
+  const pad = 20 * f, kopf = (titel ? 30 : 0) * f + (sub ? 20 : 0) * f + (titel || sub ? 8 * f : 0), fuss = 30 * f;
+  const out = document.createElement('canvas');
+  out.width = breite + 2 * pad; out.height = hoehe + kopf + fuss + pad;
+  const ctx = out.getContext('2d');
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, out.width, out.height);
+  ctx.textBaseline = 'alphabetic';
+  let y = pad + 18 * f;
+  if (titel) { ctx.fillStyle = '#111827'; ctx.font = `700 ${18 * f}px 'Source Sans 3', Arial, sans-serif`; ctx.fillText(titel, pad, y); y += 22 * f; }
+  if (sub) { ctx.fillStyle = '#6b7685'; ctx.font = `${13 * f}px 'Source Sans 3', Arial, sans-serif`;
+    let t = sub; while (ctx.measureText(t).width > out.width - 2 * pad && t.length > 10) t = t.slice(0, -2);
+    ctx.fillText(t === sub ? t : t + '…', pad, y); }
+  ctx.drawImage(bild, pad, pad + kopf - 4 * f, breite, hoehe);
+  const fy = out.height - pad / 2 - 6 * f;
+  ctx.strokeStyle = '#e5e7eb'; ctx.lineWidth = f; ctx.beginPath(); ctx.moveTo(pad, fy - 16 * f); ctx.lineTo(out.width - pad, fy - 16 * f); ctx.stroke();
+  ctx.fillStyle = '#8c98a8'; ctx.font = `${11.5 * f}px 'Source Sans 3', Arial, sans-serif`;
+  const links = `Quelle: ${quelle || '—'}`, rechts = `Stand ${new Date().toLocaleDateString('de-DE')}`;
+  let l = links; while (ctx.measureText(l).width > out.width - 2 * pad - ctx.measureText(rechts).width - 20 * f && l.length > 12) l = l.slice(0, -2);
+  ctx.fillText(l === links ? l : l + '…', pad, fy);
+  ctx.textAlign = 'right'; ctx.fillText(rechts, out.width - pad, fy);
+  return out;
+}
+
 async function exportCard(card, what, target) {
   const rows = target.rows ? target.rows() : target.canvasId ? chartRows(target.canvasId) : tableRows(target.table);
   try {
-    if (target.svg && (what === 'png' || what === 'svg')) {
-      const blob = await svgExport(target.svg, what);
+    if (target.svg && what === 'png') {
+      // Karte als PNG: SVG rastern, dann mit Titel und Quelle rahmen
+      const svgBlob = await svgExport(target.svg, 'svg');
+      const img = new Image(); img.src = URL.createObjectURL(svgBlob); await img.decode();
+      const f = 2.5, vb = (target.svg.getAttribute('viewBox') || '0 0 600 600').split(/\s+/).map(Number);
+      rahmenBild(card, img, vb[2] * f, vb[3] * f, f).toBlob(b => downloadBlob(b, exportName(card, 'png')), 'image/png');
+    } else if (target.svg && what === 'svg') {
+      const blob = await svgExport(target.svg, 'svg', card);
       downloadBlob(blob, exportName(card, what));
     } else if (what === 'png') {
       // Redraw at (at least) twice the pixel density so the picture stays
@@ -6909,17 +6961,14 @@ async function exportCard(card, what, target) {
       const oldDpr = ch.options.devicePixelRatio;
       ch.options.devicePixelRatio = Math.max(2, window.devicePixelRatio || 1);
       ch.resize(); ch.update('none');
-      const src = ch.canvas;
-      const out = document.createElement('canvas');
-      out.width = src.width; out.height = src.height;
-      const ctx = out.getContext('2d');
-      ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, out.width, out.height);
-      ctx.drawImage(src, 0, 0);
+      const src = ch.canvas, f = src.width / src.clientWidth;
+      const out = rahmenBild(card, src, src.width, src.height, f);
       ch.options.devicePixelRatio = oldDpr;
       ch.resize(); ch.update('none');
       out.toBlob(b => downloadBlob(b, exportName(card, 'png')), 'image/png');
     } else if (what === 'csv') {
-      downloadBlob(new Blob([rowsToCsv(rows)], {type: 'text/csv;charset=utf-8'}), exportName(card, 'csv'));
+      const fuss = [[], [`Quelle: ${quelleZeile(card) || '—'}`], [`Stand: ${new Date().toLocaleDateString('de-DE')}`]];
+      downloadBlob(new Blob([rowsToCsv(rows.concat(fuss))], {type: 'text/csv;charset=utf-8'}), exportName(card, 'csv'));
     } else if (what === 'xlsx') {
       const XLSX = await loadXlsx();
       const ws = XLSX.utils.aoa_to_sheet(rows);
@@ -6929,7 +6978,7 @@ async function exportCard(card, what, target) {
       const title = card.querySelector('.card-title')?.textContent || '';
       const meta = XLSX.utils.aoa_to_sheet([['Titel', title],
         ['Beschreibung', card.querySelector('.card-sub')?.textContent || ''],
-        ['Quelle', card.querySelector('.card-stamp')?.textContent.replace(/\s+/g, ' ').trim() || ''],
+        ['Quelle', quelleZeile(card) || card.querySelector('.card-stamp')?.textContent.replace(/\s+/g, ' ').trim() || ''],
         ['Exportiert', new Date().toLocaleString('de-DE')], ['Seite', location.href.split('?')[0]]]);
       XLSX.utils.book_append_sheet(wb, meta, 'Info');
       XLSX.writeFile(wb, exportName(card, 'xlsx'));
@@ -7937,6 +7986,7 @@ function karteZeichnen(boxId, geo, werte, opt) {
       ${p.lbl ? `<text x="${x}" y="${y + (p.r || 9) + 10}" text-anchor="middle">${p.lbl}</text>` : ''}`;
   }).join('');
   box.innerHTML = `<svg viewBox="0 0 ${geo.width} ${geo.height}" role="img" aria-label="${opt.titel}">${pfade}<g class="lbls"></g>${punkte}</svg><div class="map-tip"></div>`;
+  box.dataset.quelle = opt.quelle || '';
   // Daten hinter der Karte für CSV/Excel: Flächen, dann Punkte
   box._rows = [['Gebiet', `Wert (${opt.einheit})`]]
     .concat(Object.entries(werte).filter(([, v]) => v != null).map(([id, v]) => [opt.namen?.[id] || geo.shapes[id]?.name || id, +(+v).toFixed(4)]))
@@ -8505,6 +8555,7 @@ async function renderFavGrafiken() {
         const src = document.getElementById(id), card = src?.closest('.card');
         if (!card) { ziel.innerHTML = `<div class="nodata">Grafik nicht mehr vorhanden<button class="mod-reset" onclick="favgUmschalten('${key}')">entfernen</button></div>`; continue; }
         const titel = card.querySelector('.card-title')?.textContent || '', sub = card.querySelector('.card-sub')?.textContent || '';
+        ziel.dataset.quelle = quelleZeile(card);
         const tabName = document.querySelector(`.tab[data-tab="${tab}"]`)?.textContent.trim() || tab;
         ziel.innerHTML = `<div class="card-hdr"><div><div class="card-title">${_esc(titel)}</div><div class="card-sub">${_esc(sub)}</div></div>
           <button class="card-star an" title="Von der Favoritenseite entfernen" onclick="favgUmschalten('${key}')">★</button></div>
