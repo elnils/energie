@@ -787,6 +787,21 @@ main [style*="font-size:11px"]{font-size:12px!important}
 .fb-u{font-size:11px}
 .fb-d{font-size:11px}
 .favbar-suche input{font-size:13px;padding:3px 2px 4px 22px}
+
+/* Favoriten-Kacheln: Titel, Einheit, kleine Grafik mit Endwert, (i) für die Erklärung */
+.fav{padding:14px 16px 12px;gap:2px;cursor:pointer}
+.fav-top{align-items:flex-start}
+.fav-tt{display:flex;flex-direction:column;min-width:0;flex:1}
+.fav-lbl{font-size:16px;font-weight:700;line-height:1.2}
+.fav-einheit{font-size:13px;color:var(--text2)}
+.fav-info{width:22px;height:22px;border-radius:50%;border:1.5px solid #b8c2cf;background:none;color:#6b7685;font:italic 700 12px Georgia,serif;
+  cursor:pointer;flex:none;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.fav-info:hover{border-color:var(--text2);color:var(--text)}
+.fav .fav-why{display:none;border-top:0;padding:6px 0 0;margin:0}
+.fav.info .fav-why{display:block}
+.fav-mini{height:130px;margin-top:6px;position:relative}
+.fav-leer{font-size:22px;font-weight:700;padding-top:30px}
+.fav-ico,.fav-val,.fav-spark{display:none}
 </style>
 </head>
 <body>
@@ -1991,7 +2006,7 @@ const TAB_FILES = {
   lage:        ['energy_charts','gas_storage','heating_oil','commodities','destatis_vpi','smard','entsoe','_state'],
   news:        ['news'],
   jahr:        ['kennzahlen'],
-  fav:         ['fuel','heating_oil','energy_charts','gas_storage','commodities','makro','eurostat_prices','kennzahlen'],
+  fav:         ['fuel','heating_oil','energy_charts','gas_storage','commodities','makro','eurostat_prices','kennzahlen','bnetza_gas'],
   karte:       ['energy_charts','gas_storage','eurostat_prices','fuel','expansion','gas_sites'],
   makro:       ['makro'],
   themen:      ['themen'],
@@ -2076,6 +2091,88 @@ Chart.register({
       ctx.fillStyle = it.farbe;
       ctx.beginPath(); ctx.arc(chartArea.right + 1, Math.min(Math.max(it.y, chartArea.top), chartArea.bottom), 2.5, 0, 7); ctx.fill();
       ctx.fillText(it.text, chartArea.right + 7, Math.min(Math.max(it.y, chartArea.top + 6), chartArea.bottom - 4));
+    });
+    ctx.restore();
+  },
+});
+
+// Ereignisse (data/ereignisse.json): senkrechte Linie oder schattierter
+// Zeitraum mit kursiver Beschriftung in jeder Zeitreihe, deren Beschriftungen
+// Daten sind. Welche Grafik welche Ereignisse zeigt, folgt aus der Kennung
+// der Grafik (Kraftstoffe -> "sprit", Gas -> "gas", Strom -> "strom").
+let EREIGNISSE = [];
+fetch('./data/ereignisse.json?t=' + Date.now()).then(r => r.ok ? r.json() : null)
+  .then(j => { EREIGNISSE = (j?.ereignisse || []).filter(e => e.datum && e.text); Object.values(CH).forEach(c => { try { c.update('none'); } catch(e) {} }); })
+  .catch(() => {});
+function labelDatum(l) {
+  const t = String(l ?? '');
+  let m = t.match(/^(\d{4})-(\d{2})-(\d{2})/); if (m) return `${m[1]}-${m[2]}-${m[3]}`;
+  m = t.match(/^(\d{2})\.(\d{2})\.(\d{4})/); if (m) return `${m[3]}-${m[2]}-${m[1]}`;
+  m = t.match(/^(\d{2})\.(\d{2})\.(\d{2})$/); if (m) return `20${m[3]}-${m[2]}-${m[1]}`;
+  m = t.match(/^(\d{2})\/(\d{4})$/); if (m) return `${m[2]}-${m[1]}-15`;
+  return null;
+}
+function grafikBereich(id) {
+  if (/fuel|sprit|e5|e10|diesel|heiz|kraftstoff|treibstoff/i.test(id)) return 'sprit';
+  if (/gas|ttf|speicher/i.test(id)) return 'gas';
+  if (/strom|power|price|spot|day/i.test(id)) return 'strom';
+  return '';
+}
+// Großer Endwert am Linienende (Kacheln der Favoritenseite)
+Chart.register({
+  id: 'endWert',
+  afterDatasetsDraw(chart) {
+    const o = chart.options.plugins?.endWert; if (!o?.on) return;
+    const d = chart.data.datasets[0], meta = chart.getDatasetMeta(0);
+    let k = d.data.length - 1; while (k >= 0 && d.data[k] == null) k--;
+    const pt = meta.data[k]; if (!pt) return;
+    const {ctx} = chart; ctx.save();
+    ctx.fillStyle = o.farbe; ctx.beginPath(); ctx.arc(pt.x, pt.y, 4, 0, 7); ctx.fill();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.font = "700 17px 'Source Sans 3', sans-serif"; ctx.textBaseline = 'middle';
+    ctx.fillText(fmtN(d.data[k], o.dec), pt.x + 8, Math.max(chart.chartArea.top + 8, Math.min(pt.y, chart.chartArea.bottom - 8)));
+    ctx.restore();
+  },
+});
+
+Chart.register({
+  id: 'ereignisse',
+  beforeDatasetsDraw(chart) {
+    if (!EREIGNISSE.length || chart.options.plugins?.ereignisse === false) return;
+    const x = chart.scales.x, labels = chart.data.labels || [];
+    if (!x || x.type !== 'category' || labels.length < 10) return;
+    const daten = labels.map(labelDatum), ok = daten.filter(Boolean).length;
+    if (ok < labels.length * 0.8) return;
+    const bereich = grafikBereich(chart.canvas?.id || '');
+    const idx = d => { for (let i = 0; i < daten.length; i++) if (daten[i] && daten[i] >= d) return i; return -1; };
+    const {ctx, chartArea: a} = chart;
+    const erstes = daten.find(Boolean), letztes = [...daten].reverse().find(Boolean);
+    ctx.save();
+    let zeile = 0, belegtBis = -Infinity;
+    ctx.font = "italic 11.5px 'Source Sans 3', sans-serif";
+    EREIGNISSE.slice().sort((p, q) => p.datum.localeCompare(q.datum)).forEach(e => {
+      if (!(e.bereiche || ['alle']).some(b => b === 'alle' || b === bereich)) return;
+      if (e.datum > letztes) return;
+      const bis = e.bis === 'offen' ? letztes : e.bis;
+      if (bis ? bis < erstes : e.datum < erstes) return;
+      const i0 = e.datum < erstes ? 0 : idx(e.datum); if (i0 < 0) return;
+      const x0 = x.getPixelForValue(i0);
+      if (bis) {
+        const i1 = bis >= letztes ? daten.length - 1 : idx(bis);
+        const x1 = x.getPixelForValue(i1 < 0 ? daten.length - 1 : i1);
+        ctx.fillStyle = 'rgba(15,37,64,.07)';
+        ctx.fillRect(x0, a.top, Math.max(1, x1 - x0), a.bottom - a.top);
+      } else {
+        ctx.strokeStyle = '#9aa4b2'; ctx.lineWidth = 1; ctx.setLineDash([]);
+        ctx.beginPath(); ctx.moveTo(x0 + .5, a.top); ctx.lineTo(x0 + .5, a.bottom); ctx.stroke();
+      }
+      ctx.fillStyle = '#56657a'; ctx.textBaseline = 'top';
+      const w = ctx.measureText(e.text).width, tx = Math.max(a.left + 2, x0 + 4 + w > a.right ? x0 - 4 - w : x0 + 4);
+      // Beschriftung nur, wenn sie nicht in die vorige läuft; sonst eine Zeile tiefer, höchstens drei
+      if (tx < belegtBis) zeile++; else zeile = 0;
+      if (zeile > 2 || (a.right - a.left < 320 && zeile > 0)) return;
+      ctx.fillText(e.text, tx, a.top + 4 + zeile * 14);
+      belegtBis = Math.max(belegtBis, tx + w + 6);
     });
     ctx.restore();
   },
@@ -7226,6 +7323,15 @@ const FAV_KATALOG = [
    reihe:favHist('gas_storage','de_pct'), why:'Maßstab für die Versorgungssicherheit im Winter; es gelten gesetzliche Füllstandsvorgaben.'},
   {id:'gasspeicher_eu', g:'Versorgung', lbl:'Gasspeicher EU', ico:'🇪🇺', col:'#1f9d55', unit:'% gefüllt', dec:1, tab:'gas', gut:'hoch',
    reihe:favHist('gas_storage','eu_pct'), why:'Europäische Reserve – Engpässe in Nachbarländern wirken auf Deutschland zurück.'},
+  {id:'gas_industrie', g:'Versorgung', lbl:'Gasverbrauch Industrie', ico:'🏭', col:'#2563eb', unit:'GWh/Tag', dec:0, tab:'gas', gut:null,
+   reihe:async () => bnetzaWochen('bnetza_c870314'), ref:() => bnetzaRef('bnetza_c870314'),
+   why:'Wochenmittel der Industriekunden (RLM); daneben das Mittel 2018–2021 derselben Kalenderwoche als Vergleich.'},
+  {id:'gas_haushalte', g:'Versorgung', lbl:'Gasverbrauch Haushalte/Gewerbe', ico:'🏠', col:'#7aa2e3', unit:'GWh/Tag', dec:0, tab:'gas', gut:null,
+   reihe:async () => bnetzaWochen('bnetza_c870322'), ref:() => bnetzaRef('bnetza_c870322'),
+   why:'Wochenmittel der Haushalts- und Gewerbekunden (SLP), stark temperaturabhängig; Vergleich mit 2018–2021.'},
+  {id:'gas_importe', g:'Versorgung', lbl:'Gasimporte', ico:'🚢', col:'#0e7490', unit:'GWh/Tag', dec:0, tab:'gas', gut:null,
+   reihe:async () => (D.bnetza_gas?.datasets?.bnetza_c870296?.series?.['Deutschland Import'] || []).filter(p => p[1] != null).map(p => [p[0], p[1]]),
+   why:'Alle Gasimporte nach Deutschland je Tag (Bundesnetzagentur), darunter LNG.'},
   {id:'ee_anteil', g:'Versorgung', lbl:'Erneuerbare im Strommix', ico:'🌬️', col:'#1f9d55', unit:'%', dec:1, tab:'erneuerbare', gut:'hoch',
    reihe:favHist('smard_mix','renewable_share_pct'), why:'Tagesanteil von Wind, Sonne, Wasser und Biomasse – Fortschritt der Energiewende.'},
   {id:'neg_stunden', g:'Versorgung', lbl:'Negative Strompreise', ico:'➖', col:'#0891b2', unit:'Stunden im Jahr', dec:0, tab:'jahr', gut:null, jahr:true,
@@ -7251,6 +7357,21 @@ async function favExport(art) {
 }
 
 function favKatalog() { return FAV_KATALOG.concat(idxFavs()); }
+
+// Bundesnetzagentur: Kalenderwochen je Jahr -> Datumsreihe (Montag der Woche)
+function kwMontag(jahr, kw) {
+  const d = new Date(Date.UTC(jahr, 0, 4)); const tag = (d.getUTCDay() + 6) % 7;
+  d.setUTCDate(d.getUTCDate() - tag + (kw - 1) * 7); return d.toISOString().slice(0, 10);
+}
+function bnetzaWochen(id) {
+  const s = D.bnetza_gas?.datasets?.[id]?.series || {};
+  return Object.keys(s).filter(k => /^\d{4}$/.test(k)).sort().flatMap(j => (s[j] || []).filter(p => p[1] != null).map(p => [kwMontag(+j, +p[0]), p[1]]))
+    .filter(p => p[0] <= new Date().toISOString().slice(0, 10)).sort((a, b) => a[0].localeCompare(b[0]));
+}
+function bnetzaRef(id) {
+  const s = D.bnetza_gas?.datasets?.[id]?.series?.['Durchschnittlicher Gasverbrauch 2018-2021'] || [];
+  return Object.fromEntries(s.filter(p => p[1] != null).map(p => [+p[0], p[1]]));
+}
 
 function favLesen() {
   try { const v = JSON.parse(localStorage.getItem(FAV_KEY)); if (Array.isArray(v)) return v.filter(id => favKatalog().some(k => k.id === id)); } catch(e) {}
@@ -7328,26 +7449,47 @@ async function renderFav() {
   }
   const items = ids.map(id => favKatalog().find(k => k.id === id)).filter(Boolean);
   const reihen = await Promise.all(items.map(k => k.reihe().catch(() => [])));
+  const reihenSauber = items.map((k, i) => (reihen[i] || []).filter(p => p[0] && p[1] != null && !isNaN(p[1])).sort((a, b) => a[0].localeCompare(b[0])));
   grid.innerHTML = items.map((k, i) => {
-    const r = (reihen[i] || []).filter(p => p[0] && p[1] != null && !isNaN(p[1])).sort((a, b) => a[0].localeCompare(b[0]));
-    const akt = r.at(-1);
+    const r = reihenSauber[i], akt = r.at(-1);
     const datum = akt ? (k.jahr ? akt[0].slice(0, 4) + (D.kennzahlen?.years?.at(-1)?.partial ? ' bisher' : '')
                          : k.monat ? akt[0].slice(5, 7) + '/' + akt[0].slice(0, 4)
                          : new Date(akt[0]).toLocaleDateString('de-DE')) : '';
-    const chips = akt ? (k.jahr ? favChip(akt, r.at(-2), k, 'ggü. Vorjahr')
+    let chips = akt ? (k.jahr ? favChip(akt, r.at(-2), k, 'ggü. Vorjahr')
       : k.monat ? favChip(akt, favVorher(r, 30), k, 'ggü. Vormonat') + favChip(akt, favVorher(r, 365), k, 'ggü. Vorjahr')
       : favChip(akt, favVorher(r, 7), k, '7 Tage') + favChip(akt, favVorher(r, 365), k, '1 Jahr')) : '';
+    // Vergleich mit 2018–2021 (Gasverbrauch)
+    if (akt && k.ref) { const ref = k.ref(), d = new Date(akt[0] + 'T00:00:00Z');
+      const kw = Math.ceil((((d - Date.UTC(d.getUTCFullYear(), 0, 1)) / 864e5) + new Date(Date.UTC(d.getUTCFullYear(), 0, 1)).getUTCDay() + 1) / 7);
+      const rv = ref[kw] ?? ref[kw - 1];
+      if (rv) { const pz = (akt[1] - rv) / rv * 100;
+        chips = `<span class="fav-chip neutral" title="Mittel 2018–2021 derselben Kalenderwoche: ${fmtN(rv, 0)} GWh/Tag">${pz >= 0 ? '+' : '−'}${fmtN(Math.abs(pz), 0)} % ggü. 2018–21</span>` + chips; } }
     return `<div class="fav" onclick="gotoTab('${k.tab}')" title="Details im Reiter öffnen">
-      <div class="fav-top"><span class="fav-ico" style="background:${k.col}1f">${k.ico}</span>
-        <span class="fav-lbl">${k.lbl}</span>
+      <div class="fav-top">
+        <div class="fav-tt"><span class="fav-lbl">${k.lbl}</span><span class="fav-einheit">in ${k.unit}</span></div>
+        <button class="fav-info" onclick="event.stopPropagation();this.closest('.fav').classList.toggle('info')" title="Erklärung" aria-label="Erklärung zu ${k.lbl}">i</button>
         <button class="fav-star" onclick="favUmschalten('${k.id}',event)" title="Aus den Favoriten entfernen" aria-label="${k.lbl} aus den Favoriten entfernen">★</button></div>
-      <div class="fav-val">${akt ? fmtN(akt[1], k.dec) : '—'}<small>${k.unit}</small></div>
-      <div class="fav-meta">${datum ? `<span>${datum}</span>` : '<span>noch keine Daten</span>'}${chips}</div>
-      <div class="fav-spark">${favSpark(r, k.col)}</div>
       <div class="fav-why">${k.why}</div>
+      <div class="fav-mini">${r.length > 1 ? `<canvas id="fav-mini-${k.id.replace(/[^a-z0-9_-]/gi, '_')}"></canvas>` : `<div class="fav-leer">${akt ? fmtN(akt[1], k.dec) + ' ' + k.unit : 'noch keine Daten'}</div>`}</div>
+      <div class="fav-meta">${datum ? `<span>Stand ${datum}</span>` : ''}${chips}</div>
     </div>`;
   }).join('');
-  renderFavGrafiken();
+  items.forEach((k, i) => {
+    const r = reihenSauber[i], id = 'fav-mini-' + k.id.replace(/[^a-z0-9_-]/gi, '_');
+    const el = document.getElementById(id); if (!el) return;
+    const z = k.monat || k.jahr ? r : r.slice(-300);
+    if (CH[id]) CH[id].destroy();
+    CH[id] = new Chart(el, {type:'line',
+      data:{labels: z.map(p => p[0]), datasets:[{label:k.lbl, data:z.map(p => p[1]), borderColor:k.col, borderWidth:2, pointRadius:0, tension:.2, fill:false}]},
+      options:{responsive:true, maintainAspectRatio:false, animation:false, layout:{padding:{right:62, top:6}},
+        interaction:{mode:'index', intersect:false},
+        plugins:{legend:{display:false}, endWert:{on:true, dec:k.dec, farbe:k.col},
+          tooltip:{callbacks:{title:it => new Date(it[0].label).toLocaleDateString('de-DE'), label:c => `${fmtN(c.raw, k.dec)} ${k.unit}`}}},
+        scales:{x:{grid:{display:false}, border:{color:'#cfd6df'}, ticks:{autoSkip:false, maxRotation:0, color:'#6b7685', font:{size:11},
+                  callback:(v, j, t) => j === 0 || j === t.length - 1 ? new Date(z[j][0]).toLocaleDateString('de-DE', {day:'numeric', month:'numeric', year:'2-digit'}) : ''}},
+                y:{grid:{display:false}, border:{display:false}, ticks:{maxTicksLimit:4, color:'#6b7685', font:{size:11},
+                  callback:v => v === 0 ? '0' : fmtN(v, Math.abs(v) < 10 ? 2 : 0)}}}}});
+  });
   document.getElementById('fav-foot').innerHTML =
     'Rot = für Verbraucher ungünstige Richtung, Grün = günstige. Quellen: Tankerkönig, TECSON, Eurostat, Energy-Charts, GIE AGSI+, Yahoo Finance, SMARD, Destatis. Ein Klick auf eine Kachel öffnet den passenden Reiter.';
 }
