@@ -827,6 +827,22 @@ main [style*="font-size:11px"]{font-size:12px!important}
 @keyframes zielblink{0%{box-shadow:0 0 0 3px rgba(37,99,235,.45)}100%{box-shadow:0 0 0 3px rgba(37,99,235,0)}}
 .card.ziel{animation:zielblink 1.8s ease-out}
 @media (max-width:760px){.ereig-menu{position:fixed;left:10px;right:10px;width:auto;top:120px}.card{scroll-margin-top:20px}}
+
+/* Ereignis-Schalter unter Grafiken */
+.ereig-chips{display:flex;flex-wrap:wrap;gap:5px;margin:6px 0 2px}
+.ec{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--border);border-radius:999px;padding:2px 9px 2px 7px;
+  font:inherit;font-size:11.5px;color:var(--text3);cursor:pointer;line-height:1.5}
+.ec.an{color:var(--text);border-color:#c5cfdb;background:#f6f8fb}
+.ec:hover{border-color:var(--text2)}
+.ec i{display:inline-block;flex:none}
+.ec i.li{width:2px;height:12px;background:#6b7685}
+.ec i.zr{width:12px;height:10px;background:rgba(15,37,64,.15);border-left:1px solid rgba(15,37,64,.35)}
+.ec:not(.an) i{opacity:.35}
+.ec:not(.an){text-decoration:line-through;text-decoration-color:#b8c2cf}
+.fav .ereig-chips{margin-top:2px}
+.fav .ec{font-size:11px;padding:1px 7px 1px 6px}
+.fav-leg{display:flex;gap:12px;font-size:12px;color:var(--text2);margin-top:4px}
+.fav-leg i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}
 </style>
 </head>
 <body>
@@ -2138,7 +2154,7 @@ function ereignisUmschalten(id, an) {
   const aus = ereignisseAus().filter(x => x !== id); if (!an) aus.push(id);
   try { localStorage.setItem(EREIG_AUS_KEY, JSON.stringify(aus)); } catch(e) {}
   Object.values(CH).forEach(c => { try { c.update('none'); } catch(e) {} });
-  ereignisMenu();
+  ereignisMenu(); ereignisChips();
 }
 function ereignisseAlle(an) {
   try { localStorage.setItem(EREIG_AUS_KEY, JSON.stringify(an ? [] : EREIGNISSE.map(e => e.id || e.text))); } catch(e) {}
@@ -2160,7 +2176,8 @@ function ereignisMenu() {
   const b = document.getElementById('ereig-btn'); if (b) b.innerHTML = `⚑ Ereignisse <span>${n}/${EREIGNISSE.length}</span>`;
 }
 fetch('./data/ereignisse.json?t=' + Date.now()).then(r => r.ok ? r.json() : null)
-  .then(j => { EREIGNISSE = (j?.ereignisse || []).filter(e => e.datum && e.text); ereignisMenu(); Object.values(CH).forEach(c => { try { c.update('none'); } catch(e) {} }); })
+  .then(j => { EREIGNISSE = (j?.ereignisse || []).filter(e => e.datum && e.text); ereignisMenu();
+    try { renderTab(activeTab); } catch(e) {} })
   .catch(() => {});
 function labelDatum(l) {
   const t = String(l ?? '');
@@ -2169,6 +2186,18 @@ function labelDatum(l) {
   m = t.match(/^(\d{2})\.(\d{2})\.(\d{2})$/); if (m) return `20${m[3]}-${m[2]}-${m[1]}`;
   m = t.match(/^(\d{2})\/(\d{4})$/); if (m) return `${m[2]}-${m[1]}-15`;
   return null;
+}
+// Platz für Ereignis-Beschriftungen: wird beim Anlegen der Grafik reserviert
+// (oben, über den Linien), damit sie lesbar bleiben – auch wenn ein Ereignis
+// ausgeschaltet ist, bleibt der Streifen stehen und die Grafik springt nicht.
+const EREIG_ZEILEN = {};
+function ereigZeilen(canvasId, labels, schmal) {
+  if (!EREIGNISSE.length || !labels || labels.length < 10) return 0;
+  const daten = labels.map(labelDatum).filter(Boolean); if (daten.length < labels.length * 0.8) return 0;
+  const bereich = grafikBereich(canvasId), erstes = daten[0], letztes = daten.at(-1);
+  const n = EREIGNISSE.filter(e => (e.bereiche || ['alle']).some(b => b === 'alle' || b === bereich))
+    .filter(e => e.datum <= letztes && (e.bis ? e.bis >= erstes : e.datum >= erstes)).length;
+  return Math.min(n, schmal ? 1 : 2);
 }
 function grafikBereich(id) {
   if (/fuel|sprit|e5|e10|diesel|heiz|kraftstoff|treibstoff/i.test(id)) return 'sprit';
@@ -2222,47 +2251,84 @@ Chart.register({
 
 Chart.register({
   id: 'ereignisse',
-  beforeDatasetsDraw(chart) {
-    const AKTIV = ereignisseAktiv();
-    if (!AKTIV.length || chart.options.plugins?.ereignisse === false) return;
-    const x = chart.scales.x, labels = chart.data.labels || [];
-    if (!x || x.type !== 'category' || labels.length < 10) return;
-    const daten = labels.map(labelDatum), ok = daten.filter(Boolean).length;
-    if (ok < labels.length * 0.8) return;
+  // Welche Ereignisse fallen in den Zeitraum dieser Grafik (eingeschaltete und ausgeschaltete)?
+  _kandidaten(chart) {
+    if (!EREIGNISSE.length || chart.options.plugins?.ereignisse === false) return null;
+    const x = chart.scales?.x, labels = chart.data.labels || [];
+    if ((chart.config.type !== 'line' && chart.config.type !== 'bar') || chart.options.indexAxis === 'y' || labels.length < 10) return null;
+    const daten = labels.map(labelDatum);
+    if (daten.filter(Boolean).length < labels.length * 0.8) return null;
     const bereich = grafikBereich(chart.canvas?.id || '');
-    const idx = d => { for (let i = 0; i < daten.length; i++) if (daten[i] && daten[i] >= d) return i; return -1; };
-    const {ctx, chartArea: a} = chart;
     const erstes = daten.find(Boolean), letztes = [...daten].reverse().find(Boolean);
+    const liste = EREIGNISSE.filter(e => (e.bereiche || ['alle']).some(b => b === 'alle' || b === bereich))
+      .filter(e => e.datum <= letztes && (e.bis ? e.bis >= erstes : e.datum >= erstes))
+      .sort((p, q) => p.datum.localeCompare(q.datum));
+    return {daten, erstes, letztes, liste};
+  },
+  beforeDatasetsDraw(chart) {
+    const k = this._kandidaten(chart), aus = ereignisseAus();
+    chart.$ereig = k ? {...k, an: k.liste.filter(e => !aus.includes(e.id || e.text))} : null;
+    chart.$ereigZeilen = EREIG_ZEILEN[chart.canvas?.id] || 0;
+    clearTimeout(window._ereigChipsT); window._ereigChipsT = setTimeout(ereignisChips, 60);
+    const z = chart.$ereig; if (!z?.an.length) return;
+    const x = chart.scales.x, {ctx, chartArea: a} = chart, {daten, erstes, letztes} = z;
+    const idx = d => { for (let i = 0; i < daten.length; i++) if (daten[i] && daten[i] >= d) return i; return daten.length - 1; };
     ctx.save();
-    let zeile = 0, belegtBis = -Infinity;
-    ctx.font = "italic 11.5px 'Source Sans 3', sans-serif";
-    AKTIV.slice().sort((p, q) => p.datum.localeCompare(q.datum)).forEach(e => {
-      if (!(e.bereiche || ['alle']).some(b => b === 'alle' || b === bereich)) return;
-      if (e.datum > letztes) return;
-      const bis = e.bis === 'offen' ? letztes : e.bis;   // ein Zeitraum endet am "bis"; liegt das in der Zukunft, am Datenende
-      if (bis ? bis < erstes : e.datum < erstes) return;
-      const i0 = e.datum < erstes ? 0 : idx(e.datum); if (i0 < 0) return;
-      const x0 = x.getPixelForValue(i0);
+    z.pos = z.an.map(e => {
+      const bis = e.bis === 'offen' ? letztes : e.bis;
+      const x0 = x.getPixelForValue(e.datum < erstes ? 0 : idx(e.datum));
       if (bis) {
-        const i1 = bis >= letztes ? daten.length - 1 : idx(bis);
-        const x1 = x.getPixelForValue(i1 < 0 ? daten.length - 1 : i1);
-        ctx.fillStyle = 'rgba(15,37,64,.07)';
-        ctx.fillRect(x0, a.top, Math.max(1, x1 - x0), a.bottom - a.top);
-      } else {
-        ctx.strokeStyle = '#9aa4b2'; ctx.lineWidth = 1; ctx.setLineDash([]);
+        const x1 = x.getPixelForValue(bis >= letztes ? daten.length - 1 : idx(bis));
+        ctx.fillStyle = 'rgba(15,37,64,.075)'; ctx.fillRect(x0, a.top, Math.max(1, x1 - x0), a.bottom - a.top);
+        ctx.strokeStyle = 'rgba(15,37,64,.18)'; ctx.lineWidth = 1;
         ctx.beginPath(); ctx.moveTo(x0 + .5, a.top); ctx.lineTo(x0 + .5, a.bottom); ctx.stroke();
+      } else {
+        ctx.strokeStyle = '#6b7685'; ctx.lineWidth = 1.2;
+        ctx.beginPath(); ctx.moveTo(x0 + .5, a.top - 3); ctx.lineTo(x0 + .5, a.bottom); ctx.stroke();
       }
-      ctx.fillStyle = '#56657a'; ctx.textBaseline = 'top';
-      const w = ctx.measureText(e.text).width, tx = Math.max(a.left + 2, x0 + 4 + w > a.right ? x0 - 4 - w : x0 + 4);
-      // Beschriftung nur, wenn sie nicht in die vorige läuft; sonst eine Zeile tiefer, höchstens drei
-      if (tx < belegtBis) zeile++; else zeile = 0;
-      if (zeile > 2 || (a.right - a.left < 320 && zeile > 0)) return;
-      ctx.fillText(e.text, tx, a.top + 4 + zeile * 14);
-      belegtBis = Math.max(belegtBis, tx + w + 6);
+      return {e, x0};
+    });
+    ctx.restore();
+  },
+  // Beschriftungen im freien Streifen über der Grafik, auf hellem Grund
+  afterDraw(chart) {
+    const z = chart.$ereig; if (!z?.pos?.length || !chart.$ereigZeilen) return;
+    const {ctx, chartArea: a} = chart, zeilen = chart.$ereigZeilen;
+    ctx.save(); ctx.font = "italic 600 11.5px 'Source Sans 3', sans-serif"; ctx.textBaseline = 'middle';
+    const belegt = Array(zeilen).fill(-Infinity);
+    z.pos.forEach(({e, x0}) => {
+      let t = e.text; let w = ctx.measureText(t).width;
+      const maxW = a.right - a.left - 4;
+      while (w > maxW && t.length > 6) { t = t.slice(0, -2); w = ctx.measureText(t + '…').width; if (w <= maxW) t += '…'; }
+      let tx = Math.min(Math.max(a.left, x0 - 2), a.right - w - 8);
+      let r = belegt.findIndex(b => tx > b + 4);
+      if (r < 0) return;                       // kein Platz mehr: Beschriftung entfällt, Linie bleibt
+      const y = a.top - (zeilen - r) * 17 + 8;
+      ctx.fillStyle = 'rgba(255,255,255,.95)'; ctx.strokeStyle = '#d5dbe3'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.roundRect ? ctx.roundRect(tx, y - 8, w + 8, 16, 4) : ctx.rect(tx, y - 8, w + 8, 16); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#334155'; ctx.fillText(t, tx + 4, y + .5);
+      belegt[r] = tx + w + 8;
     });
     ctx.restore();
   },
 });
+
+// Schalter unter jeder Grafik mit Ereignissen: Klick blendet das Ereignis überall ein oder aus
+function ereignisChips() {
+  const aus = ereignisseAus();
+  Object.values(CH).forEach(ch => {
+    let wrap = ch.canvas?.closest('.chart-wrap, .fav-mini'); if (!wrap) return;
+    if (wrap.nextElementSibling?.classList?.contains('fav-achse')) wrap = wrap.nextElementSibling;   // in Kacheln unter die Datumszeile
+    let box = wrap.nextElementSibling?.classList?.contains('ereig-chips') ? wrap.nextElementSibling : null;
+    const liste = ch.$ereig?.liste || [];
+    if (!liste.length) { box?.remove(); return; }
+    if (!box) { box = document.createElement('div'); box.className = 'ereig-chips'; wrap.insertAdjacentElement('afterend', box); }
+    const html = liste.map(e => { const id = e.id || e.text, an = !aus.includes(id);
+      return `<button type="button" class="ec${an ? ' an' : ''}" title="${an ? 'Ausblenden' : 'Einblenden'}: ${e.text}${e.quelle ? ' – Quelle: ' + e.quelle : ''}"
+        onclick="event.stopPropagation();ereignisUmschalten('${id}', ${!an})"><i class="${e.bis ? 'zr' : 'li'}"></i>${e.text}</button>`; }).join('');
+    if (box.innerHTML !== html) box.innerHTML = html;
+  });
+}
 
 const BASE={
   responsive:true,maintainAspectRatio:false,
@@ -2312,10 +2378,13 @@ function mkChart(id, type, labels, datasets, extra={}) {
     opts.scales = opts.scales || {}; opts.scales.x = Object.assign({}, opts.scales.x);
     opts.scales.x.ticks = Object.assign({}, opts.scales.x.ticks, {maxRotation:0, autoSkipPadding:14, callback:(v, i) => /^\d{4}-/.test(String(labels[i])) ? fmt(labels[i]) : labels[i]});
   }
+  const zeilenE = (type === 'line' || type === 'bar') && !extra.indexAxis ? ereigZeilen(id, labels, false) : 0;
+  EREIG_ZEILEN[id] = zeilenE;
+  if (zeilenE) opts.layout = {padding: Object.assign({}, opts.layout?.padding, {top: zeilenE * 17 + 2})};
   if (endLabelsAktiv(type, datasets, extra)) {
     // Platz rechts für die Etiketten; Legende überflüssig
     const breit = Math.max(...datasets.filter(d => !END_SKIP.test(d.label || '')).map(d => endName(d.label).length + 6));
-    opts.layout = {padding: {right: Math.min(180, breit * 6.2 + 12)}};
+    opts.layout = {padding: Object.assign({}, opts.layout?.padding, {right: Math.min(180, breit * 6.2 + 12)})};
     opts.plugins = Object.assign({}, opts.plugins, {endLabels: {on: true}, legend: Object.assign({}, opts.plugins?.legend, {display: false})});
   }
   schriftAnheben(opts);
@@ -7675,6 +7744,7 @@ async function renderFav() {
         <button class="fav-info" onclick="event.stopPropagation();this.closest('.fav').classList.toggle('info')" title="Erklärung" aria-label="Erklärung zu ${k.lbl}">i</button>
         <button class="fav-star" onclick="favUmschalten('${k.id}',event)" title="Aus den Favoriten entfernen" aria-label="${k.lbl} aus den Favoriten entfernen">★</button></div>
       <div class="fav-why">${k.why}</div>
+      ${k.zweite ? `<div class="fav-leg"><span><i style="background:${k.col}"></i>${k.lbl}</span><span><i style="background:${k.zweite.col}"></i>${k.zweite.lbl}</span></div>` : ''}
       <div class="fav-mini${k.art ? ' fav-mini-' + k.art : ''}">${r.length > 1 || k.art ? `<canvas id="fav-mini-${k.id.replace(/[^a-z0-9_-]/gi, '_')}"></canvas>` : `<div class="fav-leer">${akt ? fmtN(akt[1], k.dec) + ' ' + k.unit : 'noch keine Daten'}</div>`}</div>
       ${!k.art && r.length > 1 ? `<div class="fav-achse"><span>${kurzDatum(r[k.monat || k.jahr ? 0 : Math.max(0, r.length - 300)][0])}</span><span>${kurzDatum(r.at(-1)[0])}</span></div>` : ''}
       <div class="fav-meta">${datum ? `<span>Stand ${datum}</span>` : ''}${chips}</div>
@@ -7690,11 +7760,12 @@ async function renderFav() {
     if (cfg) { CH[id] = new Chart(el, cfg); return; }
     const z = k.monat || k.jahr ? r : r.slice(-300);
     const ds = [{label:k.lbl, data:z.map(p => p[1]), borderColor:k.col, borderWidth:2, pointRadius:0, tension:.2, fill:false}];
+    const zeilenE = ereigZeilen(id, z.map(p => p[0]), true); EREIG_ZEILEN[id] = zeilenE;
     if (k.zweite) { const m = new Map(k.zweite.reihe()); ds.push({label:k.zweite.lbl, data:z.map(p => m.get(p[0]) ?? null), borderColor:k.zweite.col, borderWidth:2, pointRadius:0, tension:.2, fill:false, spanGaps:true}); }
     CH[id] = new Chart(el, {type:'line', data:{labels: z.map(p => p[0]), datasets:ds},
-      options:{responsive:true, maintainAspectRatio:false, animation:false, layout:{padding:{right:62, top:6}},
+      options:{responsive:true, maintainAspectRatio:false, animation:false, layout:{padding:{right:62, top:6 + zeilenE * 17}},
         interaction:{mode:'index', intersect:false},
-        plugins:{legend:{display:!!k.zweite, position:'top', align:'start', labels:{usePointStyle:true, pointStyle:'circle', boxWidth:7, boxHeight:7, color:'#56657a', font:{size:11.5}, padding:8}},
+        plugins:{legend:{display:false},
           endWert:{on:true, dec:k.dec},
           tooltip:{callbacks:{title:it => new Date(it[0].label).toLocaleDateString('de-DE'), label:c => `${c.dataset.label}: ${fmtN(c.raw, k.dec)}`}}},
         scales:{x:{grid:{display:false}, border:{color:'#cfd6df'}, ticks:{display:false}},
