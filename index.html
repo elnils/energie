@@ -1402,7 +1402,7 @@ main [style*="font-size:11px"]{font-size:12px!important}
       <div class="chart-wrap" style="height:260px"><canvas id="chart-mw-power"></canvas></div>
     </div>
     <div class="card g4" data-src="makro">
-      <div class="card-hdr"><div><div class="card-title">Preisdruck aus Energie</div><div class="card-sub">% zum Vorjahr · Destatis</div></div></div>
+      <div class="card-hdr"><div><div class="card-title">Preisdruck aus Energie</div><div class="card-sub">% zum Vorjahr · Statistisches Bundesamt</div></div></div>
       <div class="chart-wrap" style="height:260px"><canvas id="chart-mw-preise"></canvas></div>
     </div>
     <div class="card g6" data-src="makro">
@@ -1414,15 +1414,15 @@ main [style*="font-size:11px"]{font-size:12px!important}
       <div class="chart-wrap" style="height:280px"><canvas id="chart-mw-fec-s"></canvas></div>
     </div>
     <div class="card g6" data-src="makro">
-      <div class="card-hdr"><div><div class="card-title">Kraftwerksleistung nach Träger</div><div class="card-sub">GW · Jahresende · AGEE-Stat/Eurostat</div></div></div>
+      <div class="card-hdr"><div><div class="card-title">Kraftwerksleistung nach Träger</div><div class="card-sub">GW · Jahresende · Energy-Charts (Fraunhofer ISE)</div></div></div>
       <div class="chart-wrap" style="height:260px"><canvas id="chart-mw-cap"></canvas></div>
     </div>
     <div class="card g6" data-src="makro">
-      <div class="card-hdr"><div><div class="card-title">Benzin, Diesel, Heizöl seit 2005</div><div class="card-sub">€/Liter · Wochenmittel · EU Oil Bulletin</div></div></div>
+      <div class="card-hdr"><div><div class="card-title">Benzin, Diesel, Heizöl seit 2005</div><div class="card-sub">€/Liter · Wochenwerte · Weekly Oil Bulletin der EU-Kommission</div></div></div>
       <div class="chart-wrap" style="height:260px"><canvas id="chart-mw-fuel"></canvas></div>
     </div>
     <div class="card g12" data-src="makro">
-      <div class="card-hdr"><div><div class="card-title">Preiserwartungen und Industriestimmung</div><div class="card-sub">Salden der EU-Konjunkturumfragen</div></div></div>
+      <div class="card-hdr"><div><div class="card-title">Preiserwartungen und Industriestimmung</div><div class="card-sub">Salden der Konjunkturumfragen der EU-Kommission</div></div></div>
       <div class="chart-wrap" style="height:220px"><canvas id="chart-mw-stimmung"></canvas></div>
     </div>
   </div>
@@ -2334,7 +2334,7 @@ const BASE={
   responsive:true,maintainAspectRatio:false,
   interaction:{mode:'index',intersect:false},
   scales:{
-    x:{grid:{display:false},border:{color:'#d5dbe3'},ticks:{maxTicksLimit:8,color:'#6b7685',font:{size:11.5},maxRotation:0}},
+    x:{grid:{display:false},border:{color:'#d5dbe3'},ticks:{maxTicksLimit:8,color:'#6b7685',font:{size:11.5},maxRotation:0,autoSkipPadding:16}},
     y:{grid:{color:'#edf0f4'},border:{display:false},ticks:{maxTicksLimit:5,color:'#6b7685',font:{size:11.5},padding:6}}
   },
   elements:{point:{radius:0,hoverRadius:4},line:{tension:0.25,borderWidth:2}}
@@ -2380,7 +2380,11 @@ function mkChart(id, type, labels, datasets, extra={}) {
   }
   const zeilenE = (type === 'line' || type === 'bar') && !extra.indexAxis ? ereigZeilen(id, labels, false) : 0;
   EREIG_ZEILEN[id] = zeilenE;
-  if (zeilenE) opts.layout = {padding: Object.assign({}, opts.layout?.padding, {top: zeilenE * 17 + 2})};
+  if (zeilenE) {
+    opts.layout = {padding: Object.assign({}, opts.layout?.padding, {top: zeilenE * 17 + 2})};
+    // Der Streifen für Ereignisse liegt oben – eine Legende rückt nach unten, damit sich nichts überlagert
+    if (opts.plugins?.legend?.display) opts.plugins.legend = Object.assign({}, opts.plugins.legend, {position: 'bottom'});
+  }
   if (endLabelsAktiv(type, datasets, extra)) {
     // Platz rechts für die Etiketten; Legende überflüssig
     const breit = Math.max(...datasets.filter(d => !END_SKIP.test(d.label || '')).map(d => endName(d.label).length + 6));
@@ -2438,7 +2442,7 @@ const SOURCE_LABEL = {
   eurostat_prices:'Eurostat', news:'RSS',
   eurostat_env:'Eurostat (Umwelt)', worldbank_g20:'Weltbank',
   bnetza_gas:'Bundesnetzagentur', gas_storage_history:'GIE AGSI+ Historie',
-  kennzahlen:'Energy-Charts / Fraunhofer ISE (Jahreskennzahlen)', makro:'Destatis · Eurostat · SMARD', gas_sites:'GIE AGSI+ (je Speicher)', themen:'Nachrichtensuche · Pressestellen',
+  kennzahlen:'Energy-Charts / Fraunhofer ISE (Jahreskennzahlen)', makro:'SMARD · Destatis · Eurostat · EU-Kommission', gas_sites:'GIE AGSI+ (je Speicher)', themen:'Nachrichtensuche · Pressestellen',
 };
 
 // Files with no fetcher: one-off snapshots committed to the repo. They are
@@ -5551,7 +5555,7 @@ const SOURCE_INVENTORY = [
   ['themen',          'Nachrichtensuche und Pressestellen', 'Energiethemen im Trend, amtliche Meldungen', 'themen'],
   ['gas_sites',       'GIE AGSI+ (je Speicher)',   'Füllstand und Volumen je Gasspeicher-Standort', 'gas'],
   ['kennzahlen',      'Energy-Charts (Jahreskennzahlen)', 'Marktwertfaktoren, negative Stunden, Volllaststunden, Last, Import', 'jahr'],
-  ['makro',           'Amtliche Makroreihen',      'Strompreis-Historie, Verbraucher-/Erzeugerpreise, Endenergie, Kraftwerksleistung', 'makro'],
+  ['makro',           'Amtliche Makroreihen',      'SMARD, Destatis (über Bundesbank), Eurostat, EU-Kommission, Energy-Charts', 'makro'],
   ['news',            'RSS-Quellen',               'Nachrichtenlage', 'news'],
 ];
 

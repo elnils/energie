@@ -92,7 +92,8 @@ SCHEDULE = [
     # Gasspeicher je Standort: ~50 kleine AGSI-Abrufe, einer je Anlage.
     ('AGSI Standorte',   'gas_sites',       gas_sites.fetch,        360,   120),
     ('Jahreskennzahlen', 'kennzahlen',      kennzahlen.fetch,       720,   300),
-    # Makroreihen mit Energiebezug (amtliche Statistik, 11 kleine JSON-Dateien).
+    # Makroreihen mit Energiebezug direkt aus SMARD, Destatis (über die
+    # Bundesbank-API), Eurostat, EU-Kommission und Energy-Charts.
     ('Makro',            'makro',           makro.fetch,            720,   90),
     # Energiethemen (18 Suchen) und amtliche Meldungen (13 Stellen).
     ('Themen & Amtliches', 'themen',        themen.fetch,           180,   150),
