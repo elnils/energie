@@ -677,6 +677,46 @@ header{background:#eef4fb;border-bottom-color:#dbe5f2}
 .am-stelle{font-weight:600;color:var(--text2)}
 .am-tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:4px}
 .am-tags button{background:var(--accent-bg);color:var(--accent);border:0;border-radius:999px;font:inherit;font-size:11px;padding:1px 8px;cursor:pointer}
+
+/* ══ Kopf: dunkler, ruhig, hochwertig ══ */
+header{background:linear-gradient(180deg,#14304f 0%,#0f2540 100%);color:#e8eef6;border-bottom:0;
+  box-shadow:0 1px 0 rgba(255,255,255,.04) inset,0 6px 18px -12px rgba(15,37,64,.6);height:58px}
+.logo{color:#fff}
+.logo .logo-mark{width:30px!important;height:30px!important;border-radius:9px;background:rgba(255,255,255,.1)!important;
+  color:#ffd166!important;font-size:15px!important;display:inline-flex;align-items:center;justify-content:center;margin-right:2px}
+.logo .logo-sub{color:#8fa6c2}
+.hdr-right{color:#9fb3cc;gap:16px}
+.hdr-right b{color:#fff}
+header .btn{background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.18)}
+header .btn:hover{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.3)}
+header .live{color:#6ee7a8}
+.land-global{display:flex;align-items:center;gap:7px;font-size:12px;color:#9fb3cc}
+.land-global select{background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:8px;
+  padding:5px 26px 5px 10px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;appearance:none;-webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23cbd8e6' stroke-width='1.4' fill='none'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 9px center;background-size:10px}
+.land-global select option{color:#111;background:#fff}
+.land-global select:focus{outline:2px solid #6ea8fe;outline-offset:1px}
+.tabs{background:#fff;border-bottom:1px solid var(--border);box-shadow:0 1px 2px rgba(15,37,64,.04)}
+.tab.active{color:#0f2540;border-bottom-color:#0f2540}
+.favbar{background:#f8fafc}
+.land-fehlt{flex-basis:100%;font-size:11px;color:var(--text3)}
+/* Stern an jeder Grafik */
+.card-star{background:none;border:1px solid transparent;border-radius:8px;cursor:pointer;font-size:16px;line-height:1;
+  color:#b8c2cf;padding:4px 6px;margin-left:auto;flex:none}
+.card-star:hover{color:#c79100;border-color:var(--border)}
+.card-star.an{color:#e0a100}
+.card-hdr .card-star + .exp-wrap{margin-left:4px}
+.fav-abschnitt{font-size:13px;font-weight:600;color:var(--text2);margin:22px 0 10px;text-transform:uppercase;letter-spacing:.05em}
+.fav-leer{grid-column:1/-1;font-size:13px;color:var(--text3);background:#fff;border:1px dashed var(--border-strong);border-radius:12px;padding:16px}
+.favg .map-wrap svg{max-height:440px;width:auto;max-width:100%;margin:0 auto}
+.favg-fuss{margin-top:8px;font-size:12px}
+.favg-fuss a{color:var(--accent)}
+@media (max-width:760px){
+  header{height:auto}
+  .land-global span{display:none}
+  .tabs{top:auto}
+}
 </style>
 </head>
 <body>
@@ -684,6 +724,10 @@ header{background:#eef4fb;border-bottom-color:#dbe5f2}
 <header>
   <div class="logo"><span class="logo-mark" aria-hidden="true">⚡</span>Energie<span class="logo-sub">Dashboard DE/EU</span></div>
   <div class="hdr-right">
+    <label class="land-global" title="Gilt für alle Grafiken mit Länderwahl; fehlt das Land in einer Quelle, zeigt sie Deutschland">
+      <span>Land</span>
+      <select id="land-global" onchange="setLandGlobal(this.value)" aria-label="Land für alle Grafiken"></select>
+    </label>
     <div class="live"><span class="pulse"></span>LIVE</div>
     <span>Stand: <b id="last-update">—</b></span>
     <button class="btn" onclick="forceRefresh()">↺ Refresh</button>
@@ -1129,6 +1173,8 @@ header{background:#eef4fb;border-bottom-color:#dbe5f2}
   <div class="fav-picker" id="fav-picker" hidden></div>
   <div class="fav-grid" id="fav-grid"><div class="loading"><span class="spin"></span>Lädt…</div></div>
   <div class="fav-foot" id="fav-foot"></div>
+  <div class="fav-abschnitt">Angeheftete Grafiken</div>
+  <div class="grid" id="fav-grafiken"></div>
 </div>
 
 <!-- KARTE DE/EU -->
@@ -6425,8 +6471,11 @@ function setKarte(id, patch) {
 function kartenSteuerung(spec) {
   const stored = kartenCfg[spec.id] || {};
   const codes = spec.laender.map(x => x[0]);
+  // Vorgabe ist das Land aus dem Kopf; fehlt es in dieser Quelle, Deutschland
+  const gIso = landGlobal();
+  const gCode = codes.find(k => codeZuIso(k) === gIso) || codes.find(k => codeZuIso(k) === 'DE');
   const c = {
-    land: codes.includes(stored.land) ? stored.land : (codes.includes(spec.land) ? spec.land : codes[0]),
+    land: codes.includes(stored.land) ? stored.land : (gCode || (codes.includes(spec.land) ? spec.land : codes[0])),
     vgl: '', zeit: spec.zeiten?.includes(stored.zeit) ? stored.zeit : (spec.zeit || 'tab'),
   };
   if (spec.vergleich && codes.includes(stored.vgl) && stored.vgl !== c.land) c.vgl = stored.vgl;
@@ -6445,7 +6494,9 @@ function kartenSteuerung(spec) {
   }
   const opts = (list, sel, blank) => (blank ? `<option value="">${blank}</option>` : '') +
     list.map(([v, l]) => `<option value="${v}" ${v === sel ? 'selected' : ''}>${l}</option>`).join('');
+  const fehlt = gIso !== 'DE' && !codes.some(k => codeZuIso(k) === gIso) && !stored.land;
   bar.innerHTML =
+    (fehlt ? `<span class="land-fehlt">${landName(gIso)} gibt es hier nicht – gezeigt wird ${landName(codeZuIso(c.land))}</span>` : '') +
     (spec.extras || []).map(x => `<label>${x.label} <select data-k="${x.k}">${opts(x.options, c[x.k])}</select></label>`).join('') +
     `<label>Land <select data-k="land">${opts(spec.laender, c.land)}</select></label>` +
     (spec.vergleich ? `<label><span class="vgl-mark"></span> Vergleich <select data-k="vgl">${
@@ -6623,6 +6674,7 @@ function renderTab(tab){
       }
     }
     try { addExportButtons(tab); } catch(e) { console.error('export buttons', e); }
+    try { _gerendert.add(tab); addStarButtons(tab); setTimeout(() => addStarButtons(tab), 600); } catch(e) { console.error('stars', e); }
   }
 }
 
@@ -7106,6 +7158,7 @@ async function renderFav() {
       <div class="fav-why">${k.why}</div>
     </div>`;
   }).join('');
+  renderFavGrafiken();
   document.getElementById('fav-foot').innerHTML =
     'Rot = für Verbraucher ungünstige Richtung, Grün = günstige. Quellen: Tankerkönig, TECSON, Eurostat, Energy-Charts, GIE AGSI+, Yahoo Finance, SMARD, Destatis. Ein Klick auf eine Kachel öffnet den passenden Reiter.';
 }
@@ -7571,6 +7624,154 @@ function renderAmtlich() {
     : '<div class="nodata">Keine Meldungen für diese Auswahl</div>';
 }
 
+
+// ══════════════════════════════════════════════
+// LAND FÜR DIE GANZE SEITE
+// ══════════════════════════════════════════════
+// Eine Wahl im Kopf gilt für alle Karten mit Länderwahl und für die
+// Länder-Menüs der einzelnen Reiter. Eine Karte, deren Quelle das Land nicht
+// führt, fällt auf Deutschland zurück und sagt das. Eine Wahl direkt an einer
+// Karte gilt nur dort, bis das Land oben wieder geändert wird.
+const LAND_GLOBAL_KEY = 'energydash:land';
+const LAND_GLOBAL_LISTE = ['DE','EU','AT','BE','CH','CZ','DK','ES','FR','IT','NL','NO','PL','SE'];
+function landGlobal() { try { return localStorage.getItem(LAND_GLOBAL_KEY) || 'DE'; } catch(e) { return 'DE'; } }
+
+// Quellcode eines Landes (price_at, EU27_2020, DEU, de, dk1 …) -> ISO2 wie im Kopf
+function codeZuIso(k) {
+  const u = String(k || '').replace(/^price_/i, '').toUpperCase();
+  if (/^EU/.test(u)) return 'EU';
+  if (/^EA/.test(u)) return 'EA';
+  if (u === 'GR') return 'EL';
+  if (u.length === 3 && ISO3_ZU_2[u]) return ISO3_ZU_2[u];
+  return u.slice(0, 2);
+}
+
+function landGlobalFuellen() {
+  const sel = document.getElementById('land-global'); if (!sel) return;
+  sel.innerHTML = LAND_GLOBAL_LISTE.map(c => `<option value="${c}">${landName(c)}</option>`).join('');
+  sel.value = landGlobal();
+  landMenusAbgleichen();
+}
+
+// Einfache Länder-Menüs der Reiter (Eurostat, Gasspeicher) auf das Kopf-Land setzen
+function landMenusAbgleichen() {
+  const iso = landGlobal();
+  document.querySelectorAll('main select').forEach(sel => {
+    if (sel.closest('.card-ctl') || sel.id === 'map-eu-layer' || sel.id === 'map-de-layer') return;
+    const opt = [...sel.options].find(o => codeZuIso(o.value) === iso && /^[a-z]{2}$|^[A-Z]{2}$|^EU27|^EA2/.test(o.value));
+    if (opt && sel.value !== opt.value) sel.value = opt.value;
+  });
+}
+
+function setLandGlobal(iso) {
+  try { localStorage.setItem(LAND_GLOBAL_KEY, iso); } catch(e) {}
+  // Kartenspezifische Länder zurücksetzen, damit überall das neue Land gilt
+  Object.keys(kartenCfg).forEach(id => { delete kartenCfg[id].land; if (codeZuIso(kartenCfg[id].vgl) === iso) delete kartenCfg[id].vgl; });
+  try { localStorage.setItem(KARTEN_KEY, JSON.stringify(kartenCfg)); } catch(e) {}
+  landMenusAbgleichen();
+  renderTab(activeTab);
+}
+
+// ══════════════════════════════════════════════
+// GRAFIKEN ALS FAVORIT
+// ══════════════════════════════════════════════
+// Jede Karte mit Grafik, Karte oder Tabelle bekommt einen Stern. Angeheftete
+// Karten erscheinen auf der Favoritenseite: Diagramme werden dort als eigene
+// Chart.js-Kopie gezeichnet, Karten und Tabellen als Abbild.
+const FAVG_KEY = 'energydash:favGrafiken';
+function favgLesen() { try { const v = JSON.parse(localStorage.getItem(FAVG_KEY)); return Array.isArray(v) ? v : []; } catch(e) { return []; } }
+function favgSchreiben(v) { try { localStorage.setItem(FAVG_KEY, JSON.stringify(v)); } catch(e) {} }
+
+function karteAnker(card) {
+  const el = card.querySelector('canvas[id], .map-wrap[id]') ||
+             (card.querySelector('table') && card.querySelector('[id]'));
+  return el?.id || null;
+}
+
+function addStarButtons(tab) {
+  if (tab === 'fav') return;
+  const panel = document.getElementById('panel-' + tab); if (!panel) return;
+  const pins = favgLesen();
+  panel.querySelectorAll('.card').forEach(card => {
+    const hdr = card.querySelector('.card-hdr'); if (!hdr) return;
+    const id = karteAnker(card);
+    let b = hdr.querySelector('.card-star');
+    if (!id || !card.querySelector('canvas, svg, table')) { if (b) b.remove(); return; }
+    if (!b) {
+      b = document.createElement('button'); b.type = 'button'; b.className = 'card-star';
+      hdr.insertBefore(b, hdr.querySelector('.exp-wrap'));
+      b.addEventListener('click', ev => { ev.stopPropagation(); favgUmschalten(b.dataset.key); });
+    }
+    const key = tab + '|' + id, an = pins.includes(key);
+    b.dataset.key = key; b.textContent = an ? '★' : '☆'; b.classList.toggle('an', an);
+    b.title = an ? 'Von der Favoritenseite entfernen' : 'Auf der Favoritenseite anheften';
+    b.setAttribute('aria-label', b.title);
+  });
+}
+
+function favgUmschalten(key) {
+  const v = favgLesen(), i = v.indexOf(key);
+  if (i >= 0) v.splice(i, 1); else v.push(key);
+  favgSchreiben(v);
+  addStarButtons(activeTab);
+  if (activeTab === 'fav') renderFavGrafiken();
+}
+
+const _gerendert = new Set();
+async function tabVorbereiten(tab) {
+  if (_gerendert.has(tab)) return;
+  await loadForTab(tab);
+  try { RENDERS[tab]?.(); } catch(e) { console.warn('Vorbereiten', tab, e); }
+  _gerendert.add(tab);
+  await new Promise(r => setTimeout(r, 250));     // asynchrone Teile (Karten, Verlauf) fertig werden lassen
+}
+
+let _favgLaeuft = false;
+async function renderFavGrafiken() {
+  const box = document.getElementById('fav-grafiken'); if (!box || _favgLaeuft) return;
+  _favgLaeuft = true;
+  try {
+    const pins = favgLesen();
+    if (!pins.length) {
+      box.innerHTML = `<div class="fav-leer">Noch keine Grafik angeheftet. In jedem Reiter steht oben rechts an jeder Grafik ein ☆ – ein Klick legt sie hierher.</div>`;
+      return;
+    }
+    box.innerHTML = pins.map((k, i) => `<div class="card g6 favg" data-key="${k}"><div class="loading"><span class="spin"></span>Lädt…</div></div>`).join('');
+    for (const key of pins) {
+      const [tab, id] = key.split('|');
+      const ziel = box.querySelector(`.favg[data-key="${CSS.escape(key)}"]`);
+      try {
+        await tabVorbereiten(tab);
+        const src = document.getElementById(id), card = src?.closest('.card');
+        if (!card) { ziel.innerHTML = `<div class="nodata">Grafik nicht mehr vorhanden<button class="mod-reset" onclick="favgUmschalten('${key}')">entfernen</button></div>`; continue; }
+        const titel = card.querySelector('.card-title')?.textContent || '', sub = card.querySelector('.card-sub')?.textContent || '';
+        const tabName = document.querySelector(`.tab[data-tab="${tab}"]`)?.textContent.trim() || tab;
+        ziel.innerHTML = `<div class="card-hdr"><div><div class="card-title">${_esc(titel)}</div><div class="card-sub">${_esc(sub)}</div></div>
+          <button class="card-star an" title="Von der Favoritenseite entfernen" onclick="favgUmschalten('${key}')">★</button></div>
+          <div class="favg-inhalt"></div>
+          <div class="favg-fuss"><a href="#" onclick="gotoTab('${tab}');return false">Im Reiter ${_esc(tabName)} öffnen →</a></div>`;
+        const inhalt = ziel.querySelector('.favg-inhalt');
+        const ch = CH[id];
+        if (ch) {
+          const h = Math.max(200, Math.min(320, src.closest('.chart-wrap')?.offsetHeight || 240));
+          inhalt.innerHTML = `<div class="chart-wrap" style="height:${h}px"><canvas></canvas></div>`;
+          const cid = 'favg-' + id;
+          if (CH[cid]) CH[cid].destroy();
+          CH[cid] = new Chart(inhalt.querySelector('canvas'), {
+            type: ch.config.type,
+            data: {labels: (ch.data.labels || []).slice(), datasets: ch.data.datasets.map(d => ({...d, data: Array.isArray(d.data) ? d.data.slice() : d.data}))},
+            options: ch.config.options,
+          });
+        } else {
+          const kopie = src.closest('.map-wrap, .chart-wrap, .tbl-scroll') || src;
+          inhalt.innerHTML = kopie.outerHTML.replace(/\sid="[^"]*"/g, '');
+          inhalt.querySelectorAll('.map-tip').forEach(x => x.remove());
+        }
+      } catch(e) { ziel.innerHTML = `<div class="nodata">Konnte nicht geladen werden</div>`; console.warn('favg', key, e); }
+    }
+  } finally { _favgLaeuft = false; }
+}
+
 // ══════════════════════════════════════════════
 // EINWILLIGUNG UND REICHWEITENMESSUNG
 // ══════════════════════════════════════════════
@@ -7660,6 +7861,7 @@ function trackTab(tab) {
 // ══════════════════════════════════════════════
 loadRangePersistence();
 initLand();
+landGlobalFuellen();
 initConsent();
 init();
 setInterval(async()=>{Object.keys(D).forEach(k=>delete D[k]);await init();},15*60*1000);
