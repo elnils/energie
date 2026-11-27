@@ -30,12 +30,12 @@
     "last_success_iso": "2026-11-27T18:26:35Z"
   },
   "energy_charts": {
-    "last_attempt_epoch": 1795803456,
-    "last_attempt_iso": "2026-11-27T18:17:36Z",
+    "last_attempt_epoch": 1795807491,
+    "last_attempt_iso": "2026-11-27T19:24:51Z",
     "last_error_epoch": 1779577175,
     "last_error_message": "SourceTimeoutError: source exceeded wallclock budget | at File \"/home/runner/work/energie/energie/scripts/fetch_all.py\", line 84, in _alarm_handler",
-    "last_success_epoch": 1795803623,
-    "last_success_iso": "2026-11-27T18:20:23Z"
+    "last_success_epoch": 1795807624,
+    "last_success_iso": "2026-11-27T19:27:04Z"
   },
   "energy_futures": {
     "last_attempt_epoch": 1795803995,
@@ -134,12 +134,12 @@
     "last_success_iso": "2026-11-27T18:28:57Z"
   },
   "makro": {
-    "last_attempt_epoch": 1795762942,
-    "last_attempt_iso": "2026-11-27T07:02:22Z",
+    "last_attempt_epoch": 1795807624,
+    "last_attempt_iso": "2026-11-27T19:27:04Z",
     "last_error_epoch": 1795762473,
     "last_error_message": "RuntimeError: MAKRO_QUELLE nicht gesetzt | at File \"/home/runner/work/energie/energie/scripts/fetchers/makro.py\", line 24, in _basis",
-    "last_success_epoch": 1795762954,
-    "last_success_iso": "2026-11-27T07:02:34Z"
+    "last_success_epoch": 1795807639,
+    "last_success_iso": "2026-11-27T19:27:19Z"
   },
   "news": {
     "last_attempt_epoch": 1795804174,
@@ -148,18 +148,24 @@
     "last_success_iso": "2026-11-27T18:29:56Z"
   },
   "smard": {
-    "last_attempt_epoch": 1795803447,
-    "last_attempt_iso": "2026-11-27T18:17:27Z",
+    "last_attempt_epoch": 1795807483,
+    "last_attempt_iso": "2026-11-27T19:24:43Z",
     "last_error_epoch": 1784702205,
     "last_error_message": "RuntimeError: SMARD: all filters returned empty | at File \"/home/runner/work/energie/energie/scripts/fetchers/smard.py\", line 109, in fetch",
-    "last_success_epoch": 1795803456,
-    "last_success_iso": "2026-11-27T18:17:36Z"
+    "last_success_epoch": 1795807491,
+    "last_success_iso": "2026-11-27T19:24:51Z"
   },
   "themen": {
     "last_attempt_epoch": 1795804137,
     "last_attempt_iso": "2026-11-27T18:28:57Z",
     "last_success_epoch": 1795804174,
     "last_success_iso": "2026-11-27T18:29:34Z"
+  },
+  "vor_ort": {
+    "last_attempt_epoch": 1795807639,
+    "last_attempt_iso": "2026-11-27T19:27:19Z",
+    "last_success_epoch": 1795808073,
+    "last_success_iso": "2026-11-27T19:34:33Z"
   },
   "weather": {
     "last_attempt_epoch": 1795803688,
