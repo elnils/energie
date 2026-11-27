@@ -2,8 +2,8 @@
 Tankerkoenig — German fuel station prices.
 
 Reduced footprint vs v4.3:
-  - 6 cities (Berlin, Hamburg, München, Frankfurt, Leipzig, Köln)
-  - 3 fuel types (E5, E10, Diesel)
+  - 19 cities: one per Bundesland plus Frankfurt, Leipzig, Köln
+  - 3 fuel types (E5, E10, Diesel) in one type=all call per city
   - 2 calls/day cadence (08:00/18:00 Berlin) — set by orchestrator gating
 
 Output schema: per city the avg/min/count for each fuel type, plus a national
@@ -21,13 +21,29 @@ from datetime import datetime, timezone
 from core import http, validators, history
 
 
+# Eine Stadt je Bundesland (Landeshauptstadt bzw. größte Stadt), dazu die
+# bisherigen Städte Frankfurt, Leipzig und Köln, damit ihre Reihen weiterlaufen.
+# Wert: (lat, lon, Länderkürzel)
 CITIES: Dict[str, tuple] = {
-    'Berlin':    (52.520, 13.405),
-    'Hamburg':   (53.550, 10.000),
-    'München':   (48.137, 11.575),
-    'Frankfurt': (50.110,  8.682),
-    'Leipzig':   (51.340, 12.375),
-    'Köln':      (50.938,  6.960),
+    'Berlin':       (52.520, 13.405, 'BE'),
+    'Hamburg':      (53.550, 10.000, 'HH'),
+    'München':      (48.137, 11.575, 'BY'),
+    'Frankfurt':    (50.110,  8.682, 'HE'),
+    'Leipzig':      (51.340, 12.375, 'SN'),
+    'Köln':         (50.938,  6.960, 'NW'),
+    'Stuttgart':    (48.776,  9.183, 'BW'),
+    'Potsdam':      (52.391, 13.064, 'BB'),
+    'Bremen':       (53.079,  8.802, 'HB'),
+    'Wiesbaden':    (50.082,  8.240, 'HE'),
+    'Schwerin':     (53.635, 11.401, 'MV'),
+    'Hannover':     (52.375,  9.732, 'NI'),
+    'Düsseldorf':   (51.227,  6.773, 'NW'),
+    'Mainz':        (49.992,  8.247, 'RP'),
+    'Saarbrücken':  (49.240,  6.997, 'SL'),
+    'Dresden':      (51.050, 13.737, 'SN'),
+    'Magdeburg':    (52.120, 11.628, 'ST'),
+    'Kiel':         (54.323, 10.123, 'SH'),
+    'Erfurt':       (50.978, 11.029, 'TH'),
 }
 NATIONAL_CENTER = (51.163, 10.447)
 
@@ -51,7 +67,10 @@ def _fetch_prices(lat: float, lon: float, fuel_type: str, api_key: str,
         try:
             r = s.get('https://creativecommons.tankerkoenig.de/json/list.php',
                       params={'lat': lat, 'lng': lon, 'rad': rad,
-                              'sort': 'price', 'type': fuel_type, 'apikey': api_key},
+                              # type=all liefert alle drei Sorten in einem Abruf,
+                              # erlaubt dann aber nur die Sortierung nach Entfernung
+                              'sort': 'dist' if fuel_type == 'all' else 'price',
+                              'type': fuel_type, 'apikey': api_key},
                       headers=headers, timeout=25)
             if r.status_code == 503:
                 time.sleep(20 + 30 * attempt)
@@ -64,6 +83,16 @@ def _fetch_prices(lat: float, lon: float, fuel_type: str, api_key: str,
                 if 'apikey' in msg.lower():
                     raise RuntimeError(f'tankerkoenig rejected key: {msg}')
                 raise RuntimeError(f'tankerkoenig: {msg}')
+            if fuel_type == 'all':
+                out = {'e5': [], 'e10': [], 'diesel': []}
+                for st in d.get('stations', []):
+                    if st.get('isOpen') is False:
+                        continue
+                    for ft in out:
+                        v = st.get(ft)
+                        if v and validators.in_range('fuel_eur_l', v):
+                            out[ft].append(round(float(v), 3))
+                return {k: sorted(v) for k, v in out.items()}
             prices = []
             for st in d.get('stations', []):
                 v = st.get('price') or st.get(fuel_type)
@@ -84,21 +113,22 @@ def fetch() -> dict:
         raise RuntimeError('TANKERKOENIG_API_KEY missing')
 
     cities_out: Dict[str, dict] = {}
-    for city, (lat, lon) in CITIES.items():
-        cd = {'count': 0}
+    for city, (lat, lon, land) in CITIES.items():
+        cd = {'count': 0, 'land': land, 'lat': lat, 'lon': lon}
+        # Ein Abruf je Stadt für alle drei Sorten (früher drei)
+        try:
+            alle = _fetch_prices(lat, lon, 'all', api_key, rad=10)
+        except Exception as e:
+            print(f'      {city}: {e}')
+            alle = {}
+            time.sleep(5.0)
         for ft in ('e5', 'e10', 'diesel'):
-            try:
-                prices = _fetch_prices(lat, lon, ft, api_key, rad=10)
-                cd[f'{ft}_avg'] = _avg(prices)
-                cd[f'{ft}_min'] = prices[0] if prices else None
-                cd[f'{ft}_max'] = prices[-1] if prices else None
-                cd['count'] = max(cd['count'], len(prices))
-                time.sleep(2.0)
-            except Exception as e:
-                print(f'      {city}/{ft}: {e}')
-                cd[f'{ft}_avg'] = None
-                cd[f'{ft}_min'] = None
-                time.sleep(5.0)
+            prices = alle.get(ft) or []
+            cd[f'{ft}_avg'] = _avg(prices)
+            cd[f'{ft}_min'] = prices[0] if prices else None
+            cd[f'{ft}_max'] = prices[-1] if prices else None
+            cd['count'] = max(cd['count'], len(prices))
+        time.sleep(1.5)
         cities_out[city] = cd
         print(f'    fuel/{city}: E5={cd.get("e5_avg")} Diesel={cd.get("diesel_avg")}')
 
