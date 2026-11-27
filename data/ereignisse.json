@@ -1,8 +1,12 @@
 {
-  "hinweis": "Ereignisse für die Grafiken. datum = Beginn, bis = Ende (\"offen\" = bis heute, leer = nur Linie). bereiche: \"alle\" für jede Zeitreihe, \"sprit\" nur Kraftstoffe und Heizöl, \"gas\" nur Gas, \"strom\" nur Strom. Stichtage bitte prüfen und bei Bedarf hier ändern.",
+  "hinweis": "Ereignisse für die Grafiken. datum = Beginn, bis = Ende (leer = nur Linie). bereiche: alle, sprit (Kraftstoffe/Heizöl), gas, strom. art: krise oder massnahme. ungefaehr = Datum nur ungefähr bekannt. Jeder Eintrag lässt sich im Dashboard einzeln ein- und ausblenden.",
   "ereignisse": [
-    {"datum": "2026-03-01", "bis": "", "text": "Beginn des Irankriegs", "bereiche": ["alle"]},
-    {"datum": "2026-05-01", "bis": "2026-07-01", "text": "Tankrabatt", "bereiche": ["sprit"]},
-    {"datum": "2026-10-01", "bis": "offen", "text": "Erneuter Tankrabatt", "bereiche": ["sprit"]}
+    {"id": "finanzkrise", "datum": "2008-09-15", "bis": "", "text": "Finanzkrise (Lehman-Pleite)", "bereiche": ["alle"], "art": "krise", "quelle": "Insolvenzantrag Lehman Brothers, 15.9.2008"},
+    {"id": "ukraine", "datum": "2022-02-24", "bis": "", "text": "Russlands Angriff auf die Ukraine", "bereiche": ["alle"], "art": "krise", "quelle": "Beginn der russischen Invasion, 24.2.2022"},
+    {"id": "tankrabatt2022", "datum": "2022-06-01", "bis": "2022-08-31", "text": "Tankrabatt 2022", "bereiche": ["sprit"], "art": "massnahme", "quelle": "Energiesteuersenkungsgesetz, Juni bis August 2022"},
+    {"id": "irankrieg", "datum": "2026-03-01", "bis": "", "text": "Beginn des Irankriegs", "bereiche": ["alle"], "art": "krise", "ungefaehr": true, "quelle": "Datum ungefähr, bitte prüfen"},
+    {"id": "tankrabatt2026", "datum": "2026-05-01", "bis": "2026-07-01", "text": "Tankrabatt", "bereiche": ["sprit"], "art": "massnahme", "ungefaehr": true, "quelle": "Zeitraum ungefähr, bitte prüfen"},
+    {"id": "tankrabatt2026b", "datum": "2026-10-01", "bis": "2026-12-31", "text": "Erneuter Tankrabatt", "bereiche": ["sprit"], "art": "massnahme", "ungefaehr": true, "quelle": "Ende laut Berichten mit Jahresende, ab Januar Spritpreisdeckel; Beginn bitte prüfen"},
+    {"id": "spritpreisdeckel", "datum": "2026-11-24", "bis": "", "text": "Spritpreisdeckel angekündigt", "bereiche": ["sprit"], "art": "massnahme", "quelle": "Bundesregierung, 24.11.2026: „Stromsteuer sinkt – Spritpreisdeckel kommt“"}
   ]
 }

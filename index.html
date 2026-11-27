@@ -802,6 +802,31 @@ main [style*="font-size:11px"]{font-size:12px!important}
 .fav-mini{height:130px;margin-top:6px;position:relative}
 .fav-leer{font-size:22px;font-weight:700;padding-top:30px}
 .fav-ico,.fav-val,.fav-spark{display:none}
+
+/* Ereignis-Schalter */
+.ereig{position:relative;flex:none}
+.ereig-btn{background:none;border:1px solid var(--border);border-radius:999px;padding:3px 10px;font:inherit;font-size:12.5px;color:var(--text2);cursor:pointer;white-space:nowrap}
+.ereig-btn span{color:var(--text3);font-size:11.5px;margin-left:2px}
+.ereig-btn:hover{border-color:var(--border-strong);color:var(--text)}
+.ereig-menu{position:absolute;right:0;top:calc(100% + 6px);width:340px;max-height:70vh;overflow:auto;background:#fff;border:1px solid var(--border);
+  border-radius:12px;box-shadow:0 10px 28px rgba(15,37,64,.14);padding:8px 10px;z-index:300}
+.em-h{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin:6px 2px 4px}
+.em-i{display:flex;gap:9px;align-items:flex-start;padding:6px 4px;border-radius:8px;cursor:pointer;font-size:13.5px;line-height:1.35}
+.em-i:hover{background:var(--bg-alt)}
+.em-i input{margin-top:3px;accent-color:var(--accent);width:16px;height:16px;flex:none}
+.em-d{display:block;font-size:12px;color:var(--text2)}
+.em-q{display:block;font-size:11.5px;color:var(--text3)}
+.em-f{display:flex;gap:8px;align-items:center;border-top:1px solid var(--border);margin-top:6px;padding-top:8px;font-size:11.5px;color:var(--text3)}
+.em-f button{background:var(--bg-alt);border:1px solid var(--border);border-radius:8px;padding:3px 9px;font:inherit;font-size:12px;cursor:pointer}
+.em-f span{margin-left:auto}
+/* Kacheln: Datum am Rand, Quelle klein */
+.fav-achse{display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin:2px 0 4px;font-variant-numeric:tabular-nums}
+.fav-quelle{font-size:11px;color:var(--text3);margin-top:4px}
+/* Sprungziel kurz hervorheben, Kopfbereich beim Scrollen frei lassen */
+.card{scroll-margin-top:170px}
+@keyframes zielblink{0%{box-shadow:0 0 0 3px rgba(37,99,235,.45)}100%{box-shadow:0 0 0 3px rgba(37,99,235,0)}}
+.card.ziel{animation:zielblink 1.8s ease-out}
+@media (max-width:760px){.ereig-menu{position:fixed;left:10px;right:10px;width:auto;top:120px}.card{scroll-margin-top:20px}}
 </style>
 </head>
 <body>
@@ -852,6 +877,11 @@ main [style*="font-size:11px"]{font-size:12px!important}
 <div class="favbar" id="favbar">
   <a class="favbar-lbl" href="#" onclick="gotoTab('fav');return false" title="Alle Favoriten">★</a>
   <div class="favbar-items" id="favbar-items"></div>
+  <div class="ereig">
+    <button class="ereig-btn" id="ereig-btn" onclick="event.stopPropagation();document.getElementById('ereig-menu').hidden=!document.getElementById('ereig-menu').hidden"
+      title="Krisen und Maßnahmen in den Grafiken ein- oder ausblenden">⚑ Ereignisse</button>
+    <div class="ereig-menu" id="ereig-menu" hidden onclick="event.stopPropagation()"></div>
+  </div>
   <div class="favbar-suche">
     <input type="search" id="favsuche" placeholder="Suchen: Kennzahl, Reiter …" autocomplete="off"
       oninput="favSuche(this.value)" onfocus="favSuche(this.value)" onkeydown="if(event.key==='Escape'){this.value='';favSuche('')}">
@@ -2101,8 +2131,36 @@ Chart.register({
 // Daten sind. Welche Grafik welche Ereignisse zeigt, folgt aus der Kennung
 // der Grafik (Kraftstoffe -> "sprit", Gas -> "gas", Strom -> "strom").
 let EREIGNISSE = [];
+const EREIG_AUS_KEY = 'energydash:ereignisseAus';
+function ereignisseAus() { try { return JSON.parse(localStorage.getItem(EREIG_AUS_KEY) || '[]'); } catch(e) { return []; } }
+function ereignisseAktiv() { const aus = ereignisseAus(); return EREIGNISSE.filter(e => !aus.includes(e.id || e.text)); }
+function ereignisUmschalten(id, an) {
+  const aus = ereignisseAus().filter(x => x !== id); if (!an) aus.push(id);
+  try { localStorage.setItem(EREIG_AUS_KEY, JSON.stringify(aus)); } catch(e) {}
+  Object.values(CH).forEach(c => { try { c.update('none'); } catch(e) {} });
+  ereignisMenu();
+}
+function ereignisseAlle(an) {
+  try { localStorage.setItem(EREIG_AUS_KEY, JSON.stringify(an ? [] : EREIGNISSE.map(e => e.id || e.text))); } catch(e) {}
+  Object.values(CH).forEach(c => { try { c.update('none'); } catch(e) {} });
+  ereignisMenu();
+}
+function ereignisMenu() {
+  const box = document.getElementById('ereig-menu'); if (!box) return;
+  const aus = ereignisseAus(), d = x => x.split('-').reverse().join('.');
+  const gruppe = (art, titel) => { const l = EREIGNISSE.filter(e => (e.art || 'krise') === art); if (!l.length) return '';
+    return `<div class="em-h">${titel}</div>` + l.map(e => `<label class="em-i"><input type="checkbox" ${aus.includes(e.id || e.text) ? '' : 'checked'}
+      onchange="ereignisUmschalten('${e.id || e.text}', this.checked)"><span><b>${e.text}</b>
+      <span class="em-d">${d(e.datum)}${e.bis ? ' – ' + d(e.bis) : ''}${e.ungefaehr ? ' · ungefähr' : ''}</span>
+      ${e.quelle ? `<span class="em-q">Quelle: ${e.quelle}</span>` : ''}</span></label>`).join(''); };
+  box.innerHTML = gruppe('krise', 'Krisen') + gruppe('massnahme', 'Maßnahmen') +
+    `<div class="em-f"><button onclick="ereignisseAlle(true)">alle ein</button><button onclick="ereignisseAlle(false)">alle aus</button>
+     <span>Gepflegt in data/ereignisse.json</span></div>`;
+  const n = EREIGNISSE.length - EREIGNISSE.filter(e => aus.includes(e.id || e.text)).length;
+  const b = document.getElementById('ereig-btn'); if (b) b.innerHTML = `⚑ Ereignisse <span>${n}/${EREIGNISSE.length}</span>`;
+}
 fetch('./data/ereignisse.json?t=' + Date.now()).then(r => r.ok ? r.json() : null)
-  .then(j => { EREIGNISSE = (j?.ereignisse || []).filter(e => e.datum && e.text); Object.values(CH).forEach(c => { try { c.update('none'); } catch(e) {} }); })
+  .then(j => { EREIGNISSE = (j?.ereignisse || []).filter(e => e.datum && e.text); ereignisMenu(); Object.values(CH).forEach(c => { try { c.update('none'); } catch(e) {} }); })
   .catch(() => {});
 function labelDatum(l) {
   const t = String(l ?? '');
@@ -2165,7 +2223,8 @@ Chart.register({
 Chart.register({
   id: 'ereignisse',
   beforeDatasetsDraw(chart) {
-    if (!EREIGNISSE.length || chart.options.plugins?.ereignisse === false) return;
+    const AKTIV = ereignisseAktiv();
+    if (!AKTIV.length || chart.options.plugins?.ereignisse === false) return;
     const x = chart.scales.x, labels = chart.data.labels || [];
     if (!x || x.type !== 'category' || labels.length < 10) return;
     const daten = labels.map(labelDatum), ok = daten.filter(Boolean).length;
@@ -2177,10 +2236,10 @@ Chart.register({
     ctx.save();
     let zeile = 0, belegtBis = -Infinity;
     ctx.font = "italic 11.5px 'Source Sans 3', sans-serif";
-    EREIGNISSE.slice().sort((p, q) => p.datum.localeCompare(q.datum)).forEach(e => {
+    AKTIV.slice().sort((p, q) => p.datum.localeCompare(q.datum)).forEach(e => {
       if (!(e.bereiche || ['alle']).some(b => b === 'alle' || b === bereich)) return;
       if (e.datum > letztes) return;
-      const bis = e.bis === 'offen' ? letztes : e.bis;
+      const bis = e.bis === 'offen' ? letztes : e.bis;   // ein Zeitraum endet am "bis"; liegt das in der Zukunft, am Datenende
       if (bis ? bis < erstes : e.datum < erstes) return;
       const i0 = e.datum < erstes ? 0 : idx(e.datum); if (i0 < 0) return;
       const x0 = x.getPixelForValue(i0);
@@ -2244,6 +2303,15 @@ function mkChart(id, type, labels, datasets, extra={}) {
   if(extra.plugins) opts.plugins = Object.assign({}, opts.plugins||{}, extra.plugins);
   if(extra.indexAxis) opts.indexAxis = extra.indexAxis;
   if(extra.interaction) opts.interaction = extra.interaction;
+  // Datumsbeschriftung der x-Achse lesbar: ISO-Daten werden zu "29.10." bzw. "Okt. 26"
+  const iso = (labels || []).filter(l => /^\d{4}-\d{2}-\d{2}/.test(String(l)));
+  if (iso.length && iso.length >= labels.length * 0.8 && type !== 'scatter' && !extra.indexAxis) {
+    const tage = (Date.parse(iso.at(-1)) - Date.parse(iso[0])) / 864e5;
+    const fmt = l => { const d = new Date(String(l).slice(0, 10) + 'T12:00:00Z');
+      return tage <= 400 ? `${d.getUTCDate()}.${d.getUTCMonth() + 1}.` : d.toLocaleDateString('de-DE', {month:'short', year:'2-digit', timeZone:'UTC'}); };
+    opts.scales = opts.scales || {}; opts.scales.x = Object.assign({}, opts.scales.x);
+    opts.scales.x.ticks = Object.assign({}, opts.scales.x.ticks, {maxRotation:0, autoSkipPadding:14, callback:(v, i) => /^\d{4}-/.test(String(labels[i])) ? fmt(labels[i]) : labels[i]});
+  }
   if (endLabelsAktiv(type, datasets, extra)) {
     // Platz rechts für die Etiketten; Legende überflüssig
     const breit = Math.max(...datasets.filter(d => !END_SKIP.test(d.label || '')).map(d => endName(d.label).length + 6));
@@ -7393,6 +7461,42 @@ async function favExport(art) {
   XLSX.writeFile(wb, name + '.xlsx');
 }
 
+// Quelle (klein unter der Kachel) und Sprungziel (Reiter, Grafik, Vorbereitung)
+const FAV_QUELLE = {e5:'Tankerkönig (MTS-K)', e10:'Tankerkönig (MTS-K)', diesel:'Tankerkönig (MTS-K)', heizoel:'TECSON',
+  strom_hh:'Eurostat', gas_hh:'Eurostat', vpi_energie:'Destatis', inflation:'Destatis', strom_da:'Energy-Charts (EPEX Spot)',
+  strom_monat:'SMARD / Bundesnetzagentur', ttf:'ICE über Yahoo Finance', brent:'ICE über Yahoo Finance',
+  gasspeicher_de:'GIE AGSI+', gasspeicher_eu:'GIE AGSI+', gasspeicher_vj:'GIE AGSI+', ee_anteil:'SMARD / Bundesnetzagentur',
+  neg_stunden:'Energy-Charts', gas_industrie:'Bundesnetzagentur', gas_haushalte:'Bundesnetzagentur',
+  gas_verbrauch_vj:'Bundesnetzagentur', gas_importe:'Bundesnetzagentur', strommix:'SMARD / Bundesnetzagentur'};
+const FAV_ZIEL = {
+  e5:['kraftstoff','chart-fuel-history',() => setFuel('e5')], e10:['kraftstoff','chart-fuel-history',() => setFuel('e10')],
+  diesel:['kraftstoff','chart-fuel-history',() => setFuel('diesel')], heizoel:['kraftstoff','chart-heatoil-hist',() => setFuel('heizoel')],
+  strom_hh:['strompreise','chart-strompreise'], gas_hh:['strompreise','chart-gaspreise'],
+  vpi_energie:['makro','chart-mw-preise'], inflation:['makro','chart-mw-preise'], strom_monat:['makro','chart-mw-power'],
+  strom_da:['strom','chart-price'], strommix:['strom','chart-gen'],
+  ttf:['rohstoffe','chart-comm-detail',() => setCommDetail('ttf_eu_proxy')], brent:['rohstoffe','chart-comm-detail',() => setCommDetail('brent_crude')],
+  gasspeicher_de:['gas','chart-gasprog'], gasspeicher_vj:['gas','chart-gasprog'],
+  gasspeicher_eu:['gas','chart-gasprog',() => { const s = document.getElementById('gasprog-land'); if (s) { s.value = 'eu'; renderGasPrognose(); } }],
+  ee_anteil:['erneuerbare','chart-ren-share'], neg_stunden:['jahr','jk-neg_hours'],
+  gas_industrie:['gas','chart-bnetza'], gas_haushalte:['gas','chart-bnetza'], gas_verbrauch_vj:['gas','chart-bnetza'], gas_importe:['gas','chart-bnetza'],
+};
+// Zum Reiter wechseln, warten bis gezeichnet, dann zur Grafik scrollen und kurz hervorheben
+async function gotoKarte(tab, anker, vor) {
+  if (activeTab !== tab) { gotoTab(tab); await new Promise(r => setTimeout(r, 700)); }
+  try { vor?.(); } catch(e) {}
+  await new Promise(r => setTimeout(r, 150));
+  const el = document.getElementById(anker) || document.querySelector(`[data-canvas-for="${anker}"]`);
+  const card = el?.closest('.card'); if (!card) return;
+  card.scrollIntoView({behavior:'smooth', block:'start'});
+  card.classList.remove('ziel'); void card.offsetWidth; card.classList.add('ziel');
+}
+function favOeffnen(id) {
+  const k = favKatalog().find(x => x.id === id); if (!k) return;
+  const z = FAV_ZIEL[id] || (id.startsWith('idx:') ? ['rohstoffe','chart-idx'] : null);
+  if (z) gotoKarte(z[0], z[1], z[2]); else gotoTab(k.tab);
+}
+
+const kurzDatum = d => { const x = new Date(String(d).slice(0, 10) + 'T12:00:00Z'); return `${x.getUTCDate()}.${x.getUTCMonth() + 1}.${String(x.getUTCFullYear()).slice(2)}`; };
 function favKatalog() { return FAV_KATALOG.concat(idxFavs()); }
 
 // Bundesnetzagentur: Kalenderwochen je Jahr -> Datumsreihe (Montag der Woche)
@@ -7565,14 +7669,16 @@ async function renderFav() {
       const rv = ref[kw] ?? ref[kw - 1];
       if (rv) { const pz = (akt[1] - rv) / rv * 100;
         chips = `<span class="fav-chip neutral" title="Mittel 2018–2021 derselben Kalenderwoche: ${fmtN(rv, 0)} GWh/Tag">${pz >= 0 ? '+' : '−'}${fmtN(Math.abs(pz), 0)} % ggü. 2018–21</span>` + chips; } }
-    return `<div class="fav" onclick="gotoTab('${k.tab}')" title="Details im Reiter öffnen">
+    return `<div class="fav" onclick="favOeffnen('${k.id}')" title="Zur Grafik im Reiter springen">
       <div class="fav-top">
         <div class="fav-tt"><span class="fav-lbl">${k.lbl}</span><span class="fav-einheit">${k._einheit || (/\bin\b|^am |^Füllstand/.test(k.unit) ? k.unit : 'in ' + k.unit)}</span></div>
         <button class="fav-info" onclick="event.stopPropagation();this.closest('.fav').classList.toggle('info')" title="Erklärung" aria-label="Erklärung zu ${k.lbl}">i</button>
         <button class="fav-star" onclick="favUmschalten('${k.id}',event)" title="Aus den Favoriten entfernen" aria-label="${k.lbl} aus den Favoriten entfernen">★</button></div>
       <div class="fav-why">${k.why}</div>
       <div class="fav-mini${k.art ? ' fav-mini-' + k.art : ''}">${r.length > 1 || k.art ? `<canvas id="fav-mini-${k.id.replace(/[^a-z0-9_-]/gi, '_')}"></canvas>` : `<div class="fav-leer">${akt ? fmtN(akt[1], k.dec) + ' ' + k.unit : 'noch keine Daten'}</div>`}</div>
+      ${!k.art && r.length > 1 ? `<div class="fav-achse"><span>${kurzDatum(r[k.monat || k.jahr ? 0 : Math.max(0, r.length - 300)][0])}</span><span>${kurzDatum(r.at(-1)[0])}</span></div>` : ''}
       <div class="fav-meta">${datum ? `<span>Stand ${datum}</span>` : ''}${chips}</div>
+      <div class="fav-quelle">Quelle: ${FAV_QUELLE[k.id] || (k.id.startsWith('idx:') ? 'Yahoo Finance, eigene Gewichtung' : 'Energie-Dashboard')}</div>
     </div>`;
   }).join('');
   items.forEach((k, i) => {
@@ -7591,8 +7697,7 @@ async function renderFav() {
         plugins:{legend:{display:!!k.zweite, position:'top', align:'start', labels:{usePointStyle:true, pointStyle:'circle', boxWidth:7, boxHeight:7, color:'#56657a', font:{size:11.5}, padding:8}},
           endWert:{on:true, dec:k.dec},
           tooltip:{callbacks:{title:it => new Date(it[0].label).toLocaleDateString('de-DE'), label:c => `${c.dataset.label}: ${fmtN(c.raw, k.dec)}`}}},
-        scales:{x:{grid:{display:false}, border:{color:'#cfd6df'}, ticks:{autoSkip:false, maxRotation:0, color:'#6b7685', font:{size:11},
-                  callback:(v, j, t) => j === 0 || j === t.length - 1 ? new Date(z[j][0]).toLocaleDateString('de-DE', {day:'numeric', month:'numeric', year:'2-digit'}) : ''}},
+        scales:{x:{grid:{display:false}, border:{color:'#cfd6df'}, ticks:{display:false}},
                 y:{grid:{display:false}, border:{display:false}, ticks:{maxTicksLimit:4, color:'#6b7685', font:{size:11},
                   callback:v => v === 0 ? '0' : fmtN(v, Math.abs(v) < 10 ? 2 : 0)}}}}});
   });
@@ -7974,7 +8079,7 @@ async function renderFavBar() {
       if (akt && alt) { const dv = akt[1] - alt[1], pz = /%/.test(k.unit) ? null : (alt[1] ? dv / Math.abs(alt[1]) * 100 : null);
         const cls = !k.gut || Math.abs(dv) < 1e-9 ? '' : ((dv > 0) === (k.gut === 'tief') ? 'neg' : 'pos');
         d = `<span class="fb-d ${cls}">${dv >= 0 ? '▲' : '▼'} ${pz != null ? fmtN(Math.abs(pz), 1) + ' %' : fmtN(Math.abs(dv), 1)}</span>`; }
-      return `<button class="fb-item" onclick="gotoTab('${k.tab}')" title="${k.lbl}: ${akt ? fmtN(akt[1], k.dec) + ' ' + k.unit : 'keine Daten'} – Veränderung ${k.jahr ? 'zum Vorjahr' : k.monat ? 'zum Vormonat' : 'über 7 Tage'}">
+      return `<button class="fb-item" onclick="favOeffnen('${k.id}')" title="${k.lbl}: ${akt ? fmtN(akt[1], k.dec) + ' ' + k.unit : 'keine Daten'} – Veränderung ${k.jahr ? 'zum Vorjahr' : k.monat ? 'zum Vormonat' : 'über 7 Tage'}">
         <span class="fb-l">${k.lbl.replace('Index: ', 'Σ ')}</span><span class="fb-v">${akt ? fmtN(akt[1], k.dec) : '—'}</span><span class="fb-u">${k.unit.split(' ')[0]}</span>${d}</button>`;
     }).join('') : '<span class="fb-leer">Noch keine Favoriten – über die Suche rechts hinzufügen</span>';
   } finally { _favBarLaeuft = false; }
@@ -7995,6 +8100,7 @@ function favSuche(q) {
     '<div class="fs-h">Nichts gefunden</div>';
   res.hidden = false;
 }
+document.addEventListener('click', () => { const m = document.getElementById('ereig-menu'); if (m) m.hidden = true; });
 document.addEventListener('click', e => { if (!e.target.closest('.favbar-suche')) { const r = document.getElementById('favsuche-res'); if (r) r.hidden = true; } });
 
 
