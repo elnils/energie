@@ -134,9 +134,9 @@
     "last_success_iso": "2026-11-27T06:20:35Z"
   },
   "makro": {
-    "last_attempt_epoch": 1795760435,
-    "last_attempt_iso": "2026-11-27T06:20:35Z",
-    "last_error_epoch": 1795760435,
+    "last_attempt_epoch": 1795762473,
+    "last_attempt_iso": "2026-11-27T06:54:33Z",
+    "last_error_epoch": 1795762473,
     "last_error_message": "RuntimeError: MAKRO_QUELLE nicht gesetzt | at File \"/home/runner/work/energie/energie/scripts/fetchers/makro.py\", line 24, in _basis"
   },
   "news": {
