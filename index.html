@@ -904,6 +904,19 @@ main [style*="font-size:11px"]{font-size:12px!important}
   .card-title{font-size:15.5px}
   .card-kern{font-size:14px;margin-bottom:8px;padding-bottom:8px}
 }
+
+/* Kennzahl-Kacheln schlanker */
+.kpis{gap:10px;grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+.kpi{padding:10px 13px 9px}
+.kpi-bar{top:14px;left:13px;width:7px;height:7px}
+.kpi-lbl{font-size:12.5px;padding-left:13px;margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi-val{font-size:23px;margin-top:2px}
+.kpi-unit{font-size:11.5px;margin-top:1px}
+.kpi-delta{font-size:11.5px;margin-top:3px;padding:0 7px}
+.ec-det summary{cursor:pointer;font-size:11.5px;color:var(--text2);list-style:none;display:inline-block;border:1px solid var(--border);border-radius:999px;padding:1px 9px}
+.ec-det summary::-webkit-details-marker{display:none}
+.ec-det[open] summary{background:var(--bg-alt)}
+.ec-liste{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
 </style>
 </head>
 <body>
@@ -2113,7 +2126,7 @@ const TAB_FILES = {
   gas:         ['gas_storage','entsog','gas_storage_history','bnetza_gas','worldbank_g20','gas_sites'],
   rohstoffe:   ['commodities','fx'],
   // merged tab: road fuels + heating oil + jet fuel/supply
-  kraftstoff:  ['fuel','heating_oil','commodities','eurostat_oil','eia_petroleum','fred_energy'],
+  kraftstoff:  ['fuel','heating_oil','commodities','eurostat_oil','eia_petroleum','fred_energy','makro'],
   erneuerbare: ['energy_charts','smard','worldbank_g20'],
   umwelt:      ['eurostat_env','worldbank_g20'],
   g20:         ['worldbank_g20'],
@@ -2124,6 +2137,7 @@ const TAB_FILES = {
   news:        ['news'],
   jahr:        ['kennzahlen'],
   fav:         ['fuel','heating_oil','energy_charts','gas_storage','commodities','makro','eurostat_prices','kennzahlen','bnetza_gas','gas_storage_history','smard'],
+  // (die Kacheln nutzen die langen Reihen aus energy_charts, commodities, gas_storage_history und makro)
   karte:       ['energy_charts','gas_storage','eurostat_prices','fuel','expansion','gas_sites'],
   makro:       ['makro'],
   themen:      ['themen'],
@@ -2394,9 +2408,15 @@ function ereignisChips() {
     const liste = ch.$ereig?.liste || [];
     if (!liste.length) { box?.remove(); return; }
     if (!box) { box = document.createElement('div'); box.className = 'ereig-chips'; wrap.insertAdjacentElement('afterend', box); }
-    const html = liste.map(e => { const id = e.id || e.text, an = !aus.includes(id);
+    const inKachel = !!ch.canvas.closest('.fav');
+    const chips = liste.map(e => { const id = e.id || e.text, an = !aus.includes(id);
       return `<button type="button" class="ec${an ? ' an' : ''}" title="${an ? 'Ausblenden' : 'Einblenden'}: ${e.text}${e.quelle ? ' – Quelle: ' + e.quelle : ''}"
         onclick="event.stopPropagation();ereignisUmschalten('${id}', ${!an})"><i class="${e.bis ? 'zr' : 'li'}"></i>${e.text}</button>`; }).join('');
+    // In den kleinen Kacheln zusammengeklappt, damit sie schlank bleiben
+    const offen = box.querySelector('details')?.open;
+    const html = inKachel && liste.length > 1
+      ? `<details class="ec-det"${offen ? ' open' : ''} onclick="event.stopPropagation()"><summary>⚑ ${liste.filter(e => !aus.includes(e.id || e.text)).length}/${liste.length} Ereignisse</summary><div class="ec-liste">${chips}</div></details>`
+      : chips;
     if (box.innerHTML !== html) box.innerHTML = html;
   });
 }
@@ -3459,11 +3479,19 @@ async function renderKraftstoff() {
       const t = r.date ? new Date(r.date).getTime() / 1000 : 0;
       return t >= co;
     });
-    const labels = filtered.map(r => r.date);
+    // Vor dem Beginn des eigenen Archivs: Wochenwerte des Weekly Oil Bulletin (EU-Kommission)
+    const start = history[0].date;
+    const ob = id => (D.makro?.series?.[id]?.series || []).filter(p => p.date < start && Date.parse(p.date) / 1000 >= co);
+    const obE5 = ob('de_fuel_e95'), obD = ob('de_fuel_diesel');
+    const vorher = [...new Set([...obE5, ...obD].map(p => p.date))].sort();
+    const mE5 = new Map(obE5.map(p => [p.date, p.v])), mD = new Map(obD.map(p => [p.date, p.v]));
+    const labels = vorher.concat(filtered.map(r => r.date));
+    const vor = arr => vorher.map(d => arr.get(d) ?? null);
+    const leer = vorher.map(() => null);
     mkChart('chart-fuel-history', 'line', labels, [
-      {label:'E5',     data:filtered.map(r => r.e5_avg),     borderColor:'#0e6cb6', backgroundColor:'transparent', borderWidth:2},
-      {label:'E10',    data:filtered.map(r => r.e10_avg),    borderColor:'#1f9d55', backgroundColor:'transparent', borderWidth:2},
-      {label:'Diesel', data:filtered.map(r => r.diesel_avg), borderColor:'#7e57c2', backgroundColor:'transparent', borderWidth:2},
+      {label:'E5',     data:vor(mE5).concat(filtered.map(r => r.e5_avg)),     borderColor:'#0e6cb6', backgroundColor:'transparent', borderWidth:2, spanGaps:true},
+      {label:'E10',    data:leer.concat(filtered.map(r => r.e10_avg)),    borderColor:'#1f9d55', backgroundColor:'transparent', borderWidth:2},
+      {label:'Diesel', data:vor(mD).concat(filtered.map(r => r.diesel_avg)), borderColor:'#7e57c2', backgroundColor:'transparent', borderWidth:2, spanGaps:true},
     ], {
       plugins:{
         legend:{display:true,labels:{color:'#56657a',boxWidth:8,font:{size:10}}},
@@ -3471,7 +3499,9 @@ async function renderKraftstoff() {
         // two days is usually two readings taken at different times of day,
         // not a market move, and the tooltip is where that can be checked.
         tooltip:{callbacks:{afterTitle: items => {
-          const r = filtered[items[0]?.dataIndex];
+          const j = (items[0]?.dataIndex ?? 0) - vorher.length;
+          if (j < 0) return 'Wochenwert · Weekly Oil Bulletin der EU-Kommission';
+          const r = filtered[j];
           return r?.snapshot_utc ? `Snapshot ${r.snapshot_utc} UTC · ${r.n_stations||'?'} Stationen`
                                  : `${r?.n_stations||'?'} Stationen · Uhrzeit nicht erfasst`;
         }}},
@@ -7525,6 +7555,19 @@ function renderMakro() {
 const FAV_KEY = 'energydash:fav';
 const FAV_DEFAULT = ['e10','diesel','strom_da','brent','ttf'];
 
+// Lange Reihen: mehrere Quellen zu einer Tagesreihe zusammenführen; spätere
+// Quellen überschreiben frühere am selben Tag (die aktuellste gewinnt)
+const favZusammen = (...teile) => { const m = new Map(); teile.forEach(t => (t || []).forEach(([d, v]) => { if (d && v != null && !isNaN(v)) m.set(String(d).slice(0, 10), +v); })); return [...m].sort((a, b) => a[0].localeCompare(b[0])); };
+const favKurse = key => (D.commodities?.[key]?.series || []).map(p => [new Date(p.ts * 1000).toISOString().slice(0, 10), p.v]);
+const favMakro = id => (D.makro?.series?.[id]?.series || []).map(p => [p.date, p.v]);
+function favStromTage() {
+  const z = D.energy_charts?.price_de_monthly; if (!z?.unix_seconds?.length) return [];
+  const acc = {}; z.unix_seconds.forEach((t, i) => { const v = z.price[i]; if (v == null) return;
+    const d = new Date(t * 1000).toLocaleDateString('sv-SE', {timeZone:'Europe/Berlin'}); (acc[d] ||= [0, 0]); acc[d][0] += v; acc[d][1]++; });
+  return Object.entries(acc).filter(([, a]) => a[1] >= 20).map(([d, a]) => [d, a[0] / a[1]]);
+}
+const favSpeicher = land => (D.gas_storage_history?.countries?.[land]?.rows || []).map(r => [r[0], r[1]]);
+
 // Hilfen: Verlauf aus history/*.jsonl, aus den Makroreihen, aus Eurostat
 const favHist = (src, feld) => async () => (await loadHistory(src))
   .filter(r => r[feld] != null).map(r => [r.date, +r[feld]]);
@@ -7535,13 +7578,13 @@ const favEurostat = (teil, land = 'DE', f = 100) => async () =>
 
 const FAV_KATALOG = [
   {id:'e5', g:'Verbraucher', lbl:'Super E5', ico:'⛽', col:'#2563eb', unit:'€/l', dec:3, tab:'kraftstoff', gut:'tief',
-   reihe:favHist('fuel','e5_avg'), why:'Spritpreise treffen Pendler direkt; CO₂-Preis und Energiesteuer sind feste Bestandteile.'},
+   reihe:async () => favZusammen(favMakro('de_fuel_e95'), await favHist('fuel','e5_avg')()), why:'Spritpreise treffen Pendler direkt; CO₂-Preis und Energiesteuer sind feste Bestandteile.'},
   {id:'e10', g:'Verbraucher', lbl:'Super E10', ico:'⛽', col:'#0e7490', unit:'€/l', dec:3, tab:'kraftstoff', gut:'tief',
    reihe:favHist('fuel','e10_avg'), why:'Günstigere Sorte mit Bioethanol-Anteil; Abstand zu E5 zeigt die Beimischungspolitik.'},
   {id:'diesel', g:'Verbraucher', lbl:'Diesel', ico:'🚚', col:'#4a5568', unit:'€/l', dec:3, tab:'kraftstoff', gut:'tief',
-   reihe:favHist('fuel','diesel_avg'), why:'Treibstoff für Güterverkehr und Landwirtschaft – die Kosten wirken auf viele Preise weiter.'},
+   reihe:async () => favZusammen(favMakro('de_fuel_diesel'), await favHist('fuel','diesel_avg')()), why:'Treibstoff für Güterverkehr und Landwirtschaft – die Kosten wirken auf viele Preise weiter.'},
   {id:'heizoel', g:'Verbraucher', lbl:'Heizöl', ico:'🛢️', col:'#c0392b', unit:'€/l', dec:3, tab:'kraftstoff', gut:'tief',
-   reihe:favHist('heating_oil','ref_eur_l'), why:'Viele Haushalte heizen noch mit Öl; der Preis folgt Gasöl und Dollar.'},
+   reihe:async () => favZusammen(favMakro('de_fuel_heating'), await favHist('heating_oil','ref_eur_l')()), why:'Viele Haushalte heizen noch mit Öl; der Preis folgt Gasöl und Dollar.'},
   {id:'strom_hh', g:'Verbraucher', lbl:'Strompreis Haushalte', ico:'💡', col:'#0e6cb6', unit:'ct/kWh', dec:1, tab:'strompreise', gut:'tief',
    reihe:favEurostat('electricity_household'), why:'Was Haushalte je kWh zahlen – inklusive Steuern, Umlagen und Netzentgelten (Eurostat, halbjährlich).'},
   {id:'gas_hh', g:'Verbraucher', lbl:'Gaspreis Haushalte', ico:'🔥', col:'#dc6803', unit:'ct/kWh', dec:1, tab:'strompreise', gut:'tief',
@@ -7551,17 +7594,17 @@ const FAV_KATALOG = [
   {id:'inflation', g:'Verbraucher', lbl:'Inflation gesamt', ico:'🛒', col:'#7e57c2', unit:'% ggü. Vorjahr', dec:1, tab:'makro', gut:'tief', monat:true,
    reihe:favMw('de_cpi_yoy'), why:'Verbraucherpreisindex insgesamt – Maßstab für Löhne, Renten und Geldpolitik.'},
   {id:'strom_da', g:'Großhandel', lbl:'Strom Day-Ahead', ico:'⚡', col:'#1e3a5f', unit:'€/MWh', dec:1, tab:'strom', gut:'tief',
-   reihe:favHist('spot_price','de_avg'), why:'Tagesmittel an der Börse – Grundlage dynamischer Tarife und der Industriestrom-Debatte.'},
+   reihe:async () => favZusammen(favStromTage(), await favHist('spot_price','de_avg')()), why:'Tagesmittel an der Börse – Grundlage dynamischer Tarife und der Industriestrom-Debatte.'},
   {id:'strom_monat', g:'Großhandel', lbl:'Strom Großhandel (Monat)', ico:'📊', col:'#1e3a5f', unit:'€/MWh', dec:1, tab:'makro', gut:'tief', monat:true,
    reihe:favMw('de_power_price'), why:'Monatsmittel seit 2015 – zeigt Krise und Normalisierung im langen Vergleich.'},
   {id:'ttf', g:'Großhandel', lbl:'Erdgas TTF', ico:'🔥', col:'#dc6803', unit:'€/MWh', dec:1, tab:'gas', gut:'tief',
-   reihe:favHist('commodities','ttf_eur_mwh'), why:'Europäischer Gaspreis; bestimmt Heizkosten und oft den Strompreis.'},
+   reihe:async () => favZusammen(favKurse('ttf_eu_proxy'), await favHist('commodities','ttf_eur_mwh')()), why:'Europäischer Gaspreis; bestimmt Heizkosten und oft den Strompreis.'},
   {id:'brent', g:'Großhandel', lbl:'Rohöl Brent', ico:'🛢️', col:'#4a5568', unit:'$/Barrel', dec:1, tab:'rohstoffe', gut:'tief',
-   reihe:favHist('commodities','brent_usd_bbl'), why:'Weltmarktpreis für Rohöl; Basis für Sprit und Heizöl, abhängig von OPEC+ und Konflikten.'},
+   reihe:async () => favZusammen(favKurse('brent_crude'), await favHist('commodities','brent_usd_bbl')()), why:'Weltmarktpreis für Rohöl; Basis für Sprit und Heizöl, abhängig von OPEC+ und Konflikten.'},
   {id:'gasspeicher_de', g:'Versorgung', lbl:'Gasspeicher Deutschland', ico:'🏭', col:'#1f9d55', unit:'% gefüllt', dec:1, tab:'gas', gut:'hoch',
-   reihe:favHist('gas_storage','de_pct'), why:'Maßstab für die Versorgungssicherheit im Winter; es gelten gesetzliche Füllstandsvorgaben.'},
+   reihe:async () => favZusammen(favSpeicher('de'), await favHist('gas_storage','de_pct')()), why:'Maßstab für die Versorgungssicherheit im Winter; es gelten gesetzliche Füllstandsvorgaben.'},
   {id:'gasspeicher_eu', g:'Versorgung', lbl:'Gasspeicher EU', ico:'🇪🇺', col:'#1f9d55', unit:'% gefüllt', dec:1, tab:'gas', gut:'hoch',
-   reihe:favHist('gas_storage','eu_pct'), why:'Europäische Reserve – Engpässe in Nachbarländern wirken auf Deutschland zurück.'},
+   reihe:async () => favZusammen(favSpeicher('eu'), await favHist('gas_storage','eu_pct')()), why:'Europäische Reserve – Engpässe in Nachbarländern wirken auf Deutschland zurück.'},
   {id:'gas_industrie', g:'Versorgung', lbl:'Gasverbrauch Industrie', ico:'🏭', col:'#2563eb', unit:'GWh/Tag', dec:0, tab:'gas', gut:null,
    reihe:async () => bnetzaWochen('bnetza_c870314'), ref:() => bnetzaRef('bnetza_c870314'),
    why:'Wochenmittel der Industriekunden (RLM); daneben das Mittel 2018–2021 derselben Kalenderwoche als Vergleich.'},
@@ -7576,7 +7619,7 @@ const FAV_KATALOG = [
    reihe:async () => bnetzaWochen('bnetza_c870330'), art:'stapel',
    why:'Wochenmittel des Gasverbrauchs von Industrie (unten) und Haushalten/Gewerbe (oben): letzte gemeldete Woche gegen dieselbe Kalenderwoche des Vorjahres.'},
   {id:'gasspeicher_vj', g:'Versorgung', lbl:'Gasspeicher', ico:'🛢', col:'#2563eb', unit:'Füllstand in Prozent', dec:2, tab:'gas', gut:'hoch',
-   reihe:favHist('gas_storage','de_pct'), art:'vorjahr',
+   reihe:async () => favZusammen(favSpeicher('de'), await favHist('gas_storage','de_pct')()), art:'vorjahr',
    why:'Füllstand der deutschen Gasspeicher heute gegen denselben Tag des Vorjahres (GIE AGSI+).'},
   {id:'strommix', g:'Versorgung', lbl:'Strommix', ico:'⚡', col:'#2563eb', unit:'am Vortag erzeugt, in Prozent', dec:1, tab:'strom', gut:null,
    reihe:async () => (await loadHistory('smard_mix')).filter(r => r.renewable_share_pct != null).map(r => [r.date, r.renewable_share_pct]), art:'mix',
@@ -7606,7 +7649,8 @@ async function favExport(art) {
 }
 
 // Quelle (klein unter der Kachel) und Sprungziel (Reiter, Grafik, Vorbereitung)
-const FAV_QUELLE = {e5:'Tankerkönig (MTS-K)', e10:'Tankerkönig (MTS-K)', diesel:'Tankerkönig (MTS-K)', heizoel:'TECSON',
+const FAV_QUELLE = {e5:'Tankerkönig (MTS-K); vorher Weekly Oil Bulletin der EU-Kommission', e10:'Tankerkönig (MTS-K)',
+  diesel:'Tankerkönig (MTS-K); vorher Weekly Oil Bulletin der EU-Kommission', heizoel:'TECSON; vorher Weekly Oil Bulletin der EU-Kommission',
   strom_hh:'Eurostat', gas_hh:'Eurostat', vpi_energie:'Destatis', inflation:'Destatis', strom_da:'Energy-Charts (EPEX Spot)',
   strom_monat:'SMARD / Bundesnetzagentur', ttf:'ICE über Yahoo Finance', brent:'ICE über Yahoo Finance',
   gasspeicher_de:'GIE AGSI+', gasspeicher_eu:'GIE AGSI+', gasspeicher_vj:'GIE AGSI+', ee_anteil:'SMARD / Bundesnetzagentur',
@@ -7821,7 +7865,7 @@ async function renderFav() {
       <div class="fav-why">${k.why}</div>
       ${k.zweite ? `<div class="fav-leg"><span><i style="background:${k.col}"></i>${k.lbl}</span><span><i style="background:${k.zweite.col}"></i>${k.zweite.lbl}</span></div>` : ''}
       <div class="fav-mini${k.art ? ' fav-mini-' + k.art : ''}">${r.length > 1 || k.art ? `<canvas id="fav-mini-${k.id.replace(/[^a-z0-9_-]/gi, '_')}"></canvas>` : `<div class="fav-leer">${akt ? fmtN(akt[1], k.dec) + ' ' + k.unit : 'noch keine Daten'}</div>`}</div>
-      ${!k.art && r.length > 1 ? `<div class="fav-achse"><span>${kurzDatum(r[k.monat || k.jahr ? 0 : Math.max(0, r.length - 300)][0])}</span><span>${kurzDatum(r.at(-1)[0])}</span></div>` : ''}
+      ${!k.art && r.length > 1 ? `<div class="fav-achse"><span>${kurzDatum(r[0][0])}</span><span>${kurzDatum(r.at(-1)[0])}</span></div>` : ''}
       <div class="fav-meta">${datum ? `<span>Stand ${datum}</span>` : ''}${chips}</div>
       <div class="fav-quelle">Quelle: ${FAV_QUELLE[k.id] || (k.id.startsWith('idx:') ? 'Yahoo Finance, eigene Gewichtung' : 'Energie-Dashboard')}</div>
     </div>`;
@@ -7833,7 +7877,8 @@ async function renderFav() {
     const cfg = k.art ? spezial[i] : null;
     if (k.art && !cfg) { el.parentElement.innerHTML = '<div class="fav-leer">noch keine Daten</div>'; return; }
     if (cfg) { CH[id] = new Chart(el, cfg); return; }
-    const z = k.monat || k.jahr ? r : r.slice(-300);
+    const schritt = Math.ceil(r.length / 700);
+    const z = schritt > 1 ? r.filter((_, j) => j % schritt === 0 || j === r.length - 1) : r;
     const ds = [{label:k.lbl, data:z.map(p => p[1]), borderColor:k.col, borderWidth:2, pointRadius:0, tension:.2, fill:false}];
     const zeilenE = ereigZeilen(id, z.map(p => p[0]), true); EREIG_ZEILEN[id] = zeilenE;
     if (k.zweite) { const m = new Map(k.zweite.reihe()); ds.push({label:k.zweite.lbl, data:z.map(p => m.get(p[0]) ?? null), borderColor:k.zweite.col, borderWidth:2, pointRadius:0, tension:.2, fill:false, spanGaps:true}); }
@@ -7847,6 +7892,7 @@ async function renderFav() {
                 y:{grid:{display:false}, border:{display:false}, ticks:{maxTicksLimit:4, color:'#6b7685', font:{size:11},
                   callback:v => v === 0 ? '0' : fmtN(v, Math.abs(v) < 10 ? 2 : 0)}}}}});
   });
+  renderFavGrafiken();
   document.getElementById('fav-foot').innerHTML =
     'Rot = für Verbraucher ungünstige Richtung, Grün = günstige. Quellen: Tankerkönig, TECSON, Eurostat, Energy-Charts, GIE AGSI+, Yahoo Finance, SMARD, Destatis. Ein Klick auf eine Kachel öffnet den passenden Reiter.';
 }

@@ -130,7 +130,9 @@ def fetch() -> dict:
 
     for tid, symbol, unit, metric, category, label in TICKERS:
         try:
-            series = _yahoo_chart(symbol)
+            # Energieträger mit langer Historie (10 Jahre), alles andere 2 Jahre
+            lang = category in ('oil', 'gas', 'coal', 'co2', 'power')
+            series = _yahoo_chart(symbol, '10y' if lang else '2y')
             if series is None:
                 series = []
             if metric and series:
