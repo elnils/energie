@@ -587,7 +587,7 @@ header{background:#eef4fb;border-bottom-color:#dbe5f2}
 .card-hdr{align-items:center}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 /* Favoritenleiste: eine schmale Zeile unter den Reitern, auf jeder Seite */
-.favbar{position:sticky;top:105px;z-index:140;display:flex;align-items:center;gap:10px;background:#fff;
+.favbar{position:sticky;top:var(--favtop,105px);z-index:140;display:flex;align-items:center;gap:10px;background:#fff;
   border-bottom:1px solid var(--border);padding:6px 20px;min-height:42px}
 .favbar-lbl{color:#c79100;font-size:15px;text-decoration:none;flex:none}
 .favbar-items{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;flex:1;min-width:0}
@@ -843,6 +843,67 @@ main [style*="font-size:11px"]{font-size:12px!important}
 .fav .ec{font-size:11px;padding:1px 7px 1px 6px}
 .fav-leg{display:flex;gap:12px;font-size:12px;color:var(--text2);margin-top:4px}
 .fav-leg i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}
+
+/* ══ Navigation in zwei Ebenen ══ */
+.tabs{padding:0 20px}
+.kat-row{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--border)}
+.kat-row::-webkit-scrollbar{display:none}
+.kat{background:none;border:0;border-bottom:2px solid transparent;padding:11px 14px 9px;font:inherit;font-size:15px;font-weight:600;
+  color:var(--text3);cursor:pointer;white-space:nowrap}
+.kat:hover{color:var(--text)}
+.kat.active{color:#0f2540;border-bottom-color:#0f2540}
+#tab-row{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;padding:6px 0;min-width:0}
+#tab-row::-webkit-scrollbar{display:none}
+#tab-row.leer{display:none}
+#tab-row .tab{border:1px solid transparent;border-radius:999px;padding:5px 13px;font-size:13.5px;color:var(--text2);border-bottom:1px solid transparent}
+#tab-row .tab:hover{background:var(--bg-alt)}
+#tab-row .tab.active{background:#eef3fa;color:#0f2540;border-color:#c9d6e8;font-weight:600}
+#tab-row .tab.aus{display:none}
+.favsuche-auf{display:none}
+@media (max-width:760px){
+  .tabs{padding:0 8px}
+  .kat{padding:10px 11px 8px;font-size:14.5px}
+  #tab-row{padding:5px 0}
+  #tab-row .tab{padding:4px 11px;font-size:13px;min-height:0}
+  /* Favoritenleiste in einer Zeile, Suche hinter der Lupe */
+  .favbar{flex-wrap:nowrap;padding:5px 10px;gap:6px}
+  .favbar-suche{display:none;order:0;flex:1 1 auto}
+  .favbar.suchen .favbar-suche{display:block}
+  .favbar.suchen .favbar-items,.favbar.suchen .ereig,.favbar.suchen .favbar-lbl{display:none}
+  .favsuche-auf{display:block;background:none;border:1px solid var(--border);border-radius:999px;width:30px;height:28px;font-size:16px;color:var(--text2);flex:none;cursor:pointer}
+  .favbar.suchen .favsuche-auf{display:none}
+  .ereig-btn{padding:3px 8px}
+  .ereig-btn span{display:none}
+  /* Zeitraum als schmale Zeile */
+  .range-bar{padding:6px 8px;margin-bottom:10px;border-radius:10px}
+  .range-bar-lbl{display:none}
+  .range-opts{overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none;max-width:100%}
+  .range-opt{min-height:30px;padding:4px 10px;font-size:12.5px}
+  /* Kennzahlen zweispaltig und kompakt */
+  .kpis,.kpis[id]{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px;margin-bottom:10px}
+  .kpi{padding:9px 11px 9px}
+  .kpi-bar{top:13px;left:11px;width:7px;height:7px}
+  .kpi-lbl{font-size:12px;padding-left:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .kpi-val{font-size:21px;margin-top:2px}
+  .kpi-unit{font-size:11px;margin-top:1px}
+  .kpi-delta{font-size:11px;margin-top:3px;padding:0 6px}
+  main{padding-top:10px}
+}
+
+@media (max-width:760px){
+  /* Kartenkopf: Titel links, Stern und Export klein rechts daneben */
+  .card-hdr{flex-direction:row!important;align-items:flex-start!important;gap:6px;text-align:left}
+  .card-hdr > div:first-child{flex:1;min-width:0}
+  .card-hdr select{width:auto;max-width:48%}
+  .card-hdr:has(select){flex-wrap:wrap}
+  .card-hdr:has(select) select{order:5;flex-basis:100%;max-width:100%}
+  .exp-btn{min-height:30px;padding:4px 9px;font-size:0}
+  .exp-btn::before{content:"⤓";font-size:15px}
+  .card-star{padding:3px 5px;font-size:17px}
+  .card{padding:12px 12px 10px}
+  .card-title{font-size:15.5px}
+  .card-kern{font-size:14px;margin-bottom:8px;padding-bottom:8px}
+}
 </style>
 </head>
 <body>
@@ -865,28 +926,37 @@ main [style*="font-size:11px"]{font-size:12px!important}
      holds prices and supply, the second climate, comparisons and context.
      Both rows scroll together on narrow screens. -->
 <nav class="tabs">
-  <div class="tab-row">
-    <button class="tab active" data-tab="fav">★ Favoriten</button>
-    <button class="tab" data-tab="karte">Karte DE/EU</button>
-    <button class="tab" data-tab="strom">Stromerzeugung</button>
-    <button class="tab" data-tab="jahr">Jahreskennzahlen</button>
-    <button class="tab" data-tab="strompreise">Strompreise & Importe</button>
-    <button class="tab" data-tab="markt">Marktpreise</button>
-    <button class="tab" data-tab="gas">Gas</button>
-    <button class="tab" data-tab="rohstoffe">Rohstoffe</button>
-    <button class="tab" data-tab="kraftstoff">Kraftstoffe & Heizöl</button>
-    <button class="tab" data-tab="futures">Futures & Prognosen</button>
+  <!-- Zwei Ebenen: oben Kategorien, darunter nur die Reiter der gewählten Kategorie -->
+  <div class="kat-row" id="kat-row" role="tablist" aria-label="Kategorien">
+    <button class="kat" data-kat="fav">★ Favoriten</button>
+    <button class="kat" data-kat="strom">Strom</button>
+    <button class="kat" data-kat="gas">Gas</button>
+    <button class="kat" data-kat="oel">Öl &amp; Sprit</button>
+    <button class="kat" data-kat="maerkte">Märkte</button>
+    <button class="kat" data-kat="klima">Klima &amp; Makro</button>
+    <button class="kat" data-kat="lage">Lage &amp; Karte</button>
+    <button class="kat" data-kat="news">News</button>
   </div>
-  <div class="tab-row">
-    <button class="tab" data-tab="erneuerbare">Erneuerbare</button>
-    <button class="tab" data-tab="umwelt">Emissionen & Wärme</button>
-    <button class="tab" data-tab="makro">Makro &amp; Endenergie</button>
-    <button class="tab" data-tab="g20">G20-Vergleich</button>
-    <button class="tab" data-tab="lage">Marktlage & Versorgung</button>
-    <button class="tab" data-tab="wetter">Wetter</button>
-    <button class="tab" data-tab="fx">Wechselkurse</button>
-    <button class="tab" data-tab="themen">Themen &amp; Amtliches</button>
-    <button class="tab" data-tab="news">News</button>
+  <div class="tab-row" id="tab-row">
+    <button class="tab active" data-tab="fav" data-kat="fav">★ Favoriten</button>
+    <button class="tab" data-tab="strom" data-kat="strom">Stromerzeugung</button>
+    <button class="tab" data-tab="jahr" data-kat="strom">Jahreskennzahlen</button>
+    <button class="tab" data-tab="strompreise" data-kat="strom">Strompreise &amp; Importe</button>
+    <button class="tab" data-tab="erneuerbare" data-kat="strom">Erneuerbare</button>
+    <button class="tab" data-tab="gas" data-kat="gas">Gas</button>
+    <button class="tab" data-tab="kraftstoff" data-kat="oel">Kraftstoffe &amp; Heizöl</button>
+    <button class="tab" data-tab="rohstoffe" data-kat="oel">Rohstoffe</button>
+    <button class="tab" data-tab="markt" data-kat="maerkte">Marktpreise</button>
+    <button class="tab" data-tab="futures" data-kat="maerkte">Futures &amp; Prognosen</button>
+    <button class="tab" data-tab="fx" data-kat="maerkte">Wechselkurse</button>
+    <button class="tab" data-tab="makro" data-kat="klima">Makro &amp; Endenergie</button>
+    <button class="tab" data-tab="umwelt" data-kat="klima">Emissionen &amp; Wärme</button>
+    <button class="tab" data-tab="g20" data-kat="klima">G20-Vergleich</button>
+    <button class="tab" data-tab="lage" data-kat="lage">Marktlage &amp; Versorgung</button>
+    <button class="tab" data-tab="karte" data-kat="lage">Karte DE/EU</button>
+    <button class="tab" data-tab="wetter" data-kat="lage">Wetter</button>
+    <button class="tab" data-tab="themen" data-kat="news">Themen &amp; Amtliches</button>
+    <button class="tab" data-tab="news" data-kat="news">News</button>
   </div>
 </nav>
 
@@ -898,8 +968,9 @@ main [style*="font-size:11px"]{font-size:12px!important}
       title="Krisen und Maßnahmen in den Grafiken ein- oder ausblenden">⚑ Ereignisse</button>
     <div class="ereig-menu" id="ereig-menu" hidden onclick="event.stopPropagation()"></div>
   </div>
+  <button class="favsuche-auf" onclick="document.getElementById('favbar').classList.add('suchen');document.getElementById('favsuche').focus()" aria-label="Suchen">⌕</button>
   <div class="favbar-suche">
-    <input type="search" id="favsuche" placeholder="Suchen: Kennzahl, Reiter …" autocomplete="off"
+    <input type="search" id="favsuche" onblur="setTimeout(()=>{if(!this.value)document.getElementById('favbar').classList.remove('suchen')},200)" placeholder="Suchen: Kennzahl, Reiter …" autocomplete="off"
       oninput="favSuche(this.value)" onfocus="favSuche(this.value)" onkeydown="if(event.key==='Escape'){this.value='';favSuche('')}">
     <div class="favsuche-res" id="favsuche-res" hidden></div>
   </div>
@@ -8464,6 +8535,34 @@ function kernMakro() {
   const monat = new Date(l.date).toLocaleDateString('de-DE', {month:'long', year:'numeric'});
   kern('chart-mw-power', `Strom im Großhandel im ${monat}: <b>${fmtN(l.v, 0)} €/MWh</b>${vj ? ` – ${_rich(_pz(l.v, vj.v))} gegenüber dem Vorjahresmonat` : ''}.`);
 }
+
+
+// ══════════════════════════════════════════════
+// KATEGORIEN ÜBER DEN REITERN
+// ══════════════════════════════════════════════
+function katSync(tab) {
+  const btn = document.querySelector(`.tab[data-tab="${tab}"]`); if (!btn) return;
+  const kat = btn.dataset.kat;
+  document.querySelectorAll('.kat').forEach(k => k.classList.toggle('active', k.dataset.kat === kat));
+  const inKat = [...document.querySelectorAll('#tab-row .tab')].filter(t => t.dataset.kat === kat);
+  document.querySelectorAll('#tab-row .tab').forEach(t => t.classList.toggle('aus', t.dataset.kat !== kat));
+  // Eine Kategorie mit nur einem Reiter braucht keine zweite Zeile
+  document.getElementById('tab-row')?.classList.toggle('leer', inKat.length < 2);
+}
+document.querySelectorAll('.kat').forEach(k => k.addEventListener('click', () => {
+  const erster = document.querySelector(`#tab-row .tab[data-kat="${k.dataset.kat}"]`);
+  if (erster) erster.click();
+}));
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => katSync(t.dataset.tab)));
+katSync(activeTab);
+// Favoritenleiste klebt direkt unter Kopf und Reitern – Höhe ändert sich mit der Kategorie
+function favbarOben() {
+  const h = document.querySelector('header')?.offsetHeight || 58, t = document.querySelector('.tabs');
+  const tabsKleben = t && getComputedStyle(t).position === 'sticky';
+  document.documentElement.style.setProperty('--favtop', (tabsKleben ? h + t.offsetHeight : 0) + 'px');
+}
+favbarOben(); window.addEventListener('resize', favbarOben);
+document.querySelectorAll('.tab,.kat').forEach(b => b.addEventListener('click', () => setTimeout(favbarOben, 0)));
 
 // ══════════════════════════════════════════════
 // EINWILLIGUNG UND REICHWEITENMESSUNG
