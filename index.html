@@ -760,6 +760,89 @@ main [style*="font-size:10px"]{font-size:11.5px!important}
 main [style*="font-size:11px"]{font-size:12px!important}
 .card-hdr{gap:10px}
 .card-hdr > div:first-child{min-width:0;flex:1}
+
+/* Lesen im Dashboard */
+.am-det summary{cursor:pointer;list-style:none;font-size:14px;line-height:1.35;color:var(--text)}
+.am-det summary::-webkit-details-marker{display:none}
+.am-det summary::after{content:" ▾";color:var(--text3);font-size:11px}
+.am-det[open] summary::after{content:" ▴"}
+.am-det p{margin:6px 0 4px;font-size:13.5px;line-height:1.55;color:var(--text2);background:var(--bg-alt);border-left:3px solid #c9d6e8;padding:8px 10px;border-radius:0 8px 8px 0}
+.am-orig{font-size:12.5px;color:var(--accent)}
+.am-lesen{font-size:10.5px;color:var(--accent);background:var(--accent-bg);border-radius:999px;padding:0 7px}
+.th-art{margin-top:6px}
+.th-art summary{cursor:pointer;font-size:12.5px;color:var(--accent)}
+.th-art .am-meta{margin-top:8px}
+.th-art .am-det summary{color:var(--text);font-size:13.5px}
+.am-item a.am-orig,.th-art a.am-orig{color:var(--accent);font-size:12.5px}
+
+/* Kernaussage über der Grafik */
+.card-kern{font-size:15px;line-height:1.45;color:var(--text);margin:-2px 0 10px;padding:0 0 10px;border-bottom:1px solid var(--border)}
+.card-kern b{font-weight:700}
+.card-kern .k-neg{color:#b91c1c}.card-kern .k-pos{color:#15803d}
+/* Favoritenleiste schlanker */
+.favbar{min-height:36px;padding:4px 20px;gap:8px}
+.favbar-items{gap:5px}
+.fb-item{padding:2px 9px;font-size:12.5px;gap:4px;border-radius:999px;line-height:1.5;background:#f1f4f8}
+.fb-v{font-weight:650}
+.fb-u{font-size:11px}
+.fb-d{font-size:11px}
+.favbar-suche input{font-size:13px;padding:3px 2px 4px 22px}
+
+/* Favoriten-Kacheln: Titel, Einheit, kleine Grafik mit Endwert, (i) für die Erklärung */
+.fav{padding:14px 16px 12px;gap:2px;cursor:pointer}
+.fav-top{align-items:flex-start}
+.fav-tt{display:flex;flex-direction:column;min-width:0;flex:1}
+.fav-lbl{font-size:16px;font-weight:700;line-height:1.2}
+.fav-einheit{font-size:13px;color:var(--text2)}
+.fav-info{width:22px;height:22px;border-radius:50%;border:1.5px solid #b8c2cf;background:none;color:#6b7685;font:italic 700 12px Georgia,serif;
+  cursor:pointer;flex:none;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.fav-info:hover{border-color:var(--text2);color:var(--text)}
+.fav .fav-why{display:none;border-top:0;padding:6px 0 0;margin:0}
+.fav.info .fav-why{display:block}
+.fav-mini{height:130px;margin-top:6px;position:relative}
+.fav-leer{font-size:22px;font-weight:700;padding-top:30px}
+.fav-ico,.fav-val,.fav-spark{display:none}
+
+/* Ereignis-Schalter */
+.ereig{position:relative;flex:none}
+.ereig-btn{background:none;border:1px solid var(--border);border-radius:999px;padding:3px 10px;font:inherit;font-size:12.5px;color:var(--text2);cursor:pointer;white-space:nowrap}
+.ereig-btn span{color:var(--text3);font-size:11.5px;margin-left:2px}
+.ereig-btn:hover{border-color:var(--border-strong);color:var(--text)}
+.ereig-menu{position:absolute;right:0;top:calc(100% + 6px);width:340px;max-height:70vh;overflow:auto;background:#fff;border:1px solid var(--border);
+  border-radius:12px;box-shadow:0 10px 28px rgba(15,37,64,.14);padding:8px 10px;z-index:300}
+.em-h{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin:6px 2px 4px}
+.em-i{display:flex;gap:9px;align-items:flex-start;padding:6px 4px;border-radius:8px;cursor:pointer;font-size:13.5px;line-height:1.35}
+.em-i:hover{background:var(--bg-alt)}
+.em-i input{margin-top:3px;accent-color:var(--accent);width:16px;height:16px;flex:none}
+.em-d{display:block;font-size:12px;color:var(--text2)}
+.em-q{display:block;font-size:11.5px;color:var(--text3)}
+.em-f{display:flex;gap:8px;align-items:center;border-top:1px solid var(--border);margin-top:6px;padding-top:8px;font-size:11.5px;color:var(--text3)}
+.em-f button{background:var(--bg-alt);border:1px solid var(--border);border-radius:8px;padding:3px 9px;font:inherit;font-size:12px;cursor:pointer}
+.em-f span{margin-left:auto}
+/* Kacheln: Datum am Rand, Quelle klein */
+.fav-achse{display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin:2px 0 4px;font-variant-numeric:tabular-nums}
+.fav-quelle{font-size:11px;color:var(--text3);margin-top:4px}
+/* Sprungziel kurz hervorheben, Kopfbereich beim Scrollen frei lassen */
+.card{scroll-margin-top:170px}
+@keyframes zielblink{0%{box-shadow:0 0 0 3px rgba(37,99,235,.45)}100%{box-shadow:0 0 0 3px rgba(37,99,235,0)}}
+.card.ziel{animation:zielblink 1.8s ease-out}
+@media (max-width:760px){.ereig-menu{position:fixed;left:10px;right:10px;width:auto;top:120px}.card{scroll-margin-top:20px}}
+
+/* Ereignis-Schalter unter Grafiken */
+.ereig-chips{display:flex;flex-wrap:wrap;gap:5px;margin:6px 0 2px}
+.ec{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--border);border-radius:999px;padding:2px 9px 2px 7px;
+  font:inherit;font-size:11.5px;color:var(--text3);cursor:pointer;line-height:1.5}
+.ec.an{color:var(--text);border-color:#c5cfdb;background:#f6f8fb}
+.ec:hover{border-color:var(--text2)}
+.ec i{display:inline-block;flex:none}
+.ec i.li{width:2px;height:12px;background:#6b7685}
+.ec i.zr{width:12px;height:10px;background:rgba(15,37,64,.15);border-left:1px solid rgba(15,37,64,.35)}
+.ec:not(.an) i{opacity:.35}
+.ec:not(.an){text-decoration:line-through;text-decoration-color:#b8c2cf}
+.fav .ereig-chips{margin-top:2px}
+.fav .ec{font-size:11px;padding:1px 7px 1px 6px}
+.fav-leg{display:flex;gap:12px;font-size:12px;color:var(--text2);margin-top:4px}
+.fav-leg i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}
 </style>
 </head>
 <body>
@@ -810,6 +893,11 @@ main [style*="font-size:11px"]{font-size:12px!important}
 <div class="favbar" id="favbar">
   <a class="favbar-lbl" href="#" onclick="gotoTab('fav');return false" title="Alle Favoriten">★</a>
   <div class="favbar-items" id="favbar-items"></div>
+  <div class="ereig">
+    <button class="ereig-btn" id="ereig-btn" onclick="event.stopPropagation();document.getElementById('ereig-menu').hidden=!document.getElementById('ereig-menu').hidden"
+      title="Krisen und Maßnahmen in den Grafiken ein- oder ausblenden">⚑ Ereignisse</button>
+    <div class="ereig-menu" id="ereig-menu" hidden onclick="event.stopPropagation()"></div>
+  </div>
   <div class="favbar-suche">
     <input type="search" id="favsuche" placeholder="Suchen: Kennzahl, Reiter …" autocomplete="off"
       oninput="favSuche(this.value)" onfocus="favSuche(this.value)" onkeydown="if(event.key==='Escape'){this.value='';favSuche('')}">
@@ -1275,7 +1363,7 @@ main [style*="font-size:11px"]{font-size:12px!important}
     </div>
     <div class="card g5" data-src="themen" id="amtlich-card">
       <div class="card-hdr"><div><div class="card-title">Amtliche Meldungen</div>
-        <div class="card-sub">Bund, Übertragungsnetzbetreiber, EU-Kommission, Energieagentur und Verbände · letzte 45 Tage</div></div></div>
+        <div class="card-sub">Bund, Übertragungsnetzbetreiber, EU-Kommission, Energieagentur, Verbände und Fachmedien · aufklappen zum Lesen, wo ein Ausschnitt vorliegt</div></div></div>
       <div class="am-filter" id="am-filter"></div>
       <div id="am-liste" class="am-liste"><div class="loading"><span class="spin"></span>Lädt…</div></div>
     </div>
@@ -1964,7 +2052,7 @@ const TAB_FILES = {
   lage:        ['energy_charts','gas_storage','heating_oil','commodities','destatis_vpi','smard','entsoe','_state'],
   news:        ['news'],
   jahr:        ['kennzahlen'],
-  fav:         ['fuel','heating_oil','energy_charts','gas_storage','commodities','makro','eurostat_prices','kennzahlen'],
+  fav:         ['fuel','heating_oil','energy_charts','gas_storage','commodities','makro','eurostat_prices','kennzahlen','bnetza_gas','gas_storage_history','smard'],
   karte:       ['energy_charts','gas_storage','eurostat_prices','fuel','expansion','gas_sites'],
   makro:       ['makro'],
   themen:      ['themen'],
@@ -2007,12 +2095,247 @@ Chart.defaults.plugins.tooltip.padding=10;
 Chart.defaults.plugins.tooltip.cornerRadius=5;
 Chart.defaults.plugins.tooltip.titleFont={weight:'600',size:11};
 
+// Direkte Beschriftung: Bei Liniendiagrammen mit bis zu vier Reihen steht
+// Name und letzter Wert am Ende jeder Linie, die Legende entfällt.
+// Bänder (Spanne, min/max) werden nicht beschriftet; überlappende Etiketten
+// werden auseinandergeschoben.
+const END_SKIP = /spanne|\(max\)|\(min\)|band|bereich/i;
+// Kurzname fürs Linienende: Klammern und Einheiten weg, lange Fachbegriffe gekürzt
+function endName(l) {
+  return String(l || '').replace(/\s*\(.*?\)\s*/g, ' ').replace(/ (EUR|€|USD|\$)\/.*$/, '')
+    .replace('Verbraucherpreise insgesamt', 'Inflation').replace('Verbraucherpreise Energie', 'VPI Energie')
+    .replace(/Erzeugerpreise.*/, 'Erzeugerpreise').replace('Preiserwartungen ', 'Preiserw. ')
+    .replace(/\s+/g, ' ').trim().slice(0, 24);
+}
+function endLabelsAktiv(type, datasets, extra) {
+  if (extra?.endLabels === false || type !== 'line') return false;
+  const echt = datasets.filter(d => (d.type || 'line') === 'line' && !END_SKIP.test(d.label || '') && d.label);
+  return echt.length >= 1 && echt.length <= 4 && echt.length === datasets.filter(d => !END_SKIP.test(d.label || '')).length;
+}
+Chart.register({
+  id: 'endLabels',
+  afterDatasetsDraw(chart) {
+    if (!chart.options.plugins?.endLabels?.on) return;
+    const {ctx, chartArea} = chart, items = [];
+    chart.data.datasets.forEach((d, i) => {
+      if (END_SKIP.test(d.label || '') || !chart.isDatasetVisible(i)) return;
+      const meta = chart.getDatasetMeta(i);
+      for (let k = d.data.length - 1; k >= 0; k--) {
+        const v = d.data[k], y = typeof v === 'object' && v ? v.y : v;
+        if (y == null || isNaN(y)) continue;
+        const pt = meta.data[k]; if (!pt) break;
+        items.push({y: pt.y, x: pt.x, farbe: typeof d.borderColor === 'string' ? d.borderColor : '#1a2332',
+          text: `${endName(d.label)}  ${fmtN(y, Math.abs(y) < 10 ? 2 : Math.abs(y) < 100 ? 1 : 0)}`});
+        break;
+      }
+    });
+    items.sort((a, b) => a.y - b.y);
+    for (let i = 1; i < items.length; i++) if (items[i].y - items[i - 1].y < 14) items[i].y = items[i - 1].y + 14;
+    ctx.save();
+    ctx.font = "600 11.5px 'Source Sans 3', sans-serif"; ctx.textBaseline = 'middle';
+    items.forEach(it => {
+      ctx.fillStyle = it.farbe;
+      ctx.beginPath(); ctx.arc(chartArea.right + 1, Math.min(Math.max(it.y, chartArea.top), chartArea.bottom), 2.5, 0, 7); ctx.fill();
+      ctx.fillText(it.text, chartArea.right + 7, Math.min(Math.max(it.y, chartArea.top + 6), chartArea.bottom - 4));
+    });
+    ctx.restore();
+  },
+});
+
+// Ereignisse (data/ereignisse.json): senkrechte Linie oder schattierter
+// Zeitraum mit kursiver Beschriftung in jeder Zeitreihe, deren Beschriftungen
+// Daten sind. Welche Grafik welche Ereignisse zeigt, folgt aus der Kennung
+// der Grafik (Kraftstoffe -> "sprit", Gas -> "gas", Strom -> "strom").
+let EREIGNISSE = [];
+const EREIG_AUS_KEY = 'energydash:ereignisseAus';
+function ereignisseAus() { try { return JSON.parse(localStorage.getItem(EREIG_AUS_KEY) || '[]'); } catch(e) { return []; } }
+function ereignisseAktiv() { const aus = ereignisseAus(); return EREIGNISSE.filter(e => !aus.includes(e.id || e.text)); }
+function ereignisUmschalten(id, an) {
+  const aus = ereignisseAus().filter(x => x !== id); if (!an) aus.push(id);
+  try { localStorage.setItem(EREIG_AUS_KEY, JSON.stringify(aus)); } catch(e) {}
+  Object.values(CH).forEach(c => { try { c.update('none'); } catch(e) {} });
+  ereignisMenu(); ereignisChips();
+}
+function ereignisseAlle(an) {
+  try { localStorage.setItem(EREIG_AUS_KEY, JSON.stringify(an ? [] : EREIGNISSE.map(e => e.id || e.text))); } catch(e) {}
+  Object.values(CH).forEach(c => { try { c.update('none'); } catch(e) {} });
+  ereignisMenu();
+}
+function ereignisMenu() {
+  const box = document.getElementById('ereig-menu'); if (!box) return;
+  const aus = ereignisseAus(), d = x => x.split('-').reverse().join('.');
+  const gruppe = (art, titel) => { const l = EREIGNISSE.filter(e => (e.art || 'krise') === art); if (!l.length) return '';
+    return `<div class="em-h">${titel}</div>` + l.map(e => `<label class="em-i"><input type="checkbox" ${aus.includes(e.id || e.text) ? '' : 'checked'}
+      onchange="ereignisUmschalten('${e.id || e.text}', this.checked)"><span><b>${e.text}</b>
+      <span class="em-d">${d(e.datum)}${e.bis ? ' – ' + d(e.bis) : ''}${e.ungefaehr ? ' · ungefähr' : ''}</span>
+      ${e.quelle ? `<span class="em-q">Quelle: ${e.quelle}</span>` : ''}</span></label>`).join(''); };
+  box.innerHTML = gruppe('krise', 'Krisen') + gruppe('massnahme', 'Maßnahmen') +
+    `<div class="em-f"><button onclick="ereignisseAlle(true)">alle ein</button><button onclick="ereignisseAlle(false)">alle aus</button>
+     <span>Gepflegt in data/ereignisse.json</span></div>`;
+  const n = EREIGNISSE.length - EREIGNISSE.filter(e => aus.includes(e.id || e.text)).length;
+  const b = document.getElementById('ereig-btn'); if (b) b.innerHTML = `⚑ Ereignisse <span>${n}/${EREIGNISSE.length}</span>`;
+}
+fetch('./data/ereignisse.json?t=' + Date.now()).then(r => r.ok ? r.json() : null)
+  .then(j => { EREIGNISSE = (j?.ereignisse || []).filter(e => e.datum && e.text); ereignisMenu();
+    try { renderTab(activeTab); } catch(e) {} })
+  .catch(() => {});
+function labelDatum(l) {
+  const t = String(l ?? '');
+  let m = t.match(/^(\d{4})-(\d{2})-(\d{2})/); if (m) return `${m[1]}-${m[2]}-${m[3]}`;
+  m = t.match(/^(\d{2})\.(\d{2})\.(\d{4})/); if (m) return `${m[3]}-${m[2]}-${m[1]}`;
+  m = t.match(/^(\d{2})\.(\d{2})\.(\d{2})$/); if (m) return `20${m[3]}-${m[2]}-${m[1]}`;
+  m = t.match(/^(\d{2})\/(\d{4})$/); if (m) return `${m[2]}-${m[1]}-15`;
+  return null;
+}
+// Platz für Ereignis-Beschriftungen: wird beim Anlegen der Grafik reserviert
+// (oben, über den Linien), damit sie lesbar bleiben – auch wenn ein Ereignis
+// ausgeschaltet ist, bleibt der Streifen stehen und die Grafik springt nicht.
+const EREIG_ZEILEN = {};
+function ereigZeilen(canvasId, labels, schmal) {
+  if (!EREIGNISSE.length || !labels || labels.length < 10) return 0;
+  const daten = labels.map(labelDatum).filter(Boolean); if (daten.length < labels.length * 0.8) return 0;
+  const bereich = grafikBereich(canvasId), erstes = daten[0], letztes = daten.at(-1);
+  const n = EREIGNISSE.filter(e => (e.bereiche || ['alle']).some(b => b === 'alle' || b === bereich))
+    .filter(e => e.datum <= letztes && (e.bis ? e.bis >= erstes : e.datum >= erstes)).length;
+  return Math.min(n, schmal ? 1 : 2);
+}
+function grafikBereich(id) {
+  if (/fuel|sprit|e5|e10|diesel|heiz|kraftstoff|treibstoff/i.test(id)) return 'sprit';
+  if (/gas|ttf|speicher/i.test(id)) return 'gas';
+  if (/strom|power|price|spot|day/i.test(id)) return 'strom';
+  return '';
+}
+// Großer Endwert am Linienende (Kacheln der Favoritenseite)
+Chart.register({
+  id: 'endWert',
+  afterDatasetsDraw(chart) {
+    const o = chart.options.plugins?.endWert; if (!o?.on) return;
+    const {ctx} = chart; ctx.save();
+    const marken = [];
+    chart.data.datasets.forEach((d, i) => {
+      const meta = chart.getDatasetMeta(i); if (meta.hidden) return;
+      let k = d.data.length - 1; while (k >= 0 && d.data[k] == null) k--;
+      const pt = meta.data[k]; if (!pt) return;
+      marken.push({x: pt.x, y: pt.y, v: d.data[k], farbe: d.borderColor});
+    });
+    marken.sort((a, b) => a.y - b.y);
+    for (let i = 1; i < marken.length; i++) if (marken[i].y - marken[i - 1].y < 18) marken[i].y = marken[i - 1].y + 18;
+    marken.forEach(m => {
+      ctx.fillStyle = m.farbe; ctx.beginPath(); ctx.arc(m.x, Math.min(m.y, chart.chartArea.bottom), 4, 0, 7); ctx.fill();
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
+      ctx.font = "700 17px 'Source Sans 3', sans-serif"; ctx.textBaseline = 'middle';
+      ctx.fillText(fmtN(m.v, o.dec), m.x + 8, Math.max(chart.chartArea.top + 8, Math.min(m.y, chart.chartArea.bottom - 8)));
+    });
+    ctx.restore();
+  },
+});
+
+// Werte in bzw. über Balken (Vorjahresvergleich, Stapel, Strommix)
+Chart.register({
+  id: 'balkenWert',
+  afterDatasetsDraw(chart) {
+    const o = chart.options.plugins?.balkenWert; if (!o?.on) return;
+    const {ctx} = chart; ctx.save();
+    ctx.font = `700 ${o.gross || 16}px 'Source Sans 3', sans-serif`;
+    chart.data.datasets.forEach((d, i) => chart.getDatasetMeta(i).data.forEach((bar, j) => {
+      const v = d.data[j]; if (v == null) return;
+      const t = fmtN(v, o.dec ?? 0);
+      if (o.lage === 'rechts') { ctx.fillStyle = o.farbe || '#2563eb'; ctx.textBaseline = 'middle'; ctx.textAlign = 'right'; ctx.fillText(t, chart.width - 2, bar.y); }
+      else if (o.lage === 'innen') { ctx.fillStyle = '#fff'; ctx.textBaseline = 'middle'; ctx.textAlign = 'center';
+        const h = Math.abs(bar.base - bar.y); if (h > 18) ctx.fillText(t, bar.x, (bar.y + bar.base) / 2); }
+      else { ctx.fillStyle = Array.isArray(d.backgroundColor) ? d.backgroundColor[j] : d.backgroundColor; ctx.textBaseline = 'bottom'; ctx.textAlign = 'center'; ctx.fillText(t, bar.x, bar.y - 3); }
+    }));
+    ctx.restore();
+  },
+});
+
+Chart.register({
+  id: 'ereignisse',
+  // Welche Ereignisse fallen in den Zeitraum dieser Grafik (eingeschaltete und ausgeschaltete)?
+  _kandidaten(chart) {
+    if (!EREIGNISSE.length || chart.options.plugins?.ereignisse === false) return null;
+    const x = chart.scales?.x, labels = chart.data.labels || [];
+    if ((chart.config.type !== 'line' && chart.config.type !== 'bar') || chart.options.indexAxis === 'y' || labels.length < 10) return null;
+    const daten = labels.map(labelDatum);
+    if (daten.filter(Boolean).length < labels.length * 0.8) return null;
+    const bereich = grafikBereich(chart.canvas?.id || '');
+    const erstes = daten.find(Boolean), letztes = [...daten].reverse().find(Boolean);
+    const liste = EREIGNISSE.filter(e => (e.bereiche || ['alle']).some(b => b === 'alle' || b === bereich))
+      .filter(e => e.datum <= letztes && (e.bis ? e.bis >= erstes : e.datum >= erstes))
+      .sort((p, q) => p.datum.localeCompare(q.datum));
+    return {daten, erstes, letztes, liste};
+  },
+  beforeDatasetsDraw(chart) {
+    const k = this._kandidaten(chart), aus = ereignisseAus();
+    chart.$ereig = k ? {...k, an: k.liste.filter(e => !aus.includes(e.id || e.text))} : null;
+    chart.$ereigZeilen = EREIG_ZEILEN[chart.canvas?.id] || 0;
+    clearTimeout(window._ereigChipsT); window._ereigChipsT = setTimeout(ereignisChips, 60);
+    const z = chart.$ereig; if (!z?.an.length) return;
+    const x = chart.scales.x, {ctx, chartArea: a} = chart, {daten, erstes, letztes} = z;
+    const idx = d => { for (let i = 0; i < daten.length; i++) if (daten[i] && daten[i] >= d) return i; return daten.length - 1; };
+    ctx.save();
+    z.pos = z.an.map(e => {
+      const bis = e.bis === 'offen' ? letztes : e.bis;
+      const x0 = x.getPixelForValue(e.datum < erstes ? 0 : idx(e.datum));
+      if (bis) {
+        const x1 = x.getPixelForValue(bis >= letztes ? daten.length - 1 : idx(bis));
+        ctx.fillStyle = 'rgba(15,37,64,.075)'; ctx.fillRect(x0, a.top, Math.max(1, x1 - x0), a.bottom - a.top);
+        ctx.strokeStyle = 'rgba(15,37,64,.18)'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(x0 + .5, a.top); ctx.lineTo(x0 + .5, a.bottom); ctx.stroke();
+      } else {
+        ctx.strokeStyle = '#6b7685'; ctx.lineWidth = 1.2;
+        ctx.beginPath(); ctx.moveTo(x0 + .5, a.top - 3); ctx.lineTo(x0 + .5, a.bottom); ctx.stroke();
+      }
+      return {e, x0};
+    });
+    ctx.restore();
+  },
+  // Beschriftungen im freien Streifen über der Grafik, auf hellem Grund
+  afterDraw(chart) {
+    const z = chart.$ereig; if (!z?.pos?.length || !chart.$ereigZeilen) return;
+    const {ctx, chartArea: a} = chart, zeilen = chart.$ereigZeilen;
+    ctx.save(); ctx.font = "italic 600 11.5px 'Source Sans 3', sans-serif"; ctx.textBaseline = 'middle';
+    const belegt = Array(zeilen).fill(-Infinity);
+    z.pos.forEach(({e, x0}) => {
+      let t = e.text; let w = ctx.measureText(t).width;
+      const maxW = a.right - a.left - 4;
+      while (w > maxW && t.length > 6) { t = t.slice(0, -2); w = ctx.measureText(t + '…').width; if (w <= maxW) t += '…'; }
+      let tx = Math.min(Math.max(a.left, x0 - 2), a.right - w - 8);
+      let r = belegt.findIndex(b => tx > b + 4);
+      if (r < 0) return;                       // kein Platz mehr: Beschriftung entfällt, Linie bleibt
+      const y = a.top - (zeilen - r) * 17 + 8;
+      ctx.fillStyle = 'rgba(255,255,255,.95)'; ctx.strokeStyle = '#d5dbe3'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.roundRect ? ctx.roundRect(tx, y - 8, w + 8, 16, 4) : ctx.rect(tx, y - 8, w + 8, 16); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#334155'; ctx.fillText(t, tx + 4, y + .5);
+      belegt[r] = tx + w + 8;
+    });
+    ctx.restore();
+  },
+});
+
+// Schalter unter jeder Grafik mit Ereignissen: Klick blendet das Ereignis überall ein oder aus
+function ereignisChips() {
+  const aus = ereignisseAus();
+  Object.values(CH).forEach(ch => {
+    let wrap = ch.canvas?.closest('.chart-wrap, .fav-mini'); if (!wrap) return;
+    if (wrap.nextElementSibling?.classList?.contains('fav-achse')) wrap = wrap.nextElementSibling;   // in Kacheln unter die Datumszeile
+    let box = wrap.nextElementSibling?.classList?.contains('ereig-chips') ? wrap.nextElementSibling : null;
+    const liste = ch.$ereig?.liste || [];
+    if (!liste.length) { box?.remove(); return; }
+    if (!box) { box = document.createElement('div'); box.className = 'ereig-chips'; wrap.insertAdjacentElement('afterend', box); }
+    const html = liste.map(e => { const id = e.id || e.text, an = !aus.includes(id);
+      return `<button type="button" class="ec${an ? ' an' : ''}" title="${an ? 'Ausblenden' : 'Einblenden'}: ${e.text}${e.quelle ? ' – Quelle: ' + e.quelle : ''}"
+        onclick="event.stopPropagation();ereignisUmschalten('${id}', ${!an})"><i class="${e.bis ? 'zr' : 'li'}"></i>${e.text}</button>`; }).join('');
+    if (box.innerHTML !== html) box.innerHTML = html;
+  });
+}
+
 const BASE={
   responsive:true,maintainAspectRatio:false,
   interaction:{mode:'index',intersect:false},
   scales:{
-    x:{grid:{color:'#eef2f6',drawBorder:false},ticks:{maxTicksLimit:8,color:'#6b7685',font:{size:11.5}}},
-    y:{grid:{color:'#eef2f6',drawBorder:false},ticks:{maxTicksLimit:5,color:'#6b7685',font:{size:11.5}}}
+    x:{grid:{display:false},border:{color:'#d5dbe3'},ticks:{maxTicksLimit:8,color:'#6b7685',font:{size:11.5},maxRotation:0}},
+    y:{grid:{color:'#edf0f4'},border:{display:false},ticks:{maxTicksLimit:5,color:'#6b7685',font:{size:11.5},padding:6}}
   },
   elements:{point:{radius:0,hoverRadius:4},line:{tension:0.25,borderWidth:2}}
 };
@@ -2046,6 +2369,24 @@ function mkChart(id, type, labels, datasets, extra={}) {
   if(extra.plugins) opts.plugins = Object.assign({}, opts.plugins||{}, extra.plugins);
   if(extra.indexAxis) opts.indexAxis = extra.indexAxis;
   if(extra.interaction) opts.interaction = extra.interaction;
+  // Datumsbeschriftung der x-Achse lesbar: ISO-Daten werden zu "29.10." bzw. "Okt. 26"
+  const iso = (labels || []).filter(l => /^\d{4}-\d{2}-\d{2}/.test(String(l)));
+  if (iso.length && iso.length >= labels.length * 0.8 && type !== 'scatter' && !extra.indexAxis) {
+    const tage = (Date.parse(iso.at(-1)) - Date.parse(iso[0])) / 864e5;
+    const fmt = l => { const d = new Date(String(l).slice(0, 10) + 'T12:00:00Z');
+      return tage <= 400 ? `${d.getUTCDate()}.${d.getUTCMonth() + 1}.` : d.toLocaleDateString('de-DE', {month:'short', year:'2-digit', timeZone:'UTC'}); };
+    opts.scales = opts.scales || {}; opts.scales.x = Object.assign({}, opts.scales.x);
+    opts.scales.x.ticks = Object.assign({}, opts.scales.x.ticks, {maxRotation:0, autoSkipPadding:14, callback:(v, i) => /^\d{4}-/.test(String(labels[i])) ? fmt(labels[i]) : labels[i]});
+  }
+  const zeilenE = (type === 'line' || type === 'bar') && !extra.indexAxis ? ereigZeilen(id, labels, false) : 0;
+  EREIG_ZEILEN[id] = zeilenE;
+  if (zeilenE) opts.layout = {padding: Object.assign({}, opts.layout?.padding, {top: zeilenE * 17 + 2})};
+  if (endLabelsAktiv(type, datasets, extra)) {
+    // Platz rechts für die Etiketten; Legende überflüssig
+    const breit = Math.max(...datasets.filter(d => !END_SKIP.test(d.label || '')).map(d => endName(d.label).length + 6));
+    opts.layout = {padding: Object.assign({}, opts.layout?.padding, {right: Math.min(180, breit * 6.2 + 12)})};
+    opts.plugins = Object.assign({}, opts.plugins, {endLabels: {on: true}, legend: Object.assign({}, opts.plugins?.legend, {display: false})});
+  }
   schriftAnheben(opts);
   CH[id] = new Chart(el, {type, data:{labels,datasets}, options:opts});
   // Charts redrawn by a card's own menus need their export entry too.
@@ -2508,6 +2849,7 @@ function renderStrom() {
     {label:'CO₂-Intensität',val:co2i,unit:'g/kWh (est.)',color:'#dc6803'},
   ]);
   renderPriceChart();
+  try { kernStrom(); } catch(e) { console.error('kernStrom', e); }
   try { renderResidual(); } catch(e) { console.error('renderResidual', e); }
   try { renderSpikes(); } catch(e) { console.error('renderSpikes', e); }
   try { renderEuDayAhead(); } catch(e) { console.error('renderEuDayAhead', e); }
@@ -6696,15 +7038,15 @@ function initLand() {
 // ══════════════════════════════════════════════
 const RENDERS={
   strom:renderStrom, strompreise:renderStrompreise, markt:renderMarkt,
-  gas:() => { renderGas();
+  gas:() => { renderGas(); try { kernGas(); } catch(e) { console.error('kernGas', e); }
     try { renderGasPrognose(); } catch(e) { console.error('renderGasPrognose', e); }
     try { renderGasStandorte(); } catch(e) { console.error('renderGasStandorte', e); } },
   rohstoffe:() => { renderRohstoffe(); try { renderIdx(); } catch(e) { console.error('renderIdx', e); } },
-  kraftstoff:renderKraftstoffMerged,
+  kraftstoff:() => { renderKraftstoffMerged(); kernSprit().catch(e => console.error('kernSprit', e)); },
   erneuerbare:renderErneuerbare, umwelt:renderUmwelt, g20:renderG20,
   wetter:renderWetter, fx:renderFx,
   futures:renderFutures, lage:renderLage, news:renderNews,
-  jahr:renderJahr, makro:renderMakro, themen:renderThemen, fav:renderFav, karte:renderKarte,
+  jahr:renderJahr, makro:() => { renderMakro(); try { kernMakro(); } catch(e) { console.error('kernMakro', e); } }, themen:renderThemen, fav:renderFav, karte:renderKarte,
 };
 
 // Blanket provenance: after a tab renders, every card that shows data and
@@ -7145,6 +7487,25 @@ const FAV_KATALOG = [
    reihe:favHist('gas_storage','de_pct'), why:'Maßstab für die Versorgungssicherheit im Winter; es gelten gesetzliche Füllstandsvorgaben.'},
   {id:'gasspeicher_eu', g:'Versorgung', lbl:'Gasspeicher EU', ico:'🇪🇺', col:'#1f9d55', unit:'% gefüllt', dec:1, tab:'gas', gut:'hoch',
    reihe:favHist('gas_storage','eu_pct'), why:'Europäische Reserve – Engpässe in Nachbarländern wirken auf Deutschland zurück.'},
+  {id:'gas_industrie', g:'Versorgung', lbl:'Gasverbrauch Industrie', ico:'🏭', col:'#2563eb', unit:'GWh/Tag', dec:0, tab:'gas', gut:null,
+   reihe:async () => bnetzaWochen('bnetza_c870314'), ref:() => bnetzaRef('bnetza_c870314'),
+   why:'Wochenmittel der Industriekunden (RLM); daneben das Mittel 2018–2021 derselben Kalenderwoche als Vergleich.'},
+  {id:'gas_haushalte', g:'Versorgung', lbl:'Gasverbrauch Haushalte/Gewerbe', ico:'🏠', col:'#7aa2e3', unit:'GWh/Tag', dec:0, tab:'gas', gut:null,
+   reihe:async () => bnetzaWochen('bnetza_c870322'), ref:() => bnetzaRef('bnetza_c870322'),
+   why:'Wochenmittel der Haushalts- und Gewerbekunden (SLP), stark temperaturabhängig; Vergleich mit 2018–2021.'},
+  {id:'gas_importe', g:'Versorgung', lbl:'Gasimporte', ico:'🚢', col:'#2563eb', unit:'GWh pro Tag', dec:0, tab:'gas', gut:null,
+   reihe:async () => (D.bnetza_gas?.datasets?.bnetza_c870296?.series?.['Deutschland Import'] || []).filter(p => p[1] != null).map(p => [p[0], p[1]]),
+   zweite:{lbl:'LNG-Importe', col:'#8fb3e8', reihe:() => (D.bnetza_gas?.datasets?.bnetza_c870296?.series?.['LNG'] || []).filter(p => p[1] != null)},
+   why:'Alle Gasimporte nach Deutschland je Tag und davon die Anlandungen über LNG-Terminals (Bundesnetzagentur).'},
+  {id:'gas_verbrauch_vj', g:'Versorgung', lbl:'Gasverbrauch', ico:'🔥', col:'#2563eb', unit:'GWh, Wochenmittel', dec:0, tab:'gas', gut:null,
+   reihe:async () => bnetzaWochen('bnetza_c870330'), art:'stapel',
+   why:'Wochenmittel des Gasverbrauchs von Industrie (unten) und Haushalten/Gewerbe (oben): letzte gemeldete Woche gegen dieselbe Kalenderwoche des Vorjahres.'},
+  {id:'gasspeicher_vj', g:'Versorgung', lbl:'Gasspeicher', ico:'🛢', col:'#2563eb', unit:'Füllstand in Prozent', dec:2, tab:'gas', gut:'hoch',
+   reihe:favHist('gas_storage','de_pct'), art:'vorjahr',
+   why:'Füllstand der deutschen Gasspeicher heute gegen denselben Tag des Vorjahres (GIE AGSI+).'},
+  {id:'strommix', g:'Versorgung', lbl:'Strommix', ico:'⚡', col:'#2563eb', unit:'am Vortag erzeugt, in Prozent', dec:1, tab:'strom', gut:null,
+   reihe:async () => (await loadHistory('smard_mix')).filter(r => r.renewable_share_pct != null).map(r => [r.date, r.renewable_share_pct]), art:'mix',
+   why:'Anteile an der Stromerzeugung des letzten vollständigen Tages (SMARD, Viertelstundenwerte). Der Verlauf darunter zeigt den Anteil der Erneuerbaren.'},
   {id:'ee_anteil', g:'Versorgung', lbl:'Erneuerbare im Strommix', ico:'🌬️', col:'#1f9d55', unit:'%', dec:1, tab:'erneuerbare', gut:'hoch',
    reihe:favHist('smard_mix','renewable_share_pct'), why:'Tagesanteil von Wind, Sonne, Wasser und Biomasse – Fortschritt der Energiewende.'},
   {id:'neg_stunden', g:'Versorgung', lbl:'Negative Strompreise', ico:'➖', col:'#0891b2', unit:'Stunden im Jahr', dec:0, tab:'jahr', gut:null, jahr:true,
@@ -7169,7 +7530,120 @@ async function favExport(art) {
   XLSX.writeFile(wb, name + '.xlsx');
 }
 
+// Quelle (klein unter der Kachel) und Sprungziel (Reiter, Grafik, Vorbereitung)
+const FAV_QUELLE = {e5:'Tankerkönig (MTS-K)', e10:'Tankerkönig (MTS-K)', diesel:'Tankerkönig (MTS-K)', heizoel:'TECSON',
+  strom_hh:'Eurostat', gas_hh:'Eurostat', vpi_energie:'Destatis', inflation:'Destatis', strom_da:'Energy-Charts (EPEX Spot)',
+  strom_monat:'SMARD / Bundesnetzagentur', ttf:'ICE über Yahoo Finance', brent:'ICE über Yahoo Finance',
+  gasspeicher_de:'GIE AGSI+', gasspeicher_eu:'GIE AGSI+', gasspeicher_vj:'GIE AGSI+', ee_anteil:'SMARD / Bundesnetzagentur',
+  neg_stunden:'Energy-Charts', gas_industrie:'Bundesnetzagentur', gas_haushalte:'Bundesnetzagentur',
+  gas_verbrauch_vj:'Bundesnetzagentur', gas_importe:'Bundesnetzagentur', strommix:'SMARD / Bundesnetzagentur'};
+const FAV_ZIEL = {
+  e5:['kraftstoff','chart-fuel-history',() => setFuel('e5')], e10:['kraftstoff','chart-fuel-history',() => setFuel('e10')],
+  diesel:['kraftstoff','chart-fuel-history',() => setFuel('diesel')], heizoel:['kraftstoff','chart-heatoil-hist',() => setFuel('heizoel')],
+  strom_hh:['strompreise','chart-strompreise'], gas_hh:['strompreise','chart-gaspreise'],
+  vpi_energie:['makro','chart-mw-preise'], inflation:['makro','chart-mw-preise'], strom_monat:['makro','chart-mw-power'],
+  strom_da:['strom','chart-price'], strommix:['strom','chart-gen'],
+  ttf:['rohstoffe','chart-comm-detail',() => setCommDetail('ttf_eu_proxy')], brent:['rohstoffe','chart-comm-detail',() => setCommDetail('brent_crude')],
+  gasspeicher_de:['gas','chart-gasprog'], gasspeicher_vj:['gas','chart-gasprog'],
+  gasspeicher_eu:['gas','chart-gasprog',() => { const s = document.getElementById('gasprog-land'); if (s) { s.value = 'eu'; renderGasPrognose(); } }],
+  ee_anteil:['erneuerbare','chart-ren-share'], neg_stunden:['jahr','jk-neg_hours'],
+  gas_industrie:['gas','chart-bnetza'], gas_haushalte:['gas','chart-bnetza'], gas_verbrauch_vj:['gas','chart-bnetza'], gas_importe:['gas','chart-bnetza'],
+};
+// Zum Reiter wechseln, warten bis gezeichnet, dann zur Grafik scrollen und kurz hervorheben
+async function gotoKarte(tab, anker, vor) {
+  if (activeTab !== tab) { gotoTab(tab); await new Promise(r => setTimeout(r, 700)); }
+  try { vor?.(); } catch(e) {}
+  await new Promise(r => setTimeout(r, 150));
+  const el = document.getElementById(anker) || document.querySelector(`[data-canvas-for="${anker}"]`);
+  const card = el?.closest('.card'); if (!card) return;
+  card.scrollIntoView({behavior:'smooth', block:'start'});
+  card.classList.remove('ziel'); void card.offsetWidth; card.classList.add('ziel');
+}
+function favOeffnen(id) {
+  const k = favKatalog().find(x => x.id === id); if (!k) return;
+  const z = FAV_ZIEL[id] || (id.startsWith('idx:') ? ['rohstoffe','chart-idx'] : null);
+  if (z) gotoKarte(z[0], z[1], z[2]); else gotoTab(k.tab);
+}
+
+const kurzDatum = d => { const x = new Date(String(d).slice(0, 10) + 'T12:00:00Z'); return `${x.getUTCDate()}.${x.getUTCMonth() + 1}.${String(x.getUTCFullYear()).slice(2)}`; };
 function favKatalog() { return FAV_KATALOG.concat(idxFavs()); }
+
+// Bundesnetzagentur: Kalenderwochen je Jahr -> Datumsreihe (Montag der Woche)
+function kwMontag(jahr, kw) {
+  const d = new Date(Date.UTC(jahr, 0, 4)); const tag = (d.getUTCDay() + 6) % 7;
+  d.setUTCDate(d.getUTCDate() - tag + (kw - 1) * 7); return d.toISOString().slice(0, 10);
+}
+function bnetzaWochen(id) {
+  const s = D.bnetza_gas?.datasets?.[id]?.series || {};
+  return Object.keys(s).filter(k => /^\d{4}$/.test(k)).sort().flatMap(j => (s[j] || []).filter(p => p[1] != null).map(p => [kwMontag(+j, +p[0]), p[1]]))
+    .filter(p => p[0] <= new Date().toISOString().slice(0, 10)).sort((a, b) => a[0].localeCompare(b[0]));
+}
+function bnetzaRef(id) {
+  const s = D.bnetza_gas?.datasets?.[id]?.series?.['Durchschnittlicher Gasverbrauch 2018-2021'] || [];
+  return Object.fromEntries(s.filter(p => p[1] != null).map(p => [+p[0], p[1]]));
+}
+
+
+// Kacheltypen im Stil der Übersichten großer Datenseiten:
+//  vorjahr – zwei Balken: derselbe Tag im Vorjahr gegen heute
+//  stapel  – Industrie und Haushalte gestapelt, Vorjahreswoche gegen letzte Woche
+//  mix     – Strommix des letzten vollständigen Tages als waagerechte Balken
+function kachelSpezial(k, r) {
+  const tickX = {grid:{display:false}, border:{color:'#cfd6df'}, ticks:{color:'#56657a', font:{size:12}}};
+  const datumKurz = d => new Date(d + 'T12:00:00Z').toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit', year:'2-digit'});
+  const basis = {responsive:true, maintainAspectRatio:false, animation:false, plugins:{legend:{display:false}, ereignisse:false}};
+  if (k.art === 'vorjahr') {
+    const akt = r.at(-1); if (!akt) return null;
+    const d = new Date(akt[0] + 'T00:00:00Z'); d.setUTCFullYear(d.getUTCFullYear() - 1);
+    const vjIso = d.toISOString().slice(0, 10);
+    let vj = r.filter(p => p[0] <= vjIso).at(-1);
+    if (!vj || vjIso.slice(0, 7) !== vj[0].slice(0, 7)) {
+      const rows = D.gas_storage_history?.countries?.de?.rows || [];
+      const x = rows.filter(q => q[0] <= vjIso).at(-1); if (x) vj = [x[0], x[1]];
+    }
+    if (!vj) return null;
+    const pp = akt[1] - vj[1];
+    k._aussage = `${fmtN(Math.abs(pp), 1)} Punkte ${pp < 0 ? 'weniger' : 'mehr'} als vor einem Jahr`;
+    return {type:'bar', data:{labels:[datumKurz(vj[0]), datumKurz(akt[0])], datasets:[{data:[vj[1], akt[1]], backgroundColor:['#4a90d9', '#8fb3e8'], borderRadius:2, barPercentage:.85, categoryPercentage:.9}]},
+      options:{...basis, layout:{padding:{top:22}}, plugins:{...basis.plugins, balkenWert:{on:true, dec:k.dec, gross:17}, tooltip:{enabled:false}},
+        scales:{x:tickX, y:{display:false, beginAtZero:true}}}};
+  }
+  if (k.art === 'stapel') {
+    const mh = new Map(bnetzaWochen('bnetza_c870322'));
+    const ind = bnetzaWochen('bnetza_c870314').filter(p => mh.has(p[0]));   // nur Wochen, die beide melden
+    const l = ind.at(-1); if (!l) return null;
+    const d = new Date(l[0] + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() - 364);
+    const vjIso = d.toISOString().slice(0, 10), vjI = ind.find(p => p[0] >= vjIso);
+    if (!vjI || vjI[0] === l[0]) return null;
+    const sum = x => x[1] + mh.get(x[0]);
+    k._aussage = `Gesamt ${fmtN(sum(l), 0)} GWh/Tag – ${sum(l) >= sum(vjI) ? '+' : '−'}${fmtN(Math.abs((sum(l) - sum(vjI)) / sum(vjI) * 100), 1)} % ggü. Vorjahreswoche`;
+    return {type:'bar', data:{labels:[datumKurz(vjI[0]), datumKurz(l[0])], datasets:[
+        {label:'Industrie', data:[vjI[1], l[1]], backgroundColor:'#4a90d9', stack:'s', barPercentage:.85, categoryPercentage:.9},
+        {label:'Haushalte/Gewerbe', data:[mh.get(vjI[0]), mh.get(l[0])], backgroundColor:'#8fb3e8', stack:'s', barPercentage:.85, categoryPercentage:.9}]},
+      options:{...basis, plugins:{...basis.plugins, legend:{display:true, position:'top', align:'start', labels:{usePointStyle:true, pointStyle:'circle', boxWidth:7, boxHeight:7, color:'#56657a', font:{size:11.5}, padding:8}},
+          balkenWert:{on:true, lage:'innen', gross:15}, tooltip:{callbacks:{label:c => `${c.dataset.label}: ${fmtN(c.raw, 0)} GWh/Tag`}}},
+        scales:{x:{...tickX, stacked:true}, y:{display:false, stacked:true, beginAtZero:true}}}};
+  }
+  if (k.art === 'mix') {
+    const sm = D.smard?.series; if (!sm) return null;
+    const tag = ts => new Date(ts).toLocaleDateString('sv-SE', {timeZone:'Europe/Berlin'});
+    const tage = {}; (sm.load || []).forEach(p => { tage[tag(p.ts)] = (tage[tag(p.ts)] || 0) + 1; });
+    const voll = Object.keys(tage).sort().filter(t => tage[t] >= 90).at(-1); if (!voll) return null;
+    const summe = key => (sm[key] || []).filter(p => p.v != null && tag(p.ts) === voll).reduce((a, p) => a + p.v, 0);
+    const gruppen = [['Wind', summe('wind_onshore') + summe('wind_offshore')], ['Kohle', summe('lignite') + summe('hard_coal')],
+      ['Gas', summe('natural_gas')], ['Biomasse', summe('biomass')], ['Solar', summe('solar')],
+      ['Sonstige', summe('hydro') + summe('pumped_storage') + summe('other_conventional') + summe('nuclear')]];
+    const ges = gruppen.reduce((a, g) => a + g[1], 0); if (!ges) return null;
+    k._mixTag = voll;
+    const ee = (summe('wind_onshore') + summe('wind_offshore') + summe('solar') + summe('biomass') + summe('hydro')) / ges * 100;
+    k._aussage = `Erneuerbare zusammen ${fmtN(ee, 1)} %`;
+    k._einheit = `am ${datumKurz(voll)} in Deutschland erzeugt, in Prozent`;
+    return {type:'bar', data:{labels:gruppen.map(g => g[0]), datasets:[{data:gruppen.map(g => +(g[1] / ges * 100).toFixed(1)), backgroundColor:'#4a90d9', borderRadius:2, barPercentage:.7}]},
+      options:{...basis, indexAxis:'y', layout:{padding:{right:44}}, plugins:{...basis.plugins, balkenWert:{on:true, lage:'rechts', dec:1, gross:15, farbe:'#2563eb'}, tooltip:{enabled:false}},
+        scales:{y:{grid:{display:false}, border:{display:false}, ticks:{color:'#56657a', font:{size:12.5}}}, x:{display:false, beginAtZero:true}}}};
+  }
+  return null;
+}
 
 function favLesen() {
   try { const v = JSON.parse(localStorage.getItem(FAV_KEY)); if (Array.isArray(v)) return v.filter(id => favKatalog().some(k => k.id === id)); } catch(e) {}
@@ -7247,26 +7721,57 @@ async function renderFav() {
   }
   const items = ids.map(id => favKatalog().find(k => k.id === id)).filter(Boolean);
   const reihen = await Promise.all(items.map(k => k.reihe().catch(() => [])));
+  const reihenSauber = items.map((k, i) => (reihen[i] || []).filter(p => p[0] && p[1] != null && !isNaN(p[1])).sort((a, b) => a[0].localeCompare(b[0])));
+  const spezial = items.map((k, i) => k.art ? kachelSpezial(k, reihenSauber[i]) : null);
   grid.innerHTML = items.map((k, i) => {
-    const r = (reihen[i] || []).filter(p => p[0] && p[1] != null && !isNaN(p[1])).sort((a, b) => a[0].localeCompare(b[0]));
-    const akt = r.at(-1);
+    const r = reihenSauber[i], akt = r.at(-1);
     const datum = akt ? (k.jahr ? akt[0].slice(0, 4) + (D.kennzahlen?.years?.at(-1)?.partial ? ' bisher' : '')
                          : k.monat ? akt[0].slice(5, 7) + '/' + akt[0].slice(0, 4)
                          : new Date(akt[0]).toLocaleDateString('de-DE')) : '';
-    const chips = akt ? (k.jahr ? favChip(akt, r.at(-2), k, 'ggü. Vorjahr')
+    let chips = akt ? (k.jahr ? favChip(akt, r.at(-2), k, 'ggü. Vorjahr')
       : k.monat ? favChip(akt, favVorher(r, 30), k, 'ggü. Vormonat') + favChip(akt, favVorher(r, 365), k, 'ggü. Vorjahr')
       : favChip(akt, favVorher(r, 7), k, '7 Tage') + favChip(akt, favVorher(r, 365), k, '1 Jahr')) : '';
-    return `<div class="fav" onclick="gotoTab('${k.tab}')" title="Details im Reiter öffnen">
-      <div class="fav-top"><span class="fav-ico" style="background:${k.col}1f">${k.ico}</span>
-        <span class="fav-lbl">${k.lbl}</span>
+    // Vergleich mit 2018–2021 (Gasverbrauch)
+    if (k.art) chips = k._aussage ? `<span class="fav-chip neutral">${k._aussage}</span>` : '';
+    if (akt && k.ref) { const ref = k.ref(), d = new Date(akt[0] + 'T00:00:00Z');
+      const kw = Math.ceil((((d - Date.UTC(d.getUTCFullYear(), 0, 1)) / 864e5) + new Date(Date.UTC(d.getUTCFullYear(), 0, 1)).getUTCDay() + 1) / 7);
+      const rv = ref[kw] ?? ref[kw - 1];
+      if (rv) { const pz = (akt[1] - rv) / rv * 100;
+        chips = `<span class="fav-chip neutral" title="Mittel 2018–2021 derselben Kalenderwoche: ${fmtN(rv, 0)} GWh/Tag">${pz >= 0 ? '+' : '−'}${fmtN(Math.abs(pz), 0)} % ggü. 2018–21</span>` + chips; } }
+    return `<div class="fav" onclick="favOeffnen('${k.id}')" title="Zur Grafik im Reiter springen">
+      <div class="fav-top">
+        <div class="fav-tt"><span class="fav-lbl">${k.lbl}</span><span class="fav-einheit">${k._einheit || (/\bin\b|^am |^Füllstand/.test(k.unit) ? k.unit : 'in ' + k.unit)}</span></div>
+        <button class="fav-info" onclick="event.stopPropagation();this.closest('.fav').classList.toggle('info')" title="Erklärung" aria-label="Erklärung zu ${k.lbl}">i</button>
         <button class="fav-star" onclick="favUmschalten('${k.id}',event)" title="Aus den Favoriten entfernen" aria-label="${k.lbl} aus den Favoriten entfernen">★</button></div>
-      <div class="fav-val">${akt ? fmtN(akt[1], k.dec) : '—'}<small>${k.unit}</small></div>
-      <div class="fav-meta">${datum ? `<span>${datum}</span>` : '<span>noch keine Daten</span>'}${chips}</div>
-      <div class="fav-spark">${favSpark(r, k.col)}</div>
       <div class="fav-why">${k.why}</div>
+      ${k.zweite ? `<div class="fav-leg"><span><i style="background:${k.col}"></i>${k.lbl}</span><span><i style="background:${k.zweite.col}"></i>${k.zweite.lbl}</span></div>` : ''}
+      <div class="fav-mini${k.art ? ' fav-mini-' + k.art : ''}">${r.length > 1 || k.art ? `<canvas id="fav-mini-${k.id.replace(/[^a-z0-9_-]/gi, '_')}"></canvas>` : `<div class="fav-leer">${akt ? fmtN(akt[1], k.dec) + ' ' + k.unit : 'noch keine Daten'}</div>`}</div>
+      ${!k.art && r.length > 1 ? `<div class="fav-achse"><span>${kurzDatum(r[k.monat || k.jahr ? 0 : Math.max(0, r.length - 300)][0])}</span><span>${kurzDatum(r.at(-1)[0])}</span></div>` : ''}
+      <div class="fav-meta">${datum ? `<span>Stand ${datum}</span>` : ''}${chips}</div>
+      <div class="fav-quelle">Quelle: ${FAV_QUELLE[k.id] || (k.id.startsWith('idx:') ? 'Yahoo Finance, eigene Gewichtung' : 'Energie-Dashboard')}</div>
     </div>`;
   }).join('');
-  renderFavGrafiken();
+  items.forEach((k, i) => {
+    const r = reihenSauber[i], id = 'fav-mini-' + k.id.replace(/[^a-z0-9_-]/gi, '_');
+    const el = document.getElementById(id); if (!el) return;
+    if (CH[id]) CH[id].destroy();
+    const cfg = k.art ? spezial[i] : null;
+    if (k.art && !cfg) { el.parentElement.innerHTML = '<div class="fav-leer">noch keine Daten</div>'; return; }
+    if (cfg) { CH[id] = new Chart(el, cfg); return; }
+    const z = k.monat || k.jahr ? r : r.slice(-300);
+    const ds = [{label:k.lbl, data:z.map(p => p[1]), borderColor:k.col, borderWidth:2, pointRadius:0, tension:.2, fill:false}];
+    const zeilenE = ereigZeilen(id, z.map(p => p[0]), true); EREIG_ZEILEN[id] = zeilenE;
+    if (k.zweite) { const m = new Map(k.zweite.reihe()); ds.push({label:k.zweite.lbl, data:z.map(p => m.get(p[0]) ?? null), borderColor:k.zweite.col, borderWidth:2, pointRadius:0, tension:.2, fill:false, spanGaps:true}); }
+    CH[id] = new Chart(el, {type:'line', data:{labels: z.map(p => p[0]), datasets:ds},
+      options:{responsive:true, maintainAspectRatio:false, animation:false, layout:{padding:{right:62, top:6 + zeilenE * 17}},
+        interaction:{mode:'index', intersect:false},
+        plugins:{legend:{display:false},
+          endWert:{on:true, dec:k.dec},
+          tooltip:{callbacks:{title:it => new Date(it[0].label).toLocaleDateString('de-DE'), label:c => `${c.dataset.label}: ${fmtN(c.raw, k.dec)}`}}},
+        scales:{x:{grid:{display:false}, border:{color:'#cfd6df'}, ticks:{display:false}},
+                y:{grid:{display:false}, border:{display:false}, ticks:{maxTicksLimit:4, color:'#6b7685', font:{size:11},
+                  callback:v => v === 0 ? '0' : fmtN(v, Math.abs(v) < 10 ? 2 : 0)}}}}});
+  });
   document.getElementById('fav-foot').innerHTML =
     'Rot = für Verbraucher ungünstige Richtung, Grün = günstige. Quellen: Tankerkönig, TECSON, Eurostat, Energy-Charts, GIE AGSI+, Yahoo Finance, SMARD, Destatis. Ein Klick auf eine Kachel öffnet den passenden Reiter.';
 }
@@ -7645,7 +8150,7 @@ async function renderFavBar() {
       if (akt && alt) { const dv = akt[1] - alt[1], pz = /%/.test(k.unit) ? null : (alt[1] ? dv / Math.abs(alt[1]) * 100 : null);
         const cls = !k.gut || Math.abs(dv) < 1e-9 ? '' : ((dv > 0) === (k.gut === 'tief') ? 'neg' : 'pos');
         d = `<span class="fb-d ${cls}">${dv >= 0 ? '▲' : '▼'} ${pz != null ? fmtN(Math.abs(pz), 1) + ' %' : fmtN(Math.abs(dv), 1)}</span>`; }
-      return `<button class="fb-item" onclick="gotoTab('${k.tab}')" title="${k.lbl}: ${akt ? fmtN(akt[1], k.dec) + ' ' + k.unit : 'keine Daten'} – Veränderung ${k.jahr ? 'zum Vorjahr' : k.monat ? 'zum Vormonat' : 'über 7 Tage'}">
+      return `<button class="fb-item" onclick="favOeffnen('${k.id}')" title="${k.lbl}: ${akt ? fmtN(akt[1], k.dec) + ' ' + k.unit : 'keine Daten'} – Veränderung ${k.jahr ? 'zum Vorjahr' : k.monat ? 'zum Vormonat' : 'über 7 Tage'}">
         <span class="fb-l">${k.lbl.replace('Index: ', 'Σ ')}</span><span class="fb-v">${akt ? fmtN(akt[1], k.dec) : '—'}</span><span class="fb-u">${k.unit.split(' ')[0]}</span>${d}</button>`;
     }).join('') : '<span class="fb-leer">Noch keine Favoriten – über die Suche rechts hinzufügen</span>';
   } finally { _favBarLaeuft = false; }
@@ -7666,6 +8171,7 @@ function favSuche(q) {
     '<div class="fs-h">Nichts gefunden</div>';
   res.hidden = false;
 }
+document.addEventListener('click', () => { const m = document.getElementById('ereig-menu'); if (m) m.hidden = true; });
 document.addEventListener('click', e => { if (!e.target.closest('.favbar-suche')) { const r = document.getElementById('favsuche-res'); if (r) r.hidden = true; } });
 
 
@@ -7712,6 +8218,8 @@ async function renderThemen() {
         <span class="th-n">${t.summe_7t}${t.gedeckelt ? '+' : ''} Treffer</span></div>
       <div class="th-mitte"><span class="th-bars" aria-hidden="true">${bars}</span>
         <span class="th-titel">${s ? `<a href="${_esc(s.link)}" target="_blank" rel="noopener">${_esc(s.titel)}</a> <span class="th-q">${_esc(s.quelle)}</span>` : '<span class="th-q">keine Schlagzeile</span>'}</span></div>
+      ${(() => { const art = (d.artikel || []).filter(a => (a.themen || []).includes(t.id)).slice(0, 4);
+        return art.length ? `<details class="th-art"><summary>${art.length} Artikel zum Lesen</summary>${art.map(a => leseItem(a.titel, a.quelle, a.datum, a.text, a.link)).join('')}</details>` : ''; })()}
       <div class="th-links"><a href="#" onclick="gotoTab('${t.tab}');return false">Daten ansehen →</a>
         ${fav ? `<a href="#" onclick="favUmschalten('${fav}');return false">${favLesen().includes(fav) ? '★ Kennzahl angeheftet' : '☆ Kennzahl anheften'}</a>` : ''}
         <a href="#" onclick="amThema='${t.id}';renderAmtlich();document.getElementById('am-liste').scrollIntoView({behavior:'smooth',block:'nearest'});return false">Amtliches dazu</a></div>
@@ -7725,19 +8233,29 @@ async function renderThemen() {
   addExportButtons('themen');
 }
 
+// Ein Eintrag zum Lesen: mit Text aufklappbar (Ausschnitt + Link zum Original),
+// ohne Text nur die verlinkte Überschrift.
+function leseItem(titel, quelle, datum, text, link, kopf) {
+  const meta = `<div class="am-meta"><span class="am-stelle">${_esc(quelle)}</span><span>${datum ? new Date(datum).toLocaleDateString('de-DE') : ''}</span>${text ? '<span class="am-lesen">Ausschnitt</span>' : ''}</div>`;
+  if (!text) return `${meta}<a href="${_esc(link)}" target="_blank" rel="noopener">${_esc(titel)}</a>`;
+  return `${meta}<details class="am-det"><summary>${_esc(titel)}</summary>
+    <p>${_esc(text)}${text.length >= 590 ? ' …' : ''}</p>
+    <a class="am-orig" href="${_esc(link)}" target="_blank" rel="noopener">Ganzen Text beim Original lesen ↗</a></details>`;
+}
+
 function renderAmtlich() {
   const d = D.themen, box = document.getElementById('am-liste'), fil = document.getElementById('am-filter');
   if (!d?.meldungen || !box) return;
-  const gruppen = ['alle', ...new Set(d.meldungen.map(m => m.gruppe))];
+  const gruppen = ['alle', ...new Set(d.meldungen.map(m => m.gruppe)), ...((d.artikel || []).length ? ['Fachmedien'] : [])];
   const themaName = Object.fromEntries((d.themen || []).map(t => [t.id, t.name]));
   fil.innerHTML = gruppen.map(g => `<button class="mod-chip${amGruppe === g ? ' on' : ''}" onclick="amGruppe='${g}';renderAmtlich()">${g === 'alle' ? 'Alle' : _esc(g)}</button>`).join('') +
     (amThema ? `<button class="mod-chip on" onclick="amThema='';renderAmtlich()" title="Themenfilter aufheben">${_esc(themaName[amThema] || amThema)} ×</button>` : '');
-  const ms = d.meldungen.filter(m => (amGruppe === 'alle' || m.gruppe === amGruppe) && (!amThema || (m.themen || []).includes(amThema)));
-  document.getElementById('amtlich-card')._exportRows = () => [['Datum', 'Stelle', 'Gruppe', 'Titel', 'Themen', 'Link']]
-    .concat(ms.map(m => [m.datum.slice(0, 10), m.stelle, m.gruppe, m.titel, (m.themen || []).map(t => themaName[t] || t).join(', '), m.link]));
+  const quelle = amGruppe === 'Fachmedien' ? (d.artikel || []).map(a => ({...a, stelle: a.quelle, gruppe: 'Fachmedien'})) : d.meldungen;
+  const ms = quelle.filter(m => (amGruppe === 'alle' || amGruppe === 'Fachmedien' || m.gruppe === amGruppe) && (!amThema || (m.themen || []).includes(amThema)));
+  document.getElementById('amtlich-card')._exportRows = () => [['Datum', 'Stelle', 'Gruppe', 'Titel', 'Themen', 'Link', 'Ausschnitt']]
+    .concat(ms.map(m => [String(m.datum).slice(0, 10), m.stelle, m.gruppe, m.titel, (m.themen || []).map(t => themaName[t] || t).join(', '), m.link, m.text || '']));
   box.innerHTML = ms.length ? ms.slice(0, 60).map(m => `<div class="am-item">
-      <div class="am-meta"><span class="am-stelle">${_esc(m.stelle)}</span><span>${new Date(m.datum).toLocaleDateString('de-DE')}</span></div>
-      <a href="${_esc(m.link)}" target="_blank" rel="noopener">${_esc(m.titel)}</a>
+      ${leseItem(m.titel, m.stelle, m.datum, m.text, m.link, true)}
       ${(m.themen || []).length ? `<div class="am-tags">${m.themen.map(t => `<button onclick="amThema='${t}';renderAmtlich()">${_esc(themaName[t] || t)}</button>`).join('')}</div>` : ''}
     </div>`).join('') + (ms.length > 60 ? `<div class="th-fuss">${ms.length - 60} weitere ältere Meldungen ausgeblendet</div>` : '')
     : '<div class="nodata">Keine Meldungen für diese Auswahl</div>';
@@ -7891,6 +8409,56 @@ async function renderFavGrafiken() {
     }
     addExportButtons('fav');
   } finally { _favgLaeuft = false; }
+}
+
+
+// ══════════════════════════════════════════════
+// KERNAUSSAGEN ÜBER GRAFIKEN
+// ══════════════════════════════════════════════
+// Ein Satz über der Grafik, der sagt, was man sieht – die Zahl, die zählt,
+// und der Vergleich, der sie einordnet.
+function kern(anchorId, html) {
+  const a = document.getElementById(anchorId) || document.querySelector(`[data-canvas-for="${anchorId}"]`);
+  const card = a?.closest('.card'); if (!card) return;
+  let el = card.querySelector('.card-kern');
+  if (!html) { el?.remove(); return; }
+  if (!el) { el = document.createElement('div'); el.className = 'card-kern'; card.querySelector('.card-hdr')?.insertAdjacentElement('afterend', el); }
+  el.innerHTML = html;
+}
+const _pz = (a, b) => b ? (a - b) / Math.abs(b) * 100 : null;
+const _rich = (v, gutTief = true) => v == null ? '' : `<b class="${Math.abs(v) < 0.5 ? '' : (v > 0) === gutTief ? 'k-neg' : 'k-pos'}">${v >= 0 ? '+' : '−'}${fmtN(Math.abs(v), 0)} %</b>`;
+
+function kernStrom() {
+  const pr = D.energy_charts?.price_de; if (!pr?.unix_seconds?.length) return;
+  const tag = t => new Date(t * 1000).toLocaleDateString('sv-SE', {timeZone:'Europe/Berlin'});
+  const acc = {}; pr.unix_seconds.forEach((t, i) => { const v = pr.price[i]; if (v == null) return; (acc[tag(t)] ||= []).push(v); });
+  const tage = Object.keys(acc).sort().filter(d => acc[d].length >= 23);
+  if (tage.length < 3) return;
+  const m = d => acc[d].reduce((a, b) => a + b, 0) / acc[d].length;
+  const heute = tage.at(-1), vor = tage.slice(-8, -1), mv = vor.reduce((a, d) => a + m(d), 0) / vor.length;
+  kern('chart-price', `Day-Ahead am ${heute.split('-').reverse().slice(0, 2).join('.')}. im Mittel <b>${fmtN(m(heute), 0)} €/MWh</b> – ${_rich(_pz(m(heute), mv))} gegenüber dem Mittel der ${vor.length} Tage davor.`);
+}
+
+function kernGas() {
+  const rows = D.gas_storage_history?.countries?.de?.rows; if (!rows?.length) return;
+  const l = rows.at(-1), d = new Date(l[0]); d.setUTCFullYear(d.getUTCFullYear() - 1);
+  const vj = rows.find(r => r[0] >= d.toISOString().slice(0, 10));
+  if (!vj) return;
+  const pp = l[1] - vj[1];
+  kern('chart-gas', `Deutsche Gasspeicher zu <b>${fmtN(l[1], 1)} %</b> gefüllt – <b class="${pp < 0 ? 'k-neg' : 'k-pos'}">${fmtN(Math.abs(pp), 1)} Punkte ${pp < 0 ? 'weniger' : 'mehr'}</b> als vor einem Jahr (${fmtN(vj[1], 1)} %).`);
+}
+
+async function kernSprit() {
+  const h = (await loadHistory('fuel')).filter(r => r.e10_avg != null); if (h.length < 8) return;
+  const l = h.at(-1), w = h.at(-8);
+  kern('chart-fuel-history', `Super E10 kostet <b>${fmtN(l.e10_avg, 3)} €/l</b>, Diesel <b>${fmtN(l.diesel_avg, 3)} €/l</b> – E10 ${_rich(_pz(l.e10_avg, w.e10_avg))} binnen einer Woche.`);
+}
+
+function kernMakro() {
+  const r = D.makro?.series?.de_power_price?.series; if (!r?.length) return;
+  const l = r.at(-1), vj = r.find(p => p.date.slice(0, 7) === `${+l.date.slice(0, 4) - 1}${l.date.slice(4, 7)}`);
+  const monat = new Date(l.date).toLocaleDateString('de-DE', {month:'long', year:'numeric'});
+  kern('chart-mw-power', `Strom im Großhandel im ${monat}: <b>${fmtN(l.v, 0)} €/MWh</b>${vj ? ` – ${_rich(_pz(l.v, vj.v))} gegenüber dem Vorjahresmonat` : ''}.`);
 }
 
 // ══════════════════════════════════════════════
