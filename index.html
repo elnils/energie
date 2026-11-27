@@ -2838,7 +2838,9 @@ function unwrap(name, raw) {
 
 async function loadFile(name) {
   try {
-    const r = await fetch(`./data/${name}.json?t=${Date.now()}`);
+    // meta immer frisch; alle anderen Dateien mit dem Stand des letzten Datenlaufs als
+    // Schlüssel – so kommen sie aus dem Browser-Cache, bis es neue Daten gibt
+    const r = await fetch(`./data/${name}.json?v=${name === 'meta' ? Date.now() : datenStand()}`);
     if(!r.ok) throw new Error(r.status);
     const raw = await r.json();
     return unwrap(name, raw);
@@ -2852,6 +2854,24 @@ async function loadForTab(tab) {
   needed.forEach((f,i)=>{ if(res[i].value) D[f]=res[i].value; });
 }
 
+function datenStand() { return encodeURIComponent(D.meta?.last_fetch || String(Math.floor(Date.now() / 600000))); }
+
+// Im Hintergrund die Daten der übrigen Reiter laden – erst die der gleichen
+// Kategorie, dann den Rest –, damit der Wechsel ohne Wartezeit klappt
+let _vorladen = 0;
+async function vorladen() {
+  const lauf = ++_vorladen;
+  const kat = document.querySelector(`.tab[data-tab="${activeTab}"]`)?.dataset.kat;
+  const tabs = [...document.querySelectorAll('#tab-row .tab')].map(t => [t.dataset.tab, t.dataset.kat])
+    .sort((a, b) => (b[1] === kat) - (a[1] === kat)).map(x => x[0]).filter(t => t !== activeTab);
+  const warte = () => new Promise(r => (window.requestIdleCallback || setTimeout)(r, {timeout: 400}));
+  for (const t of tabs) {
+    if (lauf !== _vorladen) return;           // ein neuer Lauf hat übernommen
+    await warte();
+    try { await loadForTab(t); } catch(e) {}
+  }
+}
+
 async function init() {
   const meta = await loadFile('meta');
   if(meta) {
@@ -2863,6 +2883,7 @@ async function init() {
   renderTab(activeTab);
   // Die Leiste braucht Dateien mehrerer Reiter; sie lädt nach, ohne die Seite aufzuhalten
   renderFavBar();
+  setTimeout(vorladen, 1500);
 }
 
 async function forceRefresh() {
@@ -3370,7 +3391,7 @@ async function loadHistory(source) {
   D._history = D._history || {};
   if (D._history[source] !== undefined) return D._history[source];
   try {
-    const r = await fetch(`./data/history/${source}.jsonl?t=${Date.now()}`);
+    const r = await fetch(`./data/history/${source}.jsonl?v=${datenStand()}`);
     if (!r.ok) { D._history[source] = []; return []; }
     const text = await r.text();
     const lines = text.split('\n').filter(l => l.trim());
@@ -6880,7 +6901,7 @@ async function svgExport(svg, art, card) {
     k.setAttribute('viewBox', `0 -40 ${vb[2]} ${vb[3] + 70}`); vb[1] = -40; vb[3] += 70;
     const g = document.createElementNS(ns, 'g');
     g.innerHTML = `<text x="0" y="-18" style="font:700 16px 'Source Sans 3',Arial,sans-serif;fill:#111827;stroke:none">${esc(card.querySelector('.card-title')?.textContent.trim() || '')}</text>
-      <text x="0" y="${vb[3] - 52}" style="font:11px 'Source Sans 3',Arial,sans-serif;fill:#8c98a8;stroke:none">Quelle: ${esc(quelleZeile(card))} · Stand ${new Date().toLocaleDateString('de-DE')}</text>`;
+      <text x="0" y="${vb[3] - 52}" style="font:11px 'Source Sans 3',Arial,sans-serif;fill:#8c98a8;stroke:none">Quelle: Energie-Dashboard (${esc(quelleZeile(card))}) · Stand ${new Date().toLocaleDateString('de-DE')}</text>`;
     k.appendChild(g);
   }
   k.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
@@ -6906,7 +6927,10 @@ async function svgExport(svg, art, card) {
 }
 
 // Quelle einer Karte für den Export: die Quellen aus der Stempelzeile, sonst aus data-src
-function quelleZeile(card) {
+// Innere Klammern vermeiden, weil die Quelle selbst in Klammern hinter "Energie-Dashboard" steht
+const ohneKlammern = q => String(q || '').replace(/\s*\(([^)]*)\)/g, ', $1');
+function quelleZeile(card) { return ohneKlammern(quelleRoh(card)); }
+function quelleRoh(card) {
   if (card.dataset.quelle) return card.dataset.quelle;
   const kq = card.querySelector('.map-wrap[data-quelle]')?.dataset.quelle;   // Karten: Quelle der gezeigten Ebene
   if (kq) return kq;
@@ -6935,7 +6959,7 @@ function rahmenBild(card, bild, breite, hoehe, f) {
   const fy = out.height - pad / 2 - 6 * f;
   ctx.strokeStyle = '#e5e7eb'; ctx.lineWidth = f; ctx.beginPath(); ctx.moveTo(pad, fy - 16 * f); ctx.lineTo(out.width - pad, fy - 16 * f); ctx.stroke();
   ctx.fillStyle = '#8c98a8'; ctx.font = `${11.5 * f}px 'Source Sans 3', Arial, sans-serif`;
-  const links = `Quelle: ${quelle || '—'}`, rechts = `Stand ${new Date().toLocaleDateString('de-DE')}`;
+  const links = `Quelle: Energie-Dashboard${quelle ? ` (${quelle})` : ''}`, rechts = `Stand ${new Date().toLocaleDateString('de-DE')}`;
   let l = links; while (ctx.measureText(l).width > out.width - 2 * pad - ctx.measureText(rechts).width - 20 * f && l.length > 12) l = l.slice(0, -2);
   ctx.fillText(l === links ? l : l + '…', pad, fy);
   ctx.textAlign = 'right'; ctx.fillText(rechts, out.width - pad, fy);
@@ -6967,7 +6991,7 @@ async function exportCard(card, what, target) {
       ch.resize(); ch.update('none');
       out.toBlob(b => downloadBlob(b, exportName(card, 'png')), 'image/png');
     } else if (what === 'csv') {
-      const fuss = [[], [`Quelle: ${quelleZeile(card) || '—'}`], [`Stand: ${new Date().toLocaleDateString('de-DE')}`]];
+      const fuss = [[], [`Quelle: Energie-Dashboard (${quelleZeile(card) || '—'})`], [`Stand: ${new Date().toLocaleDateString('de-DE')}`]];
       downloadBlob(new Blob([rowsToCsv(rows.concat(fuss))], {type: 'text/csv;charset=utf-8'}), exportName(card, 'csv'));
     } else if (what === 'xlsx') {
       const XLSX = await loadXlsx();
@@ -6978,7 +7002,7 @@ async function exportCard(card, what, target) {
       const title = card.querySelector('.card-title')?.textContent || '';
       const meta = XLSX.utils.aoa_to_sheet([['Titel', title],
         ['Beschreibung', card.querySelector('.card-sub')?.textContent || ''],
-        ['Quelle', quelleZeile(card) || card.querySelector('.card-stamp')?.textContent.replace(/\s+/g, ' ').trim() || ''],
+        ['Quelle', 'Energie-Dashboard (' + (quelleZeile(card) || card.querySelector('.card-stamp')?.textContent.replace(/\s+/g, ' ').trim() || '') + ')'],
         ['Exportiert', new Date().toLocaleString('de-DE')], ['Seite', location.href.split('?')[0]]]);
       XLSX.utils.book_append_sheet(wb, meta, 'Info');
       XLSX.writeFile(wb, exportName(card, 'xlsx'));
@@ -8756,7 +8780,14 @@ initLand();
 landGlobalFuellen();
 initConsent();
 init();
-setInterval(async()=>{Object.keys(D).forEach(k=>delete D[k]);await init();},15*60*1000);
+// Alle 15 Minuten nur nachsehen, ob es einen neuen Datenstand gibt; nur dann neu laden
+setInterval(async () => {
+  try {
+    const r = await fetch(`./data/meta.json?v=${Date.now()}`); if (!r.ok) return;
+    const m = await r.json();
+    if (m.last_fetch && m.last_fetch !== D.meta?.last_fetch) { Object.keys(D).forEach(k => delete D[k]); await init(); }
+  } catch(e) {}
+}, 15 * 60 * 1000);
 </script>
 </body>
 </html>
